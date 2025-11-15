@@ -27,7 +27,7 @@ public final class CameraViewModel: ObservableObject {
 
     private let cameraService: CameraServiceProtocol
     private let storageService: StorageServiceProtocol
-    private var cancellables = Set<AnyCancellable>()
+    private var cancellables: Set<AnyCancellable> = Set<AnyCancellable>()
 
     // MARK: - Initialization
 
@@ -74,7 +74,7 @@ public final class CameraViewModel: ObservableObject {
 
         do {
             // Capture photo
-            let photoData = try await cameraService.capturePhoto()
+            let photoData: Data = try await cameraService.capturePhoto()
             capturedPhotoData = photoData
             errorMessage = nil
 
@@ -92,14 +92,14 @@ public final class CameraViewModel: ObservableObject {
             #endif
 
             // Upload to Firebase Storage
-            let itemId = UUID().uuidString
-            let userId = "current_user_id" // TODO: Get from Auth service
+            let itemId: String = UUID().uuidString
+            let userId: String = "current_user_id" // TODO: Get from Auth service
 
             uploadProgress = 0.5 // Mid-progress
 
             // Capture storage service reference to avoid sendability issues
-            let storage = storageService
-            let downloadURL = try await storage.uploadCroppedObject(
+            let storage: StorageServiceProtocol = storageService
+            let downloadURL: URL = try await storage.uploadCroppedObject(
                 image,
                 itemId: itemId,
                 userId: userId
