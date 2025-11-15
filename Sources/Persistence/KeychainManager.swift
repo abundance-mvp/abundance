@@ -25,7 +25,7 @@ public struct KeychainManager: Sendable {
             kSecValueData as String: data
         ]
 
-        let status = SecItemAdd(query as CFDictionary, nil)
+        let status: OSStatus = SecItemAdd(query as CFDictionary, nil)
 
         guard status == errSecSuccess else {
             throw KeychainError.saveFailed(status: status)
@@ -42,7 +42,7 @@ public struct KeychainManager: Sendable {
         ]
 
         var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        let status: OSStatus = SecItemCopyMatching(query as CFDictionary, &result)
 
         guard status == errSecSuccess else {
             throw KeychainError.retrieveFailed(status: status)
@@ -64,7 +64,7 @@ public struct KeychainManager: Sendable {
             kSecAttrAccount as String: key
         ]
 
-        let status = SecItemDelete(query as CFDictionary)
+        let status: OSStatus = SecItemDelete(query as CFDictionary)
 
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw KeychainError.deleteFailed(status: status)
