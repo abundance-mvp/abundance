@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import AVFoundation
 
 /// ViewModel for camera capture feature (MVVM pattern)
 @MainActor
@@ -67,5 +68,9 @@ public final class CameraViewModel: ObservableObject {
 
     public func stopCamera() {
         cameraService.stopSession()
+    }
+
+    public func getCaptureSession() -> AVCaptureSession? {
+        return cameraService.getCaptureSession()
     }
 }

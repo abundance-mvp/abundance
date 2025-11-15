@@ -102,6 +102,10 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
         }
     }
 
+    public func getCaptureSession() -> AVCaptureSession? {
+        return captureSession
+    }
+
     // MARK: - Private Methods
 
     nonisolated private func configureSession() throws {

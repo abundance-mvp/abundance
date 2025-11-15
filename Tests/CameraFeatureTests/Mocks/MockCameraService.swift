@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import AVFoundation
 @testable import CameraFeature
 
 /// Mock implementation of CameraServiceProtocol for testing
@@ -63,6 +64,10 @@ final class MockCameraService: CameraServiceProtocol, @unchecked Sendable {
     func checkAuthorization() async -> CameraAuthorizationStatus {
         didCallCheckAuthorization = true
         return stubbedAuthStatus
+    }
+
+    func getCaptureSession() -> AVCaptureSession? {
+        return nil // Mock doesn't need real session
     }
 
     // MARK: - Helper Methods

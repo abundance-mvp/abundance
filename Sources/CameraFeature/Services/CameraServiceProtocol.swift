@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import AVFoundation
 
 /// Protocol defining camera capture operations
 /// - Note: Uses Data for images to avoid UIKit dependency in protocol
@@ -22,4 +23,9 @@ public protocol CameraServiceProtocol: Sendable {
     /// Check camera authorization status
     /// - Returns: Current authorization status
     func checkAuthorization() async -> CameraAuthorizationStatus
+
+    /// Get the underlying AVCaptureSession for preview layer
+    /// - Note: Only needed for UIViewRepresentable bridge to AVCaptureVideoPreviewLayer
+    /// - Returns: AVCaptureSession instance, or nil if not supported
+    func getCaptureSession() -> AVCaptureSession?
 }
