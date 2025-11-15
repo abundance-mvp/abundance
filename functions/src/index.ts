@@ -1,5 +1,8 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { createItem } from './items/createItem';
+import { getItem } from './items/getItem';
+import { listItems } from './items/listItems';
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -33,4 +36,131 @@ export const getUserProfile = functions.https.onCall(async (data, context) => {
   }
 
   return userDoc.data();
+});
+
+// Create item endpoint
+export const createItemHTTP = functions.https.onRequest(async (req, res) => {
+  // Verify Firebase Auth token
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    res
+      .status(401)
+      .json({
+        error: { code: "unauthenticated", message: "User must be signed in" },
+      });
+    return;
+  }
+
+  try {
+    const token = authHeader.split("Bearer ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const userId = decodedToken.uid;
+
+    const { imageUrl, layer1Result, detectedBarcode } = req.body;
+
+    if (!imageUrl || !layer1Result) {
+      res
+        .status(400)
+        .json({
+          error: {
+            code: "invalid-argument",
+            message: "Missing required fields",
+          },
+        });
+      return;
+    }
+
+    const itemId = await createItem(
+      userId,
+      imageUrl,
+      layer1Result,
+      detectedBarcode
+    );
+
+    res.status(201).json({
+      itemId,
+      status: "processing",
+      createdAt: new Date().toISOString(),
+      layer1Complete: true,
+      layer2aScheduled: true,
+      layer2bScheduled: true,
+    });
+  } catch (error) {
+    console.error("Error creating item:", error);
+    res
+      .status(500)
+      .json({ error: { code: "internal", message: "Internal server error" } });
+  }
+});
+
+// Get item endpoint
+export const getItemHTTP = functions.https.onRequest(async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    res
+      .status(401)
+      .json({
+        error: { code: "unauthenticated", message: "User must be signed in" },
+      });
+    return;
+  }
+
+  try {
+    const token = authHeader.split("Bearer ")[1];
+    await admin.auth().verifyIdToken(token);
+
+    const itemId = req.query.itemId as string;
+    if (!itemId) {
+      res
+        .status(400)
+        .json({
+          error: { code: "invalid-argument", message: "Missing itemId" },
+        });
+      return;
+    }
+
+    const item = await getItem(itemId);
+    if (!item) {
+      res
+        .status(404)
+        .json({ error: { code: "not-found", message: "Item not found" } });
+      return;
+    }
+
+    res.status(200).json(item);
+  } catch (error) {
+    console.error("Error getting item:", error);
+    res
+      .status(500)
+      .json({ error: { code: "internal", message: "Internal server error" } });
+  }
+});
+
+// List items endpoint
+export const listItemsHTTP = functions.https.onRequest(async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    res
+      .status(401)
+      .json({
+        error: { code: "unauthenticated", message: "User must be signed in" },
+      });
+    return;
+  }
+
+  try {
+    const token = authHeader.split("Bearer ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const userId = decodedToken.uid;
+
+    const limit = parseInt(req.query.limit as string) || 20;
+    const items = await listItems(userId, limit);
+
+    res.status(200).json({ items });
+  } catch (error) {
+    console.error("Error listing items:", error);
+    res
+      .status(500)
+      .json({ error: { code: "internal", message: "Internal server error" } });
+  }
 });
