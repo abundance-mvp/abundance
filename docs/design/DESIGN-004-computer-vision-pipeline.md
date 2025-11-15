@@ -31,18 +31,28 @@ This document specifies the complete 4-layer AI pipeline for cataloging househol
 │                          iOS CLIENT                              │
 │                                                                   │
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │ Layer 1: On-Device Object Detection                       │  │
+│  │ Layer 1: Real-Time Object Detection (NEW ARCHITECTURE)    │  │
 │  │                                                            │  │
 │  │ ┌────────────────┐  ┌──────────────────────────────────┐ │  │
 │  │ │ AVFoundation   │  │ Vision Framework                 │ │  │
-│  │ │ Camera Capture │→ │ - VNCoreMLRequest (YOLOv3-Tiny) │ │  │
-│  │ │ Photo Storage  │  │ - VNDetectBarcodesRequest       │ │  │
-│  │ └────────────────┘  │ - Bounding box detection        │ │  │
-│  │                     │ - Crop objects from photo        │ │  │
+│  │ │ 2 FPS Stream   │→ │ - VNCoreMLRequest (YOLOv11n)    │ │  │
+│  │ │ CVPixelBuffer  │  │ - VNGenerateForegroundInstance  │ │  │
+│  │ └────────────────┘  │   MaskRequest (subject masks)    │ │  │
+│  │                     │ - VNImageFingerprint (dedup)     │ │  │
+│  │ ┌────────────────┐  │ - VNCalculateImageAesthetics    │ │  │
+│  │ │ Quality Filter │  │   ScoresRequest (quality)        │ │  │
+│  │ │ - Aesthetic    │  │ - Parallel multi-object detect   │ │  │
+│  │ │ - Blur         │  │ - Organic border rendering       │ │  │
+│  │ │ - Lighting     │  └──────────────────────────────────┘ │  │
+│  │ │ - Completeness │  ┌──────────────────────────────────┐ │  │
+│  │ └────────────────┘  │ Three-Tier Catalog Mode          │ │  │
+│  │                     │ - Auto: conf>0.70 && qual>0.65   │ │  │
+│  │                     │ - Manual: conf 0.40-0.69 (tap)   │ │  │
+│  │                     │ - Ignore: conf<0.40 (skip)       │ │  │
 │  │                     └──────────────────────────────────┘ │  │
 │  │                                                            │  │
-│  │ Output: Cropped objects (JPG), barcodes (if detected)     │  │
-│  │ Privacy Firewall: Full photo NEVER leaves device          │  │
+│  │ Output: Cropped objects (JPG) + quality scores + dedup    │  │
+│  │ Privacy Firewall: Full frames NEVER leave device          │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                              ↓                                   │
 │                   Upload cropped objects only                    │
@@ -777,7 +787,8 @@ Return JSON:
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial design, 4-layer architecture specification | Computer Vision & ML Engineer |
+| 2025-11-15 | 2.0 | **MAJOR REFACTOR**: Update Layer 1 from single-photo to real-time 2 FPS streaming. Add VNGenerateForegroundInstanceMaskRequest, VNImageFingerprint deduplication, VNCalculateImageAestheticsScoresRequest quality assessment, and three-tier confidence system (auto/manual/ignore). Upgrade from YOLOv3-Tiny to YOLOv11n. Document parallel multi-object processing and organic border rendering. | Stage 6.1 Documentation Refactor |
 
 ---
 
-**This design will be implemented in Stage 2.4 (Computer Vision Pipeline Architecture) after tech stack finalization in Stage 2.1.**
+**Related**: 2025-11-15-realtime-object-detection-refactor.md (Implementation Plan)

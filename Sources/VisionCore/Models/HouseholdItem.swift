@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 /// Domain model representing a detected household item from Vision Framework
-public struct HouseholdItem: Identifiable, Codable, Equatable {
+public struct HouseholdItem: Identifiable, Codable, Equatable, Sendable {
     /// Unique identifier
     public let id: UUID
 

@@ -42,17 +42,58 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
         }
         #endif
 
-        // TODO: Implement YOLOv3-Tiny Vision request in Sprint 3
-        // For now, return empty array (structure complete, ML model integration deferred)
+        // Load YOLOv11n CoreML model (5.2 MB, trained on COCO 80 classes)
+        // YOLOv11n includes built-in NMS and outputs VNRecognizedObjectObservation
+        // which Vision Framework can use directly without custom post-processing.
+        guard let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
+            throw VisionError.modelNotFound
+        }
 
-        // Placeholder for Sprint 2: Return empty array
-        // Sprint 3 will implement:
-        // 1. Load YOLOv3-Tiny.mlmodel (34 MB)
-        // 2. Create VNCoreMLRequest with model
-        // 3. Filter results by householdClasses
-        // 4. Apply NMS (Non-Maximum Suppression)
-        // 5. Convert VNRecognizedObjectObservation to HouseholdItem
+        let model = try VNCoreMLModel(for: MLModel(contentsOf: modelURL))
 
-        return []
+        // Create Vision request
+        return try await withCheckedThrowingContinuation { continuation in
+            let request = VNCoreMLRequest(model: model) { request, error in
+                if let error = error {
+                    continuation.resume(throwing: VisionError.requestFailed(error))
+                    return
+                }
+
+                // Process results
+                // YOLOv11n outputs VNRecognizedObjectObservation with built-in NMS
+                guard let results = request.results as? [VNRecognizedObjectObservation] else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                // Filter by household classes and confidence threshold
+                let imageWidth = cgImage.width
+                let imageHeight = cgImage.height
+                let householdItems: [HouseholdItem] = results.compactMap { observation -> HouseholdItem? in
+                    guard let topLabel = observation.labels.first,
+                          Self.householdClasses.contains(topLabel.identifier),
+                          topLabel.confidence >= self.confidenceThreshold else {
+                        return nil
+                    }
+
+                    return HouseholdItem(
+                        label: topLabel.identifier,
+                        confidence: ConfidenceScore(raw: topLabel.confidence),
+                        boundingBox: observation.boundingBox,
+                        imageSize: CGSize(width: imageWidth, height: imageHeight)
+                    )
+                }
+
+                continuation.resume(returning: Array(householdItems))
+            }
+
+            // Perform detection
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            do {
+                try handler.perform([request])
+            } catch {
+                continuation.resume(throwing: VisionError.requestFailed(error))
+            }
+        }
     }
 }

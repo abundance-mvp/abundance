@@ -35,38 +35,52 @@ let package: Package = Package(
         ),
         .target(
             name: "CameraFeature",
-            dependencies: [],
+            dependencies: ["Persistence"],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "CameraFeatureTests",
-            dependencies: ["CameraFeature"]
+            dependencies: [
+                "CameraFeature",
+                "Persistence"
+            ]
         ),
 
         // Core
         .target(
             name: "Persistence",
-            dependencies: [],
+            dependencies: [
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "PersistenceTests",
-            dependencies: ["Persistence"]
+            dependencies: [
+                "Persistence",
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
+            ]
         ),
         .target(
             name: "VisionCore",
             dependencies: [],
+            resources: [
+                .copy("Resources/yolo11n.mlmodelc")
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "VisionCoreTests",
-            dependencies: ["VisionCore"]
+            dependencies: ["VisionCore"],
+            resources: [
+                .process("Resources")
+            ]
         )
     ]
 )
