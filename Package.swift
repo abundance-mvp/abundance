@@ -48,14 +48,19 @@ let package: Package = Package(
         // Core
         .target(
             name: "Persistence",
-            dependencies: [],
+            dependencies: [
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "PersistenceTests",
-            dependencies: ["Persistence"]
+            dependencies: [
+                "Persistence",
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
+            ]
         ),
         .target(
             name: "VisionCore",
