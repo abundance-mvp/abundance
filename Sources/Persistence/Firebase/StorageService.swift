@@ -1,5 +1,5 @@
 import Foundation
-import FirebaseStorage
+@preconcurrency import FirebaseStorage
 #if os(iOS)
 import UIKit
 public typealias PlatformImage = UIImage
@@ -31,6 +31,7 @@ public final class StorageService: StorageServiceProtocol {
 
     private let storage: Storage
     private let compressionQuality: CGFloat = 0.8 // 80% JPEG quality
+    private let uploadTimeout: TimeInterval = 60.0 // 60 seconds
 
     // MARK: - Initialization
 
@@ -54,18 +55,21 @@ public final class StorageService: StorageServiceProtocol {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             throw StorageError.compressionFailed
         }
-        let imageRep = NSBitmapImageRep(cgImage: cgImage)
-        guard let imageData = imageRep.representation(using: .jpeg, properties: [.compressionFactor: compressionQuality]) else {
+        let imageRep: NSBitmapImageRep = NSBitmapImageRep(cgImage: cgImage)
+        guard let imageData = imageRep.representation(
+            using: .jpeg,
+            properties: [.compressionFactor: compressionQuality]
+        ) else {
             throw StorageError.compressionFailed
         }
         #endif
 
         // Create storage reference: users/{userId}/items/{itemId}/cropped.jpg
-        let ref = storage.reference()
+        let ref: StorageReference = storage.reference()
             .child("users/\(userId)/items/\(itemId)/cropped.jpg")
 
         // Set metadata
-        let metadata = StorageMetadata()
+        let metadata: StorageMetadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
         metadata.cacheControl = "public, max-age=3600" // 1 hour cache
         metadata.customMetadata = [
@@ -75,11 +79,45 @@ public final class StorageService: StorageServiceProtocol {
             "version": "1.0"
         ]
 
-        // Upload data
-        _ = try await ref.putDataAsync(imageData, metadata: metadata)
+        // Upload with timeout
+        return try await withTimeout(uploadTimeout, ref: ref, imageData: imageData, metadata: metadata)
+    }
 
-        // Get download URL
-        let downloadURL = try await ref.downloadURL()
-        return downloadURL
+    // MARK: - Helper Methods
+
+    /// Execute upload operation with timeout
+    private func withTimeout(
+        _ timeout: TimeInterval,
+        ref: StorageReference,
+        imageData: Data,
+        metadata: StorageMetadata
+    ) async throws -> URL {
+        try await withThrowingTaskGroup(of: URL?.self) { group in
+            // Add main upload operation
+            group.addTask {
+                // Upload data
+                _ = try await ref.putDataAsync(imageData, metadata: metadata)
+
+                // Get download URL
+                let downloadURL: URL = try await ref.downloadURL()
+                return downloadURL
+            }
+
+            // Add timeout task
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                throw StorageError.networkTimeout
+            }
+
+            // Wait for first completion (operation or timeout)
+            if let result = try await group.next() {
+                group.cancelAll()
+                if let url = result {
+                    return url
+                }
+            }
+
+            throw StorageError.networkTimeout
+        }
     }
 }
