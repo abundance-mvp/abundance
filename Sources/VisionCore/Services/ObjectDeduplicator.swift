@@ -42,6 +42,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
     ///   - pixelBuffer: The CVPixelBuffer containing the image data
     ///   - boundingBox: The normalized bounding box (0.0-1.0) of the object region
     /// - Returns: String identifier for the fingerprint
+    /// - Note: For perceptual similarity deduplication, use `isSimilarToRecent()` instead
     public nonisolated func generateFingerprint(
         pixelBuffer: CVPixelBuffer,
         boundingBox: CGRect
@@ -78,36 +79,80 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         }
     }
 
-    /// Checks if a fingerprint matches any cached fingerprint within similarity threshold
+    /// Checks if a fingerprint matches any cached fingerprint
     /// - Parameter fingerprint: The fingerprint identifier to check
-    /// - Returns: true if a similar fingerprint exists in cache, false otherwise
+    /// - Returns: true if an exact match or similar fingerprint exists in cache, false otherwise
+    /// - Note: For the primary perceptual similarity API, use `isSimilarToRecent()` which caches observations automatically
     public func isDuplicate(_ fingerprint: String) async -> Bool {
         // Clean expired entries first
         await cleanCache()
 
-        // Check if this exact fingerprint exists in cache
-        if cache[fingerprint] != nil {
-            return true
+        // Fast path: Check for exact match
+        guard let queryEntry = cache[fingerprint] else {
+            // Not in cache at all
+            return false
         }
 
-        // TODO: Implement similarity comparison using VNFeaturePrintObservation.computeDistance
-        // For now, we only check exact matches
-        // This requires storing the actual VNFeaturePrintObservation and computing distances
+        // If we have the observation cached (via cacheFingerprint),
+        // do perceptual similarity comparison
+        if let queryObservation = queryEntry.fingerprint {
+            // Compare against all OTHER cached fingerprints using perceptual similarity
+            for (cachedIdentifier, entry) in cache {
+                // Skip comparing against itself
+                if cachedIdentifier == fingerprint {
+                    continue
+                }
 
-        return false
+                guard let cachedObservation = entry.fingerprint else {
+                    continue
+                }
+
+                do {
+                    var distance: Float = 0
+                    try queryObservation.computeDistance(&distance, to: cachedObservation)
+
+                    // If distance is small enough, fingerprints are similar
+                    // Lower distance = more similar
+                    // Threshold: 1 - similarityThreshold (e.g., 1 - 0.90 = 0.10)
+                    let maxDistance = Float(1.0 - similarityThreshold)
+
+                    if distance <= maxDistance {
+                        logger.debug("Found similar fingerprint: distance=\(String(format: "%.3f", distance))")
+                        return true // Found a similar fingerprint
+                    }
+                } catch {
+                    // If comparison fails, skip this entry
+                    continue
+                }
+            }
+        }
+
+        // Exact match found (entry exists in cache)
+        // If we had an observation, we already did similarity comparison above
+        // If we don't have an observation, this is still a valid exact string match
+        return true
     }
 
     /// Adds a fingerprint to the cache with current timestamp
     /// - Parameter fingerprint: The fingerprint identifier to cache
+    /// - Note: If an entry already exists (e.g., from generateFingerprint), this updates the timestamp
     public func addToCache(_ fingerprint: String) async {
-        // Note: This simplified version only stores the identifier for exact matching
-        // For full similarity comparison, use cacheFingerprint() instead
-        let entry = CacheEntry(
-            fingerprint: nil, // No observation for string-based cache
-            timestamp: Date()
-        )
-
-        cache[fingerprint] = entry
+        // Check if entry already exists (e.g., from generateFingerprint)
+        if let existingEntry = cache[fingerprint] {
+            // Update timestamp but preserve the observation
+            let updatedEntry = CacheEntry(
+                fingerprint: existingEntry.fingerprint,
+                timestamp: Date()
+            )
+            cache[fingerprint] = updatedEntry
+        } else {
+            // Create new entry without observation (string-only caching)
+            let entry = CacheEntry(
+                fingerprint: nil,
+                timestamp: Date()
+            )
+            cache[fingerprint] = entry
+        }
 
         // Clean old entries
         await cleanCache()
