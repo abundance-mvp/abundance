@@ -3,7 +3,7 @@ import Combine
 
 /// Protocol defining camera capture operations
 /// - Note: Uses Data for images to avoid UIKit dependency in protocol
-public protocol CameraServiceProtocol {
+public protocol CameraServiceProtocol: Sendable {
     /// Publisher for current camera session state
     var sessionState: AnyPublisher<CameraSessionState, Never> { get }
 

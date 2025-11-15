@@ -3,7 +3,7 @@ import Combine
 @testable import CameraFeature
 
 /// Mock implementation of CameraServiceProtocol for testing
-final class MockCameraService: CameraServiceProtocol {
+final class MockCameraService: CameraServiceProtocol, @unchecked Sendable {
 
     // MARK: - Published State
 
