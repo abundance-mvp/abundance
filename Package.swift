@@ -68,13 +68,19 @@ let package: Package = Package(
         .target(
             name: "VisionCore",
             dependencies: [],
+            resources: [
+                .copy("Resources/TinyYOLO.mlmodelc")
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "VisionCoreTests",
-            dependencies: ["VisionCore"]
+            dependencies: ["VisionCore"],
+            resources: [
+                .process("Resources")
+            ]
         )
     ]
 )

@@ -25,6 +25,7 @@ public protocol HouseholdItemDetectorProtocol {
 public enum VisionError: Error, LocalizedError {
     case invalidImage
     case modelNotLoaded
+    case modelNotFound
     case requestFailed(Error)
     case noItemsDetected
 
@@ -34,6 +35,8 @@ public enum VisionError: Error, LocalizedError {
             return "Invalid image format"
         case .modelNotLoaded:
             return "YOLOv3-Tiny model not loaded"
+        case .modelNotFound:
+            return "YOLOv3-Tiny model not found in bundle"
         case .requestFailed(let error):
             return "Vision request failed: \(error.localizedDescription)"
         case .noItemsDetected:

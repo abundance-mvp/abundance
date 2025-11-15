@@ -42,17 +42,66 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
         }
         #endif
 
-        // TODO: Implement YOLOv3-Tiny Vision request in Sprint 3
-        // For now, return empty array (structure complete, ML model integration deferred)
+        // Load TinyYOLO CoreML model (63 MB, trained on PASCAL VOC 20 classes)
+        // NOTE: TinyYOLO outputs VNCoreMLFeatureValueObservation (raw MLMultiArray)
+        // which requires custom YOLO post-processing:
+        // - Anchor box decoding
+        // - Non-Maximum Suppression (NMS)
+        // - Confidence thresholding
+        // This will be implemented in Sprint 4 with full YOLO utilities.
+        // For now, this demonstrates model integration with Vision Framework.
+        guard let modelURL = Bundle.module.url(forResource: "TinyYOLO", withExtension: "mlmodelc") else {
+            throw VisionError.modelNotFound
+        }
 
-        // Placeholder for Sprint 2: Return empty array
-        // Sprint 3 will implement:
-        // 1. Load YOLOv3-Tiny.mlmodel (34 MB)
-        // 2. Create VNCoreMLRequest with model
-        // 3. Filter results by householdClasses
-        // 4. Apply NMS (Non-Maximum Suppression)
-        // 5. Convert VNRecognizedObjectObservation to HouseholdItem
+        let model = try VNCoreMLModel(for: MLModel(contentsOf: modelURL))
 
-        return []
+        // Create Vision request
+        return try await withCheckedThrowingContinuation { continuation in
+            let request = VNCoreMLRequest(model: model) { request, error in
+                if let error = error {
+                    continuation.resume(throwing: VisionError.requestFailed(error))
+                    return
+                }
+
+                // Process results
+                // TinyYOLO outputs VNCoreMLFeatureValueObservation (raw MLMultiArray)
+                // not VNRecognizedObjectObservation. Custom post-processing required.
+                guard let results = request.results as? [VNRecognizedObjectObservation] else {
+                    // Model loaded and executed, but requires YOLO post-processing
+                    // to convert MLMultiArray to bounding boxes
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                // Filter by household classes and confidence threshold
+                let imageWidth = cgImage.width
+                let imageHeight = cgImage.height
+                let householdItems: [HouseholdItem] = results.compactMap { observation -> HouseholdItem? in
+                    guard let topLabel = observation.labels.first,
+                          Self.householdClasses.contains(topLabel.identifier),
+                          topLabel.confidence >= self.confidenceThreshold else {
+                        return nil
+                    }
+
+                    return HouseholdItem(
+                        label: topLabel.identifier,
+                        confidence: ConfidenceScore(raw: topLabel.confidence),
+                        boundingBox: observation.boundingBox,
+                        imageSize: CGSize(width: imageWidth, height: imageHeight)
+                    )
+                }
+
+                continuation.resume(returning: Array(householdItems))
+            }
+
+            // Perform detection
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            do {
+                try handler.perform([request])
+            } catch {
+                continuation.resume(throwing: VisionError.requestFailed(error))
+            }
+        }
     }
 }

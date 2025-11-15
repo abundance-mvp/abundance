@@ -1,7 +1,7 @@
 import Foundation
 
 /// Confidence score with categorization for UI feedback
-public struct ConfidenceScore: Codable, Equatable {
+public struct ConfidenceScore: Codable, Equatable, Sendable {
     /// Raw confidence from Vision Framework (0-1)
     public let raw: Float
 
@@ -29,7 +29,7 @@ public struct ConfidenceScore: Codable, Equatable {
     }
 
     /// Confidence category for UI feedback
-    public enum ConfidenceCategory: String, Codable, Equatable {
+    public enum ConfidenceCategory: String, Codable, Equatable, Sendable {
         case high    // >0.8 (auto-accept)
         case medium  // 0.6-0.8 (prompt verification)
         case low     // <0.6 (filtered out)
