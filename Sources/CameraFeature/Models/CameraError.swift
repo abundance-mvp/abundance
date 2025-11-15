@@ -1,7 +1,7 @@
 import Foundation
 
 /// Errors that can occur during camera operations
-public enum CameraError: Error, LocalizedError, Equatable {
+public enum CameraError: Error, LocalizedError, Equatable, Sendable {
     /// Camera device is not available on this device
     case deviceNotAvailable
 

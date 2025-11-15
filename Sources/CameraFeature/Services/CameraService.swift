@@ -1,25 +1,27 @@
-import AVFoundation // Required for AVFoundation camera capture
+@preconcurrency import AVFoundation // Required for AVFoundation camera capture
 import Combine
 
 /// Concrete implementation of CameraServiceProtocol using AVFoundation
-public final class CameraService: NSObject, CameraServiceProtocol {
+/// @MainActor ensures thread-safe access to camera resources
+@MainActor
+public final class CameraService: NSObject, @preconcurrency CameraServiceProtocol {
 
     // MARK: - Properties
 
-    private let captureSession = AVCaptureSession()
-    private let photoOutput = AVCapturePhotoOutput()
+    nonisolated(unsafe) private let captureSession = AVCaptureSession()
+    nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
     private let sessionQueue = DispatchQueue(label: "com.abundance.camera.session")
 
-    private let sessionStateSubject = CurrentValueSubject<CameraSessionState, Never>(.notStarted)
+    nonisolated(unsafe) private let sessionStateSubject = CurrentValueSubject<CameraSessionState, Never>(.notStarted)
     public var sessionState: AnyPublisher<CameraSessionState, Never> {
         sessionStateSubject.eraseToAnyPublisher()
     }
 
-    private var photoContinuation: CheckedContinuation<Data, Error>?
+    nonisolated(unsafe) private var photoContinuation: CheckedContinuation<Data, Error>?
 
     // MARK: - Initialization
 
-    public override init() {
+    nonisolated public override init() {
         super.init()
     }
 
@@ -64,7 +66,7 @@ public final class CameraService: NSObject, CameraServiceProtocol {
         }
     }
 
-    public func stopSession() {
+    nonisolated public func stopSession() {
         sessionQueue.async { [weak self] in
             self?.captureSession.stopRunning()
             self?.sessionStateSubject.send(.stopped)
@@ -72,7 +74,12 @@ public final class CameraService: NSObject, CameraServiceProtocol {
     }
 
     public func capturePhoto() async throws -> Data {
-        return try await withCheckedThrowingContinuation { continuation in
+        return try await withCheckedThrowingContinuation { [weak self] continuation in
+            guard let self = self else {
+                continuation.resume(throwing: CameraError.captureFailure)
+                return
+            }
+
             self.photoContinuation = continuation
 
             let settings = AVCapturePhotoSettings()
@@ -97,7 +104,7 @@ public final class CameraService: NSObject, CameraServiceProtocol {
 
     // MARK: - Private Methods
 
-    private func configureSession() throws {
+    nonisolated private func configureSession() throws {
         captureSession.beginConfiguration()
         defer { captureSession.commitConfiguration() }
 
@@ -133,9 +140,10 @@ public final class CameraService: NSObject, CameraServiceProtocol {
 
 // MARK: - AVCapturePhotoCaptureDelegate
 
+@MainActor
 extension CameraService: AVCapturePhotoCaptureDelegate {
 
-    public func photoOutput(
+    nonisolated public func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?

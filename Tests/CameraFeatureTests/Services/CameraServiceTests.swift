@@ -2,18 +2,19 @@ import XCTest
 import Combine
 @testable import CameraFeature
 
+@MainActor
 final class CameraServiceTests: XCTestCase {
 
-    var sut: CameraService!
-    var cancellables: Set<AnyCancellable>!
+    nonisolated(unsafe) var sut: CameraService!
+    nonisolated(unsafe) var cancellables: Set<AnyCancellable>!
 
-    override func setUp() {
+    nonisolated override func setUp() {
         super.setUp()
         sut = CameraService()
         cancellables = []
     }
 
-    override func tearDown() {
+    nonisolated override func tearDown() {
         sut?.stopSession()
         cancellables = nil
         sut = nil

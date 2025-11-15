@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents the current state of the camera capture session
-public enum CameraSessionState: Equatable {
+public enum CameraSessionState: Equatable, Sendable {
     /// Session has not been started yet
     case notStarted
 

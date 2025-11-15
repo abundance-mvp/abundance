@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents the authorization status for camera access
-public enum CameraAuthorizationStatus: Equatable {
+public enum CameraAuthorizationStatus: Equatable, Sendable {
     /// User has granted camera access
     case authorized
 
