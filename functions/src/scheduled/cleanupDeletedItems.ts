@@ -15,8 +15,13 @@ export const cleanupDeletedItemsScheduled = functions.onSchedule(
   },
   async (event) => {
     console.log('[Cleanup] Starting cleanupDeletedItems job');
-    await cleanupDeletedItems();
-    console.log('[Cleanup] Completed cleanupDeletedItems job');
+    try {
+      await cleanupDeletedItems();
+      console.log('[Cleanup] Completed cleanupDeletedItems job');
+    } catch (error) {
+      console.error('[Cleanup] Job failed:', error);
+      throw error; // Re-throw to mark Cloud Scheduler execution as failed
+    }
   }
 );
 

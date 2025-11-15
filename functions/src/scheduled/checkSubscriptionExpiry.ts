@@ -13,8 +13,13 @@ export const checkSubscriptionExpiryScheduled = functions.onSchedule(
   },
   async (event) => {
     console.log('[Subscriptions] Starting checkSubscriptionExpiry job');
-    await checkSubscriptionExpiry();
-    console.log('[Subscriptions] Completed checkSubscriptionExpiry job');
+    try {
+      await checkSubscriptionExpiry();
+      console.log('[Subscriptions] Completed checkSubscriptionExpiry job');
+    } catch (error) {
+      console.error('[Subscriptions] Job failed:', error);
+      throw error; // Re-throw to mark Cloud Scheduler execution as failed
+    }
   }
 );
 
