@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Abundance",
-    platforms: [.iOS(.v18), .macOS(.v10_15)], // iOS 26 maps to iOS 18 in Package.swift
+    platforms: [.iOS(.v18), .macOS(.v14)], // iOS 18 and macOS 14 for @Observable support
     products: [
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
         .library(name: "Persistence", targets: ["Persistence"])
@@ -26,7 +26,10 @@ let package = Package(
         ),
         .testTarget(
             name: "OnboardingFeatureTests",
-            dependencies: ["OnboardingFeature"]
+            dependencies: [
+                "OnboardingFeature",
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
+            ]
         ),
 
         // Core
