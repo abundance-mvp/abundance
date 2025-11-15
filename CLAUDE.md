@@ -40,6 +40,18 @@
 
 ---
 
+## ⚠️ CRITICAL: docs/ Symlink
+
+**Local:** `docs/` → symlink to `~/code/spec-kit/docs/`
+**Remote:** `docs/` → actual files (not symlink)
+
+**❌ NEVER delete files from docs/ or commit docs/ deletions**
+**✅ To sync docs:** `./.claude/scripts/sync-docs.sh`
+
+Git shows docs/ as "D" (deleted) - this is **expected** (symlink vs actual files)
+
+---
+
 ## Workflow
 
 ### Before Starting
@@ -63,22 +75,15 @@ swiftlint              # Zero warnings required
 
 ---
 
-## CI/CD (Blocks Merge)
+## CI/CD
 
-- **ios-build-check** - Swift 6.0 + SwiftLint + XCTest (80%+ coverage)
-- **backend-validation** - TypeScript + ESLint + Jest
-- **security-pr-review** - OWASP scanning
-
-**Debug:** Comment `@claude` in PR for AI debugging
-
----
+**Required checks:** ios-build-check, backend-validation, security-pr-review
+**Debug:** Comment `@claude` in PR
 
 ## Common Tasks
 
 ```bash
-swift test                           # Run all tests
-/check-drift                         # Check ADR compliance
-swift build                          # Build project
+swift test && /check-drift           # Test + compliance
 firebase deploy --only firestore:rules
 ```
 
@@ -86,12 +91,9 @@ firebase deploy --only firestore:rules
 
 ## Documentation
 
-- **Setup:** `.claude/docs/REPOSITORY-SETUP-CHECKLIST-001.md`
-- **ADRs:** `docs/adr/ADR-*.md` (via symlink)
-- **Automation:** `.claude/docs/CLAUDE-CODE-AUTOMATION-001.md`
-- **CI/CD:** `.claude/docs/GITHUB-ACTIONS-ARCHITECTURE-001.md`
-- **Plans:** `docs/plans/` (via symlink)
+**Setup:** `.claude/docs/REPOSITORY-SETUP-CHECKLIST-001.md`
+**ADRs:** `docs/adr/` | **Plans:** `docs/plans/` | **Automation:** `.claude/docs/`
 
 ---
 
-**Last Updated:** 2025-11-15
+**Updated:** 2025-11-15
