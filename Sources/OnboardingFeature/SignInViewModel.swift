@@ -1,15 +1,13 @@
 import SwiftUI
-import Observation
 @preconcurrency import FirebaseAuth
 import AuthenticationServices
 import Persistence
 
-@Observable
 @MainActor
-public class SignInViewModel {
-    public var isAuthenticated: Bool = false
-    public var isLoading: Bool = false
-    public var error: Error?
+public class SignInViewModel: ObservableObject {
+    @Published public var isAuthenticated: Bool = false
+    @Published public var isLoading: Bool = false
+    @Published public var error: Error?
 
     private let keychain: KeychainManager
 
