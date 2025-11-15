@@ -37,10 +37,10 @@ public class SignInViewModel {
             }
 
             // Create Firebase credential from Apple credential
-            let firebaseCredential = OAuthProvider.credential(
-                withProviderID: "apple.com",
-                idToken: idToken,
-                rawNonce: ""
+            let firebaseCredential = OAuthProvider.appleCredential(
+                withIDToken: idToken,
+                rawNonce: nil,
+                fullName: credential.fullName
             )
 
             // Sign in to Firebase
