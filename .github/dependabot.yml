@@ -1,0 +1,41 @@
+version: 2
+updates:
+  # iOS Swift Package Manager
+  - package-ecosystem: "swift"
+    directory: "/ios"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ios"
+
+  # Backend Node.js
+  - package-ecosystem: "npm"
+    directory: "/backend/functions"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+
+  # AI Pipeline Node.js
+  - package-ecosystem: "npm"
+    directory: "/backend/ai-pipeline"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ai-pipeline"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"

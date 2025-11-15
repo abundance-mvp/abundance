@@ -1,0 +1,55 @@
+name: Claude Code Action - CI Debugging
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  debug-ci:
+    name: Debug CI Failures
+    runs-on: ubuntu-latest
+
+    # Only run when @claude is mentioned in PR comment
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@claude')
+
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.issue.pull_request.head.ref }}
+
+      - name: Get PR details
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            return pr.data;
+
+      - name: Invoke Claude Code Action
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            A developer mentioned @claude in this PR comment.
+
+            PR: ${{ steps.pr.outputs.title }}
+            Comment: ${{ github.event.comment.body }}
+
+            Please analyze recent CI failures and suggest fixes.
+            Review the workflow logs and provide specific guidance.
+
+          # CORRECTED: This is CI debugging via @claude mentions
+          # NOT automatic CI failure response (ref: RESEARCH-VALIDATION-stage-5.3.md)

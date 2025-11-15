@@ -1,0 +1,53 @@
+name: Changelog Update
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update:
+    name: Update CHANGELOG.md
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog entry
+        id: changelog
+        run: |
+          # Get commits since last release
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --oneline)
+          else
+            COMMITS=$(git log ${LAST_TAG}..HEAD --oneline)
+          fi
+
+          # Format changelog entry
+          echo "## [${{ github.event.release.tag_name }}] - $(date +%Y-%m-%d)" > /tmp/changelog.md
+          echo "" >> /tmp/changelog.md
+          echo "$COMMITS" | while read line; do
+            echo "- $line" >> /tmp/changelog.md
+          done
+          echo "" >> /tmp/changelog.md
+
+      - name: Update CHANGELOG.md
+        run: |
+          # Prepend new entry to CHANGELOG.md
+          if [ -f CHANGELOG.md ]; then
+            cat /tmp/changelog.md CHANGELOG.md > /tmp/new-changelog.md
+            mv /tmp/new-changelog.md CHANGELOG.md
+          else
+            mv /tmp/changelog.md CHANGELOG.md
+          fi
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG.md for ${{ github.event.release.tag_name }}"
+          git push

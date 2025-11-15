@@ -1,0 +1,59 @@
+name: Sprint Task
+description: Create a task for a sprint
+title: "[Sprint X]: "
+labels: ["sprint-task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Create a task for sprint execution.
+
+  - type: input
+    id: sprint
+    attributes:
+      label: Sprint Number
+      description: Which sprint is this for?
+      placeholder: "2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: What needs to be done?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How do we know this is done?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Documentation References
+      description: Links to ADRs, DESIGN docs, CODE-EXAMPLEs
+      placeholder: |
+        - ADR-XXX: [link]
+        - DESIGN-XXX: [link]
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - iOS
+        - Backend
+        - AI Pipeline
+        - Documentation
+        - Testing
+    validations:
+      required: true

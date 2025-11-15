@@ -1,0 +1,49 @@
+name: iOS Build Check
+
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build-check.yml'
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build iOS App
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.0'
+
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Build iOS project
+        working-directory: ios
+        run: swift build -c debug
+
+      - name: Run SwiftLint
+        working-directory: ios
+        run: |
+          if ! command -v swiftlint &> /dev/null; then
+            brew install swiftlint
+          fi
+          swiftlint lint --strict
+
+      - name: Run unit tests
+        working-directory: ios
+        run: swift test --parallel

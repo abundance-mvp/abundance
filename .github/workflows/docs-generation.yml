@@ -1,0 +1,42 @@
+name: Documentation Generation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**/*.swift'
+      - 'backend/**/*.ts'
+
+jobs:
+  generate:
+    name: Generate API Docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate Swift docs
+        run: |
+          # Install sourcedocs (Swift documentation generator)
+          brew install sourcedocs
+          cd ios
+          sourcedocs generate --spm-module AbundanceApp --output-folder ../docs/api/ios
+
+      - name: Generate TypeScript docs
+        run: |
+          cd backend/functions
+          npm install -g typedoc
+          typedoc --out ../../docs/api/backend src/index.ts
+
+      - name: Commit generated docs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/api
+          if git diff --staged --quiet; then
+            echo "No documentation changes"
+          else
+            git commit -m "docs: auto-generate API documentation"
+            git push
+          fi

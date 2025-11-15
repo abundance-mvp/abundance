@@ -1,0 +1,47 @@
+name: Security-Focused PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  security-review:
+    name: Security Review
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+
+      - name: Run Claude Code security review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Review this PR for OWASP Top 10 security issues:
+
+            Changed files: ${{ steps.changed-files.outputs.all_changed_files }}
+
+            Check for:
+            - SQL injection vulnerabilities
+            - XSS vulnerabilities
+            - Authentication/authorization issues
+            - Sensitive data exposure
+            - Security misconfigurations
+            - Insecure deserialization
+            - Using components with known vulnerabilities
+
+            Provide specific line-by-line feedback with severity ratings.
+
+            Reference: RESEARCH-VALIDATION-stage-5.3.md (launched August 2025)
