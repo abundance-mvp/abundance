@@ -14,6 +14,10 @@ Generated/
 # Firebase
 GoogleService-Info.plist
 GoogleService-Info-*.plist
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*-debug.log
 
 # Dependencies
 Pods/
