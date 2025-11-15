@@ -1,0 +1,81 @@
+import Foundation
+import Combine
+@testable import CameraFeature
+
+/// Mock implementation of CameraServiceProtocol for testing
+final class MockCameraService: CameraServiceProtocol {
+
+    // MARK: - Published State
+
+    private let sessionStateSubject = CurrentValueSubject<CameraSessionState, Never>(.notStarted)
+    var sessionState: AnyPublisher<CameraSessionState, Never> {
+        sessionStateSubject.eraseToAnyPublisher()
+    }
+
+    // MARK: - Stubbed Values
+
+    var stubbedPhotoData: Data?
+    var stubbedAuthStatus: CameraAuthorizationStatus = .notDetermined
+    var shouldFailStartSession: Bool = false
+    var shouldFailCapturePhoto: Bool = false
+
+    // MARK: - Tracking Calls
+
+    var didCallStartSession: Bool = false
+    var didCallStopSession: Bool = false
+    var didCallCapturePhoto: Bool = false
+    var didCallCheckAuthorization: Bool = false
+
+    // MARK: - Protocol Methods
+
+    func startSession() async throws {
+        didCallStartSession = true
+
+        if shouldFailStartSession {
+            sessionStateSubject.send(.failed(CameraError.deviceNotAvailable))
+            throw CameraError.deviceNotAvailable
+        }
+
+        sessionStateSubject.send(.configuring)
+        try await Task.sleep(for: .milliseconds(10))
+        sessionStateSubject.send(.running)
+    }
+
+    func stopSession() {
+        didCallStopSession = true
+        sessionStateSubject.send(.stopped)
+    }
+
+    func capturePhoto() async throws -> Data {
+        didCallCapturePhoto = true
+
+        if shouldFailCapturePhoto {
+            throw CameraError.captureFailure
+        }
+
+        guard let photoData = stubbedPhotoData else {
+            throw CameraError.invalidImageData
+        }
+
+        return photoData
+    }
+
+    func checkAuthorization() async -> CameraAuthorizationStatus {
+        didCallCheckAuthorization = true
+        return stubbedAuthStatus
+    }
+
+    // MARK: - Helper Methods
+
+    func reset() {
+        sessionStateSubject.send(.notStarted)
+        stubbedPhotoData = nil
+        stubbedAuthStatus = .notDetermined
+        shouldFailStartSession = false
+        shouldFailCapturePhoto = false
+        didCallStartSession = false
+        didCallStopSession = false
+        didCallCapturePhoto = false
+        didCallCheckAuthorization = false
+    }
+}
