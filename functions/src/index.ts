@@ -4,6 +4,11 @@ import { createItem } from './items/createItem';
 import { getItem } from './items/getItem';
 import { listItems } from './items/listItems';
 
+// Import triggers
+import { onItemCreated } from './triggers/onItemCreated';
+import { onLayer2aComplete } from './triggers/onLayer2aComplete';
+import { onLayer2bComplete } from './triggers/onLayer2bComplete';
+
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 
@@ -164,3 +169,6 @@ export const listItemsHTTP = functions.https.onRequest(async (req, res) => {
       .json({ error: { code: "internal", message: "Internal server error" } });
   }
 });
+
+// Export Firestore triggers
+export { onItemCreated, onLayer2aComplete, onLayer2bComplete };
