@@ -15,56 +15,72 @@
 
 ## Overview
 
-This document specifies the Camera Capture View for the Abundance iOS app, which enables users to scan household items using the device camera with real-time object detection and barcode scanning. The view integrates AVFoundation for camera preview, Vision Framework for on-device object detection (Layer 1 from Stage 2.4), and displays visual feedback using the Liquid Glass design language.
+This document specifies the Camera Detection View for the Abundance iOS app, which enables **continuous real-time object detection** at 2 FPS with organic glowing borders, automatic/manual cataloging, and visual fingerprinting deduplication. The view integrates AVFoundation for camera preview, Vision Framework for YOLOv11n detection + subject mask generation, and displays organic borders using VNInstanceMaskObservation with the Liquid Glass design language.
 
-**User Journey**: Catalog View → Tap Camera Tab → Camera Opens → Detect Objects → Tap Capture → Cropped Objects Uploaded → AI Processing → Return to Catalog
+**User Journey (NEW ARCHITECTURE)**: Catalog View → Tap Camera Tab → Camera Opens → **Continuous 2 FPS Detection** → Organic Borders Appear → **Automatic Catalog (Mint Green)** OR **Double-Tap Manual Catalog (Grey)** → Sparkle Animation → Cropped Objects Uploaded → AI Processing → Continue Scanning
+
+**Architecture Change**:
+- **OLD**: Button-triggered single photo capture → detect → upload
+- **NEW**: Continuous 2 FPS streaming → parallel detect → quality filter → auto/manual catalog → upload
 
 **Success Criteria**:
 - Camera preview loads in < 500ms
-- Real-time object detection displays bounding boxes at 30 FPS
-- Barcode detection triggers Mint Green glow indicator within 200ms
-- Capture button provides immediate haptic + visual feedback
-- User returns to Catalog view with loading states for AI processing
+- Real-time object detection at 2 FPS (every 0.5 seconds)
+- Organic borders rendered using VNInstanceMaskObservation contour extraction
+- Mint green glow for high-confidence + high-quality objects (automatic catalog)
+- Grey glow for medium-confidence OR low-quality objects (manual catalog via double-tap)
+- Sparkle animation triggers on automatic catalog
+- Deduplication prevents re-cataloging same object (5-minute cache, 0.90 similarity)
+- No capture button (fully automatic/gesture-driven UI)
 
 ---
 
-## Layout
+## Layout (NEW: Real-Time Detection Architecture)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  [Cancel - .secondary]                                          │
+│  [Cancel - .secondary]                      [Mode: Auto/Manual]  │
 │                                                                   │
 │                                                                   │
 │                    CAMERA PREVIEW (Fullscreen)                   │
 │                       AVCaptureVideoPreviewLayer                 │
+│                     Continuous 2 FPS Processing                   │
 │                                                                   │
 │   ┌─────────────────────────────────────────────────────┐       │
 │   │                                                       │       │
-│   │         [Glass Overlay Frame - ConcentricRectangle]  │       │
-│   │         .thin material, 2pt stroke, .primary vibrancy│       │
+│   │  [Organic Border Overlay - Mint Green OR Grey]       │       │
+│   │  VNInstanceMaskObservation contour path              │       │
+│   │  3pt stroke, glowing shadow (pulsing animation)      │       │
 │   │                                                       │       │
+│   │     ┌───────┐  "backpack"                            │       │
+│   │     │  92%  │  confidence badge                      │       │
+│   │     └───────┘  .ultraThickMaterial pill              │       │
 │   │                                                       │       │
-│   │         [Object Bounding Box - Bright Blue]          │       │
-│   │         2pt stroke, soft glow, label overlay         │       │
-│   │                                                       │       │
-│   │         [Barcode Indicator - Mint Green Glow]        │       │
-│   │         Pulsing animation when barcode detected      │       │
+│   │  [Sparkle Animation] - On automatic catalog          │       │
+│   │  Particle emitter, Mint Green particles, 0.5s        │       │
 │   │                                                       │       │
 │   └─────────────────────────────────────────────────────┘       │
 │                                                                   │
 │                                                                   │
+│  *** NO CAPTURE BUTTON - Fully Automatic/Gesture-Driven ***      │
 │                                                                   │
-│                                                                   │
-│                      [Capture Button]                            │
-│                   Capsule, 80x80pt, .thick material              │
-│                   Camera icon, Bright Blue glow                  │
-│                                                                   │
-│                                                                   │
-│   "Align item within frame • Tap to capture"                    │
+│   "Double-tap grey objects to catalog manually"                  │
 │   15pt, SF Pro Rounded Regular, .secondary vibrancy             │
+│   .ultraThickMaterial pill, centered                            │
 │                                                                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+**Key Changes from OLD Layout**:
+- ❌ **Removed**: Capture button (replaced with automatic cataloging)
+- ❌ **Removed**: Glass overlay frame (no longer needed for framing)
+- ❌ **Removed**: Rectangular bounding boxes (replaced with organic borders)
+- ❌ **Removed**: Barcode indicator (barcode detection moved to Layer 2)
+- ✅ **Added**: Organic border overlays using VNInstanceMaskObservation
+- ✅ **Added**: Mint green (auto) vs grey (manual) color-coded borders
+- ✅ **Added**: Sparkle animation for automatic catalog events
+- ✅ **Added**: Double-tap gesture for manual cataloging
+- ✅ **Added**: Mode indicator (Auto/Manual) in top-right
 
 ---
 
@@ -101,203 +117,218 @@ captureSession.addOutput(output)
 
 ---
 
-### Glass Overlay Frame
+### Organic Border Overlay (NEW)
 
-**Purpose**: Visual guide to help users frame objects within the detection area
+**Purpose**: Display real-time object detection with organic, subject-aware borders extracted from VNInstanceMaskObservation
 
 **Specifications**:
-- **Shape**: ConcentricRectangle(cornerRadius: 24, inset: 0) [iOS 26+]
-- **Fallback**: RoundedRectangle(cornerRadius: 24) [iOS 25]
-- **Material**: .thin (translucent, subtle blur)
-- **Stroke**: 2pt, .primary vibrancy
-- **Position**: Centered, 80% of screen width, 60% of screen height
-- **Padding**: 40pt from edges (safe for all device sizes)
-- **Animation**: Gentle fade-in on camera open (.brandGentle spring, 0.3s delay)
+- **Shape**: Custom path extracted from VNInstanceMaskObservation contour (organic, follows object shape)
+- **Stroke**: 3pt, Mint Green (#B3FFE1) for automatic mode, Grey (#808080) for manual mode
+- **Glow**: Pulsing shadow matching border color
+  - **Mint Green**: radius 16, opacity 0.8 (high confidence + quality)
+  - **Grey**: radius 12, opacity 0.6 (medium confidence OR low quality)
+- **Label**: Object class name (e.g., "backpack", "tent", "drill")
+  - **Position**: Top-center of mask bounding box, 4pt padding
+  - **Background**: .ultraThickMaterial (pill shape, Capsule)
+  - **Text**: 12pt SF Pro Rounded Semibold, .primary vibrancy
+  - **Confidence Badge**: 14pt SF Pro Rounded Bold, same pill
 
-**Visual Effect**:
-- Soft shadow: `radius: 8, color: .black.opacity(0.2), x: 0, y: 4`
-- Inner glow when object detected: Bright Blue shadow, radius 12, opacity 0.3
+**Border Color Logic**:
+- **Mint Green (Automatic)**: confidence > 0.70 AND quality > 0.65 → triggers automatic catalog
+- **Grey (Manual)**: confidence 0.40-0.69 OR quality < 0.65 → requires double-tap to catalog
+- **No Border (Ignore)**: confidence < 0.40 → not shown
+
+**Coordinate Transformation**:
+- Vision Framework uses normalized coordinates (0-1, bottom-left origin)
+- VNInstanceMaskObservation provides pixel mask → extract contour using marching squares algorithm
+- Transform contour points to SwiftUI coordinates (pixels, top-left origin)
+
+**Animation**:
+- Borders appear with brandSnappy spring (0.3s response, 0.6 damping)
+- Glow pulses continuously (brandGentle spring, 1.0s cycle, repeat forever)
+- On automatic catalog: Sparkle animation triggers (0.5s, then border fades out)
 
 **SwiftUI Implementation**:
 ```swift
-struct GlassOverlayFrame: View {
-    @Binding var hasDetectedObject: Bool
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+struct OrganicBorderOverlay: View {
+    let object: DetectedObject
+    @State private var isAnimating = false
+
+    var borderColor: Color {
+        object.catalogMode == .automatic ? .brandMintGreen : Color.grey
+    }
 
     var body: some View {
-        if #available(iOS 26, *) {
-            ConcentricRectangle(cornerRadius: 24, inset: 0)
-                .strokeBorder(style: StrokeStyle(lineWidth: 2))
-                .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(40)
-                .background {
-                    if !reduceTransparency {
-                        if #available(iOS 26, *) {
-                            ConcentricRectangle(cornerRadius: 24, inset: 0)
-                                .fill(.thinMaterial)
-                        } else {
-                            RoundedRectangle(cornerRadius: 24)
-                                .fill(.thinMaterial)
-                        }
-                    }
+        // Extract organic shape from VNInstanceMaskObservation
+        OrganicBorderShape(mask: object.mask)
+            .stroke(borderColor, lineWidth: 3)
+            .shadow(
+                color: borderColor.opacity(object.catalogMode == .automatic ? 0.8 : 0.6),
+                radius: object.catalogMode == .automatic ? 16 : 12,
+                x: 0,
+                y: 0
+            )
+            .scaleEffect(isAnimating ? 1.05 : 1.0)
+            .animation(
+                .brandGentle.repeatForever(autoreverses: true),
+                value: isAnimating
+            )
+            .overlay(alignment: .top) {
+                HStack(spacing: 4) {
+                    Text("\(Int(object.confidence * 100))%")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
+
+                    Text(object.label)
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
                 }
-                .shadow(
-                    color: hasDetectedObject ? Color.brandBrightBlue.opacity(0.3) : .black.opacity(0.2),
-                    radius: hasDetectedObject ? 12 : 8,
-                    x: 0,
-                    y: 4
-                )
-                .animation(.brandGentle, value: hasDetectedObject)
-        } else {
-            RoundedRectangle(cornerRadius: 24)
-                .strokeBorder(style: StrokeStyle(lineWidth: 2))
-                .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(40)
-                .background {
-                    if !reduceTransparency {
-                        RoundedRectangle(cornerRadius: 24)
-                            .fill(.thinMaterial)
-                    }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.ultraThickMaterial, in: Capsule())
+                .offset(y: -8)
+            }
+            .onAppear { isAnimating = true }
+            .onDisappear { isAnimating = false }
+    }
+}
+
+/// Custom shape extracted from VNInstanceMaskObservation using marching squares
+struct OrganicBorderShape: Shape {
+    let mask: VNInstanceMaskObservation
+
+    func path(in rect: CGRect) -> Path {
+        // Extract contour from mask pixels using marching squares algorithm
+        let pixels = extractMaskPixels(from: mask)
+        let contourPoints = traceContour(pixels)
+
+        // Convert to SwiftUI path
+        var path = Path()
+        guard let firstPoint = contourPoints.first else {
+            // Fallback to rectangle if mask extraction fails
+            return Path(rect)
+        }
+
+        path.move(to: firstPoint)
+        for point in contourPoints.dropFirst() {
+            path.addLine(to: point)
+        }
+        path.closeSubpath()
+
+        return path
+    }
+
+    private func extractMaskPixels(from mask: VNInstanceMaskObservation) -> [[Bool]] {
+        // Implementation details (see SubjectMaskGenerator service)
+        // Returns 2D boolean array of mask pixels
+        []
+    }
+
+    private func traceContour(_ pixels: [[Bool]]) -> [CGPoint] {
+        // Marching squares algorithm implementation
+        // Returns array of contour edge points
+        []
+    }
+}
+```
+
+**Performance**:
+- Mask generation: 50-80ms per object (VNGenerateForegroundInstanceMaskRequest)
+- Contour extraction: 5-10ms (marching squares)
+- Parallel processing: 5 objects = ~120ms total (not sequential)
+- Target: Fits within 500ms frame budget (2 FPS)
+
+**Accessibility**:
+- VoiceOver: "Backpack detected with 92% confidence. Automatic catalog mode."
+- Reduce Motion: Disable pulsing glow animation
+- High Contrast: Increase stroke width to 4pt, boost glow opacity to 1.0
+
+---
+
+### Sparkle Animation (NEW)
+
+**Purpose**: Visual feedback when object is automatically cataloged (mint green border triggers catalog)
+
+**Specifications**:
+- **Shape**: 10-15 small circles (sparkles) emitted from border center
+- **Color**: Mint Green (#B3FFE1) with gradient to white
+- **Size**: 4-8pt diameter, random sizes
+- **Motion**: Radial expansion from center, velocity 50-100pt/s
+- **Opacity**: Fade from 1.0 → 0.0 over 0.5s
+- **Duration**: 0.5s total (sparkles disappear as border fades out)
+
+**Trigger**: Automatic catalog event (confidence > 0.70 AND quality > 0.65)
+
+**SwiftUI Implementation**:
+```swift
+struct SparkleAnimation: View {
+    let center: CGPoint
+    @State private var sparkles: [Sparkle] = []
+
+    struct Sparkle: Identifiable {
+        let id = UUID()
+        let offset: CGSize
+        let size: CGFloat
+        let opacity: Double
+    }
+
+    var body: some View {
+        ZStack {
+            ForEach(sparkles) { sparkle in
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.brandMintGreen, .white],
+                            startPoint: .center,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: sparkle.size, height: sparkle.size)
+                    .offset(sparkle.offset)
+                    .opacity(sparkle.opacity)
+            }
+        }
+        .onAppear {
+            generateSparkles()
+            withAnimation(.easeOut(duration: 0.5)) {
+                sparkles = sparkles.map { sparkle in
+                    Sparkle(
+                        offset: CGSize(
+                            width: sparkle.offset.width * 3,
+                            height: sparkle.offset.height * 3
+                        ),
+                        size: sparkle.size,
+                        opacity: 0
+                    )
                 }
-                .shadow(
-                    color: hasDetectedObject ? Color.brandBrightBlue.opacity(0.3) : .black.opacity(0.2),
-                    radius: hasDetectedObject ? 12 : 8,
-                    x: 0,
-                    y: 4
-                )
-                .animation(.brandGentle, value: hasDetectedObject)
+            }
+        }
+    }
+
+    private func generateSparkles() {
+        sparkles = (0..<12).map { _ in
+            let angle = Double.random(in: 0...(2 * .pi))
+            let distance = CGFloat.random(in: 10...30)
+            return Sparkle(
+                offset: CGSize(
+                    width: cos(angle) * distance,
+                    height: sin(angle) * distance
+                ),
+                size: CGFloat.random(in: 4...8),
+                opacity: 1.0
+            )
         }
     }
 }
 ```
 
-**Accessibility**:
-- Hidden from VoiceOver (decorative element)
-- Reduce Transparency: Remove material, use opaque `backgroundDefault` color
+**Haptic Feedback**: `.success` haptic when sparkle animation triggers
 
 ---
 
-### Object Bounding Boxes
+### Double-Tap Gesture Handler (NEW)
 
-**Purpose**: Display real-time object detection results from Vision Framework (VNCoreMLRequest with YOLOv3-Tiny)
-
-**Specifications**:
-- **Shape**: Rectangle (Vision Framework bounding box coordinates)
-- **Stroke**: 2pt, Bright Blue (#4381DF)
-- **Glow**: Soft shadow, radius 8, Bright Blue at 40% opacity
-- **Label**: Object class name (e.g., "backpack", "tent", "drill")
-  - **Position**: Top-left of bounding box, 4pt padding
-  - **Background**: .ultraThickMaterial (pill shape, Capsule)
-  - **Text**: 12pt SF Pro Rounded Semibold, .primary vibrancy
-  - **Min Confidence**: Only show labels for objects with >60% confidence
-
-**Coordinate Transformation**:
-- Vision Framework uses normalized coordinates (0-1, bottom-left origin)
-- Transform to UIKit coordinates (pixels, top-left origin) using CoordinateTransformer (DESIGN-013)
-
-**Animation**:
-- Bounding boxes appear with brandSnappy spring (0.3s response, 0.6 damping)
-- Glow pulses gently when object confidence > 80% (brandGentle spring, repeat forever)
-
-**SwiftUI Implementation**:
-```swift
-struct ObjectBoundingBox: View {
-    let object: DetectedObject
-    let imageSize: CGSize
-
-    var body: some View {
-        let pixelRect = CoordinateTransformer.visionToUIKit(
-            object.boundingBox,
-            imageSize: imageSize
-        )
-
-        Rectangle()
-            .strokeBorder(Color.brandBrightBlue, lineWidth: 2)
-            .frame(width: pixelRect.width, height: pixelRect.height)
-            .position(x: pixelRect.midX, y: pixelRect.midY)
-            .shadow(color: Color.brandBrightBlue.opacity(0.4), radius: 8, x: 0, y: 0)
-            .overlay(alignment: .topLeading) {
-                if object.confidence >= 0.6 {
-                    Text(object.label)
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.ultraThickMaterial, in: Capsule())
-                        .offset(x: pixelRect.minX + 4, y: pixelRect.minY + 4)
-                }
-            }
-            .animation(.brandSnappy, value: object.boundingBox)
-    }
-}
-```
-
-**Performance**: Limit to 5 bounding boxes max (display top 5 by confidence to avoid UI clutter)
-
----
-
-### Barcode Detection Indicator
-
-**Purpose**: Provide visual feedback when barcode is detected (VNDetectBarcodesRequest from Vision Framework)
-
-**Specifications**:
-- **Shape**: Circle, 60pt diameter
-- **Position**: Top-right corner of overlay frame, 12pt from edge
-- **Icon**: SF Symbol "barcode.viewfinder", 24pt
-- **Color**: Mint Green (#B3FFE1) when detected, .secondary when not detected
-- **Glow**: Mint Green shadow, radius 16, opacity 0.6 (pulsing animation)
-- **Animation**: Pulsing scale effect (1.0 → 1.1 → 1.0) with brandBouncy spring
-
-**Trigger**: VNDetectBarcodesRequest returns successful result with recognized barcode value
-
-**SwiftUI Implementation**:
-```swift
-struct BarcodeIndicator: View {
-    @Binding var barcodeDetected: Bool
-    @State private var isPulsing = false
-
-    var body: some View {
-        Circle()
-            .fill(.ultraThickMaterial)
-            .frame(width: 60, height: 60)
-            .overlay {
-                Image(systemName: "barcode.viewfinder")
-                    .font(.system(size: 24))
-                    .foregroundStyle(barcodeDetected ? Color.brandMintGreen : .secondary)
-            }
-            .shadow(
-                color: barcodeDetected ? Color.brandMintGreen.opacity(0.6) : .clear,
-                radius: barcodeDetected ? 16 : 0,
-                x: 0,
-                y: 0
-            )
-            .scaleEffect(isPulsing && barcodeDetected ? 1.1 : 1.0)
-            .animation(.brandBouncy.repeatForever(autoreverses: true), value: isPulsing)
-            .onChange(of: barcodeDetected) { _, newValue in
-                isPulsing = newValue
-            }
-            .accessibilityLabel(barcodeDetected ? "Barcode detected" : "No barcode detected")
-    }
-}
-```
-
-**Haptic Feedback**: `.success` haptic when barcode first detected
-
----
-
-### Capture Button
-
-**Purpose**: Primary action button to capture photo and trigger object cropping + AI analysis
-
-**Specifications**:
-- **Shape**: Circle, 80x80pt (large tap target)
-- **Material**: .thickMaterial
-- **Icon**: SF Symbol "camera.fill", 36pt, .primary vibrancy
-- **Border**: 3pt stroke, Bright Blue (#4381DF)
-- **Glow**: Bright Blue shadow, radius 12, opacity 0.5
-- **Position**: Bottom center, 32pt above safe area
+**Purpose**: Enable manual cataloging for grey-bordered objects (medium confidence OR low quality)
 - **States**:
   - **Default**: Bright Blue glow, solid border
   - **Pressed**: Scale to 0.9, glow radius 16, border 4pt
@@ -789,9 +820,11 @@ struct CameraView: View {
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-10 | 1.0 | Initial camera capture view specification | iOS UI/UX Designer |
+| 2025-11-15 | 2.0 | **MAJOR REFACTOR**: Replace capture button UI with real-time organic border overlays using VNInstanceMaskObservation. Add mint green (auto) vs grey (manual) color-coded borders, sparkle animation for automatic catalog, double-tap gesture for manual catalog, and remove glass overlay frame. Deprecate old rectangular bounding box approach. Document full real-time 2 FPS detection pipeline UI/UX. | Stage 6.1 Documentation Refactor |
 
 ---
 
-**Status**: ✅ **APPROVED**
+**Status**: ✅ **APPROVED** (Real-Time Detection Architecture)
 
-**Implementation Ready**: Camera view specified with AVFoundation integration, Vision Framework real-time detection, SwiftUI Liquid Glass UI, and complete accessibility support.
+**Implementation Ready**: Camera view specified with AVFoundation continuous streaming, VNInstanceMaskObservation organic borders, automatic/manual cataloging UI, SwiftUI Liquid Glass integration, sparkle animations, and gesture-driven interaction patterns.
+**Related**: 2025-11-15-realtime-object-detection-refactor.md (Implementation Plan)

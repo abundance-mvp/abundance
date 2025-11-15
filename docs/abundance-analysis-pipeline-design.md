@@ -1,7 +1,7 @@
 # Abundance App Analysis Pipeline: Complete Design Specification
 
 **Created**: 2025-10-22
-**Last Updated**: 2025-11-11 (Phases 4-6 refactored)
+**Last Updated**: 2025-11-15 (Layer 1 Real-Time Detection Architecture Refactor)
 **Status**: Active - Phases 1-3 as designed, Phases 4-6 refactored (see below)
 **Purpose**: Transform Abundance vision document into implementation-ready spec-kit through multi-stage expert analysis
 
@@ -1008,15 +1008,22 @@ This stage makes ALL foundational technology decisions:
 
 **Tasks**:
 
-1. **Design Layer 1: On-Device Object Detection (iOS)**:
+1. **Design Layer 1: Real-Time On-Device Object Detection (iOS) - REFACTORED 2025-11-15**:
 
-   - AVFoundation camera integration
-   - Photo capture and temporary storage
-   - **Core ML VNCoreMLRequest with YOLOv3-Tiny** (80 COCO object classes)
-   - Bounding box detection for multiple objects
-   - Cropping objects from original photo
+   - AVFoundation 2 FPS continuous frame streaming (CVPixelBuffer)
+   - **Core ML VNCoreMLRequest with YOLOv11n** (80 COCO object classes, 10x faster)
+   - **VNGenerateForegroundInstanceMaskRequest** (organic subject masks)
+   - **VNImageFingerprint** (visual deduplication, 5-min cache, 0.90 similarity)
+   - **VNCalculateImageAestheticsScoresRequest** (quality assessment)
+   - Parallel multi-object detection (5 objects simultaneously in ~120ms)
+   - Three-tier confidence system: automatic (conf>0.70 && qual>0.65), manual (conf 0.40-0.69), ignore (<0.40)
+   - Organic glowing borders (mint green for auto, grey for manual)
+   - Automatic cataloging on high-confidence + high-quality detections
+   - Double-tap gesture for manual cataloging
    - Apple Neural Engine optimization
-   - Privacy firewall (full photo never leaves device)
+   - Privacy firewall: full frames NEVER leave device, only cropped objects after quality filter
+
+   **Architecture Change**: Button-triggered single-photo → continuous 2 FPS real-time detection
 
 2. **Design Layer 2a: Attribute Extraction (Gemini 2.5 Flash-Lite)**:
 

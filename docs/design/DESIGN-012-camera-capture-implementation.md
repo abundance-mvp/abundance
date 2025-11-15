@@ -13,14 +13,19 @@
 
 ## Overview
 
-This document specifies the iOS camera capture implementation for Layer 1 of the computer vision pipeline. The camera service handles photo capture, temporary storage, and provides the raw image to Vision Framework for object detection.
+This document specifies the iOS camera capture implementation for Layer 1 of the computer vision pipeline. The camera service handles **real-time continuous frame processing** at 2 FPS, providing CVPixelBuffers directly to Vision Framework for parallel object detection with organic border rendering.
 
 **Key Requirements**:
-- Use AVFoundation for camera access and photo capture
-- Support high-quality still image capture (not video)
-- Manage temporary storage for photos before processing
+- Use AVFoundation for camera access and continuous frame capture
+- Support real-time streaming at 2 FPS (throttled frame processing every 0.5 seconds)
+- Process CVPixelBuffers directly (no UIImage conversion for detection)
 - Handle camera permissions and errors
-- Integrate with MVVM architecture (CameraViewModel → CameraService)
+- Integrate with MVVM architecture (CameraDetectionViewModel → CameraService)
+- Support parallel multi-object detection and rendering
+
+**Architecture Change (Sprint 3 Real-Time Refactor)**:
+- **OLD**: Button-triggered single photo capture → detect objects → upload
+- **NEW**: Continuous 2 FPS stream → parallel detect → quality assessment → automatic/manual cataloging → upload
 
 ---
 
@@ -62,8 +67,12 @@ protocol CameraServiceProtocol {
     /// Stop camera session
     func stopSession()
 
-    /// Capture photo
+    /// Capture single photo (DEPRECATED: Use real-time frame processing instead)
+    @available(*, deprecated, message: "Use processFrame() pipeline with CameraDetectionViewModel for real-time detection")
     func capturePhoto() async throws -> UIImage
+
+    /// Get video data output for real-time frame processing
+    var videoDataOutput: AVCaptureVideoDataOutput { get }
 
     /// Check camera authorization status
     func checkAuthorization() async -> CameraAuthorizationStatus
@@ -116,6 +125,11 @@ final class CameraService: NSObject, CameraServiceProtocol {
         sessionStateSubject.eraseToAnyPublisher()
     }
 
+    // Real-time frame processing
+    private let _videoDataOutput = AVCaptureVideoDataOutput()
+    var videoDataOutput: AVCaptureVideoDataOutput { _videoDataOutput }
+
+    // DEPRECATED: Single photo capture
     private var photoContinuation: CheckedContinuation<UIImage, Error>?
 
     // MARK: - Initialization
@@ -168,7 +182,7 @@ final class CameraService: NSObject, CameraServiceProtocol {
         }
         captureSession.addInput(videoInput)
 
-        // Add photo output
+        // Add photo output (DEPRECATED, kept for backward compatibility)
         guard captureSession.canAddOutput(photoOutput) else {
             throw CameraError.cannotAddOutput
         }
@@ -177,10 +191,22 @@ final class CameraService: NSObject, CameraServiceProtocol {
         // Configure photo output settings
         photoOutput.isHighResolutionCaptureEnabled = true
         photoOutput.maxPhotoQualityPrioritization = .quality
+
+        // Add video data output for real-time frame processing
+        videoDataOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+        videoDataOutput.alwaysDiscardsLateVideoFrames = true
+
+        guard captureSession.canAddOutput(videoDataOutput) else {
+            throw CameraError.cannotAddOutput
+        }
+        captureSession.addOutput(videoDataOutput)
     }
 
-    // MARK: - Photo Capture
+    // MARK: - Photo Capture (DEPRECATED)
 
+    @available(*, deprecated, message: "Use real-time frame processing with videoDataOutput instead")
     func capturePhoto() async throws -> UIImage {
         return try await withCheckedThrowingContinuation { continuation in
             self.photoContinuation = continuation
@@ -325,7 +351,257 @@ final class CameraViewModel: ObservableObject {
 
 ---
 
-## CameraView Implementation
+## Real-Time Frame Processing (NEW ARCHITECTURE)
+
+### CameraDetectionViewModel
+
+The new real-time detection architecture uses `CameraDetectionViewModel` instead of the deprecated button-based `CameraViewModel`.
+
+**Key Features**:
+- Continuous frame processing at 2 FPS (throttled to every 0.5 seconds)
+- Direct CVPixelBuffer processing (no UIImage conversion)
+- Parallel multi-object detection
+- Quality assessment and automatic/manual cataloging
+- Visual fingerprinting deduplication
+
+### Frame Processing Pipeline
+
+```swift
+import SwiftUI
+import AVFoundation
+import Combine
+
+/// ViewModel for real-time camera detection
+@MainActor
+final class CameraDetectionViewModel: NSObject, ObservableObject {
+
+    // MARK: - Published Properties
+
+    @Published var detectedObjects: [DetectedObject] = []
+    @Published var sessionState: CameraSessionState = .notStarted
+    @Published var isProcessing: Bool = false
+    @Published var errorMessage: String?
+
+    // MARK: - Dependencies
+
+    private let cameraService: CameraServiceProtocol
+    private let yoloDetector: HouseholdItemDetectorProtocol
+    private let qualityAssessor: ImageQualityAssessor
+    private let deduplicator: ObjectDeduplicator
+    private let maskGenerator: SubjectMaskGenerator
+    private let catalogService: CatalogServiceProtocol
+
+    // MARK: - Frame Throttling
+
+    private var lastProcessedTime: Date = .distantPast
+    private let frameInterval: TimeInterval = 0.5 // 2 FPS
+    private let videoQueue = DispatchQueue(label: "com.abundance.camera.video")
+
+    // MARK: - Initialization
+
+    init(
+        cameraService: CameraServiceProtocol,
+        yoloDetector: HouseholdItemDetectorProtocol,
+        qualityAssessor: ImageQualityAssessor = ImageQualityAssessor(),
+        deduplicator: ObjectDeduplicator = ObjectDeduplicator(),
+        maskGenerator: SubjectMaskGenerator = SubjectMaskGenerator(),
+        catalogService: CatalogServiceProtocol
+    ) {
+        self.cameraService = cameraService
+        self.yoloDetector = yoloDetector
+        self.qualityAssessor = qualityAssessor
+        self.deduplicator = deduplicator
+        self.maskGenerator = maskGenerator
+        self.catalogService = catalogService
+
+        super.init()
+
+        // Set video data output delegate
+        cameraService.videoDataOutput.setSampleBufferDelegate(
+            self,
+            queue: videoQueue
+        )
+    }
+
+    // MARK: - Frame Processing
+
+    /// Process incoming frame from camera (called at 30 FPS, throttled to 2 FPS internally)
+    func processFrame(_ pixelBuffer: CVPixelBuffer) async {
+        // Throttle to 2 FPS
+        let now = Date()
+        guard now.timeIntervalSince(lastProcessedTime) >= frameInterval else {
+            return
+        }
+        lastProcessedTime = now
+
+        await MainActor.run { isProcessing = true }
+        defer { Task { @MainActor in isProcessing = false } }
+
+        do {
+            // 1. YOLO detection (23ms)
+            let yoloResults = try await yoloDetector.detectInStream(pixelBuffer: pixelBuffer)
+
+            // 2. Process all detected objects in parallel (5 objects = 120ms total, not sequential)
+            let detectedObjects = await withTaskGroup(of: DetectedObject?.self) { group in
+                for result in yoloResults {
+                    group.addTask {
+                        await self.processObject(result, in: pixelBuffer)
+                    }
+                }
+
+                var objects: [DetectedObject] = []
+                for await object in group {
+                    if let object = object {
+                        objects.append(object)
+                    }
+                }
+                return objects
+            }
+
+            // 3. Update UI on main thread
+            await MainActor.run {
+                self.detectedObjects = detectedObjects
+            }
+
+            // 4. Trigger automatic cataloging for mint-green objects
+            for object in detectedObjects where object.catalogMode == .automatic {
+                Task {
+                    await catalogObject(object, pixelBuffer: pixelBuffer)
+                }
+            }
+
+        } catch {
+            await MainActor.run {
+                errorMessage = "Detection failed: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private func processObject(_ yoloResult: YOLOResult, in pixelBuffer: CVPixelBuffer) async -> DetectedObject? {
+        // Check deduplication first
+        let fingerprint = await deduplicator.generateFingerprint(
+            pixelBuffer: pixelBuffer,
+            boundingBox: yoloResult.boundingBox
+        )
+
+        if await deduplicator.isDuplicate(fingerprint) {
+            return nil // Skip duplicate
+        }
+
+        // Generate subject mask (50-80ms)
+        let mask = await maskGenerator.generateMask(
+            pixelBuffer: pixelBuffer,
+            boundingBox: yoloResult.boundingBox
+        )
+
+        // Assess quality (35ms)
+        let quality = await qualityAssessor.assess(
+            pixelBuffer: pixelBuffer,
+            boundingBox: yoloResult.boundingBox
+        )
+
+        // Determine catalog mode
+        let catalogMode = determineCatalogMode(
+            confidence: yoloResult.confidence,
+            quality: quality
+        )
+
+        // Skip if confidence too low
+        guard catalogMode != .ignore else {
+            return nil
+        }
+
+        // Add to deduplication cache
+        await deduplicator.addToCache(fingerprint)
+
+        return DetectedObject(
+            id: UUID(),
+            label: yoloResult.label,
+            confidence: yoloResult.confidence,
+            boundingBox: yoloResult.boundingBox,
+            qualityScore: quality,
+            catalogMode: catalogMode,
+            mask: mask,
+            fingerprint: fingerprint,
+            alternativeLabels: yoloResult.alternativeLabels
+        )
+    }
+
+    private func determineCatalogMode(confidence: Double, quality: Double) -> CatalogMode {
+        if confidence > 0.70 && quality > 0.65 {
+            return .automatic // Mint green border
+        } else if confidence >= 0.40 {
+            return .manual // Grey border, requires double-tap
+        } else {
+            return .ignore // Don't show border
+        }
+    }
+
+    /// Catalog object (triggered automatically for mint-green or manually via double-tap)
+    func catalogObject(_ object: DetectedObject, pixelBuffer: CVPixelBuffer) async {
+        // Implementation in Stage 5
+    }
+
+    /// Handle double-tap gesture for manual cataloging
+    func handleDoubleTap(at location: CGPoint) async {
+        // Find object at tap location
+        guard let object = detectedObjects.first(where: { $0.boundingBox.contains(location) }),
+              object.catalogMode == .manual else {
+            return
+        }
+
+        // Capture current frame and catalog
+        // Implementation depends on frame capture strategy
+    }
+}
+
+// MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
+
+extension CameraDetectionViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
+
+    func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            return
+        }
+
+        Task {
+            await processFrame(pixelBuffer)
+        }
+    }
+
+    func captureOutput(
+        _ output: AVCaptureOutput,
+        didDrop sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        // Frame dropped, acceptable for 2 FPS target
+    }
+}
+```
+
+### Performance Characteristics
+
+| Stage | Latency | Notes |
+|-------|---------|-------|
+| YOLO Inference | 23ms | YOLOv11n on iPhone 16 Pro |
+| Subject Mask Generation | 50-80ms | Per object, VNGenerateForegroundInstanceMaskRequest |
+| Quality Assessment | 35ms | Aesthetic + blur + lighting + completeness |
+| **Total per object** | **108-138ms** | Acceptable for 2 FPS (500ms budget) |
+| **5 objects parallel** | **~120ms** | Parallel processing, not sequential |
+
+**Throttling Strategy**:
+- Camera runs at 30 FPS
+- Process every 15th frame (0.5s interval = 2 FPS)
+- Drop frames when processing takes >500ms
+- No UI blocking, all processing async
+
+---
+
+## CameraView Implementation (DEPRECATED)
 
 ### SwiftUI View
 
@@ -691,9 +967,41 @@ func testCameraCapture_EndToEnd() async throws {
 
 ## Integration with Vision Framework
 
-### Handoff Pattern
+### NEW: Real-Time Pipeline (Current Architecture)
+
+The new architecture processes frames continuously without temporary storage:
 
 ```swift
+// In CameraDetectionViewModel
+// Frame arrives from camera → process immediately → discard frame
+func processFrame(_ pixelBuffer: CVPixelBuffer) async {
+    // 1. YOLO detection on CVPixelBuffer (no UIImage conversion)
+    let yoloResults = try await yoloDetector.detectInStream(pixelBuffer: pixelBuffer)
+
+    // 2. Parallel processing (masks, quality, fingerprints)
+    let detectedObjects = await withTaskGroup { ... }
+
+    // 3. Update UI with organic borders
+    await MainActor.run { self.detectedObjects = detectedObjects }
+
+    // 4. Automatic catalog for high-confidence objects
+    for object in detectedObjects where object.catalogMode == .automatic {
+        await catalogObject(object, pixelBuffer: pixelBuffer)
+    }
+}
+```
+
+**Key Differences from OLD Architecture**:
+- ✅ No temporary file storage (frames processed in-memory)
+- ✅ No UIImage conversion (CVPixelBuffer → Vision directly)
+- ✅ Continuous processing (not button-triggered)
+- ✅ Parallel multi-object handling
+- ✅ Privacy-first: only cropped objects uploaded, never full frames
+
+### OLD: Single-Photo Pattern (DEPRECATED)
+
+```swift
+// DEPRECATED: Old button-triggered capture
 // In CatalogViewModel (orchestrates camera → vision)
 @MainActor
 class CatalogViewModel: ObservableObject {
@@ -702,6 +1010,7 @@ class CatalogViewModel: ObservableObject {
     private let visionService: VisionServiceProtocol
     private let temporaryStorage: TemporaryPhotoStorage
 
+    @available(*, deprecated, message: "Use CameraDetectionViewModel real-time pipeline")
     func captureAndAnalyzeItem() async {
         do {
             // 1. Capture photo
@@ -730,15 +1039,25 @@ class CatalogViewModel: ObservableObject {
 
 ## Acceptance Criteria
 
-- [x] ✅ AVCaptureSession configured for high-quality photo capture
+### Real-Time Detection (Current Architecture)
+- [x] ✅ AVCaptureSession configured for continuous video frame capture
+- [x] ✅ AVCaptureVideoDataOutput for real-time CVPixelBuffer streaming
+- [x] ✅ Frame throttling to 2 FPS (process every 0.5 seconds)
+- [x] ✅ Direct CVPixelBuffer → YOLO pipeline (no UIImage conversion)
+- [x] ✅ Parallel multi-object processing with TaskGroup
+- [x] ✅ CameraDetectionViewModel with @Published detectedObjects
+- [x] ✅ Integration with SubjectMaskGenerator, ImageQualityAssessor, ObjectDeduplicator
+- [x] ✅ Three-tier confidence system (automatic/manual/ignore)
+- [x] ✅ No temporary file storage (in-memory processing only)
 - [x] ✅ Camera permission handling (authorized/denied/not determined)
-- [x] ✅ Photo capture with async/await pattern
-- [x] ✅ Temporary storage for photos before Vision processing
+
+### Legacy Single-Photo Capture (DEPRECATED, kept for backward compatibility)
+- [x] ✅ AVCaptureSession configured for high-quality photo capture
+- [x] ✅ Photo capture with async/await pattern (deprecated)
+- [x] ✅ Temporary storage for photos before Vision processing (deprecated)
 - [x] ✅ Memory management (weak self, session cleanup)
 - [x] ✅ Error handling for all camera failures
-- [x] ✅ SwiftUI camera view with preview and capture button
-- [x] ✅ MVVM architecture (CameraViewModel → CameraService)
-- [x] ✅ Integration with Vision Framework (handoff pattern)
+- [x] ✅ SwiftUI camera view with preview and capture button (deprecated)
 
 ---
 
@@ -747,7 +1066,9 @@ class CatalogViewModel: ObservableObject {
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial camera capture implementation spec | Computer Vision & ML Engineer |
+| 2025-11-15 | 2.0 | **MAJOR REFACTOR**: Replace button-triggered single-photo capture with real-time 2 FPS continuous detection. Add CameraDetectionViewModel, CVPixelBuffer pipeline, frame throttling, parallel object processing, and deprecate old CameraViewModel.capturePhoto() | Stage 6.1 Documentation Refactor |
 
 ---
 
 **Next Document**: DESIGN-013 (Vision Framework Integration Patterns)
+**Related**: 2025-11-15-realtime-object-detection-refactor.md (Implementation Plan)
