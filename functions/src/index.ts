@@ -9,6 +9,10 @@ import { onItemCreated } from './triggers/onItemCreated';
 import { onLayer2aComplete } from './triggers/onLayer2aComplete';
 import { onLayer2bComplete } from './triggers/onLayer2bComplete';
 
+// Import scheduled jobs
+import { cleanupDeletedItemsScheduled } from './scheduled/cleanupDeletedItems';
+import { checkSubscriptionExpiryScheduled } from './scheduled/checkSubscriptionExpiry';
+
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 
@@ -172,3 +176,6 @@ export const listItemsHTTP = functions.https.onRequest(async (req, res) => {
 
 // Export Firestore triggers
 export { onItemCreated, onLayer2aComplete, onLayer2bComplete };
+
+// Export scheduled jobs
+export { cleanupDeletedItemsScheduled, checkSubscriptionExpiryScheduled };
