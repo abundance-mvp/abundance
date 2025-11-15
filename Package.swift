@@ -7,7 +7,8 @@ let package: Package = Package(
     products: [
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
         .library(name: "CameraFeature", targets: ["CameraFeature"]),
-        .library(name: "Persistence", targets: ["Persistence"])
+        .library(name: "Persistence", targets: ["Persistence"]),
+        .library(name: "VisionCore", targets: ["VisionCore"])
     ],
     dependencies: [
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "11.11.0"),
@@ -55,6 +56,17 @@ let package: Package = Package(
         .testTarget(
             name: "PersistenceTests",
             dependencies: ["Persistence"]
+        ),
+        .target(
+            name: "VisionCore",
+            dependencies: [],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
+            ]
+        ),
+        .testTarget(
+            name: "VisionCoreTests",
+            dependencies: ["VisionCore"]
         )
     ]
 )
