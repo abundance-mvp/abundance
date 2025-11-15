@@ -1,0 +1,12 @@
+sources:
+  - Sources
+
+templates:
+  - .sourcery/Templates
+
+output:
+  path: Generated
+
+args:
+  AutoMockable:
+    import: Testing
