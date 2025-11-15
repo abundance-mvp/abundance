@@ -6,6 +6,7 @@ let package: Package = Package(
     platforms: [.iOS(.v18), .macOS(.v14)], // iOS 18 and macOS 14 for @Observable support
     products: [
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
+        .library(name: "CameraFeature", targets: ["CameraFeature"]),
         .library(name: "Persistence", targets: ["Persistence"])
     ],
     dependencies: [
@@ -30,6 +31,17 @@ let package: Package = Package(
                 "OnboardingFeature",
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ]
+        ),
+        .target(
+            name: "CameraFeature",
+            dependencies: [],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
+            ]
+        ),
+        .testTarget(
+            name: "CameraFeatureTests",
+            dependencies: ["CameraFeature"]
         ),
 
         // Core
