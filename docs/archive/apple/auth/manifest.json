@@ -1,0 +1,47 @@
+{
+  "technology": "auth",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Authentication Services Overview",
+      "original_url": "https://developer.apple.com/documentation/authenticationservices",
+      "sosumi_url": "https://sosumi.ai/documentation/authenticationservices",
+      "local_path": "authentication-services-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 4
+    },
+    {
+      "title": "Keychain Services Overview",
+      "original_url": "https://developer.apple.com/documentation/security/keychain_services",
+      "sosumi_url": "https://sosumi.ai/documentation/security/keychain_services",
+      "local_path": "keychain-services-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "ASAuthorizationController API",
+      "original_url": "https://developer.apple.com/documentation/authenticationservices/asauthorizationcontroller",
+      "sosumi_url": "https://sosumi.ai/documentation/authenticationservices/asauthorizationcontroller",
+      "local_path": "asauthorizationcontroller.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 4
+    },
+    {
+      "title": "ASWebAuthenticationSession API",
+      "original_url": "https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession",
+      "sosumi_url": "https://sosumi.ai/documentation/authenticationservices/aswebauthenticationsession",
+      "local_path": "aswebauthenticationsession.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "ASPasswordCredential API",
+      "original_url": "https://developer.apple.com/documentation/authenticationservices/aspasswordcredential",
+      "sosumi_url": "https://sosumi.ai/documentation/authenticationservices/aspasswordcredential",
+      "local_path": "aspasswordcredential.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    }
+  ]
+}

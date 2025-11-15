@@ -1,0 +1,58 @@
+{
+  "name": "abundance-ai-pipeline",
+  "version": "1.0.0",
+  "description": "AI pipeline Cloud Functions for Abundance app - computer vision metadata extraction",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions,firestore",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@google/genai": "^1.29.0",
+    "@anthropic-ai/sdk": "^0.68.0",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.1",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "eslint": "^8.56.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.1.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3"
+  },
+  "private": true,
+  "keywords": [
+    "firebase",
+    "cloud-functions",
+    "ai-pipeline",
+    "computer-vision",
+    "gemini",
+    "claude",
+    "serpapi"
+  ],
+  "author": "Abundance Team",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/abundance"
+  }
+}

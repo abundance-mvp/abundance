@@ -1,0 +1,15 @@
+{
+  "technology": "content-safety",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Sensitive Content Analysis Overview",
+      "original_url": "https://developer.apple.com/documentation/sensitivecontentanalysis",
+      "sosumi_url": "https://sosumi.ai/documentation/sensitivecontentanalysis",
+      "local_path": "sensitive-content-analysis-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    }
+  ]
+}

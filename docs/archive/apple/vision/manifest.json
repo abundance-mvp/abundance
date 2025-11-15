@@ -1,0 +1,47 @@
+{
+  "technology": "vision",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Vision Framework Overview",
+      "original_url": "https://developer.apple.com/documentation/vision",
+      "sosumi_url": "https://sosumi.ai/documentation/vision",
+      "local_path": "vision-framework-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "VNImageRequestHandler API",
+      "original_url": "https://developer.apple.com/documentation/vision/vnimagerequesthandler",
+      "sosumi_url": "https://sosumi.ai/documentation/vision/vnimagerequesthandler",
+      "local_path": "vnimagerequesthandler.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "VNRecognizedObjectObservation API",
+      "original_url": "https://developer.apple.com/documentation/vision/vnrecognizedobjectobservation",
+      "sosumi_url": "https://sosumi.ai/documentation/vision/vnrecognizedobjectobservation",
+      "local_path": "vnrecognizedobjectobservation.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "VNCoreMLModel API",
+      "original_url": "https://developer.apple.com/documentation/vision/vncoremlmodel",
+      "sosumi_url": "https://sosumi.ai/documentation/vision/vncoremlmodel",
+      "local_path": "vncoremlmodel.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "VNCoreMLRequest API",
+      "original_url": "https://developer.apple.com/documentation/vision/vncoremlrequest",
+      "sosumi_url": "https://sosumi.ai/documentation/vision/vncoremlrequest",
+      "local_path": "vncoremlrequest.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    }
+  ]
+}

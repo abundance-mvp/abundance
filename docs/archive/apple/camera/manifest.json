@@ -1,0 +1,39 @@
+{
+  "technology": "camera",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "AVFoundation Overview",
+      "original_url": "https://developer.apple.com/documentation/avfoundation",
+      "sosumi_url": "https://sosumi.ai/documentation/avfoundation",
+      "local_path": "avfoundation-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "PhotoKit Overview",
+      "original_url": "https://developer.apple.com/documentation/photokit",
+      "sosumi_url": "https://sosumi.ai/documentation/photokit",
+      "local_path": "photokit-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 1
+    },
+    {
+      "title": "AVCaptureDevice API",
+      "original_url": "https://developer.apple.com/documentation/avfoundation/avcapturedevice",
+      "sosumi_url": "https://sosumi.ai/documentation/avfoundation/avcapturedevice",
+      "local_path": "avcapturedevice.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 12
+    },
+    {
+      "title": "AVCaptureSession API",
+      "original_url": "https://developer.apple.com/documentation/avfoundation/avcapturesession",
+      "sosumi_url": "https://sosumi.ai/documentation/avfoundation/avcapturesession",
+      "local_path": "avcapturesession.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 5
+    }
+  ]
+}

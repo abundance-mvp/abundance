@@ -1,0 +1,31 @@
+{
+  "technology": "testing",
+  "fetched_date": "2025-11-04",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "XCTest Overview",
+      "original_url": "https://developer.apple.com/documentation/xctest",
+      "sosumi_url": "https://sosumi.ai/documentation/xctest",
+      "local_path": "xctest-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 4
+    },
+    {
+      "title": "Swift Testing Overview",
+      "original_url": "https://developer.apple.com/documentation/testing",
+      "sosumi_url": "https://sosumi.ai/documentation/testing",
+      "local_path": "swift-testing-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "XCTestCase API",
+      "original_url": "https://developer.apple.com/documentation/xctest/xctestcase",
+      "sosumi_url": "https://sosumi.ai/documentation/xctest/xctestcase",
+      "local_path": "xctestcase.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 6
+    }
+  ]
+}

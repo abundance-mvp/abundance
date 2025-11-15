@@ -1,0 +1,23 @@
+{
+  "technology": "liquid-glass",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Liquid Glass Overview",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/liquid-glass",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/liquid-glass",
+      "local_path": "liquid-glass-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "Adopting Liquid Glass",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/adopting-liquid-glass",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/adopting-liquid-glass",
+      "local_path": "adopting-liquid-glass.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    }
+  ]
+}

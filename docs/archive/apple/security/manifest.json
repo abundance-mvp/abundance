@@ -1,0 +1,23 @@
+{
+  "technology": "security",
+  "fetched_date": "2025-11-04",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Security Framework Overview",
+      "original_url": "https://developer.apple.com/documentation/security",
+      "sosumi_url": "https://sosumi.ai/documentation/security",
+      "local_path": "security-framework-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "LAContext API",
+      "original_url": "https://developer.apple.com/documentation/localauthentication/lacontext",
+      "sosumi_url": "https://sosumi.ai/documentation/localauthentication/lacontext",
+      "local_path": "lacontext.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    }
+  ]
+}

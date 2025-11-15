@@ -1,0 +1,23 @@
+{
+  "technology": "payment",
+  "fetched_date": "2025-11-04",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "StoreKit Overview",
+      "original_url": "https://developer.apple.com/documentation/storekit",
+      "sosumi_url": "https://sosumi.ai/documentation/storekit",
+      "local_path": "storekit-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "Apple Pay Overview",
+      "original_url": "https://developer.apple.com/documentation/passkit/apple_pay",
+      "sosumi_url": "https://sosumi.ai/documentation/passkit/apple_pay",
+      "local_path": "apple-pay-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    }
+  ]
+}

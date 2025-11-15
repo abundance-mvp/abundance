@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-11-04",
+  "tech_stack_source": "docs/tech-stack/TECH-STACK-MAP-001.md",
+  "feature_mappings": {
+    "technology_overviews": {
+      "all": {
+        "primary_api": "/documentation/technologyoverviews",
+        "description": "High-level technology overviews and adoption guides"
+      },
+      "liquid_glass": {
+        "primary_api": "/documentation/technologyoverviews/liquid-glass",
+        "description": "iOS 26 Liquid Glass design system"
+      }
+    },
+    "ui_design": {
+      "hig_foundations": {
+        "primary_api": "/design/human-interface-guidelines/foundations",
+        "description": "HIG core design principles"
+      }
+    },
+    "swift_language": {
+      "basics": {
+        "primary_api": "/documentation/swift",
+        "description": "Swift language fundamentals"
+      },
+      "concurrency": {
+        "primary_api": "/documentation/swift/swift_standard_library/concurrency",
+        "description": "Swift async/await and structured concurrency"
+      }
+    },
+    "swiftui": {
+      "app_structure": {
+        "primary_api": "/documentation/swiftui/app-structure-and-behavior",
+        "description": "SwiftUI app lifecycle and structure"
+      },
+      "state_management": {
+        "primary_api": "/documentation/swiftui/state-and-data-flow",
+        "description": "SwiftUI state management"
+      }
+    },
+    "auth": {
+      "biometric": {
+        "primary_api": "/documentation/localauthentication/lacontext",
+        "description": "Face ID, Touch ID authentication"
+      }
+    },
+    "camera": {
+      "capture": {
+        "primary_api": "/documentation/avfoundation/avcapturesession",
+        "description": "Camera capture pipeline"
+      }
+    }
+  },
+  "search_hints": {
+    "ui": ["SwiftUI", "UIKit", "HIG", "Liquid Glass"],
+    "swift": ["Swift", "async", "await", "concurrency"],
+    "swiftui": ["View", "State", "Binding", "NavigationStack"],
+    "auth": ["LAContext", "Face ID", "Touch ID"],
+    "camera": ["AVCaptureSession", "AVCaptureDevice"]
+  }
+}

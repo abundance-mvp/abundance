@@ -1,0 +1,23 @@
+{
+  "technology": "maps",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "MapKit Overview",
+      "original_url": "https://developer.apple.com/documentation/mapkit",
+      "sosumi_url": "https://sosumi.ai/documentation/mapkit",
+      "local_path": "mapkit-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "MKMapView API",
+      "original_url": "https://developer.apple.com/documentation/mapkit/mkmapview",
+      "sosumi_url": "https://sosumi.ai/documentation/mapkit/mkmapview",
+      "local_path": "mkmapview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 12
+    }
+  ]
+}

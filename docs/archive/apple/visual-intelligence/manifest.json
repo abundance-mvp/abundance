@@ -1,0 +1,15 @@
+{
+  "technology": "visual-intelligence",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Visual Intelligence Overview",
+      "original_url": "https://developer.apple.com/documentation/visualintelligence",
+      "sosumi_url": "https://sosumi.ai/documentation/visualintelligence",
+      "local_path": "visual-intelligence-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 1
+    }
+  ]
+}

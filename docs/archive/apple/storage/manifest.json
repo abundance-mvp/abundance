@@ -1,0 +1,79 @@
+{
+  "technology": "storage",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Core Data Overview",
+      "original_url": "https://developer.apple.com/documentation/coredata",
+      "sosumi_url": "https://sosumi.ai/documentation/coredata",
+      "local_path": "coredata-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 4
+    },
+    {
+      "title": "CloudKit Overview",
+      "original_url": "https://developer.apple.com/documentation/cloudkit",
+      "sosumi_url": "https://sosumi.ai/documentation/cloudkit",
+      "local_path": "cloudkit-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "Files and Directories",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/files-and-directories",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/files-and-directories",
+      "local_path": "files-and-directories.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "Shared Data",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/shared-data",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/shared-data",
+      "local_path": "shared-data.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "Personal Data",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/personal-data",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/personal-data",
+      "local_path": "personal-data.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "Structured Data Models",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/structured-data-models",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/structured-data-models",
+      "local_path": "structured-data-models.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "NSPersistentContainer API",
+      "original_url": "https://developer.apple.com/documentation/coredata/nspersistentcontainer",
+      "sosumi_url": "https://sosumi.ai/documentation/coredata/nspersistentcontainer",
+      "local_path": "nspersistentcontainer.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 4
+    },
+    {
+      "title": "NSFetchRequest API",
+      "original_url": "https://developer.apple.com/documentation/coredata/nsfetchrequest",
+      "sosumi_url": "https://sosumi.ai/documentation/coredata/nsfetchrequest",
+      "local_path": "nsfetchrequest.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 5
+    },
+    {
+      "title": "NSManagedObject API",
+      "original_url": "https://developer.apple.com/documentation/coredata/nsmanagedobject",
+      "sosumi_url": "https://sosumi.ai/documentation/coredata/nsmanagedobject",
+      "local_path": "nsmanagedobject.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 10
+    }
+  ]
+}

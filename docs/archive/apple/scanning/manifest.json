@@ -1,0 +1,23 @@
+{
+  "technology": "scanning",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "VisionKit Overview",
+      "original_url": "https://developer.apple.com/documentation/visionkit",
+      "sosumi_url": "https://sosumi.ai/documentation/visionkit",
+      "local_path": "visionkit-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "DataScannerViewControllerDelegate API",
+      "original_url": "https://developer.apple.com/documentation/visionkit/datascannerviewcontrollerdelegate",
+      "sosumi_url": "https://sosumi.ai/documentation/visionkit/datascannerviewcontrollerdelegate",
+      "local_path": "datascannerviewcontrollerdelegate.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "technology": "payments",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "SKProduct API",
+      "original_url": "https://developer.apple.com/documentation/storekit/skproduct",
+      "sosumi_url": "https://sosumi.ai/documentation/storekit/skproduct",
+      "local_path": "skproduct.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "SKPaymentQueue API",
+      "original_url": "https://developer.apple.com/documentation/storekit/skpaymentqueue",
+      "sosumi_url": "https://sosumi.ai/documentation/storekit/skpaymentqueue",
+      "local_path": "skpaymentqueue.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    }
+  ]
+}

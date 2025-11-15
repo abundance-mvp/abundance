@@ -1,0 +1,55 @@
+{
+  "technology": "swift",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Swift Standard Library",
+      "original_url": "https://developer.apple.com/documentation/swift",
+      "sosumi_url": "https://sosumi.ai/documentation/swift",
+      "local_path": "swift-standard-library.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "Apple Intelligence",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/apple-intelligence",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/apple-intelligence",
+      "local_path": "apple-intelligence.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "Foundation Models",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/foundation-models",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/foundation-models",
+      "local_path": "foundation-models.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "Core ML",
+      "original_url": "https://developer.apple.com/documentation/coreml",
+      "sosumi_url": "https://sosumi.ai/documentation/coreml",
+      "local_path": "coreml-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "Metal",
+      "original_url": "https://developer.apple.com/documentation/metal",
+      "sosumi_url": "https://sosumi.ai/documentation/metal",
+      "local_path": "metal-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 4
+    },
+    {
+      "title": "MLModelConfiguration API",
+      "original_url": "https://developer.apple.com/documentation/coreml/mlmodelconfiguration",
+      "sosumi_url": "https://sosumi.ai/documentation/coreml/mlmodelconfiguration",
+      "local_path": "mlmodelconfiguration.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    }
+  ]
+}

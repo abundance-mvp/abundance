@@ -1,0 +1,79 @@
+{
+  "technology": "swiftui",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "SwiftUI Overview",
+      "original_url": "https://developer.apple.com/documentation/swiftui",
+      "sosumi_url": "https://sosumi.ai/documentation/swiftui",
+      "local_path": "swiftui-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "SwiftUI Apps Overview",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/swiftui",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/swiftui",
+      "local_path": "swiftui-apps-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "Interface Fundamentals",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/interface-fundamentals",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/interface-fundamentals",
+      "local_path": "interface-fundamentals.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "App Design and UI",
+      "original_url": "https://developer.apple.com/documentation/technologyoverviews/app-design-and-ui",
+      "sosumi_url": "https://sosumi.ai/documentation/technologyoverviews/app-design-and-ui",
+      "local_path": "app-design-and-ui.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "UIKit",
+      "original_url": "https://developer.apple.com/documentation/uikit",
+      "sosumi_url": "https://sosumi.ai/documentation/uikit",
+      "local_path": "uikit-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "View Protocol API",
+      "original_url": "https://developer.apple.com/documentation/swiftui/view",
+      "sosumi_url": "https://sosumi.ai/documentation/swiftui/view",
+      "local_path": "view.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 5
+    },
+    {
+      "title": "@State Property Wrapper API",
+      "original_url": "https://developer.apple.com/documentation/swiftui/state",
+      "sosumi_url": "https://sosumi.ai/documentation/swiftui/state",
+      "local_path": "state.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    },
+    {
+      "title": "@Binding Property Wrapper API",
+      "original_url": "https://developer.apple.com/documentation/swiftui/binding",
+      "sosumi_url": "https://sosumi.ai/documentation/swiftui/binding",
+      "local_path": "binding.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    },
+    {
+      "title": "UIImage API",
+      "original_url": "https://developer.apple.com/documentation/uikit/uiimage",
+      "sosumi_url": "https://sosumi.ai/documentation/uikit/uiimage",
+      "local_path": "uiimage.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 10
+    }
+  ]
+}

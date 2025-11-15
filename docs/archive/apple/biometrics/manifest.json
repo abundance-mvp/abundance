@@ -1,0 +1,15 @@
+{
+  "technology": "biometrics",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "Local Authentication Overview",
+      "original_url": "https://developer.apple.com/documentation/localauthentication",
+      "sosumi_url": "https://sosumi.ai/documentation/localauthentication",
+      "local_path": "local-authentication-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 3
+    }
+  ]
+}

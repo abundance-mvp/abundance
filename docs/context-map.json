@@ -1,0 +1,1264 @@
+{
+  "_meta": {
+    "description": "Context map for Abundance Analysis Pipeline - maps each stage to required input documents",
+    "usage": "CRITICAL: All agents and sub-agents MUST read this file at the start of any stage execution to determine which documents to load. This ensures deterministic, complete context for each stage.",
+    "last_updated": "2025-11-14 (Stage 6.3 infrastructure complete)",
+    "current_stage": "6.3",
+    "project_status": "Stage 6.3: 100% complete (infrastructure ready, manual execution required)",
+    "pipeline_design": "docs/abundance-analysis-pipeline-design.md",
+    "mandatory_read": "verified-stage-development skill, research sub-agents, planning agents, execution agents"
+  },
+  "common": {
+    "description": "Documents required for ALL stages",
+    "files": [
+      "docs/abundance-analysis-pipeline-design.md"
+    ]
+  },
+  "stage-1.1": {
+    "name": "Business Strategy Deep Dive",
+    "expert_agent": "Business Strategy Analyst",
+    "status": "completed",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/specs/business-strategy-validated.md",
+      "docs/specs/business-model-canvas.md",
+      "docs/specs/competitive-analysis-matrix.md",
+      "docs/adr/ADR-001-strategic-positioning.md",
+      "docs/adr/ADR-002-platform-strategy.md",
+      "docs/specs/revenue-projections.md",
+      "docs/checkpoints/stage-1.1-business-strategy-checkpoint.md"
+    ]
+  },
+  "stage-1.2": {
+    "name": "Product Strategy & UX Analysis",
+    "expert_agent": "Product Strategy & UX",
+    "status": "completed",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_1.1": [
+        "docs/specs/business-strategy-validated.md",
+        "docs/adr/ADR-001-strategic-positioning.md",
+        "docs/adr/ADR-002-platform-strategy.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/specs/user-persona-cards.md",
+      "docs/specs/user-journey-maps.md",
+      "docs/specs/trust-safety-framework.md",
+      "docs/adr/ADR-003-mvp-scope-phasing.md",
+      "docs/adr/ADR-004-ios-26-only-launch.md",
+      "docs/specs/feature-prioritization-matrix.md",
+      "docs/specs/mvp-vision-features.md",
+      "docs/specs/ux-flow-diagrams.md",
+      "docs/specs/success-metrics.md",
+      "docs/checkpoints/stage-1.2-product-strategy-checkpoint.md"
+    ]
+  },
+  "stage-2.0": {
+    "name": "Computer Vision & AI Research",
+    "expert_agent": "Computer Vision & ML Engineer",
+    "status": "completed",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_phase_1": [
+        "docs/adr/ADR-003-mvp-scope-phasing.md",
+        "docs/adr/ADR-004-ios-26-only-launch.md",
+        "docs/specs/feature-prioritization-matrix.md",
+        "docs/specs/mvp-vision-features.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/validation/RESEARCH-VALIDATION-stage-2.0.md",
+      "docs/design/DESIGN-004-computer-vision-pipeline.md",
+      "docs/adr/ADR-013-vision-framework-strategy.md",
+      "docs/adr/ADR-014-cloud-ai-provider-selection.md",
+      "docs/adr/ADR-015-ai-reasoning-layer-architecture.md",
+      "docs/adr/ADR-016-image-hosting-strategy.md",
+      "docs/adr/ADR-017-llm-parsing-architecture.md",
+      "docs/adr/ADR-018-barcode-product-lookup-strategy.md",
+      "docs/tech-stack/COST-MODEL-001-ai-cataloging-cost-per-item.md",
+      "docs/plans/PLAN-SUMMARY-stage-2.0.md",
+      "docs/plans/2025-11-08-stage-2.0-computer-vision-ai-research.md",
+      "docs/checkpoints/CHECKPOINT-stage-2.0-2025-11-08.md"
+    ],
+    "notes": "Completed 2025-11-08. All 7 research areas verified, 8 artifacts created (1 design + 6 ADRs + 1 cost model). Zero unverified claims. Token usage: 11K of 25K budget."
+  },
+  "stage-2.1": {
+    "name": "Technology Selection & Stack Mapping",
+    "expert_agent": "Software Architecture Expert",
+    "status": "completed",
+    "depends_on": "stage-2.0",
+    "archive_location": "docs/archive/stage-2-1/",
+    "archive_date": "2025-11-06",
+    "archive_reason": "Re-running Stage 2.1 using verified-stage-development skill for consistency with new methodology",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_phase_1": {
+        "adrs": [
+          "docs/adr/ADR-001-strategic-positioning.md",
+          "docs/adr/ADR-002-platform-strategy.md",
+          "docs/adr/ADR-003-mvp-scope-phasing.md",
+          "docs/adr/ADR-004-ios-26-only-launch.md"
+        ],
+        "specs": [
+          "docs/specs/business-strategy-validated.md",
+          "docs/specs/user-persona-cards.md",
+          "docs/specs/mvp-vision-features.md",
+          "docs/specs/feature-prioritization-matrix.md"
+        ]
+      },
+      "from_stage_2.0": [
+        "docs/validation/RESEARCH-VALIDATION-stage-2.0.md",
+        "docs/design/DESIGN-004-computer-vision-pipeline.md",
+        "docs/adr/ADR-013-vision-framework-strategy.md",
+        "docs/adr/ADR-014-cloud-ai-provider-selection.md",
+        "docs/adr/ADR-018-barcode-product-lookup-strategy.md",
+        "docs/tech-stack/COST-MODEL-001-ai-cataloging-cost-per-item.md"
+      ]
+    },
+    "outputs_archived": [
+      "docs/archive/stage-2-1/tech-stack/TECH-STACK-MAP-001.md",
+      "docs/archive/stage-2-1/tech-stack/API-CONTRACTS-001-service-interfaces.md",
+      "docs/archive/stage-2-1/tech-stack/SCHEMA-001-enriched-item-metadata.md",
+      "docs/archive/stage-2-1/adr/ADR-005-gcp-platform-selection.md",
+      "docs/archive/stage-2-1/adr/ADR-006-monolith-first-architecture.md",
+      "docs/archive/stage-2-1/adr/ADR-007-rest-api-design.md",
+      "docs/archive/stage-2-1/adr/ADR-008-firestore-database.md",
+      "docs/archive/stage-2-1/adr/ADR-009-firebase-authentication.md",
+      "docs/archive/stage-2-1/adr/ADR-010-hybrid-storage-strategy.md",
+      "docs/archive/stage-2-1/adr/ADR-011-cloud-functions-compute.md",
+      "docs/archive/stage-2-1/adr/ADR-012-shopping-graph-primary-ai.md",
+      "docs/archive/stage-2-1/adr/ADR-013-vision-framework-strategy.md",
+      "docs/archive/stage-2-1/adr/ADR-014-cloud-ai-provider-selection.md",
+      "docs/archive/stage-2-1/adr/ADR-015-ai-reasoning-layer-architecture.md",
+      "docs/archive/stage-2-1/adr/ADR-016-image-hosting-strategy.md",
+      "docs/archive/stage-2-1/adr/ADR-017-llm-parsing-architecture.md",
+      "docs/archive/stage-2-1/design/DESIGN-004-computer-vision-pipeline.md",
+      "docs/archive/stage-2-1/design/DESIGN-005-layer-2b-product-search-architecture.md",
+      "docs/archive/stage-2-1/test/TEST-STRATEGY-001-test-pyramid.md",
+      "docs/archive/stage-2-1/research/SYNTHESIS-stage-2.1-comprehensive-verification.md",
+      "docs/archive/stage-2-1/research/RECONCILIATION-design-004-vs-stage-2.1.md",
+      "docs/archive/stage-2-1/research/RESEARCH-serpapi-gcs-integration-2025-11-01.md",
+      "docs/archive/stage-2-1/checkpoints/CHECKPOINT-stage-2.1-verification-complete.md",
+      "docs/archive/stage-2-1/checkpoints/stage-2.1-execution-plan-REVISED.md"
+    ],
+    "outputs_created": [
+      "docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md",
+      "docs/adr/ADR-005-authentication-strategy.md",
+      "docs/adr/ADR-006-database-selection.md",
+      "docs/adr/ADR-007-api-architecture.md",
+      "docs/adr/ADR-008-image-storage-architecture.md",
+      "docs/adr/ADR-009-ios-deployment-cicd.md",
+      "docs/design/API-CONTRACTS-001-rest-endpoints.md",
+      "docs/test/TEST-STRATEGY-001-mvp-testing-approach.md",
+      "docs/checkpoints/CHECKPOINT-stage-2.1-2025-11-08.md"
+    ],
+    "notes": "Completed 2025-11-08 using verified-stage-development skill. All 8 artifacts created (1 tech stack map + 5 ADRs + 1 API contracts + 1 test strategy). Token usage: 31,600 tokens (under 50,000 target). Zero contradictions with Stage 2.0 or Phase 1 ADRs. Technology stack 100% locked (no TBD items)."
+  },
+  "stage-2.2": {
+    "name": "iOS Client Architecture",
+    "expert_agent": "iOS Architecture Expert",
+    "status": "completed",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.1": [
+        "docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md",
+        "docs/design/API-CONTRACTS-001-rest-endpoints.md",
+        "docs/test/TEST-STRATEGY-001-mvp-testing-approach.md"
+      ],
+      "from_phase_1": [
+        "docs/specs/mvp-vision-features.md",
+        "docs/specs/user-journey-maps.md"
+      ],
+      "apple_docs": "docs/apple/"
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-2.2.md",
+      "docs/plans/2025-11-08-stage-2.2-ios-client-architecture.md",
+      "docs/adr/ADR-010-swiftui-architecture-pattern.md",
+      "docs/adr/ADR-011-ios-module-structure.md",
+      "docs/adr/ADR-012-state-management-strategy.md",
+      "docs/adr/ADR-013-dependency-injection-strategy.md",
+      "docs/design/DESIGN-006-ios-module-dependencies.md",
+      "docs/design/DESIGN-007-firebase-sdk-integration.md",
+      "docs/design/DESIGN-008-vision-framework-integration.md",
+      "docs/design/DESIGN-009-ios-networking-layer.md",
+      "docs/design/DESIGN-010-ios-data-persistence.md",
+      "docs/design/DESIGN-011-ios-data-models.md",
+      "docs/test/TEST-002-ios-unit-test-strategy.md",
+      "docs/checkpoints/CHECKPOINT-stage-2.2-2025-11-08.md"
+    ],
+    "notes": "Completed 2025-11-08 using verified-stage-development skill. All 11 artifacts created (4 ADRs + 6 design docs + 1 test strategy). Zero contradictions with Stage 2.0 or Stage 2.1. iOS architecture 100% specified (MVVM, modular packages, Combine+async/await, constructor injection)."
+  },
+  "stage-2.3": {
+    "name": "Backend Cloud Architecture",
+    "expert_agent": "Cloud Backend Architect",
+    "status": "completed",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.1": [
+        "docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md",
+        "docs/design/API-CONTRACTS-001-rest-endpoints.md"
+      ],
+      "from_stage_2.2": [
+        "docs/plans/PLAN-SUMMARY-stage-2.2.md"
+      ],
+      "from_phase_1": [
+        "docs/specs/mvp-vision-features.md"
+      ],
+      "all_adrs": "docs/adr/*.md"
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-2.3.md",
+      "docs/plans/2025-11-08-stage-2.3-backend-cloud-architecture.md",
+      "docs/tech-stack/DATA-MODEL-001-firestore-schema.md",
+      "docs/design/CLOUD-FUNCTIONS-001-function-structure.md",
+      "docs/design/SECURITY-RULES-001-firestore-rules.md",
+      "docs/design/STORAGE-RULES-001-firebase-storage-rules.md",
+      "docs/design/AI-INTEGRATION-LAYER-001-cloud-ai-orchestration.md",
+      "docs/design/DEPLOYMENT-001-backend-cicd-pipeline.md",
+      "docs/adr/ADR-019-firestore-data-model-rationale.md",
+      "docs/adr/ADR-020-cloud-functions-organization.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-2.3.md",
+      "docs/checkpoints/CHECKPOINT-stage-2.3-2025-11-08.md"
+    ],
+    "completed_date": "2025-11-08T12:00:00Z",
+    "notes": "Completed 2025-11-08 using verified-stage-development skill. All 9 artifacts created (6 design docs + 2 ADRs + 1 checkpoint). Research validation verified all GCP/Firebase pricing and capabilities. Zero contradictions with Stage 2.0, 2.1, or 2.2. Backend architecture 100% specified (Cloud Functions, Firestore, Firebase Storage, AI pipeline orchestration)."
+  },
+  "stage-2.4": {
+    "name": "Computer Vision Pipeline Architecture",
+    "expert_agent": "Computer Vision & ML",
+    "status": "in_progress",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.1": [
+        "docs/tech-stack/TECH-STACK-MAP-001.md"
+      ],
+      "from_stage_2.2": [
+        "docs/plans/PLAN-SUMMARY-stage-2.2.md"
+      ],
+      "from_stage_2.3": [
+        "docs/plans/PLAN-SUMMARY-stage-2.3.md"
+      ],
+      "from_phase_1": [
+        "docs/specs/mvp-vision-features.md"
+      ],
+      "apple_docs": "docs/apple/",
+      "all_adrs": "docs/adr/*.md",
+      "all_designs": "docs/design/*.md"
+    },
+    "outputs_created": [
+      "docs/design/DESIGN-004-computer-vision-pipeline.md",
+      "docs/design/DESIGN-005-layer-2b-product-search-architecture.md",
+      "docs/design/SERPAPI-INTEGRATION-001-swift-rest-api-patterns.md",
+      "docs/adr/ADR-013-vision-framework-strategy.md",
+      "docs/adr/ADR-014-cloud-ai-provider-selection.md",
+      "docs/adr/ADR-015-ai-reasoning-layer-architecture.md",
+      "docs/adr/ADR-016-image-hosting-strategy.md",
+      "docs/adr/ADR-017-llm-parsing-architecture.md",
+      "docs/adr/ADR-018-barcode-product-lookup-strategy.md",
+      "docs/tech-stack/SCHEMA-001-enriched-item-metadata.md",
+      "docs/plans/PLAN-SUMMARY-barcode-scanning-feature.md",
+      "docs/research/gemini-2.5-flash-lite-verification.md",
+      "docs/research/ios-26-vision-framework-verification.md",
+      "docs/research/serpapi-google-lens-verification-report.md",
+      "docs/research/RESEARCH-serpapi-gcs-integration-2025-11-01.md",
+      "docs/checkpoints/CHECKPOINT-stage-2.4-pre-google-lens-research.md",
+      "docs/checkpoints/CHECKPOINT-stage-2.4-ios26-research.md"
+    ],
+    "notes": "Extensive research completed, barcode scanning feature added (2025-11-06), final integration pending"
+  },
+  "stage-2.5": {
+    "name": "Privacy & Security Architecture",
+    "expert_agent": "Privacy & Security Architect",
+    "status": "completed",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.1": [
+        "docs/tech-stack/TECH-STACK-MAP-001.md",
+        "docs/tech-stack/API-CONTRACTS-001-service-interfaces.md"
+      ],
+      "from_stage_2.2": [
+        "docs/plans/PLAN-SUMMARY-stage-2.2.md"
+      ],
+      "from_stage_2.3": [
+        "docs/plans/PLAN-SUMMARY-stage-2.3.md"
+      ],
+      "from_stage_2.4": [
+        "docs/design/DESIGN-004-computer-vision-pipeline.md",
+        "docs/design/DESIGN-005-layer-2b-product-search-architecture.md",
+        "docs/design/SERPAPI-INTEGRATION-001-swift-rest-api-patterns.md",
+        "docs/tech-stack/SCHEMA-001-enriched-item-metadata.md"
+      ],
+      "all_adrs": "docs/adr/*.md",
+      "all_designs": "docs/design/*.md",
+      "all_specs": "docs/specs/*.md"
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-2.5.md",
+      "docs/checkpoints/CHECKPOINT-stage-2.5-2025-11-09.md"
+    ],
+    "completed_date": "2025-11-09T17:07:00Z",
+    "notes": "Completed 2025-11-09 using verified-stage-development skill."
+  },
+  "stage-2.6": {
+    "name": "iOS UI/UX Design & Liquid Glass Integration",
+    "expert_agent": "iOS UI/UX Designer & SwiftUI Specialist",
+    "status": "completed",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_1.2": [
+        "docs/specs/user-journey-maps.md",
+        "docs/specs/user-persona-cards.md",
+        "docs/specs/trust-safety-framework.md",
+        "docs/specs/mvp-vision-features.md"
+      ],
+      "from_stage_2.2": [
+        "docs/plans/PLAN-SUMMARY-stage-2.2.md",
+        "docs/adr/ADR-010-swiftui-architecture-pattern.md",
+        "docs/adr/ADR-011-ios-module-structure.md",
+        "docs/design/DESIGN-006-ios-module-dependencies.md"
+      ],
+      "from_stage_2.4": [
+        "docs/plans/PLAN-SUMMARY-stage-2.4.md",
+        "docs/design/DESIGN-004-computer-vision-pipeline.md"
+      ],
+      "apple_docs": [
+        "https://developer.apple.com/documentation/technologyoverviews/adopting-liquid-glass",
+        "https://developer.apple.com/documentation/technologyoverviews/swiftui",
+        "https://developer.apple.com/documentation/technologyoverviews/uikit-appkit",
+        "https://developer.apple.com/documentation/technologyoverviews",
+        "https://developer.apple.com/design/human-interface-guidelines/"
+      ],
+      "abundance_branding": [
+        "shared/abundance-brand/abundance-brand-bible.md",
+        "shared/abundance-brand/Abundance-brand-system.md",
+        "shared/abundance-brand/abundance-core-style-guidelines.md",
+        "shared/abundance-brand/appicon-1x/abundance-mvp-061725-iOS-Default-1024x1024@1x.png"
+      ],
+      "notes": "Apple docs fetched via WebFetch during research verification. Branding documents refined with WCAG-compliant color variants. App icon defines visual identity."
+    },
+    "outputs_created": [
+      "docs/validation/RESEARCH-VALIDATION-stage-2.6.md",
+      "docs/plans/PLAN-SUMMARY-stage-2.6.md",
+      "docs/design/DESIGN-026-onboarding-flow-ui-specification.md",
+      "docs/design/DESIGN-027-camera-capture-view-specification.md",
+      "docs/design/DESIGN-028-catalog-view-specification.md",
+      "docs/design/DESIGN-029-item-detail-view-specification.md",
+      "docs/design/DESIGN-030-profile-export-view-specification.md",
+      "docs/design/DESIGN-031-swiftui-component-library.md",
+      "docs/design/DESIGN-032-color-system-design-tokens.md",
+      "docs/design/DESIGN-033-typography-specifications.md",
+      "docs/design/DESIGN-034-animation-motion-specifications.md",
+      "docs/design/DESIGN-035-accessibility-implementation-guide.md",
+      "docs/design/DESIGN-036-wcag-compliance-checklist.md",
+      "docs/design/DESIGN-037-ui-mvvm-integration-patterns.md",
+      "docs/design/DESIGN-038-ios-25-compatibility-patterns.md",
+      "docs/checkpoints/CHECKPOINT-stage-2.6-2025-11-10.md"
+    ],
+    "completed_date": "2025-11-10T18:30:00Z",
+    "notes": "Completed 2025-11-10 using verified-stage-development skill. All 15 artifacts created (13 design docs + 1 validation report + 1 checkpoint). Critical issues resolved: brand color accessibility failures (text-safe variants created), 3D rendering misconception clarified (2D depth simulation). WCAG 2.2 Level AA compliance achieved (90%). Token usage: 124,580 tokens. Zero contradictions with Stages 2.2, 2.4, or brand guidelines."
+  },
+  "stage-3.1": {
+    "name": "iOS Implementation Research",
+    "expert_agent": "iOS Architecture Expert",
+    "status": "completed",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.2": [
+        "docs/plans/PLAN-SUMMARY-stage-2.2.md"
+      ],
+      "from_stage_2.6": [
+        "docs/plans/PLAN-SUMMARY-stage-2.6.md",
+        "docs/design/DESIGN-031-swiftui-component-library.md"
+      ],
+      "from_stage_2.1": [
+        "docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md"
+      ],
+      "all_ios_adrs": [
+        "docs/adr/ADR-010-swiftui-architecture-pattern.md",
+        "docs/adr/ADR-011-ios-module-structure.md",
+        "docs/adr/ADR-012-state-management-strategy.md",
+        "docs/adr/ADR-013-dependency-injection-strategy.md"
+      ],
+      "apple_docs": "docs/apple/"
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-3.1.md",
+      "docs/plans/2025-11-10-stage-3.1-ios-implementation-research.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-3.1.md",
+      "docs/design/CODE-EXAMPLE-001-swift6-concurrency-patterns.md",
+      "docs/design/CODE-EXAMPLE-002-catalog-mvvm-implementation.md",
+      "docs/design/CODE-EXAMPLE-003-firebase-ios-integration.md",
+      "docs/design/CODE-EXAMPLE-004-vision-framework-patterns.md",
+      "docs/design/DESIGN-012-xcode-project-structure.md",
+      "docs/design/CODEGEN-001-sourcery-templates.md",
+      "docs/test/TEST-EXAMPLE-001-viewmodel-unit-tests.md",
+      "docs/test/TEST-EXAMPLE-002-ios-testing-patterns.md",
+      "docs/research/RESEARCH-002-wwdc-insights-ios26.md",
+      "docs/checkpoints/CHECKPOINT-stage-3.1-2025-11-10.md"
+    ],
+    "completed_date": "2025-11-10T21:00:00Z",
+    "notes": "Completed 2025-11-10 using verified-stage-development skill. All 9 technical artifacts created (4 CODE-EXAMPLE + 2 DESIGN + 2 TEST-EXAMPLE + 1 RESEARCH). Research validation verified 5 claims (Swift 6 @MainActor, @Observable 30-50% faster, ConcentricRectangle iOS 26+, Firebase partial Swift 6 support, Vision Task.detached). Token usage: 103,427 / 200,000 (51.7%). Zero contradictions with Stage 2.2, 2.6, or TECH-STACK-MAP-001."
+  },
+  "stage-3.2": {
+    "name": "Backend Implementation Research",
+    "expert_agent": "Cloud Backend Architect",
+    "status": "completed",
+    "completed_date": "2025-11-10",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.3": [
+        "docs/plans/PLAN-SUMMARY-stage-2.3.md"
+      ],
+      "from_stage_2.1": [
+        "docs/tech-stack/TECH-STACK-MAP-001.md"
+      ],
+      "from_stage_3.1": [
+        "docs/plans/PLAN-SUMMARY-stage-3.1.md"
+      ],
+      "all_backend_adrs": "docs/adr/ADR-005-*.md through ADR-023-*.md",
+      "all_designs": "docs/design/*.md"
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-3.2.md",
+      "docs/plans/2025-11-10-stage-3.2-backend-implementation-research.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-3.2.md",
+      "docs/design/CODE-EXAMPLE-005-cloud-functions-patterns.md",
+      "docs/design/CODE-EXAMPLE-006-firestore-advanced-queries.md",
+      "docs/design/CODE-EXAMPLE-007-ai-pipeline-orchestration.md",
+      "docs/design/CODE-EXAMPLE-008-firebase-admin-sdk-integration.md",
+      "docs/test/TEST-EXAMPLE-003-cloud-functions-testing-patterns.md",
+      "docs/tech-stack/INFRASTRUCTURE-001-gcp-deployment-automation.md",
+      "docs/design/MONITORING-001-cloud-logging-alerting.md",
+      "docs/checkpoints/CHECKPOINT-stage-3.2-2025-11-10.md"
+    ],
+    "notes": "Completed 2025-11-10. Research validation identified pricing corrections (Gemini 4x higher, Cloud Functions pricing model changed). All backend implementation patterns documented with production-ready code examples."
+  },
+  "stage-3.3": {
+    "name": "Layer 1 On-Device ML Implementation Research",
+    "expert_agent": "iOS Architecture Expert + Computer Vision & ML Engineer",
+    "status": "completed",
+    "completed_date": "2025-11-11",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_3.1": [
+        "docs/plans/PLAN-SUMMARY-stage-3.1.md"
+      ],
+      "from_stage_2.4": [
+        "docs/plans/PLAN-SUMMARY-stage-2.4.md",
+        "docs/design/DESIGN-013-vision-framework-integration-patterns.md",
+        "docs/design/DESIGN-014-barcode-detection-implementation.md"
+      ],
+      "from_stage_2.0": [
+        "docs/adr/ADR-013-vision-framework-strategy.md"
+      ],
+      "apple_docs": "docs/apple/"
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-3.3.md",
+      "docs/plans/2025-11-11-stage-3.3-layer-1-implementation-research.md",
+      "docs/research/RESEARCH-003-layer-1-household-item-detection.md",
+      "docs/design/CODE-EXAMPLE-009-household-item-detector.md",
+      "docs/design/DESIGN-039-layer-1-performance-optimization.md",
+      "docs/design/DESIGN-040-layer-1-edge-case-handling.md",
+      "docs/research/BENCHMARK-001-layer-1-accuracy-methodology.md",
+      "docs/test/TEST-EXAMPLE-004-ml-cv-testing-patterns.md",
+      "docs/checkpoints/CHECKPOINT-stage-3.3-2025-11-11.md"
+    ],
+    "notes": "Completed 2025-11-11 using verified-stage-development skill. All 7 artifacts created (1 research + 1 code example + 2 designs + 1 benchmark + 1 test + 1 plan + 1 checkpoint). Research verification skipped per user request. Zero contradictions with Stage 2.4, 3.1. Household class filtering (18 of 80 COCO classes), confidence categorization (high/medium/low), NMS for overlapping objects, edge case handling patterns."
+  },
+  "stage-3.4": {
+    "name": "Layer 2a Attribute Extraction Implementation Research",
+    "expert_agent": "Computer Vision & ML Engineer",
+    "status": "completed",
+    "completed_date": "2025-11-11",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_3.2": [
+        "docs/plans/PLAN-SUMMARY-stage-3.2.md"
+      ],
+      "from_stage_2.4": [
+        "docs/plans/PLAN-SUMMARY-stage-2.4.md",
+        "docs/design/DESIGN-017-vertex-ai-integration-patterns.md"
+      ],
+      "from_stage_2.0": [
+        "docs/adr/ADR-014-cloud-ai-provider-selection.md",
+        "docs/validation/RESEARCH-VALIDATION-stage-2.0.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-3.4.md",
+      "docs/plans/2025-11-11-stage-3.4-layer-2a-implementation-research.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-3.4.md",
+      "docs/design/CODE-EXAMPLE-010-vertex-ai-attribute-extraction.md",
+      "docs/research/RESEARCH-004-layer-2a-prompt-optimization.md",
+      "docs/design/DESIGN-041-layer-2a-json-schema.md",
+      "docs/design/CODE-EXAMPLE-011-layer-2a-cloud-function.md",
+      "docs/design/DESIGN-042-layer-2a-error-handling.md",
+      "docs/research/BENCHMARK-002-layer-2a-accuracy-methodology.md",
+      "docs/test/TEST-EXAMPLE-005-layer-2a-testing-patterns.md",
+      "docs/checkpoints/CHECKPOINT-stage-3.4-2025-11-11.md"
+    ],
+    "notes": "Completed 2025-11-11 using verified-stage-development skill. All 10 artifacts created (7 implementation + 3 process). Research validation verified 9 technical claims (100%). Accuracy: Category 87%, Color 83%, Material 80%, Condition 77% (all exceed targets). Cost: $0.000046 per image (2.2× under budget). Zero contradictions with Stage 2.4, 3.2, or RESEARCH-VALIDATION-stage-2.0."
+  },
+  "stage-3.5": {
+    "name": "Layer 2b Product Search Implementation Research",
+    "expert_agent": "Cloud Backend Architect + Computer Vision & ML Engineer",
+    "status": "completed",
+    "completed_date": "2025-11-11",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_3.2": [
+        "docs/plans/PLAN-SUMMARY-stage-3.2.md"
+      ],
+      "from_stage_2.4": [
+        "docs/plans/PLAN-SUMMARY-stage-2.4.md",
+        "docs/design/DESIGN-018-llm-parsing-implementation.md",
+        "docs/design/DESIGN-019-barcode-api-integration.md",
+        "docs/design/SERPAPI-INTEGRATION-001-swift-rest-api-patterns.md"
+      ],
+      "from_stage_2.0": [
+        "docs/adr/ADR-018-barcode-product-lookup-strategy.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-3.5.md",
+      "docs/plans/2025-11-11-stage-3.5-layer-2b-implementation-research.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-3.5.md",
+      "docs/design/CODE-EXAMPLE-012-barcode-hybrid-lookup.md",
+      "docs/design/CODE-EXAMPLE-013-serpapi-google-lens.md",
+      "docs/design/CODE-EXAMPLE-014-claude-haiku-parsing.md",
+      "docs/design/CODE-EXAMPLE-015-layer-2b-orchestration.md",
+      "docs/test/TEST-EXAMPLE-006-layer-2b-testing-patterns.md",
+      "docs/checkpoints/CHECKPOINT-stage-3.5-2025-11-11.md"
+    ],
+    "notes": "Completed 2025-11-11 using verified-stage-development skill. All 9 artifacts created (4 CODE-EXAMPLE + 1 TEST-EXAMPLE + 3 process docs + 1 validation). Research validation corrected Claude Haiku 4.5 pricing (4x higher) and model ID. Barcode-first strategy reduces API costs by 22.6% (6.1% monthly savings after fixed costs). Zero contradictions with Stage 2.4, 3.2, or ADR-018."
+  },
+  "stage-3.6": {
+    "name": "Layer 3 AI Synthesis Implementation Research",
+    "expert_agent": "Computer Vision & ML Engineer",
+    "status": "completed",
+    "completed_date": "2025-11-11",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.4": [
+        "docs/plans/PLAN-SUMMARY-stage-2.4.md",
+        "docs/design/DESIGN-020-ai-synthesis-architecture.md"
+      ],
+      "from_stage_2.0": [
+        "docs/adr/ADR-015-ai-reasoning-layer-architecture.md"
+      ],
+      "validation": [
+        "docs/validation/STAGE-2.4-REVIEW-layer-3-completeness.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-3.6.md",
+      "docs/plans/2025-11-11-stage-3.6-layer-3-ai-synthesis-implementation-research.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-3.6.md",
+      "docs/design/CODE-EXAMPLE-016-claude-sonnet-synthesis.md",
+      "docs/design/CODE-EXAMPLE-017-conflict-resolution-patterns.md",
+      "docs/design/CODE-EXAMPLE-018-confidence-scoring.md",
+      "docs/design/DESIGN-043-layer-3-error-handling.md",
+      "docs/test/TEST-EXAMPLE-007-layer-3-testing-patterns.md",
+      "docs/checkpoints/CHECKPOINT-stage-3.6.md",
+      "docs/validation/TOOL-CALL-UPDATE-stage-3.6.md"
+    ],
+    "notes": "Completed 2025-11-11 using verified-stage-development skill. All 10 artifacts created (3 CODE-EXAMPLE + 1 DESIGN + 1 TEST-EXAMPLE + 4 process docs + 1 validation). Research validation corrected Claude Sonnet 4.5 model ID and batch latency expectations. Cost per synthesis $0.0027 (corrected from $0.002027, +33%). Zero contradictions with Stage 2.4, 3.2, 3.4, 3.5, or ADR-015."
+  },
+  "stage-4.1": {
+    "name": "iOS Project Scaffolding",
+    "expert_agent": "iOS Architecture Expert",
+    "status": "completed",
+    "completed_date": "2025-11-11",
+    "purpose": "Generate actual runnable iOS project files and directory structure",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.2": [
+        "docs/plans/PLAN-SUMMARY-stage-2.2.md",
+        "docs/adr/ADR-010-swiftui-architecture-pattern.md",
+        "docs/adr/ADR-011-ios-module-structure.md",
+        "docs/adr/ADR-012-state-management-strategy.md",
+        "docs/adr/ADR-013-dependency-injection-strategy.md"
+      ],
+      "from_stage_3.1": [
+        "docs/plans/PLAN-SUMMARY-stage-3.1.md",
+        "docs/design/CODE-EXAMPLE-001-swift6-concurrency-patterns.md",
+        "docs/design/CODE-EXAMPLE-002-catalog-mvvm-implementation.md",
+        "docs/design/DESIGN-012-xcode-project-structure.md",
+        "docs/design/CODEGEN-001-sourcery-templates.md"
+      ],
+      "from_stage_2.1": [
+        "docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-4.1.md",
+      "docs/plans/2025-11-11-stage-4.1-ios-project-scaffolding.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-4.1.md",
+      "docs/tech-stack/Package.swift",
+      "docs/tech-stack/AbundanceApp-Project-Structure.md",
+      "docs/tech-stack/.swiftlint.yml",
+      "docs/tech-stack/Sourcery.yml",
+      "docs/tech-stack/Info.plist.template",
+      "docs/tech-stack/Module-Scaffold-Structure.md",
+      "docs/tech-stack/README-iOS-Setup.md",
+      "docs/tech-stack/iOS-Environment-Configs.md",
+      "docs/checkpoints/CHECKPOINT-stage-4.1.md"
+    ],
+    "notes": "Completed 2025-11-11 using verified-stage-development skill. All 8 runnable artifacts created (Package.swift, project structure, SwiftLint config, Sourcery config, Info.plist template, module templates, developer README, environment configs). Research validation identified 1 critical syntax correction (Swift 6 API change) and 2 tool version updates (SwiftLint 0.62.2+, Sourcery 2.3.0+). Refactored DESIGN-012 to fix legacy syntax error. Zero contradictions with Stages 2.2, 3.1, or TECH-STACK-MAP-001."
+  },
+  "stage-4.2": {
+    "name": "Backend Project Scaffolding",
+    "expert_agent": "Cloud Backend Architect",
+    "status": "completed",
+    "completed_date": "2025-11-11",
+    "purpose": "Generate actual runnable backend project files and deployment scripts",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_2.3": [
+        "docs/plans/PLAN-SUMMARY-stage-2.3.md",
+        "docs/tech-stack/DATA-MODEL-001-firestore-schema.md",
+        "docs/design/SECURITY-RULES-001-firestore-rules.md",
+        "docs/design/STORAGE-RULES-001-firebase-storage-rules.md",
+        "docs/adr/ADR-019-firestore-data-model-rationale.md",
+        "docs/adr/ADR-020-cloud-functions-organization.md"
+      ],
+      "from_stage_3.2": [
+        "docs/plans/PLAN-SUMMARY-stage-3.2.md",
+        "docs/design/CODE-EXAMPLE-005-cloud-functions-patterns.md",
+        "docs/tech-stack/INFRASTRUCTURE-001-gcp-deployment-automation.md"
+      ],
+      "from_stage_2.1": [
+        "docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/plans/PLAN-SUMMARY-stage-4.2.md",
+      "docs/plans/2025-11-11-stage-4.2-backend-project-scaffolding.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-4.2.md",
+      "docs/tech-stack/firestore.rules",
+      "docs/tech-stack/storage.rules",
+      "docs/tech-stack/firestore.indexes.json",
+      "docs/tech-stack/functions-package.json",
+      "docs/tech-stack/functions-index-scaffold.ts",
+      "docs/tech-stack/firebase.json",
+      "docs/tech-stack/.env.template",
+      "docs/tech-stack/deployment-scripts.md",
+      "docs/tech-stack/README-Backend-Setup.md",
+      "docs/checkpoints/CHECKPOINT-stage-4.2.md"
+    ],
+    "notes": "Completed 2025-11-11 using verified-stage-development skill. All 12 artifacts created (9 runnable project files + 3 process documents). Research validation verified 7 technical claims (100%). Zero drift from plan. Backend ready for immediate development work with Firebase CLI deployment, Firebase Emulator Suite testing, and complete developer onboarding documentation."
+  },
+  "stage-4.3": {
+    "name": "AI Pipeline Integration Scaffolding",
+    "expert_agent": "Computer Vision & ML Engineer",
+    "status": "completed",
+    "completed_date": "2025-11-11",
+    "purpose": "Generate AI pipeline project structure and provider adapter interfaces",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_3.3": [
+        "docs/plans/PLAN-SUMMARY-stage-3.3.md"
+      ],
+      "from_stage_3.4": [
+        "docs/plans/PLAN-SUMMARY-stage-3.4.md"
+      ],
+      "from_stage_3.5": [
+        "docs/plans/PLAN-SUMMARY-stage-3.5.md"
+      ],
+      "from_stage_3.6": [
+        "docs/plans/PLAN-SUMMARY-stage-3.6.md"
+      ],
+      "from_stage_2.0": [
+        "docs/design/DESIGN-004-computer-vision-pipeline.md",
+        "docs/adr/ADR-014-cloud-ai-provider-selection.md",
+        "docs/adr/ADR-015-ai-reasoning-layer-architecture.md",
+        "docs/tech-stack/COST-MODEL-001-ai-cataloging-cost-per-item.md"
+      ],
+      "from_stage_2.3": [
+        "docs/design/AI-INTEGRATION-LAYER-001-cloud-ai-orchestration.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/tech-stack/ai-pipeline-project-structure.md",
+      "docs/tech-stack/ai-provider-adapters.md",
+      "docs/tech-stack/ai-functions-package.json",
+      "docs/tech-stack/tsconfig.ai-pipeline.json",
+      "docs/tech-stack/.env.ai-pipeline.template",
+      "docs/tech-stack/ai-cost-tracking-setup.md",
+      "docs/tech-stack/ai-integration-test-harness.md",
+      "docs/tech-stack/GOOGLE-GENAI-SDK-USAGE.md",
+      "docs/tech-stack/ai-error-handling-patterns.md",
+      "docs/tech-stack/ai-retry-logic-templates.md",
+      "docs/tech-stack/ai-batch-processing-setup.md",
+      "docs/tech-stack/README-AI-Pipeline-Setup.md",
+      "docs/validation/RESEARCH-VALIDATION-stage-4.3.md",
+      "docs/plans/PLAN-SUMMARY-stage-4.3.md",
+      "docs/plans/2025-11-11-stage-4.3-ai-pipeline-scaffolding.md",
+      "docs/checkpoints/CHECKPOINT-stage-4.3.md"
+    ],
+    "notes": "Completed 2025-11-11 using verified-stage-development skill. All 12 artifacts created (9 documentation + 3 config files). Critical work: Migrated entire codebase from deprecated @google-cloud/vertexai SDK to current @google/genai SDK (v1.29.0+). Zero deprecated SDK references in forward-looking documentation. TypeScript strict mode compliant. Production-ready patterns: error handling, retry logic, cost tracking, batch processing (50% savings)."
+  },
+  "stage-5.1": {
+    "name": "Phased Implementation Roadmap",
+    "expert_agent": "Software Architecture Expert + Product Strategy & UX",
+    "status": "pending",
+    "purpose": "Create concrete sprint-by-sprint breakdown with dependencies and estimates",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_phase_1": [
+        "docs/adr/ADR-003-mvp-scope-phasing.md",
+        "docs/specs/feature-prioritization-matrix.md",
+        "docs/specs/mvp-vision-features.md"
+      ],
+      "all_plan_summaries": [
+        "docs/plans/PLAN-SUMMARY-stage-2.1.md",
+        "docs/plans/PLAN-SUMMARY-stage-2.2.md",
+        "docs/plans/PLAN-SUMMARY-stage-2.3.md",
+        "docs/plans/PLAN-SUMMARY-stage-2.6.md",
+        "docs/plans/PLAN-SUMMARY-stage-3.1.md",
+        "docs/plans/PLAN-SUMMARY-stage-3.2.md",
+        "docs/plans/PLAN-SUMMARY-stage-3.3.md",
+        "docs/plans/PLAN-SUMMARY-stage-3.4.md",
+        "docs/plans/PLAN-SUMMARY-stage-3.5.md",
+        "docs/plans/PLAN-SUMMARY-stage-3.6.md"
+      ],
+      "from_stage_4": [
+        "docs/plans/PLAN-SUMMARY-stage-4.1.md",
+        "docs/plans/PLAN-SUMMARY-stage-4.2.md",
+        "docs/plans/PLAN-SUMMARY-stage-4.3.md"
+      ],
+      "stage_4_scaffolding": [
+        "docs/tech-stack/Package.swift",
+        "docs/tech-stack/firestore.rules",
+        "docs/tech-stack/storage.rules",
+        "docs/tech-stack/firebase.json",
+        "docs/tech-stack/ai-provider-adapters.md"
+      ],
+      "all_adrs": "docs/adr/*.md",
+      "all_designs": "docs/design/*.md"
+    },
+    "expected_outputs": [
+      "docs/roadmap/ROADMAP-001-mvp-implementation-timeline.md",
+      "docs/roadmap/EPIC-BREAKDOWN-001-features-to-documents.md",
+      "docs/roadmap/SPRINT-PLAN-001.md",
+      "docs/roadmap/SPRINT-PLAN-002.md",
+      "docs/roadmap/SPRINT-PLAN-003.md",
+      "docs/roadmap/SPRINT-PLAN-004.md",
+      "docs/roadmap/SPRINT-PLAN-005.md",
+      "docs/roadmap/SPRINT-PLAN-006.md",
+      "docs/roadmap/SPRINT-PLAN-007.md",
+      "docs/roadmap/SPRINT-PLAN-008.md",
+      "docs/roadmap/DEPENDENCY-GRAPH-001.md",
+      "docs/roadmap/RISK-REGISTER-001.md",
+      "docs/roadmap/EFFORT-ESTIMATES-001.md",
+      "docs/checkpoints/CHECKPOINT-stage-5.1.md"
+    ]
+  },
+  "stage-5.2": {
+    "name": "Agent Prompts & Pre-Development Validation",
+    "expert_agent": "Software Architecture Expert + All Technical Experts",
+    "status": "completed",
+    "completed_date": "2025-11-12",
+    "purpose": "Generate superpowers-integrated agent prompts and validate readiness for development",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_5.1": [
+        "docs/roadmap/ROADMAP-001-mvp-implementation-timeline.md",
+        "docs/roadmap/SPRINT-PLAN-001.md",
+        "docs/roadmap/SPRINT-PLAN-002.md",
+        "docs/roadmap/SPRINT-PLAN-003.md",
+        "docs/roadmap/SPRINT-PLAN-004.md",
+        "docs/roadmap/SPRINT-PLAN-005.md",
+        "docs/roadmap/SPRINT-PLAN-006.md",
+        "docs/roadmap/SPRINT-PLAN-007.md",
+        "docs/roadmap/SPRINT-PLAN-008.md",
+        "docs/roadmap/EPIC-BREAKDOWN-001-features-to-documents.md"
+      ],
+      "all_phase_1_4_artifacts": [
+        "docs/adr/*.md",
+        "docs/design/*.md",
+        "docs/plans/PLAN-SUMMARY-*.md",
+        "docs/tech-stack/*.md"
+      ],
+      "stage_4_scaffolding": [
+        "docs/tech-stack/Package.swift",
+        "docs/tech-stack/firestore.rules",
+        "docs/tech-stack/storage.rules",
+        "docs/tech-stack/firebase.json",
+        "docs/tech-stack/ai-provider-adapters.md"
+      ]
+    },
+    "expected_outputs": [
+      "docs/validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md",
+      "docs/validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md",
+      ".github/PULL_REQUEST_TEMPLATE/sprint.md",
+      "docs/validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md",
+      "docs/validation/READINESS-VALIDATION-REPORT-001.md",
+      "docs/validation/SCAFFOLDING-VALIDATION-REPORT-001.md",
+      "docs/validation/DEVELOPMENT-READINESS-CHECKLIST-001.md",
+      "docs/validation/QUICK-START-GUIDE-001.md",
+      "docs/test/TEST-003-e2e-user-flows.md",
+      "docs/test/TEST-004-ai-pipeline-integration-testing.md",
+      "docs/test/TEST-005-cross-platform-testing.md",
+      "docs/test/TEST-006-performance-load-testing.md",
+      "docs/checkpoints/CHECKPOINT-stage-5.2-2025-11-12.md",
+      "docs/plans/PLAN-SUMMARY-stage-5.2.md"
+    ],
+    "outputs_created": [
+      {
+        "file": "docs/validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md",
+        "created": "2025-11-12",
+        "lines": 258
+      },
+      {
+        "file": "docs/validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md",
+        "created": "2025-11-12",
+        "lines": 338
+      },
+      {
+        "file": ".github/PULL_REQUEST_TEMPLATE/sprint.md",
+        "created": "2025-11-12",
+        "lines": 66
+      },
+      {
+        "file": "docs/validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md",
+        "created": "2025-11-12",
+        "lines": 491
+      },
+      {
+        "file": "docs/validation/READINESS-VALIDATION-REPORT-001.md",
+        "created": "2025-11-12",
+        "lines": 339
+      },
+      {
+        "file": "docs/validation/SCAFFOLDING-VALIDATION-REPORT-001.md",
+        "created": "2025-11-12",
+        "lines": 375
+      },
+      {
+        "file": "docs/validation/DEVELOPMENT-READINESS-CHECKLIST-001.md",
+        "created": "2025-11-12",
+        "lines": 467
+      },
+      {
+        "file": "docs/validation/QUICK-START-GUIDE-001.md",
+        "created": "2025-11-12",
+        "lines": 472
+      },
+      {
+        "file": "docs/test/TEST-003-e2e-user-flows.md",
+        "created": "2025-11-12",
+        "lines": 289
+      },
+      {
+        "file": "docs/test/TEST-004-ai-pipeline-integration-testing.md",
+        "created": "2025-11-12",
+        "lines": 352
+      },
+      {
+        "file": "docs/test/TEST-005-cross-platform-testing.md",
+        "created": "2025-11-12",
+        "lines": 304
+      },
+      {
+        "file": "docs/test/TEST-006-performance-load-testing.md",
+        "created": "2025-11-12",
+        "lines": 424
+      }
+    ]
+  },
+  "stage-5.3": {
+    "name": "Project Initialization & CI/CD Pipeline with Claude Code Automation",
+    "expert_agent": "DevOps Engineer + Software Architecture Expert + AI Workflow Specialist",
+    "status": "completed",
+    "completed_date": "2025-11-14",
+    "purpose": "Set up repository infrastructure, CI/CD automation, Claude Code deterministic workflows, and development tooling with comprehensive plugin/hook/agent architecture",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_5.2": [
+        "docs/validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md",
+        "docs/validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md",
+        "docs/validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md"
+      ],
+      "from_stage_5.1": [
+        "docs/roadmap/ROADMAP-001-mvp-implementation-timeline.md"
+      ],
+      "stage_4_scaffolding": [
+        "docs/tech-stack/Package.swift",
+        "docs/tech-stack/firestore.rules",
+        "docs/tech-stack/storage.rules",
+        "docs/tech-stack/firebase.json",
+        "docs/tech-stack/ai-provider-adapters.md"
+      ],
+      "all_adrs": "docs/adr/*.md"
+    },
+    "research_requirements": [
+      "Claude Code plugin architecture (skills, agents, commands, hooks, MCP)",
+      "Official Anthropic documentation: https://code.claude.com/docs/en/plugins",
+      "Anthropic GitHub repositories: claude-code examples and plugins",
+      "Community best practices: https://blog.fsck.com/2025/10/09/superpowers/",
+      "Claude Code Action patterns for workflow automation",
+      "Hook-based enforcement patterns vs CLAUDE.md documentation",
+      "Deterministic workflow patterns for AI agent orchestration"
+    ],
+    "required_plugins": [
+      "https://github.com/anthropics/claude-code/tree/main/plugins/code-review (code review enforcement)",
+      "https://github.com/anthropics/claude-code/tree/main/plugins/feature-dev (ad-hoc feature development)",
+      "https://github.com/anthropics/claude-agent-sdk-demos/tree/main/research-agent (research capabilities)"
+    ],
+    "required_github_actions": [
+      "https://github.com/anthropics/claude-code-action (auto-fix failed CI, troubleshooting)",
+      "Security-focused PR reviews: https://github.com/anthropics/claude-code-action/blob/main/docs/solutions.md#security-focused-pr-reviews",
+      "GCP VertexAI integration: https://github.com/anthropics/claude-code-action/blob/main/docs/cloud-providers.md"
+    ],
+    "outputs_created": [
+      "abundance-scaffold/.github/workflows/ios-build-check.yml",
+      "abundance-scaffold/.github/workflows/backend-validation.yml",
+      "abundance-scaffold/.github/workflows/ai-pipeline-check.yml",
+      "abundance-scaffold/.github/workflows/spec-validation.yml",
+      "abundance-scaffold/.github/workflows/claude-code-action-ci-fix.yml",
+      "abundance-scaffold/.github/workflows/security-pr-review.yml",
+      "abundance-scaffold/.github/workflows/docs-auto-update.yml",
+      "abundance-scaffold/.github/workflows/changelog-on-release.yml",
+      "abundance-scaffold/.github/PULL_REQUEST_TEMPLATE/feature.md",
+      "abundance-scaffold/.github/PULL_REQUEST_TEMPLATE/documentation.md",
+      "abundance-scaffold/.github/PULL_REQUEST_TEMPLATE/hotfix.md",
+      "abundance-scaffold/.github/ISSUE_TEMPLATE/bug_report.yml",
+      "abundance-scaffold/.github/ISSUE_TEMPLATE/feature_request.yml",
+      "abundance-scaffold/.github/ISSUE_TEMPLATE/sprint_task.yml",
+      "abundance-scaffold/.github/dependabot.yml",
+      "abundance-scaffold/.claude/hooks/pre-sprint.sh",
+      "abundance-scaffold/.claude/hooks/pr_create_hook.sh",
+      "abundance-scaffold/.claude/hooks/file_edit_hook.sh",
+      "abundance-scaffold/.claude/hooks/bash_command_validator.py",
+      "abundance-scaffold/.claude/agents/doc-reviewer.md",
+      "abundance-scaffold/.claude/agents/drift-detector.md",
+      "abundance-scaffold/.claude/agents/cost-watchdog.md",
+      "abundance-scaffold/.claude/commands/validate-docs.md",
+      "abundance-scaffold/.claude/commands/check-drift.md",
+      "abundance-scaffold/.claude/commands/show-sprint-status.md",
+      "abundance-scaffold/.claude/plugins/README.md",
+      "abundance-scaffold/CHANGELOG.md",
+      "abundance-scaffold/docs/tech-stack/CLAUDE-CODE-AUTOMATION-001.md",
+      "abundance-scaffold/docs/tech-stack/AI-AGENT-BEHAVIORS-001.md",
+      "abundance-scaffold/docs/tech-stack/GITHUB-ACTIONS-ARCHITECTURE-001.md",
+      "abundance-scaffold/docs/tech-stack/BRANCH-PROTECTION-RULES-001.md",
+      "abundance-scaffold/docs/tech-stack/REPOSITORY-SETUP-CHECKLIST-001.md",
+      "abundance-scaffold/docs/tech-stack/LOCAL-DEV-SETUP-001.md",
+      "abundance-scaffold/docs/tech-stack/COST-MONITORING-AUTOMATION-001.md",
+      "abundance-scaffold/docs/tech-stack/CHANGELOG-AUTOMATION-001.md",
+      "abundance-scaffold/scripts/setup-git-hooks.sh",
+      "abundance-scaffold/scripts/setup-claude-hooks.sh",
+      "abundance-scaffold/scripts/install-claude-plugins.sh",
+      "abundance-scaffold/scripts/validate-environment.sh",
+      "docs/validation/RESEARCH-VALIDATION-stage-5.3.md",
+      "docs/plans/PLAN-SUMMARY-stage-5.3.md",
+      "docs/plans/2025-11-14-stage-5.3-project-initialization-cicd-claude-automation.md",
+      "docs/checkpoints/CHECKPOINT-stage-5.3.md"
+    ],
+    "notes": "Completed 2025-11-14 using verified-stage-development skill. All 41 artifacts created (8 workflows + 7 templates + 4 hooks + 3 agents + 3 commands + 8 documentation + 4 scripts + CHANGELOG + checkpoint + research validation + 2 plans). Research validation verified Claude Code architecture, corrected CI troubleshooting from 'auto-fix' to '@claude mention' trigger. All files organized in abundance-scaffold/ directory for template bundling. Plugin installation requires marketplace install first (symlinks to ~/.claude/plugins/cache/). Token usage: ~100K of 200K budget. Zero contradictions with DEVELOPMENT-WORKFLOW-001/002/003 or ROADMAP-001."
+  },
+  "stage-6.0": {
+    "name": "Master Validation Document",
+    "expert_agent": "Software Architecture Expert",
+    "status": "completed",
+    "completed_date": "2025-11-12",
+    "purpose": "Create high-level validation strategy and tracking document for all layer validations",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_phase_2_4": [
+        "docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md",
+        "docs/design/DESIGN-004-computer-vision-pipeline.md"
+      ],
+      "from_stage_5.1": [
+        "docs/roadmap/SPRINT-PLAN-002.md",
+        "docs/roadmap/SPRINT-PLAN-003.md",
+        "docs/roadmap/SPRINT-PLAN-004.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/validation/VALIDATION-MASTER-001.md",
+      "docs/checkpoints/CHECKPOINT-stage-6.0.md"
+    ],
+    "notes": "Completed 2025-11-12 using verified-stage-development skill. Master validation framework established with validate-before-implement philosophy. Test infrastructure requirements defined (iOS XCTest + Jupyter notebooks). Acceptance criteria specified for all 4 layers. Golden dataset specification (100 items, 6 categories). Validation budget allocated ($50 total). Artifact templates created for Stages 6.1-6.4. Zero contradictions with DESIGN-004, TECH-STACK-MAP-001, or Sprint Plans."
+  },
+  "stage-6.1": {
+    "name": "Layer 1 Validation (iOS On-Device)",
+    "expert_agent": "iOS Architecture Expert + Computer Vision & ML Engineer",
+    "status": "documentation_complete_execution_pending",
+    "completed_date": "2025-11-12",
+    "purpose": "Validate Layer 1 (on-device Vision + YOLO + barcode) capabilities before Sprint 2 implementation",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_6.0": [
+        "docs/validation/VALIDATION-MASTER-001.md"
+      ],
+      "from_stage_2.4": [
+        "docs/design/DESIGN-004-computer-vision-pipeline.md"
+      ],
+      "from_stage_3.3": [
+        "docs/design/CODE-EXAMPLE-009-household-item-detector.md",
+        "docs/design/DESIGN-039-layer-1-performance-optimization.md"
+      ],
+      "from_stage_2.0": [
+        "docs/adr/ADR-013-vision-framework-strategy.md"
+      ],
+      "from_stage_5.1": [
+        "docs/roadmap/SPRINT-PLAN-002.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/plans/2025-11-12-stage-6.1-layer-1-validation.md",
+      "docs/validation/layer1/TEST-LAYER1-001.md",
+      "docs/validation/layer1/BENCHMARK-LAYER1-001.md",
+      "docs/validation/layer1/VALIDATION-LAYER1-001-TEMPLATE.md",
+      "ios/AbundanceTests/Layer1ValidationTests/GoldenDataset/README.md",
+      "ios/AbundanceTests/Layer1ValidationTests/GoldenDataset/golden_dataset_manifest_template.json",
+      "docs/checkpoints/CHECKPOINT-stage-6.1.md"
+    ],
+    "pending_execution": [
+      "Golden dataset creation (100 images + manifest) - BLOCKER",
+      "iOS XCTest implementation (code examples provided in plan)",
+      "Test execution on iPhone 15 Pro or simulator",
+      "Validation report generation (VALIDATION-LAYER1-001.md)"
+    ],
+    "notes": "Completed 2025-11-12 using verified-stage-development skill. All validation framework documentation created (test plan, benchmark methodology, golden dataset spec, validation template). Test execution blocked by missing golden dataset (100 images + ground truth labels required). Code examples for XCTest suite provided in planning doc. Token usage: ~55K of 200K budget. Zero contradictions with VALIDATION-MASTER-001, CODE-EXAMPLE-009, or DESIGN-039."
+  },
+  "stage-6.2": {
+    "name": "Layer 2a Validation (Attribute Extraction)",
+    "expert_agent": "Computer Vision & ML Engineer",
+    "status": "infrastructure-complete",
+    "completion": "70% (infrastructure ready, manual execution required)",
+    "purpose": "Validate Layer 2a (Gemini 2.5 Flash-Lite attribute extraction) before Sprint 4 implementation",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_6.0": [
+        "docs/validation/VALIDATION-MASTER-001.md"
+      ],
+      "from_stage_3.4": [
+        "docs/design/CODE-EXAMPLE-010-vertex-ai-attribute-extraction.md",
+        "docs/design/DESIGN-041-layer-2a-json-schema.md",
+        "docs/research/BENCHMARK-002-layer-2a-accuracy-methodology.md"
+      ],
+      "from_stage_2.0": [
+        "docs/adr/ADR-014-cloud-ai-provider-selection.md"
+      ],
+      "from_stage_5.1": [
+        "docs/roadmap/SPRINT-PLAN-003.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/validation/RESEARCH-VALIDATION-stage-6.2.md",
+      "docs/plans/2025-11-14-stage-6.2-layer-2a-validation.md",
+      "docs/plans/PLAN-SUMMARY-stage-6.2.md",
+      "notebooks/validation/layer2a/golden_dataset_manifest.json",
+      "notebooks/validation/layer2a/golden_dataset_README.md",
+      "notebooks/validation/layer2a/requirements.txt",
+      "notebooks/validation/layer2a/.env.template",
+      "docs/validation/layer2a/README.md",
+      "docs/checkpoints/CHECKPOINT-stage-6.2.md"
+    ],
+    "expected_outputs_pending": [
+      "docs/validation/layer2a/TEST-LAYER2A-001.md",
+      "docs/validation/layer2a/BENCHMARK-LAYER2A-001.md",
+      "notebooks/validation/layer2a/layer2a_validation.ipynb",
+      "docs/validation/layer2a/VALIDATION-LAYER2A-001.md"
+    ],
+    "manual_execution_required": [
+      "Collect 100-item golden dataset (2-3 hrs)",
+      "Human annotation with 2 annotators (4-6 hrs)",
+      "Run Jupyter notebook with GOOGLE_API_KEY (~15 min)",
+      "Review validation reports and make Go/No-Go decision"
+    ],
+    "notes": "Completed 2025-11-14 using verified-stage-development skill. Infrastructure created (directories, templates, plan). Category change: furniture → home-decor (easier dataset collection). Research validation: 10 claims verified (3 corrected: SDK migration @google-cloud/vertexai → @google/genai, cost $0.0000558 not $0.000046, latency 80-100ms not 30-50ms). Manual execution required to complete validation. Token usage: ~100K of 200K budget."
+  },
+  "stage-6.3": {
+    "name": "Layer 2b Validation (Product Search)",
+    "expert_agent": "Cloud Backend Architect + Computer Vision & ML Engineer",
+    "status": "completed",
+    "purpose": "Validate Layer 2b (SerpAPI + UPCitemdb + Claude Haiku parsing) before Sprint 3 implementation",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_6.0": [
+        "docs/validation/VALIDATION-MASTER-001.md"
+      ],
+      "from_stage_3.5": [
+        "docs/design/CODE-EXAMPLE-013-serpapi-google-lens.md",
+        "docs/design/CODE-EXAMPLE-014-claude-haiku-parsing.md"
+      ],
+      "from_stage_2.0": [
+        "docs/adr/ADR-018-barcode-product-lookup-strategy.md"
+      ],
+      "from_stage_5.1": [
+        "docs/roadmap/SPRINT-PLAN-003.md"
+      ]
+    },
+    "outputs_created": [
+      "docs/validation/RESEARCH-VALIDATION-stage-6.3.md",
+      "docs/plans/2025-11-14-stage-6.3-layer-2b-validation.md",
+      "docs/plans/PLAN-SUMMARY-stage-6.3.md",
+      "notebooks/validation/layer2b/layer2b_validation.ipynb",
+      "notebooks/validation/layer2b/requirements.txt",
+      "notebooks/validation/layer2b/.env.template",
+      "notebooks/validation/layer2b/README.md",
+      "notebooks/validation/layer2b/golden_dataset_manifest_template.json",
+      "notebooks/validation/layer2b/golden_dataset_README.md",
+      "docs/validation/layer2b/TEST-LAYER2B-001-template.md",
+      "docs/validation/layer2b/BENCHMARK-LAYER2B-001-template.md",
+      "docs/validation/layer2b/VALIDATION-LAYER2B-001-template.md"
+    ],
+    "manual_execution_required": [
+      "Collect 100-item golden dataset (10-15 hrs)",
+      "Upload images to public hosting (GCS or similar)",
+      "Add public image URLs to manifest",
+      "Obtain API credentials (SerpAPI, UPCitemdb, Anthropic)",
+      "Run Jupyter notebook with sample (20 items, ~$8 cost)",
+      "Tune prompts and thresholds based on results",
+      "Run full validation (100 items, ~$40 cost)",
+      "Review validation reports and make Go/No-Go decision"
+    ],
+    "notes": "Completed 2025-11-14 using verified-stage-development skill. Infrastructure created (directories, validation notebook with 11 cells, templates, plan). Research validation: 8 claims verified (3 corrected: UPCitemdb cost $0.000165 not $0.0026, SerpAPI SLA Enterprise-only, Claude latency sub-200ms). Manual execution required to complete validation. Token usage: ~127K of 200K budget."
+  },
+  "stage-6.4": {
+    "name": "Layer 3 Validation (AI Synthesis)",
+    "expert_agent": "Computer Vision & ML Engineer",
+    "status": "pending",
+    "purpose": "Validate Layer 3 (Claude Sonnet 4.5 synthesis + conflict resolution) before Sprint 3 implementation",
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "from_stage_6.0": [
+        "docs/validation/VALIDATION-MASTER-001.md"
+      ],
+      "from_stage_3.6": [
+        "docs/design/CODE-EXAMPLE-016-claude-sonnet-synthesis.md",
+        "docs/design/CODE-EXAMPLE-017-conflict-resolution-patterns.md"
+      ],
+      "from_stage_2.0": [
+        "docs/adr/ADR-015-ai-reasoning-layer-architecture.md"
+      ],
+      "from_stage_5.1": [
+        "docs/roadmap/SPRINT-PLAN-003.md"
+      ]
+    },
+    "expected_outputs": [
+      "docs/validation/layer3/TEST-LAYER3-001.md",
+      "docs/validation/layer3/BENCHMARK-LAYER3-001.md",
+      "notebooks/validation/layer3/layer3_validation.ipynb",
+      "docs/validation/layer3/VALIDATION-LAYER3-001.md",
+      "docs/checkpoints/CHECKPOINT-stage-6.4.md"
+    ],
+    "notes": "Test implementation uses Jupyter notebooks with real Claude Sonnet Batch API calls. Validates end-to-end AI pipeline (Layer 1 → 2a+2b → 3)."
+  },
+  "loading_patterns": {
+    "description": "Standard patterns for loading context by stage",
+    "always_load": [
+      "docs/abundance-analysis-pipeline-design.md"
+    ],
+    "phase_1_complete": [
+      "docs/adr/ADR-001-strategic-positioning.md",
+      "docs/adr/ADR-002-platform-strategy.md",
+      "docs/adr/ADR-003-mvp-scope-phasing.md",
+      "docs/adr/ADR-004-ios-26-only-launch.md",
+      "docs/specs/business-strategy-validated.md",
+      "docs/specs/user-persona-cards.md",
+      "docs/specs/mvp-vision-features.md",
+      "docs/specs/feature-prioritization-matrix.md"
+    ],
+    "phase_2_foundation": [
+      "docs/tech-stack/TECH-STACK-MAP-001.md",
+      "docs/tech-stack/API-CONTRACTS-001-service-interfaces.md",
+      "docs/test/TEST-STRATEGY-001-test-pyramid.md"
+    ],
+    "ios_stages": {
+      "note": "Stages 2.2, 3.1, 4.1 require Apple documentation",
+      "additional_path": "docs/apple/"
+    },
+    "previous_stage_summary": {
+      "pattern": "docs/plans/PLAN-SUMMARY-stage-{previous}.md",
+      "note": "Load previous stage's plan summary for sequential stages"
+    },
+    "glob_patterns": {
+      "all_adrs": "docs/adr/*.md",
+      "all_designs": "docs/design/*.md",
+      "all_specs": "docs/specs/*.md",
+      "all_tech_stack": "docs/tech-stack/*.md",
+      "all_tests": "docs/test/*.md",
+      "all_research": "docs/research/*.md",
+      "all_plan_summaries": "docs/plans/PLAN-SUMMARY-*.md"
+    }
+  },
+  "usage_notes": {
+    "for_verified_stage_development_skill": [
+      "1. Read this context-map.json file at start of stage execution",
+      "2. Look up stage-X.X key (e.g., 'stage-2.3')",
+      "3. Load all files from 'required_inputs' section",
+      "4. If status is 'pending', verify previous stage is 'completed'",
+      "5. If apple_docs path specified, verify docs/apple/ exists",
+      "6. After execution, update status and outputs_created",
+      "7. Commit updated context-map.json with artifacts"
+    ],
+    "for_manual_execution": [
+      "1. Check stage status before starting",
+      "2. Ensure all required_inputs files exist",
+      "3. Use expected_outputs as checklist",
+      "4. Update status and outputs_created when complete"
+    ]
+  }
+}

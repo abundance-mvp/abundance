@@ -1,0 +1,173 @@
+# SwiftLint Configuration for Abundance iOS App
+# Version: 0.62.2+ (Swift 6.0 compatible)
+# Created: 2025-11-11
+# Stage: 4.1 - iOS Project Scaffolding
+# References:
+#   - docs/validation/RESEARCH-VALIDATION-stage-4.1.md (SwiftLint 0.62.2+ verified)
+#   - docs/tech-stack/Package.swift (Swift 6 strict concurrency)
+
+# MARK: - Disabled Rules
+
+disabled_rules:
+  - trailing_whitespace       # Handled by editor (Xcode auto-formats)
+  - line_length               # Configured below (120 chars)
+  - file_length               # Allow larger files for comprehensive ViewModels
+  - type_body_length          # Allow larger types (ViewModels with many @Published properties)
+  - function_body_length      # Allow longer functions for complex async flows
+  - cyclomatic_complexity     # Allow complex async/await chains
+  - nesting                   # Allow nested closures in SwiftUI views
+
+# MARK: - Opt-In Rules (Strict Mode)
+
+opt_in_rules:
+  - force_unwrapping                    # Disallow ! operator (prefer guard/if let)
+  - implicitly_unwrapped_optional      # Disallow implicitly unwrapped optionals (!)
+  - explicit_acl                        # Require explicit access control (public, internal, private)
+  - explicit_top_level_acl              # Require access control on top-level types
+  - explicit_enum_raw_value             # Require explicit raw values for enums
+  - explicit_init                       # Prefer explicit init over implicit
+  - explicit_type_interface             # Prefer explicit types over type inference (for public APIs)
+  - closure_spacing                     # Enforce spacing in closures
+  - empty_count                         # Prefer isEmpty over count == 0
+  - first_where                         # Prefer first(where:) over filter().first
+  - contains_over_first_not_nil         # Prefer contains() over first(where:) != nil
+  - last_where                          # Prefer last(where:) over filter().last
+  - multiline_arguments                 # Format multiline function arguments
+  - multiline_function_chains           # Format multiline function chains
+  - operator_usage_whitespace           # Enforce spacing around operators
+  - sorted_first_last                   # Prefer sorted().first over min/max
+  - toggle_bool                         # Prefer toggle() over = !value
+  - unused_optional_binding             # Warn on unused optional bindings
+  - vertical_whitespace_closing_braces  # Remove extra lines before closing braces
+  - vertical_whitespace_opening_braces  # Remove extra lines after opening braces
+  - yoda_condition_rule                 # Disallow Yoda conditions (if 5 == x)
+
+# MARK: - Included Paths
+
+included:
+  - App/
+  - Packages/
+
+# MARK: - Excluded Paths
+
+excluded:
+  - .build/                   # Swift Package Manager build artifacts
+  - Pods/                     # CocoaPods (if fallback needed)
+  - Generated/                # Sourcery generated code
+  - DerivedData/              # Xcode build artifacts
+  - .swiftpm/                 # SPM cache
+  - Tests/                    # Test files (different linting rules)
+
+# MARK: - Rule Configurations
+
+# Line Length: 120 characters (Xcode default)
+line_length:
+  warning: 120
+  error: 150
+  ignores_comments: true
+  ignores_urls: true
+  ignores_function_declarations: false
+  ignores_interpolated_strings: true
+
+# Identifier Names: Min 2 characters (allow i, j for loops)
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 40
+    error: 60
+  excluded:
+    - id        # Common property name
+    - x         # SwiftUI geometry
+    - y         # SwiftUI geometry
+    - db        # Firestore database
+    - url       # URL instances
+
+# Type Names: PascalCase, min 3 characters
+type_name:
+  min_length:
+    warning: 3
+    error: 1
+  max_length:
+    warning: 40
+    error: 60
+
+# Function Parameter Count: Max 5 parameters
+function_parameter_count:
+  warning: 5
+  error: 7
+
+# Large Tuple: Max 3 elements (prefer structs)
+large_tuple:
+  warning: 3
+  error: 4
+
+# Trailing Comma: Require in multiline arrays/dicts
+trailing_comma:
+  mandatory_comma: true
+
+# Vertical Whitespace: Max 1 blank line
+vertical_whitespace:
+  max_empty_lines: 1
+
+# File Header: Optional (not enforced)
+file_header:
+  required_string: ""
+
+# MARK: - Swift 6 Specific Rules
+
+# Custom Rules for Swift 6 Concurrency
+
+custom_rules:
+  # Require @MainActor on ViewModels
+  mainactor_viewmodels:
+    name: "MainActor ViewModels"
+    regex: 'class\s+\w+ViewModel.*:\s*(ObservableObject|@Observable)'
+    message: "ViewModels should be annotated with @MainActor"
+    severity: warning
+
+  # Warn on force unwrapping in async contexts
+  force_unwrap_async:
+    name: "Force Unwrap in Async"
+    regex: '(async|await).*!'
+    message: "Avoid force unwrapping in async contexts (use try/catch or guard)"
+    severity: warning
+
+  # Require @preconcurrency for Firebase imports
+  firebase_preconcurrency:
+    name: "Firebase Preconcurrency"
+    regex: 'import\s+Firebase(?!.*@preconcurrency)'
+    message: "Firebase imports should use @preconcurrency (temporary workaround for SDK 11.x)"
+    severity: warning
+
+  # Prefer @Observable over @Published (Swift 6)
+  prefer_observable:
+    name: "Prefer @Observable"
+    regex: '@Published\s+var'
+    message: "Consider using @Observable instead of @Published for better performance (30-50% faster)"
+    severity: warning
+
+# MARK: - Reporter
+
+# Output Format: Xcode-friendly warnings
+reporter: "xcode"
+
+# MARK: - Usage Instructions
+
+# Run SwiftLint:
+#   swiftlint                          # Lint all files
+#   swiftlint --strict                 # Warnings as errors
+#   swiftlint --fix                    # Auto-fix violations
+#   swiftlint --config .swiftlint.yml  # Explicit config path
+
+# Xcode Integration:
+#   Add Run Script Phase:
+#     if which swiftlint >/dev/null; then
+#       swiftlint
+#     else
+#       echo "warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint"
+#     fi
+
+# CI/CD:
+#   swiftlint lint --strict            # Fail build on warnings

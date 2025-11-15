@@ -1,0 +1,39 @@
+{
+  "technology": "notifications",
+  "fetched_date": "2025-11-02",
+  "fetch_source": "sosumi.ai",
+  "docs": [
+    {
+      "title": "User Notifications Overview",
+      "original_url": "https://developer.apple.com/documentation/usernotifications",
+      "sosumi_url": "https://sosumi.ai/documentation/usernotifications",
+      "local_path": "user-notifications-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 6
+    },
+    {
+      "title": "User Notifications UI Overview",
+      "original_url": "https://developer.apple.com/documentation/usernotificationsui",
+      "sosumi_url": "https://sosumi.ai/documentation/usernotificationsui",
+      "local_path": "user-notifications-ui-overview.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 1
+    },
+    {
+      "title": "UNMutableNotificationContent API",
+      "original_url": "https://developer.apple.com/documentation/usernotifications/unmutablenotificationcontent",
+      "sosumi_url": "https://sosumi.ai/documentation/usernotifications/unmutablenotificationcontent",
+      "local_path": "unmutablenotificationcontent.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 4
+    },
+    {
+      "title": "UNUserNotificationCenterDelegate API",
+      "original_url": "https://developer.apple.com/documentation/usernotifications/unusernotificationcenterdelegate",
+      "sosumi_url": "https://sosumi.ai/documentation/usernotifications/unusernotificationcenterdelegate",
+      "local_path": "unusernotificationcenterdelegate.md",
+      "fetch_date": "2025-11-02",
+      "size_kb": 2
+    }
+  ]
+}
