@@ -9,7 +9,7 @@ public typealias PlatformImage = NSImage
 #endif
 
 /// Protocol for Firebase Storage upload operations
-public protocol StorageServiceProtocol {
+public protocol StorageServiceProtocol: Sendable {
     /// Upload cropped object image to Firebase Storage
     /// - Parameters:
     ///   - image: Cropped image from Vision Framework

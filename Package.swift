@@ -35,14 +35,17 @@ let package: Package = Package(
         ),
         .target(
             name: "CameraFeature",
-            dependencies: [],
+            dependencies: ["Persistence"],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "CameraFeatureTests",
-            dependencies: ["CameraFeature"]
+            dependencies: [
+                "CameraFeature",
+                "Persistence"
+            ]
         ),
 
         // Core
