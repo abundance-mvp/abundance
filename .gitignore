@@ -22,3 +22,6 @@ ui-debug.log
 # Dependencies
 Pods/
 Carthage/Build
+
+# Documentation (symlinked locally to ~/code/spec-kit/docs, actual files committed to repo)
+/docs
