@@ -1,14 +1,14 @@
 import Foundation
 @preconcurrency import CoreVideo
+@testable import VisionCore
+
 #if os(iOS)
 import UIKit
 #elseif os(macOS)
 import AppKit
 #endif
-@testable import VisionCore
 
 final class MockHouseholdItemDetector: HouseholdItemDetectorProtocol, @unchecked Sendable {
-
     var stubbedItems: [HouseholdItem] = []
     var stubbedYOLOResults: [YOLOResult] = []
     var shouldFail: Bool = false

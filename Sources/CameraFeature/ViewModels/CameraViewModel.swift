@@ -65,6 +65,11 @@ public final class CameraViewModel: ObservableObject {
         }
     }
 
+    // DEPRECATED: Single-photo capture replaced with real-time detection
+    // See: CameraDetectionViewModel.processFrame() for new API
+    /// Captures a single photo from the camera
+    /// - Note: This method is deprecated. Use `CameraDetectionViewModel` for real-time continuous object detection
+    @available(*, deprecated, message: "Use CameraDetectionViewModel.processFrame() for real-time detection pipeline")
     public func capturePhoto() async {
         guard sessionState == .running else { return }
 
