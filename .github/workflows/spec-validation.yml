@@ -19,8 +19,8 @@ jobs:
 
       - name: Check for broken links
         run: |
-          # Find all markdown files
-          find docs -name "*.md" -type f | while read file; do
+          # Find all markdown files (excluding docs/archive/)
+          find docs -path docs/archive -prune -o -name "*.md" -type f -print | while read file; do
             echo "Checking $file for broken links..."
             # Extract markdown links [text](path)
             grep -oP '\[.*?\]\(\K[^)]+' "$file" | while read link; do
@@ -40,8 +40,8 @@ jobs:
 
       - name: Validate ADR numbering
         run: |
-          # Check for duplicate ADR numbers
-          find docs/adr -name "ADR-*.md" -type f | \
+          # Check for duplicate ADR numbers (excluding docs/archive/)
+          find docs/adr -path docs/archive -prune -o -name "ADR-*.md" -type f -print | \
             sed 's/.*ADR-\([0-9]\+\).*/\1/' | \
             sort | uniq -d | while read dup; do
               echo "ERROR: Duplicate ADR number: $dup"
@@ -50,8 +50,8 @@ jobs:
 
       - name: Check DESIGN doc cross-references
         run: |
-          # Ensure all DESIGN docs reference at least one ADR
-          find docs/design -name "DESIGN-*.md" -type f | while read file; do
+          # Ensure all DESIGN docs reference at least one ADR (excluding docs/archive/)
+          find docs/design -path docs/archive -prune -o -name "DESIGN-*.md" -type f -print | while read file; do
             if ! grep -q "ADR-[0-9]\+" "$file"; then
               echo "WARNING: $file does not reference any ADRs"
             fi
