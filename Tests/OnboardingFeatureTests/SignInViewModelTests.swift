@@ -21,7 +21,7 @@ struct SignInViewModelTests {
         // Note: This test cannot run without Firebase configuration
         // Testing the error enum structure instead
 
-        let error = SignInError.authenticationFailed
+        let error: SignInError = SignInError.authenticationFailed
         #expect(error.localizedDescription == "Authentication failed")
     }
 }

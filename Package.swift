@@ -1,7 +1,7 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
-let package = Package(
+let package: Package = Package(
     name: "Abundance",
     platforms: [.iOS(.v18), .macOS(.v14)], // iOS 18 and macOS 14 for @Observable support
     products: [

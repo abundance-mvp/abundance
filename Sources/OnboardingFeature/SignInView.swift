@@ -2,7 +2,7 @@ import SwiftUI
 import AuthenticationServices
 
 public struct SignInView: View {
-    @State private var viewModel = SignInViewModel()
+    @State private var viewModel: SignInViewModel = SignInViewModel()
 
     public init() {}
 

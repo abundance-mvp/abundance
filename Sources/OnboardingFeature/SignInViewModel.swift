@@ -37,17 +37,17 @@ public class SignInViewModel {
             }
 
             // Create Firebase credential from Apple credential
-            let firebaseCredential = OAuthProvider.appleCredential(
+            let firebaseCredential: AuthCredential = OAuthProvider.appleCredential(
                 withIDToken: idToken,
                 rawNonce: nil,
                 fullName: credential.fullName
             )
 
             // Sign in to Firebase
-            let authResult = try await Auth.auth().signIn(with: firebaseCredential)
+            let authResult: AuthDataResult = try await Auth.auth().signIn(with: firebaseCredential)
 
             // Store Firebase ID token in Keychain
-            let firebaseToken = try await authResult.user.getIDToken()
+            let firebaseToken: String = try await authResult.user.getIDToken()
             try keychain.save(token: firebaseToken, forKey: "firebaseToken")
 
             isAuthenticated = true
