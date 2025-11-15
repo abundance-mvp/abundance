@@ -69,7 +69,7 @@ let package: Package = Package(
             name: "VisionCore",
             dependencies: [],
             resources: [
-                .copy("Resources/TinyYOLO.mlmodelc")
+                .copy("Resources/yolo11n.mlmodelc")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")

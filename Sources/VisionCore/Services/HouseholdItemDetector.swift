@@ -42,15 +42,10 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
         }
         #endif
 
-        // Load TinyYOLO CoreML model (63 MB, trained on PASCAL VOC 20 classes)
-        // NOTE: TinyYOLO outputs VNCoreMLFeatureValueObservation (raw MLMultiArray)
-        // which requires custom YOLO post-processing:
-        // - Anchor box decoding
-        // - Non-Maximum Suppression (NMS)
-        // - Confidence thresholding
-        // This will be implemented in Sprint 4 with full YOLO utilities.
-        // For now, this demonstrates model integration with Vision Framework.
-        guard let modelURL = Bundle.module.url(forResource: "TinyYOLO", withExtension: "mlmodelc") else {
+        // Load YOLOv11n CoreML model (5.2 MB, trained on COCO 80 classes)
+        // YOLOv11n includes built-in NMS and outputs VNRecognizedObjectObservation
+        // which Vision Framework can use directly without custom post-processing.
+        guard let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
             throw VisionError.modelNotFound
         }
 
@@ -65,11 +60,8 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
                 }
 
                 // Process results
-                // TinyYOLO outputs VNCoreMLFeatureValueObservation (raw MLMultiArray)
-                // not VNRecognizedObjectObservation. Custom post-processing required.
+                // YOLOv11n outputs VNRecognizedObjectObservation with built-in NMS
                 guard let results = request.results as? [VNRecognizedObjectObservation] else {
-                    // Model loaded and executed, but requires YOLO post-processing
-                    // to convert MLMultiArray to bounding boxes
                     continuation.resume(returning: [])
                     return
                 }
