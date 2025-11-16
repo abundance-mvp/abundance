@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { synthesizeMetadata } from '../ai-pipeline/layer3/synthesize';
+import { StructuredLogger } from '../monitoring/logger';
 
 /**
  * Trigger: onLayer2bComplete (Layer 2b → Layer 3 transition)
@@ -14,8 +15,15 @@ export const onLayer2bComplete = functions.onDocumentUpdated(
     const before = event.data?.before.data();
     const after = event.data?.after.data();
 
+    const logger = new StructuredLogger({
+      itemId,
+      userId: after?.userId,
+      layer: '3',
+      operation: 'layer3_synthesis',
+    });
+
     if (!after) {
-      console.error(`onLayer2bComplete: No after data for item ${itemId}`);
+      logger.error('No after data for item', new Error('Missing after data'));
       return;
     }
 
@@ -24,7 +32,7 @@ export const onLayer2bComplete = functions.onDocumentUpdated(
       return;
     }
 
-    console.log(`[Layer 3] Starting synthesis for item ${itemId}`);
+    logger.info('Starting Layer 3 synthesis');
 
     try {
       // Validate Layer 2 data exists
@@ -50,9 +58,13 @@ export const onLayer2bComplete = functions.onDocumentUpdated(
         updatedAt: admin.firestore.Timestamp.now(),
       });
 
-      console.log(`[Layer 3] ✅ Layer 3 complete for item ${itemId}:`, synthesizedMetadata.name);
+      logger.info('Layer 3 complete', {
+        name: synthesizedMetadata.name,
+        category: synthesizedMetadata.category,
+        confidence: synthesizedMetadata.confidence,
+      });
     } catch (error: any) {
-      console.error(`[Layer 3] ❌ Layer 3 failed for item ${itemId}:`, error);
+      logger.error('Layer 3 failed', error);
 
       // Update Firestore with error status
       await event.data?.after.ref.update({

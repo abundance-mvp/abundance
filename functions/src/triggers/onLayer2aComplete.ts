@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { identifyProduct } from '../ai-pipeline/layer2b/identifyProduct';
+import { StructuredLogger } from '../monitoring/logger';
 
 /**
  * Trigger: onLayer2aComplete (Layer 2a → Layer 2b transition)
@@ -14,8 +15,15 @@ export const onLayer2aComplete = functions.onDocumentUpdated(
     const before = event.data?.before.data();
     const after = event.data?.after.data();
 
+    const logger = new StructuredLogger({
+      itemId,
+      userId: after?.userId,
+      layer: '2b',
+      operation: 'layer2b_product_identification',
+    });
+
     if (!after) {
-      console.error(`onLayer2aComplete: No after data for item ${itemId}`);
+      logger.error('No after data for item', new Error('Missing after data'));
       return;
     }
 
@@ -24,7 +32,7 @@ export const onLayer2aComplete = functions.onDocumentUpdated(
       return;
     }
 
-    console.log(`[Layer 2b] Starting product identification for item ${itemId}`);
+    logger.info('Starting Layer 2b product identification');
 
     try {
       // Execute Layer 2b product identification
@@ -44,12 +52,13 @@ export const onLayer2aComplete = functions.onDocumentUpdated(
         updatedAt: admin.firestore.Timestamp.now(),
       });
 
-      console.log(`[Layer 2b] ✅ Layer 2b complete for item ${itemId}`);
-      console.log(`  - Source: ${layer2bResult.source}`);
-      console.log(`  - Product: ${layer2bResult.product.name}`);
-      console.log(`  - Cost savings: $${layer2bResult.costSavings.toFixed(6)}`);
+      logger.info('Layer 2b complete', {
+        source: layer2bResult.source,
+        productName: layer2bResult.product.name,
+        costSavings: layer2bResult.costSavings,
+      });
     } catch (error: any) {
-      console.error(`[Layer 2b] ❌ Layer 2b failed for item ${itemId}:`, error);
+      logger.error('Layer 2b failed', error);
 
       // Update Firestore with error status
       await event.data?.after.ref.update({
