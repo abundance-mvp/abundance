@@ -35,7 +35,7 @@ export class ClaudeHaikuProvider {
 
     try {
       const message = await this.anthropic.messages.create({
-        model: 'claude-haiku-4-20250514',
+        model: 'claude-haiku-4-5-20250815',
         max_tokens: 512,
         temperature: 0.3,
         messages: [{

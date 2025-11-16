@@ -54,7 +54,7 @@ export class ClaudeSonnetProvider {
     this.anthropic = new Anthropic({
       apiKey,
       defaultHeaders: {
-        'anthropic-beta': 'prompt-caching-2024-07-31',
+        'anthropic-beta': 'pdfs-2024-09-25,prompt-caching-2024-07-31',
       },
     });
   }
@@ -70,7 +70,7 @@ export class ClaudeSonnetProvider {
 
     try {
       const message = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 1024,
         temperature: 0.3,
         messages: [{
