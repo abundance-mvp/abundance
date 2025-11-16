@@ -1,10 +1,11 @@
 import * as functions from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
+import { identifyProduct } from '../ai-pipeline/layer2b/identifyProduct';
 
 /**
  * Trigger: onLayer2aComplete (Layer 2a → Layer 2b transition)
  * Fires when item status changes to "layer2a_complete"
- * Schedules Layer 2b processing (SerpAPI + Claude Haiku)
+ * Executes Layer 2b processing (SerpAPI + Claude Haiku)
  */
 export const onLayer2aComplete = functions.onDocumentUpdated(
   'items/{itemId}',
@@ -23,15 +24,44 @@ export const onLayer2aComplete = functions.onDocumentUpdated(
       return;
     }
 
-    console.log(`[Layer 2b] Scheduling for item ${itemId}`);
+    console.log(`[Layer 2b] Starting product identification for item ${itemId}`);
 
-    // Update status to layer2b_scheduled
-    await event.data?.after.ref.update({
-      status: 'layer2b_scheduled',
-      layer2bScheduledAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-    });
+    try {
+      // Execute Layer 2b product identification
+      const layer2bResult = await identifyProduct(
+        {
+          imageUrl: after.imageUrl,
+          barcodeData: after.barcodeData || null,
+        },
+        itemId
+      );
 
-    console.log(`[Layer 2b] Scheduled for item ${itemId}`);
+      // Update Firestore document with Layer 2b results
+      await event.data?.after.ref.update({
+        layer2b: layer2bResult,
+        status: 'layer2b_complete',
+        layer2bCompletedAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+
+      console.log(`[Layer 2b] ✅ Layer 2b complete for item ${itemId}`);
+      console.log(`  - Source: ${layer2bResult.source}`);
+      console.log(`  - Product: ${layer2bResult.product.name}`);
+      console.log(`  - Cost savings: $${layer2bResult.costSavings.toFixed(6)}`);
+    } catch (error: any) {
+      console.error(`[Layer 2b] ❌ Layer 2b failed for item ${itemId}:`, error);
+
+      // Update Firestore with error status
+      await event.data?.after.ref.update({
+        status: 'failed_layer2b',
+        error: {
+          message: error.message,
+          code: error.code || 'UNKNOWN',
+          type: error.name || 'Error',
+          timestamp: admin.firestore.Timestamp.now(),
+        },
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+    }
   }
 );

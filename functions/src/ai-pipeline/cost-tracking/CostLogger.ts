@@ -59,4 +59,84 @@ export class CostLogger {
 
     return inputCost + outputCost;
   }
+
+  /**
+   * Log barcode API usage to Firestore
+   */
+  async logBarcodeUsage(usage: {
+    api: string;
+    itemId: string;
+    barcode: string;
+    cost: number;
+    found: boolean;
+    latency: number;
+  }): Promise<void> {
+    const db = admin.firestore();
+    const usageRef = db.collection('barcode_usage').doc();
+
+    await usageRef.set({
+      api: usage.api,
+      itemId: usage.itemId,
+      barcode: usage.barcode,
+      cost: usage.cost,
+      found: usage.found,
+      latency: usage.latency,
+      timestamp: admin.firestore.Timestamp.now(),
+    });
+
+    console.log(`[CostLogger] Logged barcode usage: ${usage.api}, cost: $${usage.cost.toFixed(6)}`);
+  }
+
+  /**
+   * Log SerpAPI usage to Firestore
+   */
+  async logSerpAPIUsage(usage: {
+    itemId: string;
+    imageUrl: string;
+    matchCount: number;
+    latency: number;
+    cost: number;
+  }): Promise<void> {
+    const db = admin.firestore();
+    const usageRef = db.collection('serpapi_usage').doc();
+
+    await usageRef.set({
+      itemId: usage.itemId,
+      imageUrl: usage.imageUrl,
+      matchCount: usage.matchCount,
+      latency: usage.latency,
+      cost: usage.cost,
+      timestamp: admin.firestore.Timestamp.now(),
+    });
+
+    console.log(`[CostLogger] Logged SerpAPI usage: item ${usage.itemId}, cost: $${usage.cost.toFixed(6)}`);
+  }
+
+  /**
+   * Log Claude API usage to Firestore
+   */
+  async logClaudeUsage(usage: {
+    model: string;
+    itemId: string;
+    userId: string;
+    tokensUsed: { input: number; output: number; total: number };
+    cost: number;
+    latency: number;
+  }): Promise<void> {
+    const db = admin.firestore();
+    const usageRef = db.collection('ai_usage').doc();
+
+    await usageRef.set({
+      service: usage.model,
+      itemId: usage.itemId,
+      userId: usage.userId,
+      tokensUsed: usage.tokensUsed.total,
+      tokensInput: usage.tokensUsed.input,
+      tokensOutput: usage.tokensUsed.output,
+      cost: usage.cost,
+      timestamp: admin.firestore.Timestamp.now(),
+    });
+
+    console.log(`[CostLogger] Logged Claude usage: ${usage.model}, tokens: ${usage.tokensUsed.total}, cost: $${usage.cost.toFixed(6)}`);
+  }
 }
