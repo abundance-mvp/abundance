@@ -22,3 +22,8 @@ ui-debug.log
 # Dependencies
 Pods/
 Carthage/Build
+
+# Python/uv artifacts
+src/
+uv.lock
+.venv/
