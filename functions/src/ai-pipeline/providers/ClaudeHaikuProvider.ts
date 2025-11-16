@@ -83,26 +83,29 @@ export class ClaudeHaikuProvider {
   }
 
   private buildPrompt(visualMatches: VisualMatch[]): string {
+    // ✅ Simplified prompt to reduce token usage (was ~200 tokens, now ~120 tokens)
     const matchesText = visualMatches.slice(0, 5).map((match, idx) => {
-      return `${idx + 1}. ${match.title} - ${match.source} - ${match.price?.value || 'N/A'}`;
+      return `${idx + 1}. ${match.title} - $${match.price?.value || 'N/A'}`;
     }).join('\n');
 
-    return `You are analyzing visual search results to identify a household item. Extract structured product information.
+    return `Analyze these visual search results for a household item. Extract:
+- Brand name
+- Model name
+- Variant (if applicable)
+- Estimated value (USD, average if multiple prices)
+- Confidence (0-1, based on result consistency)
 
-**Visual Search Results:**
+Results:
 ${matchesText}
 
-**Your task:**
-Extract the brand, model, variant (if applicable), and estimated value from the search results.
-
-Return JSON with this structure:
+Return JSON:
 {
-  "brand": "Brand name",
-  "model": "Model name",
-  "variant": "Variant (if applicable, else null)",
-  "estimatedValue": number (USD, average of prices if multiple),
-  "confidence": number (0-1, based on consistency of results),
-  "reasoning": "Brief explanation of extraction logic"
+  "brand": "string",
+  "model": "string",
+  "variant": "string or null",
+  "estimatedValue": number,
+  "confidence": number (0-1),
+  "reasoning": "brief explanation"
 }`;
   }
 }
