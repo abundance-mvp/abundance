@@ -1,0 +1,37 @@
+{
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/InventoryFeature/ItemDetailView.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemDetailView.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemDetailView.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemDetailView.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemDetailView.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemDetailView.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/InventoryFeature/ItemObserver.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemObserver.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemObserver.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemObserver.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemObserver.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ItemObserver.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/InventoryFeature/PrimaryButton.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/PrimaryButton.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/PrimaryButton.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/PrimaryButton.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/PrimaryButton.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/PrimaryButton.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/OnboardingFeature/AuthViewModel.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AuthViewModel.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AuthViewModel.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AuthViewModel.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AuthViewModel.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AuthViewModel.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/OnboardingFeature/OnboardingFeature.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/OnboardingFeature.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/OnboardingFeature.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/OnboardingFeature.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/OnboardingFeature.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/OnboardingFeature.swiftdeps"
+  }
+}

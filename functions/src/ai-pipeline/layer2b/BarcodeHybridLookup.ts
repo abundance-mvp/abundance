@@ -34,8 +34,9 @@ export class BarcodeHybridLookup {
         console.log(`[BarcodeHybrid] ✅ OpenFoodFacts match for ${barcode}`);
         return openFoodResult;
       }
-    } catch (error: any) {
-      console.warn(`[BarcodeHybrid] OpenFoodFacts lookup failed for ${barcode}:`, error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.warn(`[BarcodeHybrid] OpenFoodFacts lookup failed for ${barcode}:`, message);
       // Continue to next API
     }
 
@@ -47,8 +48,9 @@ export class BarcodeHybridLookup {
         console.log(`[BarcodeHybrid] ✅ UPCitemdb match for ${barcode}`);
         return upcitemdbResult;
       }
-    } catch (error: any) {
-      console.error(`[BarcodeHybrid] UPCitemdb lookup failed for ${barcode}:`, error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.warn(`[BarcodeHybrid] UPCitemdb lookup failed for ${barcode}:`, message);
       // Continue to SerpAPI fallback
     }
 

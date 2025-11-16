@@ -1,0 +1,37 @@
+{
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/AbundanceApp.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AbundanceApp.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AbundanceApp.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AbundanceApp.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AbundanceApp.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/AbundanceApp.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Services/ObjectDeduplicatorProtocol.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ObjectDeduplicatorProtocol.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ObjectDeduplicatorProtocol.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ObjectDeduplicatorProtocol.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ObjectDeduplicatorProtocol.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ObjectDeduplicatorProtocol.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Services/SubjectMaskGenerator.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGenerator.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGenerator.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGenerator.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGenerator.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGenerator.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Services/SubjectMaskGeneratorProtocol.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGeneratorProtocol.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGeneratorProtocol.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGeneratorProtocol.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGeneratorProtocol.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/SubjectMaskGeneratorProtocol.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps"
+  }
+}

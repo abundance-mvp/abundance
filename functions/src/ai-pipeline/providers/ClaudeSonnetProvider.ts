@@ -81,6 +81,11 @@ export class ClaudeSonnetProvider {
 
       const latency = Date.now() - startTime;
 
+      // Null safety check (I2)
+      if (!message.content || message.content.length === 0) {
+        throw new Error('Empty response from Claude Sonnet');
+      }
+
       // Extract and parse JSON response
       let synthesized: any;
 
@@ -115,7 +120,7 @@ export class ClaudeSonnetProvider {
       console.log(`[ClaudeSonnet] Synthesis complete for ${itemId} in ${latency}ms`);
 
       return synthesized;
-    } catch (error: any) {
+    } catch (error) {
       console.error(`[ClaudeSonnet] Synthesis error for ${itemId}:`, error);
       throw error;
     }

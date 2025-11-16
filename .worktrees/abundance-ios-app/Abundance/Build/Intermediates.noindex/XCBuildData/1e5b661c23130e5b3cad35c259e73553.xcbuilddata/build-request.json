@@ -1,0 +1,65 @@
+{
+  "buildCommand" : {
+    "command" : "preview",
+    "style" : "xojit"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "57165a26bd77b4f91178b22d6191c18b4b9d57015a77d112d6c652ab252affbc"
+    }
+  ],
+  "containerPath" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance.xcodeproj",
+  "continueBuildingAfterErrors" : true,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "arm64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator26.0",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "arm64"
+      ],
+      "targetArchitecture" : "arm64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Products",
+      "derivedDataPath" : "/Users/w/Library/Developer/Xcode/DerivedData",
+      "indexDataStoreFolderPath" : "/Users/w/Library/Developer/Xcode/DerivedData/Abundance-bwsefcviahrolaapxmyeefzfjuow/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/w/Library/Developer/Xcode/DerivedData/Abundance-bwsefcviahrolaapxmyeefzfjuow/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "synthesized" : {
+        "table" : {
+          "ASSETCATALOG_FILTER_FOR_DEVICE_MODEL" : "iPhone17,1",
+          "ASSETCATALOG_FILTER_FOR_DEVICE_OS_VERSION" : "26.0",
+          "ASSETCATALOG_FILTER_FOR_THINNING_DEVICE_CONFIGURATION" : "iPhone17,1",
+          "BUILD_ACTIVE_RESOURCES_ONLY" : "YES",
+          "CLANG_COVERAGE_MAPPING" : "YES",
+          "CLANG_PROFILE_DATA_DIRECTORY" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/CodeCoverage/ProfileData",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES",
+          "TARGET_DEVICE_IDENTIFIER" : "2AF38B2E-BB6B-4DE0-8A1C-EDF4026E380A",
+          "TARGET_DEVICE_MODEL" : "iPhone17,1",
+          "TARGET_DEVICE_OS_VERSION" : "26.0",
+          "TARGET_DEVICE_PLATFORM_NAME" : "iphonesimulator"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

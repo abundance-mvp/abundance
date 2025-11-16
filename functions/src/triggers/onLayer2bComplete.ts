@@ -51,16 +51,16 @@ export const onLayer2bComplete = functions.onDocumentUpdated(
       });
 
       console.log(`[Layer 3] ✅ Layer 3 complete for item ${itemId}:`, synthesizedMetadata.name);
-    } catch (error: any) {
+    } catch (error) {
       console.error(`[Layer 3] ❌ Layer 3 failed for item ${itemId}:`, error);
 
       // Update Firestore with error status
       await event.data?.after.ref.update({
         status: 'failed_layer3',
         error: {
-          message: error.message,
-          code: error.code || 'UNKNOWN',
-          type: error.name || 'Error',
+          message: error instanceof Error ? error.message : 'Unknown error',
+          code: (error as any).code || 'UNKNOWN',
+          type: error instanceof Error ? error.name : 'Error',
           timestamp: admin.firestore.Timestamp.now(),
         },
         updatedAt: admin.firestore.Timestamp.now(),
