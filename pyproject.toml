@@ -1,0 +1,22 @@
+[project]
+name = "abundance-mvp"
+version = "0.1.0"
+description = "Abundance MVP - iOS app for household item cataloging"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["scripts"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

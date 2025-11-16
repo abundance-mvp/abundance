@@ -1,0 +1,21 @@
+#!/bin/bash
+# Claude Code pre-commit hook
+# Validates document references before committing docs changes
+
+set -e
+
+# Check if any docs/ files are staged
+if git diff --cached --name-only | grep -q "^docs/"; then
+    echo "📚 Docs changes detected - validating references..."
+
+    # Run validation with uv
+    if uv run scripts/validate_doc_references.py; then
+        echo "✅ Document references validated"
+    else
+        echo "❌ Document reference validation failed"
+        echo "Run 'uv run scripts/fix_doc_references.py --apply' to fix"
+        exit 1
+    fi
+fi
+
+exit 0
