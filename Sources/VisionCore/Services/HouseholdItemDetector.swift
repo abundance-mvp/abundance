@@ -1,5 +1,5 @@
 import Foundation
-import Vision
+@preconcurrency import Vision
 import CoreML
 @preconcurrency import CoreVideo
 #if os(iOS)
@@ -26,18 +26,23 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
     ]
 
     /// Cached YOLOv11n model for stream detection
-    /// Loaded once to avoid repeated disk I/O (model is 5.6 MB)
-    private lazy var streamModel: VNCoreMLModel? = {
-        guard let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc"),
-              let mlModel = try? MLModel(contentsOf: modelURL) else {
-            return nil
-        }
-        return try? VNCoreMLModel(for: mlModel)
-    }()
+    /// Loaded once during init to avoid repeated disk I/O (model is 5.6 MB)
+    /// Note: Pre-loading at init is acceptable because model is small (5.6 MB)
+    /// and initialization is lightweight
+    private let streamModel: VNCoreMLModel?
 
     // MARK: - Initialization
 
-    public init() {}
+    public init() {
+        // Pre-load stream model for real-time detection
+        // This avoids lazy initialization issues with Swift 6 concurrency
+        if let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc"),
+           let mlModel = try? MLModel(contentsOf: modelURL) {
+            self.streamModel = try? VNCoreMLModel(for: mlModel)
+        } else {
+            self.streamModel = nil
+        }
+    }
 
     // MARK: - Detection
 
