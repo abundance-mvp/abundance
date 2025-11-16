@@ -44,17 +44,24 @@ Stage 6.4 (Sprint 3) → Layer 3 validation (Claude Sonnet synthesis)
 
 ## Validation Layers Overview
 
-### Layer 1: On-Device Object Detection (iOS 26 Vision Framework)
+### Layer 1: On-Device Real-Time Object Detection (iOS 26 Vision Framework)
 **Stage**: 6.1
 **Validates Before**: Sprint 2 (Camera Capture & Backend Infrastructure)
-**Technology**: Vision Framework + Core ML (YOLOv3-Tiny)
-**Test Infrastructure**: iOS XCTest suite + golden dataset (100 images)
+**Technology**: Vision Framework + Core ML (YOLOv11n) + Real-time streaming (2 FPS)
+**Test Infrastructure**: iOS XCTest suite + golden dataset (100 images) + CVPixelBuffer frame simulation
 
 **Key Validations**:
 - Household item detection accuracy > 60%
-- Barcode detection accuracy > 95%
-- Processing latency < 500ms
+- Real-time streaming performance (2 FPS continuous detection)
+- Per-object processing latency < 120ms (YOLO 23ms + mask 50-80ms + quality ~35ms)
+- Parallel multi-object processing (5 objects simultaneously in ~120ms total)
+- Organic border mask generation (VNGenerateForegroundInstanceMaskRequest)
+- Visual fingerprinting deduplication (VNImageFingerprint, 0.90 similarity threshold)
+- Quality assessment accuracy (VNCalculateImageAestheticsScoresRequest, threshold 0.65)
+- Three-tier confidence system (automatic/manual/ignore based on confidence + quality)
 - Supported device compatibility (iPhone 15 Pro A17 chip)
+
+**Note**: Barcode detection moved to Layer 2b (Stage 6.3) per Sprint 3 architecture refactor
 
 ---
 
@@ -155,13 +162,17 @@ Stage 6.4 (Sprint 3) → Layer 3 validation (Claude Sonnet synthesis)
 ## Test Infrastructure Requirements
 
 ### Layer 1: iOS XCTest Suite
-**Purpose**: Validate on-device Vision Framework performance
+**Purpose**: Validate on-device Vision Framework real-time performance
 
 **Setup**:
 ```
 ios/AbundanceTests/Layer1ValidationTests/
-├── HouseholdItemDetectorTests.swift     # VNCoreMLRequest validation
-├── BarcodeDetectorTests.swift           # VNDetectBarcodesRequest validation
+├── HouseholdItemDetectorTests.swift     # VNCoreMLRequest (YOLOv11n) validation
+├── SubjectMaskGeneratorTests.swift      # VNGenerateForegroundInstanceMaskRequest validation
+├── ImageQualityAssessorTests.swift      # VNCalculateImageAestheticsScoresRequest validation
+├── ObjectDeduplicatorTests.swift        # VNImageFingerprint deduplication validation
+├── RealTimeStreamingTests.swift         # 2 FPS CVPixelBuffer frame processing validation
+├── ParallelProcessingTests.swift        # Multi-object parallel processing validation
 ├── GoldenDataset/
 │   ├── camping/                         # 20 images
 │   ├── kitchen/                         # 20 images
@@ -174,9 +185,10 @@ ios/AbundanceTests/Layer1ValidationTests/
 
 **Golden Dataset Requirements**:
 - 100 diverse household items (photos)
-- Ground truth labels (category, barcode if present)
+- Ground truth labels (category, quality indicators)
 - Variety: lighting conditions, angles, backgrounds
 - Storage: `ios/AbundanceTests/Layer1ValidationTests/GoldenDataset/`
+- Note: Barcode validation moved to Layer 2b (Stage 6.3)
 
 **Test Execution**:
 ```bash
@@ -225,12 +237,19 @@ notebooks/validation/
 
 ## Acceptance Criteria (Master)
 
-### Stage 6.1: Layer 1 Validation
+### Stage 6.1: Layer 1 Validation (Real-Time Object Detection)
 - [ ] ✅ Household item detection accuracy > 60% (golden dataset)
-- [ ] ✅ Barcode detection accuracy > 95% (sample barcodes)
-- [ ] ✅ Processing latency < 500ms (p90)
+- [ ] ✅ Real-time streaming validation (2 FPS continuous detection)
+- [ ] ✅ Per-object processing latency < 120ms (p90) — YOLO 23ms + mask 50-80ms + quality ~35ms
+- [ ] ✅ Parallel multi-object processing (5 objects in ~120ms total)
+- [ ] ✅ Organic border mask generation success rate > 95%
+- [ ] ✅ Visual fingerprinting deduplication (false positive rate < 5%, 0.90 similarity)
+- [ ] ✅ Quality assessment threshold validation (composite score > 0.65)
+- [ ] ✅ Three-tier confidence system accuracy (automatic/manual/ignore classification)
 - [ ] ✅ Edge cases documented (DESIGN-040 updated)
 - [ ] ✅ Validation report published (VALIDATION-LAYER1-001.md)
+
+**Note**: Barcode detection validation moved to Stage 6.3 (Layer 2b) per Sprint 3 refactor
 
 ### Stage 6.2: Layer 2a Validation
 - [ ] ✅ Category accuracy > 87%
@@ -387,9 +406,9 @@ Track validation progress across all stages:
 
 | Stage | Layer | Status | Accuracy | Cost | Latency | Sprint Blocker | Report |
 |-------|-------|--------|----------|------|---------|----------------|--------|
-| 6.1 | Layer 1 (Vision) | 🟡 Pending | - | - | - | Sprint 2 | - |
+| 6.1 | Layer 1 (Real-Time YOLOv11n) | 🟡 Pending | - | $0 | < 120ms/obj | Sprint 2 | - |
 | 6.2 | Layer 2a (Gemini) | 🟡 Pending | - | - | - | Sprint 4 | - |
-| 6.3 | Layer 2b (SerpAPI) | 🟡 Pending | - | - | - | Sprint 4 | - |
+| 6.3 | Layer 2b (SerpAPI + Barcode) | 🟡 Pending | - | - | - | Sprint 4 | - |
 | 6.4 | Layer 3 (Claude) | 🟡 Pending | - | - | - | Sprint 4 | - |
 
 **Legend**:
@@ -557,6 +576,7 @@ accuracy_df.to_csv('results/layer2a_accuracy.csv', index=False)
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-12 | 1.0 | Initial master validation strategy | Software Architecture Expert |
+| 2025-11-15 | 2.0 | **MAJOR UPDATE**: Refactor Layer 1 validation for Sprint 3 real-time object detection architecture. Update YOLOv3-Tiny → YOLOv11n, latency 500ms → 120ms per object, add real-time streaming/quality/deduplication/organic mask validations. Move barcode detection from Layer 1 to Layer 2b (Stage 6.3). | Stage 6.x Documentation Refactor |
 
 ---
 

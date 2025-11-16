@@ -19,7 +19,9 @@ Stage 6.1 establishes the **Layer 1 validation framework** for on-device Vision 
 - 📋 iOS XCTest Implementation — Scaffolding created, code examples provided
 - 🔴 **BLOCKER**: Golden Dataset (100 images + manifest) — **NOT CREATED** (prerequisite for test execution)
 
-**Sprint Blocker Status**: Stage 6.1 documentation complete. Test execution blocked until golden dataset is created.
+**Sprint Blocker Status**: Stage 6.1 documentation complete AND refactored for Sprint 3 (2025-11-15). Test execution blocked until golden dataset is created.
+
+**Refactor Note**: All validation documents updated for real-time 2 FPS streaming with YOLOv11n (was YOLOv3-Tiny). Barcode detection moved to Layer 2b. Added 6 new test cases for quality/deduplication/organic masks.
 
 ---
 
