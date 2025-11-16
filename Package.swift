@@ -116,7 +116,8 @@ let package: Package = Package(
             ],
             path: "App",
             resources: [
-                .process("GoogleService-Info.plist")
+                .process("GoogleService-Info.plist"),
+                .process("Assets.xcassets")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")

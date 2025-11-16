@@ -28,9 +28,9 @@ jobs:
               if [[ $link == http* ]]; then
                 continue
               fi
-              # Resolve relative paths
+              # Resolve relative paths with normalization
               dir=$(dirname "$file")
-              target="$dir/$link"
+              target=$(realpath -m "$dir/$link" 2>/dev/null)
               if [[ ! -f "$target" ]]; then
                 echo "ERROR: Broken link in $file: $link (resolved to $target)"
                 exit 1
