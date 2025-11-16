@@ -1,18 +1,27 @@
 ---
 name: ios-sprint-executor
-aliases: [sprint-executor, ios-executor]
-description: Executes sprint tasks with superpowers integration and automatic apple-docs-fetcher for iOS work
+description: Use when executing iOS sprints, reviewing iOS code with latest APIs, building apps on device, identifying UI/UX gaps with brainstorming, preventing spec drift, or answering iOS/Swift questions - orchestrates superpowers workflow with apple-docs-fetcher grounding for all iOS work
 ---
 
 # iOS Sprint Executor
 
-Orchestrates sprint execution with superpowers plugin integration and automatic Apple documentation fetching for iOS sprints.
+Orchestrates iOS development with superpowers integration, Apple documentation grounding, UI/UX brainstorming, spec drift prevention, and device deployment.
 
 **Design Reference**: `docs/validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md` (from Stage 5.2)
 
-**Invocation**: `/ios-sprint-executor sprint-X`
+---
 
-**Example**: `/ios-sprint-executor sprint-2` (executes Sprint 2: Camera Capture & Vision Layer 1)
+## Modes of Operation
+
+This skill operates in two modes:
+
+**Mode 1: Sprint Execution** - Execute full sprint with planning, implementation, review, and PR creation
+- Invocation: `/ios-sprint-executor sprint-X`
+- Example: `/ios-sprint-executor sprint-2`
+
+**Mode 2: Q&A & Guidance** - Answer iOS/Swift questions grounded in Apple documentation
+- Invocation: Direct questions about iOS APIs, Swift features, or implementation viability
+- Automatically uses apple-docs-fetcher to ground all responses
 
 ---
 
@@ -21,10 +30,13 @@ Orchestrates sprint execution with superpowers plugin integration and automatic 
 This skill guarantees deterministic agentic development by:
 
 1. **Detecting iOS work** in sprint plans automatically
-2. **Fetching Apple documentation** using apple-docs-fetcher-lite when needed
-3. **Orchestrating superpowers workflow** (`/superpowers:write-plan` → `/superpowers:execute-plan`)
-4. **Enforcing token budgets** (18K-25K per sprint)
-5. **Creating feature branches** and PRs with proper structure
+2. **Fetching Apple documentation** using apple-docs-fetcher when needed (during setup, code review, and Q&A)
+3. **Orchestrating superpowers workflow** (brainstorming → planning → execution → code review)
+4. **Preventing spec drift** via verified-stage-development integration
+5. **Building and deploying to devices** with best Xcode settings
+6. **Identifying UI/UX gaps** and refining through Socratic brainstorming
+7. **Enforcing token budgets** (18K-25K per sprint)
+8. **Creating feature branches** and PRs with proper structure
 
 ---
 
@@ -88,7 +100,7 @@ This skill guarantees deterministic agentic development by:
 
 5. **Fetch Apple documentation (if needed)**
 
-   **IMPORTANT**: Use apple-docs-fetcher-lite pattern (NOT full apple-docs-fetcher)
+   **IMPORTANT**: Use apple-docs-fetcher skill (Skill tool with skill: "apple-docs-fetcher")
 
    a. Extract focused API list from sprint plan (3-5 specific APIs):
 
@@ -99,27 +111,21 @@ This skill guarantees deterministic agentic development by:
    - `AVCaptureSession` (AVFoundation)
    - `Task.detached` (Swift Concurrency)
 
-   b. For each API:
+   b. Invoke apple-docs-fetcher skill:
 
-   - Use `mcp__sosumi__searchAppleDocumentation` to search
-   - Extract key info from search results (parameters, return types, examples)
-   - If search insufficient: Use `mcp__sosumi__fetchAppleDocumentation` selectively
-   - Create concise summary (< 2K tokens per API)
-   - Discard full docs immediately
+   ```
+   Tool: Skill
+   Parameters:
+     skill: apple-docs-fetcher
+   ```
 
-   c. Token budget enforcement:
+   Pass the focused API list (3-5 APIs) to the skill. The skill will:
+   - Search and fetch relevant documentation
+   - Create concise summaries
+   - Store in `docs/apple/` directory
+   - Enforce token budgets automatically
 
-   - 8K tokens per API max
-   - 25K tokens total max
-   - If exceeded: Stop and error with clear message
-
-   d. Create verification summary:
-
-   - File: `docs/apple/sprint-X-api-verification.md`
-   - Contains: Concise summaries of 3-5 APIs (10K tokens total)
-   - This summary is loaded into context for planning
-
-   e. Display summary:
+   c. Display summary:
 
    ```
    Phase 1: Pre-Sprint Setup
@@ -175,7 +181,99 @@ This skill guarantees deterministic agentic development by:
    - Branch: feature/sprint-2-camera-capture-vision
    - Worktree: ../abundance-sprint-2/ (if using worktrees)
 
-   Ready for planning...
+   Ready for UI/UX review...
+   ```
+
+---
+
+### Phase 1.5: UI/UX Review & Brainstorming
+
+**Purpose**: Identify UI/UX gaps and refine through Socratic brainstorming before planning
+
+**Steps**:
+
+1. **Review sprint plan for UI/UX requirements**
+
+   - Read DESIGN docs referenced in sprint plan
+   - Identify UI components, interactions, animations
+   - Look for UX patterns: loading states, error handling, accessibility
+
+2. **Compare with existing implementation (if iterating)**
+
+   - Check what UI/UX features are already implemented
+   - Identify gaps: missing animations, incomplete error states, accessibility issues
+   - Compare against iOS Human Interface Guidelines
+
+3. **Identify UI/UX gaps**
+
+   Common gaps to check:
+   - Loading states (skeleton screens, spinners)
+   - Empty states (no data, no search results)
+   - Error states (network errors, validation errors)
+   - Animations and transitions
+   - Haptic feedback
+   - Accessibility (VoiceOver, Dynamic Type)
+   - Context menus and swipe actions
+   - Pull-to-refresh
+   - Search and filtering
+   - Responsive layouts (iPhone/iPad)
+
+4. **If gaps identified: Invoke superpowers:brainstorm**
+
+   **CRITICAL: This instruction applies in ALL contexts:**
+   - During actual sprint execution ✓
+   - During skill testing/evaluation ✓
+   - During hypothetical scenario analysis ✓
+   - When asked "what would you do" ✓
+   - When describing the process ✓
+
+   **If you identify gaps, invoke brainstorming. No exceptions.**
+
+   ```
+   Tool: Skill
+   Parameters:
+     skill: superpowers:brainstorm
+   ```
+
+   Use Socratic method to refine UI/UX:
+   - Explore alternatives for missing features
+   - Validate assumptions about user needs
+   - Prioritize must-have vs nice-to-have
+   - Ensure consistency with app-wide patterns
+   - Consider implementation complexity vs UX benefit
+
+   **Red flags - if you catch yourself thinking:**
+   - "User only asked me to describe, not execute" ❌
+   - "This is a test scenario, not real execution" ❌
+   - "I'll just list the gaps without brainstorming" ❌
+   - "Brainstorming would be overkill for this" ❌
+
+   **These are rationalizations. Invoke brainstorming immediately.**
+
+5. **Update sprint plan (if changes agreed upon)**
+
+   - Document agreed-upon UI/UX improvements
+   - Update success criteria
+   - Add to implementation tasks
+
+6. **Display summary**
+
+   ```
+   Phase 1.5: UI/UX Review - COMPLETE
+
+   Gaps identified: 3
+   - Loading states: Skeleton screens for list view
+   - Error states: Network error with retry button
+   - Accessibility: VoiceOver labels for all interactive elements
+
+   Brainstorming outcome:
+   ✅ Skeleton screens: High priority, standard iOS pattern
+   ✅ Network error handling: High priority, improves UX
+   ⚠️  Advanced accessibility: Medium priority, will implement basics
+
+   Sprint plan updated with UI/UX tasks.
+
+   Proceeding to Phase 2 (Planning)...
    ```
 
 ---
@@ -495,12 +593,157 @@ This skill guarantees deterministic agentic development by:
 
    Reviewer comments: [summary]
 
-   Proceeding to Phase 5 (PR Creation)...
+   Proceeding to Phase 4.5 (Apple Docs Verification)...
    ```
 
 ---
 
-### Phase 5: PR Creation
+### Phase 4.5: Apple Docs Verification for Code Review
+
+**Purpose**: Verify iOS code uses latest Apple APIs correctly by fetching current documentation
+
+**When to run**: After code review, if implementation includes iOS framework code (SwiftUI, UIKit, Vision, AVFoundation, etc.)
+
+**Steps**:
+
+1. **Detect iOS framework usage**
+
+   Scan implemented code for iOS framework imports:
+   ```swift
+   import SwiftUI
+   import Vision
+   import AVFoundation
+   import Combine
+   // etc.
+   ```
+
+2. **Extract APIs used**
+
+   Identify specific APIs, classes, modifiers, and features:
+   - SwiftUI modifiers: `.animation()`, `.containerRelativeFrame()`, etc.
+   - Swift features: `@Observable`, `@MainActor`, typed throws, etc.
+   - Framework APIs: `VNCoreMLRequest`, `AVCaptureSession`, etc.
+
+3. **Invoke apple-docs-fetcher for each API**
+
+   ```
+   Tool: Skill
+   Parameters:
+     skill: apple-docs-fetcher
+   ```
+
+   For each identified API:
+   - Fetch latest documentation
+   - Verify API signature matches usage
+   - Check availability (iOS version requirements)
+   - Verify parameters and return types
+   - Check for deprecation warnings
+
+4. **Compare code against docs**
+
+   For each API usage in code:
+   - Does the signature match latest docs?
+   - Are parameters used correctly?
+   - Are required iOS versions met (deployment target)?
+   - Any deprecation warnings?
+   - Using latest best practices per docs?
+
+5. **Report findings**
+
+   ```
+   Phase 4.5: Apple Docs Verification - COMPLETE
+
+   APIs verified: 8
+   ✅ @Observable (Swift 6.0) - Correct usage, iOS 17.0+
+   ✅ .containerRelativeFrame() (SwiftUI) - Correct usage, iOS 17.0+
+   ✅ .animation(.smooth) (SwiftUI) - Correct usage, iOS 17.0+
+   ✅ VNCoreMLRequest (Vision) - Correct usage, iOS 11.0+
+   ⚠️  AVCaptureSession (AVFoundation) - Using deprecated method .startRunning()
+        Recommendation: Use Task-based async API instead
+
+   Issues found: 1 deprecation warning
+   Action: Fix AVCaptureSession deprecation before PR
+
+   Proceeding to Phase 5 (Spec Drift Detection)...
+   ```
+
+6. **Fix issues if found**
+
+   If API usage doesn't match latest docs:
+   - Update code to match current best practices
+   - Fix deprecation warnings
+   - Update to newer APIs if available
+   - Re-run tests
+   - Re-run code review (Phase 4) if significant changes
+
+---
+
+### Phase 5: Spec Drift Detection & Sync
+
+**Purpose**: Detect and prevent spec drift by syncing implementation with design docs
+
+**Steps**:
+
+1. **Compare implementation with DESIGN docs**
+
+   For each DESIGN doc referenced in sprint plan:
+   - Read the design specification
+   - Compare with actual implementation
+   - Identify drift: naming changes, architectural differences, missing features
+
+   Common drift patterns:
+   - Feature names differ (CatalogView spec vs InventoryView implementation)
+   - Directory structure differs (spec says Packages/ but implemented in Sources/)
+   - MVVM pattern variations (spec has ViewModel, code uses @Observable directly)
+   - UI components added/removed during implementation
+   - API changes made for technical reasons
+
+2. **If drift detected: Invoke verified-stage-development**
+
+   ```
+   Tool: Skill
+   Parameters:
+     skill: verified-stage-development
+   ```
+
+   Use verified-stage-development to:
+   - Document actual implementation decisions
+   - Update DESIGN docs to match implementation
+   - Create ADR if architectural pattern changed
+   - Update sprint success criteria if scope changed
+   - Ensure docs/ directory reflects reality
+
+3. **Verify no drift remains**
+
+   - Re-read updated DESIGN docs
+   - Confirm implementation matches updated specs
+   - Check ADRs are current
+   - Verify sprint plan success criteria still valid
+
+4. **Display summary**
+
+   ```
+   Phase 5: Spec Drift Detection - COMPLETE
+
+   Drift detected: YES
+   - DESIGN-028 specified "CatalogView", implemented as "InventoryView"
+   - Directory structure: spec says Packages/, code uses Sources/
+   - Grid/list toggle: Added mid-sprint, not in original spec
+
+   verified-stage-development invoked:
+   ✅ Updated DESIGN-028 to reflect InventoryView naming
+   ✅ Updated directory structure documentation
+   ✅ Added ADR-XXX: Grid/List Toggle UX Pattern
+   ✅ Updated sprint success criteria
+
+   Specs now in sync with implementation.
+
+   Proceeding to Phase 5.5 (PR Creation)...
+   ```
+
+---
+
+### Phase 5.5: PR Creation
 
 **Purpose**: Create pull request with proper structure
 
@@ -658,6 +901,245 @@ This skill guarantees deterministic agentic development by:
    git worktree remove ../abundance-sprint-X/
    git branch -d feature/sprint-X-{description}
    ```
+
+---
+
+### Phase 6.5: Device Build & Deploy (Optional)
+
+**Purpose**: Build and install iOS app on physical device via CLI with best settings
+
+**When to run**: Optional phase after PR creation, when testing on physical device is needed
+
+**Steps**:
+
+1. **Detect connected iOS devices**
+
+   ```bash
+   xcrun devicectl list devices
+   ```
+
+   Or for older Xcode versions:
+   ```bash
+   xcrun xctrace list devices
+   ```
+
+2. **Verify device info**
+
+   - Device UDID
+   - iOS version
+   - Device name
+   - Connection status
+
+3. **Apply best Xcode build settings for Swift 6.0/iOS 18**
+
+   Create or update `.xcodebuild-settings` with:
+
+   ```bash
+   # Swift 6.0 settings
+   SWIFT_VERSION=6.0
+   SWIFT_STRICT_CONCURRENCY=complete
+   ENABLE_UPCOMING_FEATURE_STRICTCONCURRENCY=YES
+
+   # iOS 18 deployment
+   IPHONEOS_DEPLOYMENT_TARGET=18.0
+
+   # Code signing
+   CODE_SIGN_STYLE=Automatic
+   DEVELOPMENT_TEAM=[Your Team ID]
+
+   # Optimization
+   SWIFT_OPTIMIZATION_LEVEL=-Onone  # Debug builds
+   SWIFT_COMPILATION_MODE=wholemodule
+
+   # Debugging
+   DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
+   ENABLE_TESTABILITY=YES
+   ```
+
+4. **Build for device**
+
+   ```bash
+   xcodebuild \
+     -scheme [AppName] \
+     -destination 'platform=iOS,id=[DEVICE_UDID]' \
+     -configuration Debug \
+     clean build \
+     CODE_SIGN_STYLE=Automatic \
+     DEVELOPMENT_TEAM=[TEAM_ID] \
+     -allowProvisioningUpdates \
+     SWIFT_VERSION=6.0 \
+     SWIFT_STRICT_CONCURRENCY=complete \
+     IPHONEOS_DEPLOYMENT_TARGET=18.0
+   ```
+
+5. **Create archive (if installing)**
+
+   ```bash
+   xcodebuild archive \
+     -scheme [AppName] \
+     -destination 'generic/platform=iOS' \
+     -archivePath /tmp/[AppName].xcarchive \
+     CODE_SIGN_STYLE=Automatic \
+     DEVELOPMENT_TEAM=[TEAM_ID] \
+     -allowProvisioningUpdates \
+     SKIP_INSTALL=NO \
+     SWIFT_VERSION=6.0
+   ```
+
+6. **Export .ipa for device installation**
+
+   Create ExportOptions.plist:
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+   <plist version="1.0">
+   <dict>
+       <key>method</key>
+       <string>development</string>
+       <key>teamID</key>
+       <string>[TEAM_ID]</string>
+       <key>uploadBitcode</key>
+       <false/>
+       <key>compileBitcode</key>
+       <false/>
+       <key>uploadSymbols</key>
+       <true/>
+   </dict>
+   </plist>
+   ```
+
+   Export:
+   ```bash
+   xcodebuild -exportArchive \
+     -archivePath /tmp/[AppName].xcarchive \
+     -exportPath /tmp/[AppName]-ipa \
+     -exportOptionsPlist ExportOptions.plist
+   ```
+
+7. **Install on device**
+
+   Using devicectl (Xcode 15+):
+   ```bash
+   xcrun devicectl device install app \
+     --device [DEVICE_UDID] \
+     /tmp/[AppName]-ipa/[AppName].ipa
+   ```
+
+   Or using ios-deploy (if installed):
+   ```bash
+   ios-deploy --id [DEVICE_UDID] \
+     --bundle /tmp/[AppName]-ipa/[AppName].app
+   ```
+
+8. **Troubleshooting common issues**
+
+   **Code signing error:**
+   - Verify DEVELOPMENT_TEAM is correct (check Apple Developer account)
+   - Run: `security find-identity -v -p codesigning`
+   - Ensure device is registered in Apple Developer Portal
+
+   **Provisioning profile error:**
+   - Use `-allowProvisioningUpdates` flag
+   - Or manually download profile from developer.apple.com
+
+   **"No such module" error:**
+   - Clean build folder: `xcodebuild clean`
+   - Verify SPM dependencies resolved: `xcodebuild -resolvePackageDependencies`
+
+   **App not installing:**
+   - Check device has enough storage
+   - Check iOS version compatibility
+   - Try: `xcrun devicectl device reboot device --device [UDID]`
+
+9. **Display summary**
+
+   ```
+   Phase 6.5: Device Build & Deploy - COMPLETE
+
+   Device: iPhone 15 Pro (00008140-000C75163A2B001C)
+   iOS Version: 18.1
+   Build Configuration: Debug
+   Swift Version: 6.0
+   Deployment Target: iOS 18.0
+
+   Build: ✅ SUCCESS (2m 34s)
+   Archive: ✅ SUCCESS (1m 12s)
+   Export: ✅ SUCCESS (45s)
+   Install: ✅ SUCCESS
+
+   App installed and ready to test on device.
+
+   Next: Test app functionality on physical device
+   ```
+
+---
+
+## Mode 2: Q&A & Guidance
+
+**Purpose**: Answer iOS/Swift questions with Apple documentation grounding
+
+**When to use**: Any time you have questions about iOS APIs, Swift features, or implementation viability
+
+**Process**:
+
+1. **Detect iOS/Swift question**
+
+   Questions that trigger this mode:
+   - "How do I use [SwiftUI feature]?"
+   - "Can I use [Swift feature] with [iOS framework]?"
+   - "What's the latest way to [iOS task]?"
+   - "Is it possible to [iOS implementation idea]?"
+   - "Show me examples of [Apple API]"
+
+2. **Invoke apple-docs-fetcher for grounding**
+
+   ```
+   Tool: Skill
+   Parameters:
+     skill: apple-docs-fetcher
+   ```
+
+   For EVERY iOS/Swift question:
+   - Extract API/framework names from question
+   - Use apple-docs-fetcher to fetch latest docs
+   - Ground answer in fetched documentation
+   - Cite documentation sources
+
+3. **Answer with grounded response**
+
+   Structure:
+   - Direct answer to question
+   - Code examples from Apple docs
+   - API signatures and parameters
+   - Availability (iOS version requirements)
+   - Best practices per documentation
+   - Links to source docs
+
+4. **Never answer from training data alone**
+
+   **RED FLAGS - STOP and fetch docs:**
+   - "I know this from training data"
+   - "This is straightforward"
+   - "Fetching docs takes time"
+   - "I'm confident about this"
+
+   **If you catch yourself thinking these → fetch docs immediately**
+
+5. **Example Q&A flow**
+
+   User: "Can I use Swift's typed throws with async sequences?"
+
+   Agent:
+   1. Identifies iOS/Swift question ✓
+   2. Invokes apple-docs-fetcher ✓
+   3. Fetches AsyncThrowingStream docs ✓
+   4. Provides answer with code examples ✓
+   5. Cites documentation source ✓
+
+   **DO NOT:**
+   - Answer from memory
+   - Skip docs fetching "for simple questions"
+   - Assume API signature from training data
 
 ---
 
