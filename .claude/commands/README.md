@@ -42,6 +42,20 @@ Fetch Apple Developer documentation via MCP.
 
 ---
 
+#### `/apple-docs-fetcher-lite {query}`
+
+Lightweight Apple docs fetcher with automatic token limit protection.
+
+**Example**: `/apple-docs-fetcher-lite SwiftUI.View`
+
+**Invokes**: `apple-docs-fetcher-lite` skill
+
+**See**: `.claude/skills/apple-docs-fetcher-lite/SKILL.md`
+
+**When to use**: When token limits prevent using the full `apple-docs-fetcher` skill
+
+---
+
 ### Project Management Commands
 
 #### `/validate-docs`
@@ -77,6 +91,25 @@ Display current sprint progress from git branch and sprint plan.
 **Uses**: Git status + docs/roadmap/SPRINT-PLAN-{N}.md
 
 **Output**: Task completion percentage with next steps
+
+---
+
+#### `/super-code-review {target}`
+
+Perform comprehensive code review using superpowers plugin.
+
+**Example**: `/super-code-review`
+
+**Invokes**: `superpowers:requesting-code-review` skill
+
+**Features**:
+- Reviews code against CLAUDE.md requirements and project standards
+- Detects potential bugs and edge cases in changes
+- Analyzes historical context via git blame
+- Provides confidence-scored feedback (threshold: 80)
+- Skips closed, draft, or previously reviewed PRs
+
+**Prerequisites**: Requires superpowers plugin
 
 ---
 
