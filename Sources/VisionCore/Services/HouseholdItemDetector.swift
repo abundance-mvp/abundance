@@ -1,6 +1,7 @@
 import Foundation
 import Vision
 import CoreML
+@preconcurrency import CoreVideo
 #if os(iOS)
 import UIKit
 #elseif os(macOS)
@@ -89,6 +90,73 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
 
             // Perform detection
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            do {
+                try handler.perform([request])
+            } catch {
+                continuation.resume(throwing: VisionError.requestFailed(error))
+            }
+        }
+    }
+
+    // MARK: - Real-time Stream Detection
+
+    /// Detects objects in a real-time video frame from CVPixelBuffer
+    /// Optimized for streaming pipeline with lower confidence threshold
+    /// - Parameter pixelBuffer: CVPixelBuffer from camera frame
+    /// - Returns: Array of raw YOLO detection results with alternative labels
+    /// - Throws: VisionError if detection fails
+    public func detectInStream(pixelBuffer: CVPixelBuffer) async throws -> [YOLOResult] {
+        // Load YOLOv11n CoreML model
+        guard let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
+            throw VisionError.modelNotFound
+        }
+
+        let model = try VNCoreMLModel(for: MLModel(contentsOf: modelURL))
+
+        // Create Vision request with lower confidence threshold for real-time
+        // Real-time uses 0.40 (vs 0.60 for single-photo) to catch more objects
+        // Quality filtering happens later in the pipeline
+        let streamConfidenceThreshold: Float = 0.40
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let request = VNCoreMLRequest(model: model) { request, error in
+                if let error = error {
+                    continuation.resume(throwing: VisionError.requestFailed(error))
+                    return
+                }
+
+                // Process results - YOLOv11n outputs VNRecognizedObjectObservation
+                guard let results = request.results as? [VNRecognizedObjectObservation] else {
+                    continuation.resume(returning: [])
+                    return
+                }
+
+                // Convert to YOLOResult with alternative labels
+                let yoloResults: [YOLOResult] = results.compactMap { observation -> YOLOResult? in
+                    guard let topLabel = observation.labels.first,
+                          topLabel.confidence >= streamConfidenceThreshold else {
+                        return nil
+                    }
+
+                    // Collect top 3 alternative labels (excluding primary)
+                    let alternatives = observation.labels
+                        .dropFirst() // Skip primary label
+                        .prefix(3) // Take top 3 alternatives
+                        .map { AlternativeLabel(label: $0.identifier, confidence: Double($0.confidence)) }
+
+                    return YOLOResult(
+                        label: topLabel.identifier,
+                        confidence: Double(topLabel.confidence),
+                        boundingBox: observation.boundingBox,
+                        alternativeLabels: Array(alternatives)
+                    )
+                }
+
+                continuation.resume(returning: yoloResults)
+            }
+
+            // Perform detection on pixel buffer
+            let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
             do {
                 try handler.perform([request])
             } catch {

@@ -1,4 +1,5 @@
 import XCTest
+@preconcurrency import CoreVideo
 #if os(iOS)
 import UIKit
 #elseif os(macOS)
@@ -105,5 +106,118 @@ final class HouseholdItemDetectorTests: XCTestCase {
         }
         return image
         #endif
+    }
+
+    // MARK: - Real-time Stream Detection Tests
+
+    func testDetectInStream_withMock_returnsYOLOResults() async throws {
+        // Given
+        let pixelBuffer = try createTestPixelBuffer()
+        let expectedResult = YOLOResult(
+            label: "bottle",
+            confidence: 0.85,
+            boundingBox: CGRect(x: 0.1, y: 0.2, width: 0.3, height: 0.4),
+            alternativeLabels: [
+                AlternativeLabel(label: "cup", confidence: 0.7),
+                AlternativeLabel(label: "mug", confidence: 0.65)
+            ]
+        )
+        sut.stubbedYOLOResults = [expectedResult]
+
+        // When
+        let results = try await sut.detectInStream(pixelBuffer: pixelBuffer)
+
+        // Then
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results.first?.label, "bottle")
+        XCTAssertEqual(results.first?.confidence, 0.85)
+        XCTAssertEqual(results.first?.alternativeLabels.count, 2)
+        XCTAssertTrue(sut.didCallDetectInStream)
+    }
+
+    func testDetectInStream_withLowConfidence_stillReturnsResults() async throws {
+        // Given
+        let pixelBuffer = try createTestPixelBuffer()
+        let lowConfidenceResult = YOLOResult(
+            label: "chair",
+            confidence: 0.45, // Below single-photo threshold (0.6) but above stream threshold (0.4)
+            boundingBox: CGRect(x: 0.2, y: 0.3, width: 0.4, height: 0.5)
+        )
+        sut.stubbedYOLOResults = [lowConfidenceResult]
+
+        // When
+        let results = try await sut.detectInStream(pixelBuffer: pixelBuffer)
+
+        // Then
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results.first?.confidence, 0.45)
+    }
+
+    func testDetectInStream_withAlternativeLabels_includesTopThree() async throws {
+        // Given
+        let pixelBuffer = try createTestPixelBuffer()
+        let resultWithAlternatives = YOLOResult(
+            label: "laptop",
+            confidence: 0.9,
+            boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.5, height: 0.5),
+            alternativeLabels: [
+                AlternativeLabel(label: "keyboard", confidence: 0.75),
+                AlternativeLabel(label: "monitor", confidence: 0.65),
+                AlternativeLabel(label: "mouse", confidence: 0.55)
+            ]
+        )
+        sut.stubbedYOLOResults = [resultWithAlternatives]
+
+        // When
+        let results = try await sut.detectInStream(pixelBuffer: pixelBuffer)
+
+        // Then
+        XCTAssertEqual(results.first?.alternativeLabels.count, 3)
+        XCTAssertEqual(results.first?.alternativeLabels[0].label, "keyboard")
+        XCTAssertEqual(results.first?.alternativeLabels[1].label, "monitor")
+        XCTAssertEqual(results.first?.alternativeLabels[2].label, "mouse")
+    }
+
+    func testDetectInStream_performance_completesUnder30ms() async throws {
+        // Given
+        let pixelBuffer = try createTestPixelBuffer()
+        let results = [YOLOResult(
+            label: "bottle",
+            confidence: 0.85,
+            boundingBox: CGRect(x: 0.1, y: 0.2, width: 0.3, height: 0.4)
+        )]
+        sut.stubbedYOLOResults = results
+
+        // When
+        let startTime = CFAbsoluteTimeGetCurrent()
+        _ = try await sut.detectInStream(pixelBuffer: pixelBuffer)
+        let duration = (CFAbsoluteTimeGetCurrent() - startTime) * 1000 // Convert to ms
+
+        // Then
+        // Mock should complete in <1ms, real YOLO should be <30ms
+        XCTAssertLessThan(duration, 30.0, "detectInStream should complete in <30ms")
+    }
+
+    // MARK: - Helper Methods
+
+    private func createTestPixelBuffer() throws -> CVPixelBuffer {
+        var pixelBuffer: CVPixelBuffer?
+        let status = CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            640,
+            480,
+            kCVPixelFormatType_32BGRA,
+            [
+                kCVPixelBufferCGImageCompatibilityKey: true,
+                kCVPixelBufferCGBitmapContextCompatibilityKey: true
+            ] as CFDictionary,
+            &pixelBuffer
+        )
+
+        guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
+            throw VisionError.invalidImage
+        }
+
+        return buffer
     }
 }
