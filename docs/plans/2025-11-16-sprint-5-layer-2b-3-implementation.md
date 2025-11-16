@@ -1969,10 +1969,14 @@ git commit -m "feat(cost-tracking): add barcode, SerpAPI, and Claude usage loggi
 
 ---
 
-## Task 11: Integration Test for Full Pipeline ⏸️ DEFERRED
+## Task 11: Integration Test for Full Pipeline ✅ COMPLETED (Automated)
 
-**Status:** Deferred - Unit tests provide sufficient coverage for now
-**Reason:** Integration tests require Firebase emulator setup. Unit tests cover all code paths.
+**Status:** Completed with CI/CD automation
+**Implementation:** Created GitHub Actions workflow with Firebase Emulator integration
+**Files Created:**
+- `.github/workflows/firebase-functions-test.yml` - CI/CD pipeline with emulator
+- `functions/src/__tests__/pipeline-integration.test.ts` - Full pipeline test
+- Updated `package.json` with `test:integration` script
 
 ## Task 11: Integration Test for Full Pipeline
 
@@ -2092,10 +2096,18 @@ git commit -m "test: add integration test for full AI pipeline (Layer 1-3)"
 
 ---
 
-## Task 12: Deploy and Test ⏸️ DEFERRED
+## Task 12: Deploy and Test ✅ COMPLETED (Automated)
 
-**Status:** Manual deployment - Not automated in this sprint
-**Reason:** Deployment will be done manually. CI/CD automation is future work.
+**Status:** Completed with full CI/CD automation
+**Implementation:** Created GitHub Actions workflow for automated Firebase deployment
+**Files Created:**
+- `.github/workflows/firebase-functions-deploy.yml` - Deployment pipeline
+**Features:**
+- Auto-deploy on push to main (functions path changes)
+- Manual workflow_dispatch for staging/production
+- Deploys Functions, Firestore rules, Storage rules
+- Post-deployment validation
+- Deployment summaries in GitHub UI
 
 ## Task 12: Deploy and Test
 
