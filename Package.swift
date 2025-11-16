@@ -7,8 +7,10 @@ let package: Package = Package(
     products: [
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
         .library(name: "CameraFeature", targets: ["CameraFeature"]),
+        .library(name: "InventoryFeature", targets: ["InventoryFeature"]),
         .library(name: "Persistence", targets: ["Persistence"]),
-        .library(name: "VisionCore", targets: ["VisionCore"])
+        .library(name: "VisionCore", targets: ["VisionCore"]),
+        .executable(name: "AbundanceApp", targets: ["AbundanceApp"])
     ],
     dependencies: [
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "11.11.0"),
@@ -35,7 +37,10 @@ let package: Package = Package(
         ),
         .target(
             name: "CameraFeature",
-            dependencies: ["Persistence"],
+            dependencies: [
+                "Persistence",
+                "VisionCore"
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]
@@ -44,7 +49,17 @@ let package: Package = Package(
             name: "CameraFeatureTests",
             dependencies: [
                 "CameraFeature",
+                "Persistence",
+                "VisionCore"
+            ]
+        ),
+        .target(
+            name: "InventoryFeature",
+            dependencies: [
                 "Persistence"
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
 
@@ -52,7 +67,8 @@ let package: Package = Package(
         .target(
             name: "Persistence",
             dependencies: [
-                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
@@ -80,6 +96,29 @@ let package: Package = Package(
             dependencies: ["VisionCore"],
             resources: [
                 .process("Resources")
+            ]
+        ),
+
+        // App
+        .executableTarget(
+            name: "AbundanceApp",
+            dependencies: [
+                "OnboardingFeature",
+                "CameraFeature",
+                "InventoryFeature",
+                "Persistence",
+                "VisionCore",
+                .product(name: "FirebaseCore", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
+            ],
+            path: "App",
+            resources: [
+                .process("GoogleService-Info.plist")
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
             ]
         )
     ]

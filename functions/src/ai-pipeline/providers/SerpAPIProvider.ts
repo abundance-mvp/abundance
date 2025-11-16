@@ -45,7 +45,37 @@ export class SerpAPIProvider {
   private readonly apiBaseUrl = 'https://serpapi.com/search';
   private readonly timeout = 10000; // 10 second timeout
 
+  // ✅ Simple in-memory cache (valid for function lifetime)
+  private cache: Map<string, { result: SerpAPIResponse; timestamp: number }> = new Map();
+  private readonly cacheTTL = 3600000; // 1 hour
+
+  private getCachedResult(imageUrl: string): SerpAPIResponse | null {
+    const cached = this.cache.get(imageUrl);
+    if (!cached) return null;
+
+    const age = Date.now() - cached.timestamp;
+    if (age > this.cacheTTL) {
+      this.cache.delete(imageUrl);
+      return null;
+    }
+
+    console.log(`[SerpAPI] ✅ Cache hit for ${imageUrl} (age: ${Math.round(age / 1000)}s)`);
+    return cached.result;
+  }
+
+  private cacheResult(imageUrl: string, result: SerpAPIResponse): void {
+    this.cache.set(imageUrl, {
+      result,
+      timestamp: Date.now(),
+    });
+  }
+
   async search(imageUrl: string, itemId: string): Promise<SerpAPIResponse> {
+    // Check cache first
+    const cachedResult = this.getCachedResult(imageUrl);
+    if (cachedResult) {
+      return cachedResult;
+    }
     const apiKey = process.env.SERPAPI_API_KEY;
 
     if (!apiKey) {
@@ -102,21 +132,28 @@ export class SerpAPIProvider {
       // Validate response structure
       if (!data.visual_matches || !Array.isArray(data.visual_matches)) {
         console.warn(`[SerpAPI] No visual_matches array in response for item ${itemId}`);
-        return {
+        const emptyResult = {
           visual_matches: [],
           search_metadata: data.search_metadata,
           latency,
         };
+        // Cache empty results too (avoid retrying failed searches)
+        this.cacheResult(imageUrl, emptyResult);
+        return emptyResult;
       }
 
       console.log(`[SerpAPI] ✅ Found ${data.visual_matches.length} visual matches for item ${itemId} (${latency}ms)`);
 
-      return {
+      const searchResult = {
         visual_matches: data.visual_matches,
         search_metadata: data.search_metadata,
         search_information: data.search_information,
         latency,
       };
+
+      // Cache result before returning
+      this.cacheResult(imageUrl, searchResult);
+      return searchResult;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new SerpAPIError('SerpAPI request timed out after 10 seconds');

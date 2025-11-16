@@ -2,9 +2,11 @@ import SwiftUI
 import AuthenticationServices
 
 public struct SignInView: View {
-    @StateObject private var viewModel: SignInViewModel = SignInViewModel()
+    @ObservedObject var viewModel: AuthViewModel
 
-    public init() {}
+    public init(viewModel: AuthViewModel) {
+        self.viewModel = viewModel
+    }
 
     public var body: some View {
         VStack(spacing: 20) {
@@ -50,5 +52,5 @@ public struct SignInView: View {
 }
 
 #Preview {
-    SignInView()
+    SignInView(viewModel: AuthViewModel())
 }
