@@ -25,6 +25,16 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
         "tie", "couch", "potted plant", "toilet"
     ]
 
+    /// Cached YOLOv11n model for stream detection
+    /// Loaded once to avoid repeated disk I/O (model is 5.6 MB)
+    private lazy var streamModel: VNCoreMLModel? = {
+        guard let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc"),
+              let mlModel = try? MLModel(contentsOf: modelURL) else {
+            return nil
+        }
+        return try? VNCoreMLModel(for: mlModel)
+    }()
+
     // MARK: - Initialization
 
     public init() {}
@@ -106,12 +116,10 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
     /// - Returns: Array of raw YOLO detection results with alternative labels
     /// - Throws: VisionError if detection fails
     public func detectInStream(pixelBuffer: CVPixelBuffer) async throws -> [YOLOResult] {
-        // Load YOLOv11n CoreML model
-        guard let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
+        // Use cached model to avoid repeated loading (5.6 MB per load)
+        guard let model = streamModel else {
             throw VisionError.modelNotFound
         }
-
-        let model = try VNCoreMLModel(for: MLModel(contentsOf: modelURL))
 
         // Create Vision request with lower confidence threshold for real-time
         // Real-time uses 0.40 (vs 0.60 for single-photo) to catch more objects
