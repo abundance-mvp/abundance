@@ -52,13 +52,8 @@ def validate_references(docs_root: Path) -> List[Dict[str, str]]:
             if '{' in link_path or '}' in link_path:
                 continue
 
-            # Resolve relative path
-            if link_path.startswith('docs/'):
-                # Absolute from repo root - resolve relative to docs_root parent
-                full_path = docs_root.parent / link_path
-            else:
-                # Relative to current file
-                full_path = (md_file.parent / link_path).resolve()
+            # Resolve relative path (all paths are relative to current file)
+            full_path = (md_file.parent / link_path).resolve()
 
             # Check if target exists
             if not full_path.exists():

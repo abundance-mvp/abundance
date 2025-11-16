@@ -10,7 +10,7 @@ Usage:
 import argparse
 from pathlib import Path
 from typing import Dict
-from map_documents import DocumentMapper, DocumentFixer
+from map_documents import DocumentMapper, DocumentFixer, BrokenLinkFixer
 
 def main(docs_root: Path = Path('docs'), dry_run: bool = True, target_dir: str | None = None) -> Dict[str, int]:
     """Fix document references across all markdown files.
@@ -40,29 +40,44 @@ def main(docs_root: Path = Path('docs'), dry_run: bool = True, target_dir: str |
 
     print(f"\n🔍 Processing {len(files_to_process)} files...")
 
-    # Fix references in each file
-    fixer = DocumentFixer(mapper)
+    # Create fixers
+    doc_fixer = DocumentFixer(mapper)
+    link_fixer = BrokenLinkFixer(docs_root)
+
     stats = {
         'files_processed': 0,
         'files_modified': 0,
-        'total_changes': 0
+        'total_changes': 0,
+        'broken_links_fixed': 0,
+        'unlinked_refs_fixed': 0
     }
 
     for file_path in files_to_process:
         content = file_path.read_text()
-        fixed_content, changes = fixer.fix(content)
 
+        # First, fix broken markdown links (docs/ prefix issues)
+        content, broken_link_changes = link_fixer.fix(content, file_path)
+
+        # Then, fix unlinked references
+        content, unlinked_ref_changes = doc_fixer.fix(content, file_path)
+
+        total_changes = broken_link_changes + unlinked_ref_changes
         stats['files_processed'] += 1
 
-        if changes > 0:
+        if total_changes > 0:
             stats['files_modified'] += 1
-            stats['total_changes'] += changes
+            stats['total_changes'] += total_changes
+            stats['broken_links_fixed'] += broken_link_changes
+            stats['unlinked_refs_fixed'] += unlinked_ref_changes
 
             print(f"\n📝 {file_path.relative_to(docs_root)}")
-            print(f"   → {changes} reference(s) fixed")
+            if broken_link_changes > 0:
+                print(f"   → {broken_link_changes} broken link(s) fixed")
+            if unlinked_ref_changes > 0:
+                print(f"   → {unlinked_ref_changes} unlinked reference(s) fixed")
 
             if not dry_run:
-                file_path.write_text(fixed_content)
+                file_path.write_text(content)
                 print(f"   ✓ Changes applied")
 
     # Print summary
@@ -71,6 +86,8 @@ def main(docs_root: Path = Path('docs'), dry_run: bool = True, target_dir: str |
     print(f"   Files processed: {stats['files_processed']}")
     print(f"   Files modified: {stats['files_modified']}")
     print(f"   Total changes: {stats['total_changes']}")
+    print(f"     - Broken links fixed: {stats['broken_links_fixed']}")
+    print(f"     - Unlinked references fixed: {stats['unlinked_refs_fixed']}")
 
     if dry_run and stats['total_changes'] > 0:
         print(f"\n⚠️  DRY RUN - No changes applied")
