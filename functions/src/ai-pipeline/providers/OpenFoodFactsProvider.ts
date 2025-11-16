@@ -9,6 +9,14 @@ export interface BarcodeProduct {
   latency: number;
 }
 
+export class RateLimitError extends Error {
+  constructor(message: string, public status: number, public retryAfter?: number) {
+    super(message);
+    this.name = 'RateLimitError';
+  }
+  retryable = true;
+}
+
 export class OpenFoodFactsProvider {
   private readonly apiBaseUrl = 'https://world.openfoodfacts.org/api/v0';
   private readonly timeout = 2000; // 2 second timeout
@@ -31,6 +39,17 @@ export class OpenFoodFactsProvider {
 
       clearTimeout(timeoutId);
       const latency = Date.now() - startTime;
+
+      // ✅ I6: Add rate limit detection
+      if (response.status === 429) {
+        const retryAfter = parseInt(response.headers.get('retry-after') || '60');
+        console.warn(`[OpenFoodFacts] Rate limit exceeded, retry after ${retryAfter}s`);
+        throw new RateLimitError(
+          `OpenFoodFacts rate limit exceeded for barcode ${barcode}`,
+          429,
+          retryAfter
+        );
+      }
 
       if (!response.ok) {
         console.log(`[OpenFoodFacts] HTTP ${response.status} for barcode ${barcode}`);
@@ -61,6 +80,10 @@ export class OpenFoodFactsProvider {
 
       return product;
     } catch (error: any) {
+      if (error instanceof RateLimitError) {
+        throw error;  // Re-throw rate limit errors for retry logic
+      }
+
       if (error.name === 'AbortError') {
         console.warn(`[OpenFoodFacts] Timeout after ${this.timeout}ms for barcode ${barcode}`);
       } else {

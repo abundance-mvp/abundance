@@ -1,5 +1,5 @@
-import { OpenFoodFactsProvider } from '../providers/OpenFoodFactsProvider';
-import { UPCitemdbProvider } from '../providers/UPCitemdbProvider';
+import { OpenFoodFactsProvider, RateLimitError as OFFRateLimitError } from '../providers/OpenFoodFactsProvider';
+import { UPCitemdbProvider, RateLimitError as UPCRateLimitError } from '../providers/UPCitemdbProvider';
 import { BarcodeProduct } from '../providers/OpenFoodFactsProvider';
 
 export interface BarcodeData {
@@ -26,7 +26,7 @@ export class BarcodeHybridLookup {
 
     console.log(`[BarcodeHybrid] Starting hybrid lookup for barcode ${barcode} (item ${itemId})`);
 
-    // Step 1: Try OpenFoodFacts (free, food-only)
+    // ✅ I6: Try OpenFoodFacts first with rate limit handling
     try {
       const openFoodResult = await this.openFoodFacts.lookup(barcode);
 
@@ -35,8 +35,12 @@ export class BarcodeHybridLookup {
         return openFoodResult;
       }
     } catch (error: any) {
-      console.warn(`[BarcodeHybrid] OpenFoodFacts lookup failed for ${barcode}:`, error.message);
-      // Continue to next API
+      if (error instanceof OFFRateLimitError) {
+        console.warn(`[BarcodeHybrid] OpenFoodFacts rate limited (${error.retryAfter}s), skipping to UPCitemdb`);
+        // Continue to UPCitemdb fallback
+      } else {
+        console.warn(`[BarcodeHybrid] OpenFoodFacts lookup failed for ${barcode}:`, error.message);
+      }
     }
 
     // Step 2: Try UPCitemdb (paid, all products)
