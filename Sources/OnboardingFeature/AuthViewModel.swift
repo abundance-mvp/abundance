@@ -4,7 +4,7 @@ import AuthenticationServices
 import Persistence
 
 @MainActor
-public class SignInViewModel: ObservableObject {
+public class AuthViewModel: ObservableObject {
     @Published public var isAuthenticated: Bool = false
     @Published public var isLoading: Bool = false
     @Published public var error: Error?

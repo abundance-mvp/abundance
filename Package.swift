@@ -7,6 +7,7 @@ let package: Package = Package(
     products: [
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
         .library(name: "CameraFeature", targets: ["CameraFeature"]),
+        .library(name: "InventoryFeature", targets: ["InventoryFeature"]),
         .library(name: "Persistence", targets: ["Persistence"]),
         .library(name: "VisionCore", targets: ["VisionCore"]),
         .executable(name: "AbundanceApp", targets: ["AbundanceApp"])
@@ -52,12 +53,22 @@ let package: Package = Package(
                 "VisionCore"
             ]
         ),
+        .target(
+            name: "InventoryFeature",
+            dependencies: [
+                "Persistence"
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
+            ]
+        ),
 
         // Core
         .target(
             name: "Persistence",
             dependencies: [
-                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
@@ -94,6 +105,7 @@ let package: Package = Package(
             dependencies: [
                 "OnboardingFeature",
                 "CameraFeature",
+                "InventoryFeature",
                 "Persistence",
                 "VisionCore",
                 .product(name: "FirebaseCore", package: "firebase-ios-sdk"),
