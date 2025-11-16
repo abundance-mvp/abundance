@@ -30,6 +30,7 @@ cd /path/to/parent-directory  # Directory containing spec-kit/
 ```
 
 **What it does**:
+
 1. ✅ Creates `abundance-mvp` GitHub repository (private)
 2. ✅ Clones repository locally
 3. ✅ Copies all scaffold files (including `.github/`, `.claude/`)
@@ -131,12 +132,12 @@ Navigate to: **Settings > Secrets and variables > Actions**
 
 Add these secrets:
 
-| Secret | Source | Required |
-|--------|--------|----------|
-| `ANTHROPIC_API_KEY` | https://console.anthropic.com/ | ✅ Yes |
-| `GOOGLE_API_KEY` | https://aistudio.google.com/app/apikey | ✅ Yes |
-| `FIREBASE_SERVICE_ACCOUNT` | Firebase Console (JSON key) | ✅ Yes |
-| `SLACK_WEBHOOK_URL` | Slack workspace settings | ⚠️ Optional |
+| Secret                     | Source                                 | Required    |
+| -------------------------- | -------------------------------------- | ----------- |
+| `ANTHROPIC_API_KEY`        | https://console.anthropic.com/         | ✅ Yes      |
+| `GOOGLE_API_KEY`           | https://aistudio.google.com/app/apikey | ✅ Yes      |
+| `FIREBASE_SERVICE_ACCOUNT` | Firebase Console (JSON key)            | ✅ Yes      |
+| `SLACK_WEBHOOK_URL`        | Slack workspace settings               | ⚠️ Optional |
 
 **Quick command**:
 
@@ -153,6 +154,7 @@ gh secret set FIREBASE_SERVICE_ACCOUNT
 Navigate to: **Settings > Actions > General**
 
 Enable:
+
 - ✅ Allow all actions and reusable workflows
 - ✅ Read and write permissions
 - ✅ Allow GitHub Actions to create and approve pull requests
@@ -166,6 +168,7 @@ Navigate to: **Settings > Branches > Add rule**
 **Branch name pattern**: `main`
 
 Enable:
+
 - ✅ Require a pull request before merging
   - Required approving reviews: **1**
   - Dismiss stale pull request approvals
@@ -205,16 +208,16 @@ firebase deploy --only firestore:rules --dry-run
 
 ### GitHub Actions Workflows (`.github/workflows/`)
 
-| Workflow | Purpose | Triggers |
-|----------|---------|----------|
-| `ios-build-check.yml` | Swift 6.0 build, SwiftLint, tests | Push to `main`, PRs modifying `ios/**` |
-| `backend-validation.yml` | TypeScript build, ESLint, Firebase rules | Push to `main`, PRs modifying `backend/**` |
-| `ai-pipeline-check.yml` | Python lint, mypy, pytest, benchmarks | Push to `main`, PRs modifying `ai-pipeline/**` |
-| `spec-validation.yml` | Doc-reviewer agent, link checks | Push to `main`, PRs modifying `docs/**` |
-| `claude-code-action-ci-fix.yml` | CI debugging via @claude mentions | Issue comment with `@claude` |
-| `security-pr-review.yml` | OWASP Top 10 scanning | PR opened/synchronize |
-| `docs-auto-update.yml` | TOC generation, timestamp updates | Push to `main`, weekly schedule |
-| `changelog-on-release.yml` | CHANGELOG.md auto-update | Tag push (`v*`) |
+| Workflow                        | Purpose                                  | Triggers                                       |
+| ------------------------------- | ---------------------------------------- | ---------------------------------------------- |
+| `ios-build-check.yml`           | Swift 6.0 build, SwiftLint, tests        | Push to `main`, PRs modifying `ios/**`         |
+| `backend-validation.yml`        | TypeScript build, ESLint, Firebase rules | Push to `main`, PRs modifying `backend/**`     |
+| `ai-pipeline-check.yml`         | Python lint, mypy, pytest, benchmarks    | Push to `main`, PRs modifying `ai-pipeline/**` |
+| `spec-validation.yml`           | Doc-reviewer agent, link checks          | Push to `main`, PRs modifying `docs/**`        |
+| `claude-code-action-ci-fix.yml` | CI debugging via @claude mentions        | Issue comment with `@claude`                   |
+| `security-pr-review.yml`        | OWASP Top 10 scanning                    | PR opened/synchronize                          |
+| `docs-auto-update.yml`          | TOC generation, timestamp updates        | Push to `main`, weekly schedule                |
+| `changelog-on-release.yml`      | CHANGELOG.md auto-update                 | Tag push (`v*`)                                |
 
 ---
 
@@ -222,34 +225,35 @@ firebase deploy --only firestore:rules --dry-run
 
 #### Hooks (`.claude/hooks/`)
 
-| Hook | Purpose | Trigger |
-|------|---------|---------|
-| `pre-sprint.sh` | Validates environment before sprint execution | Before sprint starts |
-| `pr_create_hook.sh` | Enforces PR template compliance | PR creation |
-| `file_edit_hook.sh` | Detects sensitive data in commits | File edits |
-| `bash_command_validator.py` | Blocks dangerous commands | Before bash execution |
+| Hook                        | Purpose                                       | Trigger               |
+| --------------------------- | --------------------------------------------- | --------------------- |
+| `pre-sprint.sh`             | Validates environment before sprint execution | Before sprint starts  |
+| `pr_create_hook.sh`         | Enforces PR template compliance               | PR creation           |
+| `file_edit_hook.sh`         | Detects sensitive data in commits             | File edits            |
+| `bash_command_validator.py` | Blocks dangerous commands                     | Before bash execution |
 
 **Blocked patterns**: `rm -rf /`, fork bombs, `curl\|bash`, destructive operations
 
 #### Agents (`.claude/agents/`)
 
-| Agent | Purpose | Severity Levels |
-|-------|---------|-----------------|
-| `doc-reviewer.md` | Link validation, staleness detection | Info |
-| `drift-detector.md` | ADR compliance enforcement | P0/P1/P2 |
-| `cost-watchdog.md` | Budget monitoring ($554/month) | Warn/Critical/Emergency |
+| Agent               | Purpose                              | Severity Levels         |
+| ------------------- | ------------------------------------ | ----------------------- |
+| `doc-reviewer.md`   | Link validation, staleness detection | Info                    |
+| `drift-detector.md` | ADR compliance enforcement           | P0/P1/P2                |
+| `cost-watchdog.md`  | Budget monitoring ($554/month)       | Warn/Critical/Emergency |
 
 **Invoke**: `/validate-docs`, `/check-drift`, or `@doc-reviewer`
 
 #### Commands (`.claude/commands/`)
 
-| Command | Purpose | References |
-|---------|---------|------------|
-| `/validate-docs` | Check docs for broken links, stale content | `.claude/agents/doc-reviewer.md` |
-| `/check-drift` | ADR compliance with P0/P1/P2 severity | `.claude/agents/drift-detector.md` |
-| `/show-sprint-status` | Display sprint progress | `docs/roadmap/SPRINT-PLAN-*.md` |
+| Command               | Purpose                                    | References                         |
+| --------------------- | ------------------------------------------ | ---------------------------------- |
+| `/validate-docs`      | Check docs for broken links, stale content | `.claude/agents/doc-reviewer.md`   |
+| `/check-drift`        | ADR compliance with P0/P1/P2 severity      | `.claude/agents/drift-detector.md` |
+| `/show-sprint-status` | Display sprint progress                    | `docs/roadmap/SPRINT-PLAN-*.md`    |
 
 **Usage**:
+
 ```
 /validate-docs
 /check-drift
@@ -262,28 +266,28 @@ firebase deploy --only firestore:rules --dry-run
 
 ### Documentation (`docs/tech-stack/`)
 
-| Document | Description | Lines |
-|----------|-------------|-------|
-| `CLAUDE-CODE-AUTOMATION-001.md` | Architecture overview (5 plugin types) | 312 |
-| `AI-AGENT-BEHAVIORS-001.md` | Agent personas, orchestration patterns | 418 |
-| `GITHUB-ACTIONS-ARCHITECTURE-001.md` | CI/CD pipeline design, cost analysis | 587 |
-| `BRANCH-PROTECTION-RULES-001.md` | GitHub protection rules | 324 |
-| `REPOSITORY-SETUP-CHECKLIST-001.md` | 8-phase setup guide (2-3 hrs) | 467 |
-| `LOCAL-DEV-SETUP-001.md` | Developer onboarding guide (1-2 hrs) | 672 |
-| `COST-MONITORING-AUTOMATION-001.md` | Budget tracking, 3-tier alerting | 598 |
-| `CHANGELOG-AUTOMATION-001.md` | Conventional Commits strategy | 523 |
+| Document                             | Description                            | Lines |
+| ------------------------------------ | -------------------------------------- | ----- |
+| `CLAUDE-CODE-AUTOMATION-001.md`      | Architecture overview (5 plugin types) | 312   |
+| `AI-AGENT-BEHAVIORS-001.md`          | Agent personas, orchestration patterns | 418   |
+| `GITHUB-ACTIONS-ARCHITECTURE-001.md` | CI/CD pipeline design, cost analysis   | 587   |
+| `BRANCH-PROTECTION-RULES-001.md`     | GitHub protection rules                | 324   |
+| `REPOSITORY-SETUP-CHECKLIST-001.md`  | 8-phase setup guide (2-3 hrs)          | 467   |
+| `LOCAL-DEV-SETUP-001.md`             | Developer onboarding guide (1-2 hrs)   | 672   |
+| `COST-MONITORING-AUTOMATION-001.md`  | Budget tracking, 3-tier alerting       | 598   |
+| `CHANGELOG-AUTOMATION-001.md`        | Conventional Commits strategy          | 523   |
 
 ---
 
 ### Setup Scripts (`scripts/`)
 
-| Script | Purpose |
-|--------|---------|
-| `bootstrap-repository.sh` | **Interactive repository creation** (recommended) |
-| `validate-environment.sh` | Check Xcode 16+, SwiftLint, Firebase CLI, API keys |
-| `setup-git-hooks.sh` | Install pre-commit/pre-push hooks |
-| `setup-claude-hooks.sh` | Make Claude hooks executable, run tests |
-| `install-claude-plugins.sh` | Symlink marketplace plugins |
+| Script                      | Purpose                                            |
+| --------------------------- | -------------------------------------------------- |
+| `bootstrap-repository.sh`   | **Interactive repository creation** (recommended)  |
+| `validate-environment.sh`   | Check Xcode 16+, SwiftLint, Firebase CLI, API keys |
+| `setup-git-hooks.sh`        | Install pre-commit/pre-push hooks                  |
+| `setup-claude-hooks.sh`     | Make Claude hooks executable, run tests            |
+| `install-claude-plugins.sh` | Symlink marketplace plugins                        |
 
 All scripts are executable (`chmod +x`)
 
@@ -310,12 +314,12 @@ After setup, verify:
 
 **Monthly estimates** (from GITHUB-ACTIONS-ARCHITECTURE-001):
 
-| Service | Cost/Month | Notes |
-|---------|------------|-------|
-| GitHub Actions | $10.68 | 200 workflow runs/month |
-| Claude Code Agents | $20-30 | 5 reviews/sprint × 4 sprints |
-| Cost Monitoring | $15 | Daily cost-watchdog runs |
-| **Total Automation** | **~$46-56** | 8-10% of $554 total budget |
+| Service              | Cost/Month  | Notes                        |
+| -------------------- | ----------- | ---------------------------- |
+| GitHub Actions       | $10.68      | 200 workflow runs/month      |
+| Claude Code Agents   | $20-30      | 5 reviews/sprint × 4 sprints |
+| Cost Monitoring      | $15         | Daily cost-watchdog runs     |
+| **Total Automation** | **~$46-56** | 8-10% of $554 total budget   |
 
 **Within budget**: Yes (COST-MODEL-001 allocation)
 
@@ -326,6 +330,7 @@ After setup, verify:
 ### Bootstrap Script Fails
 
 **Error**: "Repository already exists"
+
 ```bash
 # Check if repo exists remotely
 gh repo view abundance-mvp
@@ -336,6 +341,7 @@ gh repo delete abundance-mvp --yes
 ```
 
 **Error**: "GitHub CLI not authenticated"
+
 ```bash
 gh auth login
 ```
@@ -345,14 +351,17 @@ gh auth login
 ### Environment Validation Fails
 
 **Missing Xcode 16+**:
+
 - Install from Mac App Store or https://developer.apple.com/download/
 
 **Missing SwiftLint**:
+
 ```bash
 brew install swiftlint
 ```
 
 **Missing Firebase CLI**:
+
 ```bash
 npm install -g firebase-tools
 ```
@@ -362,6 +371,7 @@ npm install -g firebase-tools
 ### Hooks Not Executing
 
 **Check permissions**:
+
 ```bash
 ls -la .claude/hooks/
 # Should show: -rwxr-xr-x (executable)
@@ -372,6 +382,7 @@ chmod +x .claude/hooks/*.py
 ```
 
 **Test manually**:
+
 ```bash
 ./.claude/hooks/bash_command_validator.py "rm -rf /"
 # Expected: ❌ BLOCKED: Dangerous command pattern

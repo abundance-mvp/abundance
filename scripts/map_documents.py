@@ -102,12 +102,13 @@ class LinkGenerator:
     def __init__(self, docs_root: str):
         self.docs_root = Path(docs_root)
 
-    def generate(self, reference: Reference, resolved_path: Path | None) -> str:
+    def generate(self, reference: Reference, resolved_path: Path | None, source_file: Path | None = None) -> str:
         """Generate markdown link from reference and resolved path.
 
         Args:
             reference: Reference dict with doc_id, description, line_text
             resolved_path: Actual file path, or None if not found
+            source_file: Source file where the link will be placed (for relative path calculation)
 
         Returns:
             Markdown link string, or original line if not resolved
@@ -118,11 +119,104 @@ class LinkGenerator:
         # Extract link text from filename stem
         link_text = resolved_path.stem
 
-        # Build relative path from docs root
-        relative_path = resolved_path
+        # Build relative path from source file (if provided)
+        if source_file is not None:
+            # Calculate relative path from source file to target file
+            # Convert both to absolute paths first
+            source_abs = source_file.parent.resolve()
+            target_abs = Path(resolved_path).resolve()
+            docs_abs = self.docs_root.resolve()
+
+            try:
+                # Try simple relative path first
+                relative_path = target_abs.relative_to(source_abs)
+            except ValueError:
+                # If files are in different directory trees, use .. navigation
+                # Count how many levels up from source to docs root
+                source_rel = source_abs.relative_to(docs_abs)
+                levels_up = len(source_rel.parts)
+
+                # Build relative path
+                target_rel = target_abs.relative_to(docs_abs)
+                relative_path = Path('../' * levels_up) / target_rel
+        else:
+            # Fallback to docs root relative path
+            relative_path = resolved_path
 
         # Generate markdown link
         return f"- [{link_text}]({relative_path}): {reference['description']}"
+
+class BrokenLinkFixer:
+    """Fix broken markdown links by converting to proper relative paths."""
+
+    def __init__(self, docs_root: Path):
+        self.docs_root = docs_root
+        # Pattern to match markdown links [text](path)
+        self.link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+
+    def fix(self, content: str, source_file: Path) -> tuple[str, int]:
+        """Fix broken markdown links in content.
+
+        Args:
+            content: Markdown file content
+            source_file: Path to the source file
+
+        Returns:
+            Tuple of (fixed_content, num_changes)
+        """
+        fixed_content = content
+        changes = 0
+
+        for match in self.link_pattern.finditer(content):
+            link_text = match.group(1)
+            link_path = match.group(2)
+
+            # Skip external URLs
+            if link_path.startswith('http'):
+                continue
+
+            # Skip anchor links
+            if link_path.startswith('#'):
+                continue
+
+            # Check if this is a broken link with docs/ prefix
+            if link_path.startswith('docs/'):
+                # Calculate what it currently resolves to (relative to source file)
+                current_target = (source_file.parent / link_path).resolve()
+
+                # Check if the file exists at the absolute docs/ path
+                absolute_target = (self.docs_root.parent / link_path).resolve()
+
+                if absolute_target.exists() and not current_target.exists():
+                    # This is a broken link that should be a relative path
+                    # Calculate the correct relative path
+                    try:
+                        relative_path = absolute_target.relative_to(source_file.parent.resolve())
+                    except ValueError:
+                        # Different directory trees, use .. navigation
+                        source_abs = source_file.parent.resolve()
+                        docs_abs = self.docs_root.resolve()
+
+                        # Count how many levels up from source to docs root
+                        try:
+                            source_rel = source_abs.relative_to(docs_abs)
+                            levels_up = len(source_rel.parts)
+                        except ValueError:
+                            # Source is not under docs root
+                            continue
+
+                        # Build relative path
+                        target_rel = absolute_target.relative_to(docs_abs)
+                        relative_path = Path('../' * levels_up) / target_rel
+
+                    # Replace the broken link with the fixed one
+                    old_link = f'[{link_text}]({link_path})'
+                    new_link = f'[{link_text}]({relative_path})'
+
+                    fixed_content = fixed_content.replace(old_link, new_link)
+                    changes += 1
+
+        return fixed_content, changes
 
 class DocumentFixer:
     """Fix unlinked references in markdown documents."""
@@ -132,11 +226,12 @@ class DocumentFixer:
         self.extractor = ReferenceExtractor()
         self.generator = LinkGenerator('docs')
 
-    def fix(self, content: str) -> tuple[str, int]:
+    def fix(self, content: str, source_file: Path | None = None) -> tuple[str, int]:
         """Fix all unlinked references in content.
 
         Args:
             content: Markdown file content
+            source_file: Path to the source file (for relative path calculation)
 
         Returns:
             Tuple of (fixed_content, num_changes)
@@ -151,7 +246,7 @@ class DocumentFixer:
 
         for ref in references:
             resolved_path = self.mapper.resolve_reference(ref['doc_id'])
-            new_link = self.generator.generate(ref, resolved_path)
+            new_link = self.generator.generate(ref, resolved_path, source_file)
 
             if new_link != ref['line_text']:
                 fixed_content = fixed_content.replace(
