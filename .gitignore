@@ -24,6 +24,6 @@ Pods/
 Carthage/Build
 
 # Python/uv artifacts
-src/
+/src/
 uv.lock
 .venv/

@@ -1,0 +1,8 @@
+[tools]
+python = "3.11.14"
+node = "20.19.2"
+go = "1.25.4"
+
+[settings]
+# Enable idiomatic version files (like .python-version, .node-version)
+idiomatic_version_file = true

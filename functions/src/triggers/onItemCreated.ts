@@ -1,10 +1,11 @@
 import * as functions from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
+import { extractAttributesLayer2a } from '../ai-pipeline/layer2a/extractAttributes';
 
 /**
  * Trigger: onItemCreated (Layer 1 → Layer 2a transition)
  * Fires when item document is created with status="pending"
- * Schedules Layer 2a processing (Gemini attribute extraction)
+ * Calls Gemini to extract attributes
  */
 export const onItemCreated = functions.onDocumentCreated(
   'items/{itemId}',
@@ -37,16 +38,41 @@ export const onItemCreated = functions.onDocumentCreated(
       return;
     }
 
-    console.log(`[Layer 2a] Scheduling for item ${itemId}`);
+    console.log(`[Layer 2a] Processing item ${itemId}`);
 
-    // Update status to layer2a_scheduled
-    // In Sprint 4-6, this will trigger Cloud Function to call Gemini
-    await event.data?.ref.update({
-      status: 'layer2a_scheduled',
-      layer2aScheduledAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-    });
+    try {
+      // Extract attributes using Gemini
+      const attributes = await extractAttributesLayer2a(
+        item.userId,
+        itemId,
+        item.imageUrl
+      );
 
-    console.log(`[Layer 2a] Scheduled for item ${itemId}`);
+      // Store attributes in Firestore
+      await event.data?.ref.update({
+        status: 'layer2a_complete',
+        'layer2a.category': attributes.category,
+        'layer2a.color': attributes.color,
+        'layer2a.material': attributes.material || null,
+        'layer2a.condition': attributes.condition,
+        'layer2a.confidence': attributes.confidence || null,
+        'layer2a.model': 'gemini-2.5-flash-lite',
+        layer2aCompletedAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+
+      console.log(`[Layer 2a] Complete for item ${itemId}`);
+    } catch (error: any) {
+      console.error(`[Layer 2a] Failed for item ${itemId}:`, error);
+
+      await event.data?.ref.update({
+        status: 'failed_layer2a',
+        error: {
+          message: error.message,
+          timestamp: admin.firestore.Timestamp.now(),
+        },
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+    }
   }
 );
