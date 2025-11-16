@@ -33,41 +33,34 @@ This document specifies the Item Detail View for the Abundance iOS app, which di
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                   │
 │                    [Hero Image - Parallax Scroll]                │
-│                       Top 40% of screen                          │
+│                       Top 50% of screen                          │
 │                    Cropped object photo                          │
 │                    Aspect fill, no letterbox                     │
 │                                                                   │
-│   [< Back]                                       [Edit - Icon]   │
+│   [< Back]                          [AI Confidence • Top Right]  │
 │                                                                   │
 │ ┌─────────────────────────────────────────────────────────────┐ │
 │ │                                                               │ │
 │ │          [Glass Metadata Card - .ultraThickMaterial]         │ │
-│ │                  Overlaps hero by 40pt                        │ │
+│ │                  Overlaps hero by 60pt                        │ │
 │ │                                                               │ │
-│ │  "Camping Tent"                                               │ │
-│ │  28pt, SF Pro Rounded Bold, .primary vibrancy                 │ │
+│ │  "Camping Tent"                          [Edit - Pencil]     │ │
+│ │  28pt, SF Pro Rounded Bold                                    │ │
 │ │                                                               │ │
-│ │  [AI Confidence Indicator - Color-Coded Badge]               │ │
-│ │  High/Medium/Low with icon and percentage                    │ │
-│ │                                                               │ │
-│ │  ─────────────────────────────────────────────────────        │ │
-│ │                                                               │ │
-│ │  Category:  Camping Gear                                      │ │
-│ │  Location:  Garage                                            │ │
-│ │  Est. Value: $89                                              │ │
-│ │  Color:     Green                                             │ │
-│ │  Material:  Nylon                                             │ │
-│ │  Condition: Good                                              │ │
+│ │  [Camping Gear - Category Pill Badge]                        │ │
+│ │  Coral Orange background, 12pt                                │ │
 │ │                                                               │ │
 │ │  ─────────────────────────────────────────────────────        │ │
 │ │                                                               │ │
-│ │  [AI Reasoning - Collapsible Accordion]                      │ │
-│ │  "Detected as camping tent with 87% confidence based on..."  │ │
-│ │  .secondary vibrancy, 15pt SF Pro Rounded Regular            │ │
+│ │  Est. Value:  $89                                             │ │
+│ │  20pt, Mint Green, SF Pro Rounded Bold                        │ │
+│ │                                                               │ │
+│ │  Location:    Garage                                          │ │
+│ │  Color:       Green                                           │ │
+│ │  Material:    Nylon                                           │ │
+│ │  Condition:   Good                                            │ │
 │ │                                                               │ │
 │ └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
-│                         [Additional metadata...]                 │
 │                                                                   │
 └─────────────────────────────────────────────────────────────────┘
 ```

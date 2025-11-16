@@ -1,76 +1,43 @@
 import SwiftUI
 import InventoryFeature
+import CameraFeature
+import OnboardingFeature
 
 public struct MainTabView: View {
-    @State private var selectedTab: FloatingTabBar.Tab = .catalog
+    @State private var selectedTab: Tab = .catalog
+
+    enum Tab {
+        case catalog
+        case camera
+        case profile
+    }
 
     public init() {}
 
     public var body: some View {
-        ZStack {
-            // Tab content
-            Group {
-                switch selectedTab {
-                case .catalog:
-                    InventoryView()
-                case .camera:
-                    CameraPlaceholderView()
-                case .profile:
-                    ProfilePlaceholderView()
+        TabView(selection: $selectedTab) {
+            InventoryView()
+                .tabItem {
+                    Label("Catalog", systemImage: "square.grid.2x2.fill")
                 }
-            }
+                .tag(Tab.catalog)
 
-            // Floating tab bar overlay
-            VStack {
-                Spacer()
-                FloatingTabBar(selectedTab: $selectedTab)
-            }
+            CameraTabView()
+                .tabItem {
+                    Label("Camera", systemImage: "camera.fill")
+                }
+                .tag(Tab.camera)
+
+            ProfilePlaceholderView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.fill")
+                }
+                .tag(Tab.profile)
         }
-        .ignoresSafeArea(edges: .bottom) // Tab bar extends under safe area
     }
 }
 
 // MARK: - Placeholder Views
-
-private struct CatalogPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Image(systemName: "square.grid.2x2.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(.blue)
-                Text("Catalog")
-                    .font(.title)
-                Text("Your cataloged items will appear here once you scan them with the camera.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding()
-            }
-            .navigationTitle("Catalog")
-        }
-    }
-}
-
-private struct CameraPlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(.blue)
-                Text("Camera")
-                    .font(.title)
-                Text("Real-time object detection will appear here")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding()
-            }
-            .navigationTitle("Camera")
-        }
-    }
-}
 
 private struct ProfilePlaceholderView: View {
     var body: some View {

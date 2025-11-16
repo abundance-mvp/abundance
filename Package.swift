@@ -56,7 +56,8 @@ let package: Package = Package(
         .target(
             name: "InventoryFeature",
             dependencies: [
-                "Persistence"
+                "Persistence",
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
@@ -95,7 +96,7 @@ let package: Package = Package(
             name: "VisionCoreTests",
             dependencies: ["VisionCore"],
             resources: [
-                .process("Resources")
+                .copy("Resources")
             ]
         ),
 

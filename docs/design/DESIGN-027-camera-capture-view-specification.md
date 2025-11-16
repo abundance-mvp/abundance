@@ -4,6 +4,7 @@
 **Stage**: 2.6 - iOS UI/UX Design & Liquid Glass Integration
 **Status**: Approved
 **References**:
+
 - docs/plans/PLAN-SUMMARY-stage-2.6.md
 - docs/design/DESIGN-026-onboarding-flow-ui-specification.md
 - docs/design/DESIGN-004-computer-vision-pipeline.md
@@ -20,10 +21,12 @@ This document specifies the Camera Detection View for the Abundance iOS app, whi
 **User Journey (NEW ARCHITECTURE)**: Catalog View → Tap Camera Tab → Camera Opens → **Continuous 2 FPS Detection** → Organic Borders Appear → **Automatic Catalog (Mint Green)** OR **Double-Tap Manual Catalog (Grey)** → Sparkle Animation → Cropped Objects Uploaded → AI Processing → Continue Scanning
 
 **Architecture Change**:
+
 - **OLD**: Button-triggered single photo capture → detect → upload
 - **NEW**: Continuous 2 FPS streaming → parallel detect → quality filter → auto/manual catalog → upload
 
 **Success Criteria**:
+
 - Camera preview loads in < 500ms
 - Real-time object detection at 2 FPS (every 0.5 seconds)
 - Organic borders rendered using VNInstanceMaskObservation contour extraction
@@ -72,6 +75,7 @@ This document specifies the Camera Detection View for the Abundance iOS app, whi
 ```
 
 **Key Changes from OLD Layout**:
+
 - ❌ **Removed**: Capture button (replaced with automatic cataloging)
 - ❌ **Removed**: Glass overlay frame (no longer needed for framing)
 - ❌ **Removed**: Rectangular bounding boxes (replaced with organic borders)
@@ -91,6 +95,7 @@ This document specifies the Camera Detection View for the Abundance iOS app, whi
 **Implementation**: AVCaptureVideoPreviewLayer wrapped in UIViewRepresentable
 
 **Specifications**:
+
 - **Video Gravity**: `.resizeAspectFill` (fullscreen, no letterboxing)
 - **Position**: Edge-to-edge, extends under safe area
 - **Orientation**: Follows device orientation (portrait, landscape)
@@ -98,6 +103,7 @@ This document specifies the Camera Detection View for the Abundance iOS app, whi
 - **Resolution**: 1920x1080 (Full HD) for optimal object detection
 
 **AVFoundation Setup**:
+
 ```swift
 let captureSession = AVCaptureSession()
 captureSession.sessionPreset = .hd1920x1080
@@ -122,6 +128,7 @@ captureSession.addOutput(output)
 **Purpose**: Display real-time object detection with organic, subject-aware borders extracted from VNInstanceMaskObservation
 
 **Specifications**:
+
 - **Shape**: Custom path extracted from VNInstanceMaskObservation contour (organic, follows object shape)
 - **Stroke**: 3pt, Mint Green (#B3FFE1) for automatic mode, Grey (#808080) for manual mode
 - **Glow**: Pulsing shadow matching border color
@@ -134,21 +141,25 @@ captureSession.addOutput(output)
   - **Confidence Badge**: 14pt SF Pro Rounded Bold, same pill
 
 **Border Color Logic**:
+
 - **Mint Green (Automatic)**: confidence > 0.70 AND quality > 0.65 → triggers automatic catalog
 - **Grey (Manual)**: confidence 0.40-0.69 OR quality < 0.65 → requires double-tap to catalog
 - **No Border (Ignore)**: confidence < 0.40 → not shown
 
 **Coordinate Transformation**:
+
 - Vision Framework uses normalized coordinates (0-1, bottom-left origin)
 - VNInstanceMaskObservation provides pixel mask → extract contour using marching squares algorithm
 - Transform contour points to SwiftUI coordinates (pixels, top-left origin)
 
-**Animation**:
+**Animation**:save
+
 - Borders appear with brandSnappy spring (0.3s response, 0.6 damping)
 - Glow pulses continuously (brandGentle spring, 1.0s cycle, repeat forever)
 - On automatic catalog: Sparkle animation triggers (0.5s, then border fades out)
 
 **SwiftUI Implementation**:
+
 ```swift
 struct OrganicBorderOverlay: View {
     let object: DetectedObject
@@ -233,12 +244,14 @@ struct OrganicBorderShape: Shape {
 ```
 
 **Performance**:
+
 - Mask generation: 50-80ms per object (VNGenerateForegroundInstanceMaskRequest)
 - Contour extraction: 5-10ms (marching squares)
 - Parallel processing: 5 objects = ~120ms total (not sequential)
 - Target: Fits within 500ms frame budget (2 FPS)
 
 **Accessibility**:
+
 - VoiceOver: "Backpack detected with 92% confidence. Automatic catalog mode."
 - Reduce Motion: Disable pulsing glow animation
 - High Contrast: Increase stroke width to 4pt, boost glow opacity to 1.0
@@ -250,6 +263,7 @@ struct OrganicBorderShape: Shape {
 **Purpose**: Visual feedback when object is automatically cataloged (mint green border triggers catalog)
 
 **Specifications**:
+
 - **Shape**: 10-15 small circles (sparkles) emitted from border center
 - **Color**: Mint Green (#B3FFE1) with gradient to white
 - **Size**: 4-8pt diameter, random sizes
@@ -260,6 +274,7 @@ struct OrganicBorderShape: Shape {
 **Trigger**: Automatic catalog event (confidence > 0.70 AND quality > 0.65)
 
 **SwiftUI Implementation**:
+
 ```swift
 struct SparkleAnimation: View {
     let center: CGPoint
@@ -329,6 +344,7 @@ struct SparkleAnimation: View {
 ### Double-Tap Gesture Handler (NEW)
 
 **Purpose**: Enable manual cataloging for grey-bordered objects (medium confidence OR low quality)
+
 - **States**:
   - **Default**: Bright Blue glow, solid border
   - **Pressed**: Scale to 0.9, glow radius 16, border 4pt
@@ -336,6 +352,7 @@ struct SparkleAnimation: View {
   - **Capturing**: Spinning activity indicator, glow pulsing
 
 **Action**:
+
 1. Tap → Haptic feedback (`.impact(weight: .medium)`)
 2. Scale animation (brandSnappy spring)
 3. Capture photo via AVCapturePhotoOutput
@@ -343,6 +360,7 @@ struct SparkleAnimation: View {
 5. Navigate back to Catalog with AI processing state
 
 **SwiftUI Implementation**:
+
 ```swift
 struct CaptureButton: View {
     let action: () -> Void
@@ -402,6 +420,7 @@ struct CaptureButton: View {
 **Purpose**: Exit camera view without capturing, return to Catalog
 
 **Specifications**:
+
 - **Type**: Text button, "Cancel"
 - **Font**: 17pt SF Pro Rounded Regular
 - **Color**: .secondary vibrancy
@@ -409,6 +428,7 @@ struct CaptureButton: View {
 - **Tap Target**: 44x44pt minimum (iOS HIG)
 
 **SwiftUI Implementation**:
+
 ```swift
 Button("Cancel") {
     dismiss()
@@ -427,6 +447,7 @@ Button("Cancel") {
 **Purpose**: Guide user to align items within overlay frame
 
 **Specifications**:
+
 - **Text**: "Align item within frame • Tap to capture"
 - **Font**: 15pt SF Pro Rounded Regular (Dynamic Type Callout)
 - **Color**: .secondary vibrancy
@@ -436,11 +457,13 @@ Button("Cancel") {
 - **Padding**: 12pt horizontal, 8pt vertical
 
 **States**:
+
 - **No objects detected**: Default instruction
 - **Object detected**: "Object detected • Ready to capture"
 - **Barcode detected**: "Barcode detected • Scan complete"
 
 **SwiftUI Implementation**:
+
 ```swift
 struct InstructionLabel: View {
     let detectionState: DetectionState
@@ -817,10 +840,10 @@ struct CameraView: View {
 
 ## Revision History
 
-| Date | Version | Changes | Author |
-|------|---------|---------|--------|
-| 2025-11-10 | 1.0 | Initial camera capture view specification | iOS UI/UX Designer |
-| 2025-11-15 | 2.0 | **MAJOR REFACTOR**: Replace capture button UI with real-time organic border overlays using VNInstanceMaskObservation. Add mint green (auto) vs grey (manual) color-coded borders, sparkle animation for automatic catalog, double-tap gesture for manual catalog, and remove glass overlay frame. Deprecate old rectangular bounding box approach. Document full real-time 2 FPS detection pipeline UI/UX. | Stage 6.1 Documentation Refactor |
+| Date       | Version | Changes                                                                                                                                                                                                                                                                                                                                                                                                    | Author                           |
+| ---------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| 2025-11-10 | 1.0     | Initial camera capture view specification                                                                                                                                                                                                                                                                                                                                                                  | iOS UI/UX Designer               |
+| 2025-11-15 | 2.0     | **MAJOR REFACTOR**: Replace capture button UI with real-time organic border overlays using VNInstanceMaskObservation. Add mint green (auto) vs grey (manual) color-coded borders, sparkle animation for automatic catalog, double-tap gesture for manual catalog, and remove glass overlay frame. Deprecate old rectangular bounding box approach. Document full real-time 2 FPS detection pipeline UI/UX. | Stage 6.1 Documentation Refactor |
 
 ---
 

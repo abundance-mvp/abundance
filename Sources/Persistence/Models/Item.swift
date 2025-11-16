@@ -15,6 +15,9 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
     public var condition: String?
     public var confidence: Double?
 
+    // Layer 2b/3 enriched attributes
+    public var estimatedValue: Double?
+
     // Metadata
     public let createdAt: Date
     public var updatedAt: Date
@@ -29,6 +32,7 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         material: String? = nil,
         condition: String? = nil,
         confidence: Double? = nil,
+        estimatedValue: Double? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
@@ -41,6 +45,7 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         self.material = material
         self.condition = condition
         self.confidence = confidence
+        self.estimatedValue = estimatedValue
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
