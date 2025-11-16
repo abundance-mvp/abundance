@@ -36,7 +36,10 @@ let package: Package = Package(
         ),
         .target(
             name: "CameraFeature",
-            dependencies: ["Persistence"],
+            dependencies: [
+                "Persistence",
+                "VisionCore"
+            ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]
@@ -45,7 +48,8 @@ let package: Package = Package(
             name: "CameraFeatureTests",
             dependencies: [
                 "CameraFeature",
-                "Persistence"
+                "Persistence",
+                "VisionCore"
             ]
         ),
 
