@@ -1,0 +1,37 @@
+{
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Models/ConfidenceScore.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceScore.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceScore.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceScore.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceScore.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceScore.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Models/DetectedObject.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/DetectedObject.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/DetectedObject.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/DetectedObject.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/DetectedObject.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/DetectedObject.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Models/HouseholdItem.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/HouseholdItem.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/HouseholdItem.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/HouseholdItem.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/HouseholdItem.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/HouseholdItem.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Models/YOLOResult.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/YOLOResult.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/YOLOResult.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/YOLOResult.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/YOLOResult.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/YOLOResult.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Services/BarcodeDetector.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetector.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetector.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetector.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetector.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetector.swiftdeps"
+  }
+}

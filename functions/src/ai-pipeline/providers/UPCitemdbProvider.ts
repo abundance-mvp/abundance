@@ -85,13 +85,14 @@ export class UPCitemdbProvider {
       console.log(`[UPCitemdb] ✅ Match found for ${barcode}: ${product.name} (${latency}ms)`);
 
       return product;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
         console.warn(`[UPCitemdb] Timeout after ${this.timeout}ms for barcode ${barcode}`);
         return null;
       }
 
-      console.error(`[UPCitemdb] Error for ${barcode}:`, error.message);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[UPCitemdb] Error for ${barcode}:`, message);
 
       // Re-throw specific errors for retry logic
       if (error instanceof RateLimitError || error instanceof QuotaExceededError) {

@@ -1,0 +1,37 @@
+{
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/Animation+Extensions.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Animation+Extensions.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Animation+Extensions.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Animation+Extensions.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Animation+Extensions.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Animation+Extensions.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/Color+Extensions.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Color+Extensions.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Color+Extensions.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Color+Extensions.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Color+Extensions.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/Color+Extensions.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/FloatingTabBar.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/FloatingTabBar.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/FloatingTabBar.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/FloatingTabBar.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/FloatingTabBar.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/FloatingTabBar.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/MainTabView.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/MainTabView.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/MainTabView.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/MainTabView.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/MainTabView.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/MainTabView.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/VisionCore/Services/BarcodeDetectorProtocol.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetectorProtocol.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetectorProtocol.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetectorProtocol.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetectorProtocol.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/BarcodeDetectorProtocol.swiftdeps"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/CameraFeature/ViewModels/CameraDetectionViewModel.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraDetectionViewModel.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraDetectionViewModel.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraDetectionViewModel.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraDetectionViewModel.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraDetectionViewModel.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/CameraFeature/ViewModels/CameraViewModel.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraViewModel.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraViewModel.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraViewModel.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraViewModel.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraViewModel.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/CameraFeature/Views/CameraPreviewView.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraPreviewView.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraPreviewView.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraPreviewView.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraPreviewView.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraPreviewView.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/CameraFeature/Views/CameraView.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraView.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraView.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraView.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraView.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/CameraView.swiftdeps"
+  },
+  "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Abundance/InventoryFeature/ConfidenceBadge.swift" : {
+    "const-values" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceBadge.swiftconstvalues",
+    "dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceBadge.d",
+    "diagnostics" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceBadge.dia",
+    "object" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceBadge.o",
+    "swift-dependencies" : "/Users/w/code/abundance-mvp/.worktrees/abundance-ios-app/Abundance/Build/Intermediates.noindex/Abundance.build/Debug-iphoneos/Abundance.build/Objects-normal/arm64/ConfidenceBadge.swiftdeps"
+  }
+}
