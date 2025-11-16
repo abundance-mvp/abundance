@@ -1,0 +1,28 @@
+#!/bin/bash
+# Claude Code pre-commit hook
+# Validates document references before committing docs changes
+
+set -e
+
+# Check if any docs/ files are staged
+if git diff --cached --name-only | grep -q "^docs/"; then
+    echo "📚 Docs changes detected - validating references..."
+
+    # Check if uv is available
+    if ! command -v uv &> /dev/null; then
+        echo "⚠️  Warning: 'uv' not found. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh"
+        echo "📋 Skipping validation (install uv to enable automatic doc reference checking)"
+        exit 0  # Don't block commit, just warn
+    fi
+
+    # Run validation with uv
+    if uv run scripts/validate_doc_references.py; then
+        echo "✅ Document references validated"
+    else
+        echo "❌ Document reference validation failed"
+        echo "Run 'uv run scripts/fix_doc_references.py --apply' to fix"
+        exit 1
+    fi
+fi
+
+exit 0

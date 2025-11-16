@@ -58,13 +58,18 @@ final class StorageServiceTests: XCTestCase {
 
     // Helper: Check if emulator is running
     private func isEmulatorRunning() -> Bool {
-        // Try to connect to emulator port
-        let task = Process()
+        #if os(macOS)
+        // Try to connect to emulator port (macOS only - Process not available on iOS)
+        let task: Process = Process()
         task.launchPath = "/usr/bin/nc"
         task.arguments = ["-z", "localhost", "9199"]
         task.launch()
         task.waitUntilExit()
         return task.terminationStatus == 0
+        #else
+        // On iOS, assume emulator is not running (tests run against real Firebase)
+        return false
+        #endif
     }
 
     // Helper: Create test image
