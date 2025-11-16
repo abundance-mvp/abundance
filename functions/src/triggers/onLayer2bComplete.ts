@@ -63,16 +63,16 @@ export const onLayer2bComplete = functions.onDocumentUpdated(
         category: synthesizedMetadata.category,
         confidence: synthesizedMetadata.confidence,
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Layer 3 failed', error);
 
       // Update Firestore with error status
       await event.data?.after.ref.update({
         status: 'failed_layer3',
         error: {
-          message: error.message,
-          code: error.code || 'UNKNOWN',
-          type: error.name || 'Error',
+          message: error instanceof Error ? error.message : 'Unknown error',
+          code: (error as any).code || 'UNKNOWN',
+          type: error instanceof Error ? error.name : 'Error',
           timestamp: admin.firestore.Timestamp.now(),
         },
         updatedAt: admin.firestore.Timestamp.now(),

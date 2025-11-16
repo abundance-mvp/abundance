@@ -53,12 +53,13 @@ export class BarcodeHybridLookup {
         console.log(`[BarcodeHybrid] ✅ OpenFoodFacts match for ${barcode}`);
         return openFoodResult;
       }
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof OFFRateLimitError) {
         console.warn(`[BarcodeHybrid] OpenFoodFacts rate limited (${error.retryAfter}s), skipping to UPCitemdb`);
         // Continue to UPCitemdb fallback
       } else {
-        console.warn(`[BarcodeHybrid] OpenFoodFacts lookup failed for ${barcode}:`, error.message);
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        console.warn(`[BarcodeHybrid] OpenFoodFacts lookup failed for ${barcode}:`, message);
       }
     }
 
@@ -70,8 +71,9 @@ export class BarcodeHybridLookup {
         console.log(`[BarcodeHybrid] ✅ UPCitemdb match for ${barcode}`);
         return upcitemdbResult;
       }
-    } catch (error: any) {
-      console.error(`[BarcodeHybrid] UPCitemdb lookup failed for ${barcode}:`, error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.warn(`[BarcodeHybrid] UPCitemdb lookup failed for ${barcode}:`, message);
       // Continue to SerpAPI fallback
     }
 

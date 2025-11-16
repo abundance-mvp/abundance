@@ -154,24 +154,25 @@ export class SerpAPIProvider {
       // Cache result before returning
       this.cacheResult(imageUrl, searchResult);
       return searchResult;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new SerpAPIError('SerpAPI request timed out after 10 seconds');
       }
 
-      console.error(`[SerpAPI] Error for item ${itemId}:`, error.message);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[SerpAPI] Error for item ${itemId}:`, message);
       throw error;
     }
   }
 
   async searchWithRetry(imageUrl: string, itemId: string, maxRetries = 3): Promise<SerpAPIResponse> {
-    let lastError: any;
+    let lastError: unknown;
     let delay = 1000; // Start with 1 second
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await this.search(imageUrl, itemId);
-      } catch (error: any) {
+      } catch (error) {
         lastError = error;
 
         // Don't retry on non-retryable errors

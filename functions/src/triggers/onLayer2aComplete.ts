@@ -57,16 +57,16 @@ export const onLayer2aComplete = functions.onDocumentUpdated(
         productName: layer2bResult.product.name,
         costSavings: layer2bResult.costSavings,
       });
-    } catch (error: any) {
+    } catch (error) {
       logger.error('Layer 2b failed', error);
 
       // Update Firestore with error status
       await event.data?.after.ref.update({
         status: 'failed_layer2b',
         error: {
-          message: error.message,
-          code: error.code || 'UNKNOWN',
-          type: error.name || 'Error',
+          message: error instanceof Error ? error.message : 'Unknown error',
+          code: (error as any).code || 'UNKNOWN',
+          type: error instanceof Error ? error.name : 'Error',
           timestamp: admin.firestore.Timestamp.now(),
         },
         updatedAt: admin.firestore.Timestamp.now(),

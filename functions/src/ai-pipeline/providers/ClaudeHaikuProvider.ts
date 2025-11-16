@@ -76,8 +76,9 @@ export class ClaudeHaikuProvider {
         cost: totalCost,
         latency,
       };
-    } catch (error: any) {
-      console.error(`[ClaudeHaiku] Error parsing for item ${itemId}:`, error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[ClaudeHaiku] Error parsing for item ${itemId}:`, message);
       throw error;
     }
   }
