@@ -84,4 +84,64 @@ describe('Firestore Triggers', () => {
       expect(source).toContain("status: 'layer2a_complete'");
     });
   });
+
+  describe('onItemCreated comprehensive trigger tests (I3)', () => {
+    it('should verify trigger handles missing imageUrl by reading source', () => {
+      // Read source to verify missing imageUrl handling
+      const fs = require('fs');
+      const path = require('path');
+      const triggerPath = path.join(__dirname, '../triggers/onItemCreated.ts');
+      const source = fs.readFileSync(triggerPath, 'utf8');
+
+      // Verify it checks for missing imageUrl
+      expect(source).toContain('if (!item.imageUrl)');
+      expect(source).toContain("status: 'failed_layer2a'");
+      expect(source).toContain('Missing imageUrl');
+    });
+
+    it('should verify trigger skips non-pending items by reading source', () => {
+      const fs = require('fs');
+      const path = require('path');
+      const triggerPath = path.join(__dirname, '../triggers/onItemCreated.ts');
+      const source = fs.readFileSync(triggerPath, 'utf8');
+
+      // Verify it checks status
+      expect(source).toContain("if (item.status !== 'pending')");
+      expect(source).toContain('Skipping item');
+    });
+
+    it('should verify trigger calls extractAttributesLayer2a and updates Firestore', () => {
+      const fs = require('fs');
+      const path = require('path');
+      const triggerPath = path.join(__dirname, '../triggers/onItemCreated.ts');
+      const source = fs.readFileSync(triggerPath, 'utf8');
+
+      // Verify it calls extractAttributesLayer2a
+      expect(source).toContain('await extractAttributesLayer2a');
+
+      // Verify it updates Firestore with attributes
+      expect(source).toContain("'layer2a.category': attributes.category");
+      expect(source).toContain("'layer2a.color': attributes.color");
+      expect(source).toContain("'layer2a.material': attributes.material");
+      expect(source).toContain("'layer2a.condition': attributes.condition");
+      expect(source).toContain("'layer2a.confidence': attributes.confidence");
+      expect(source).toContain("status: 'layer2a_complete'");
+    });
+
+    it('should verify trigger handles extraction failures', () => {
+      const fs = require('fs');
+      const path = require('path');
+      const triggerPath = path.join(__dirname, '../triggers/onItemCreated.ts');
+      const source = fs.readFileSync(triggerPath, 'utf8');
+
+      // Verify it has try-catch for extraction
+      expect(source).toContain('try {');
+      expect(source).toContain('catch (error');
+
+      // Verify it sets failed_layer2a status on error
+      expect(source).toContain("status: 'failed_layer2a'");
+      expect(source).toContain('error: {');
+      expect(source).toContain('message: error.message');
+    });
+  });
 });

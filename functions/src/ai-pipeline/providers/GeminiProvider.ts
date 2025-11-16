@@ -30,7 +30,27 @@ export class GeminiProvider {
   ): Promise<any> {
     // Fetch image from Cloud Storage
     const imageResponse = await fetch(imageUrl);
+
+    // I1: Validate HTTP status
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to fetch image: HTTP ${imageResponse.status} ${imageResponse.statusText}`);
+    }
+
+    // C1 & I1: Detect actual MIME type and validate it's an image
+    const contentType = imageResponse.headers.get('content-type') || '';
+    if (!contentType.startsWith('image/')) {
+      throw new Error(`Invalid content type: expected image/*, got ${contentType}`);
+    }
+
     const arrayBuffer = await imageResponse.arrayBuffer();
+
+    // I2: Validate image size doesn't exceed 20MB (Gemini API limit)
+    const imageSizeBytes = arrayBuffer.byteLength;
+    const maxSizeBytes = 20 * 1024 * 1024; // 20MB
+    if (imageSizeBytes > maxSizeBytes) {
+      throw new Error(`Image size ${imageSizeBytes} bytes exceeds maximum ${maxSizeBytes} bytes (20MB)`);
+    }
+
     const base64Image = Buffer.from(arrayBuffer).toString('base64');
 
     // Retry logic with exponential backoff
@@ -50,7 +70,7 @@ export class GeminiProvider {
                 { text: this.getPrompt() },
                 {
                   inlineData: {
-                    mimeType: 'image/jpeg',
+                    mimeType: contentType, // C1: Use detected MIME type instead of hardcoding
                     data: base64Image
                   }
                 }
@@ -85,11 +105,18 @@ export class GeminiProvider {
       } catch (error: any) {
         lastError = error;
 
-        // Don't retry on permanent errors
-        if (
-          error.message.includes('400') ||
-          error.message.includes('API key')
-        ) {
+        // C2: Don't retry on permanent errors - use proper status code checking
+        // Check for client errors (4xx) which should not be retried
+        if (error.status && error.status >= 400 && error.status < 500) {
+          throw error;
+        }
+
+        // Also check for auth errors in message as fallback
+        if (error.message && (
+          error.message.includes('API key') ||
+          error.message.includes('authentication') ||
+          error.message.includes('unauthorized')
+        )) {
           throw error;
         }
 

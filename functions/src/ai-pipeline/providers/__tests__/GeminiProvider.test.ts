@@ -12,6 +12,12 @@ describe('GeminiProvider', () => {
       // Mock node-fetch
       const fetch = require('node-fetch');
       const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: {
+          get: (name: string) => name === 'content-type' ? 'image/jpeg' : null
+        },
         arrayBuffer: jest.fn().mockResolvedValue(
           Buffer.from('fake-image-data').buffer
         )
@@ -67,6 +73,12 @@ describe('GeminiProvider', () => {
 
       const fetch = require('node-fetch');
       const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: {
+          get: (name: string) => name === 'content-type' ? 'image/jpeg' : null
+        },
         arrayBuffer: jest.fn().mockResolvedValue(
           Buffer.from('fake-image-data').buffer
         )
@@ -125,6 +137,12 @@ describe('GeminiProvider', () => {
 
       const fetch = require('node-fetch');
       const mockFetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: {
+          get: (name: string) => name === 'content-type' ? 'image/jpeg' : null
+        },
         arrayBuffer: jest.fn().mockResolvedValue(
           Buffer.from('fake-image-data').buffer
         )

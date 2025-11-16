@@ -49,7 +49,9 @@ export class CostLogger {
 
     const modelPricing = pricing[model];
     if (!modelPricing) {
-      throw new Error(`Unknown model: ${model}`);
+      // C3: Log warning instead of throwing error for unknown models
+      console.warn(`Unknown model: ${model}. Unable to calculate cost. Returning 0.`);
+      return 0;
     }
 
     const inputCost = inputTokens * modelPricing.input;
