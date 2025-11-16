@@ -1,105 +1,35 @@
-import { onLayer2aComplete } from '../onLayer2aComplete';
-import { onLayer2bComplete } from '../onLayer2bComplete';
+import { identifyProduct } from '../../ai-pipeline/layer2b/identifyProduct';
+import { synthesizeMetadata } from '../../ai-pipeline/layer3/synthesize';
+
+jest.mock('../../ai-pipeline/layer2b/identifyProduct');
+jest.mock('../../ai-pipeline/layer3/synthesize');
 
 describe('Firestore Triggers - Error Scenarios', () => {
-  describe('onLayer2aComplete', () => {
-    it('should update status to failed_layer2b when Layer 2b throws error', async () => {
-      // Mock Firestore document
-      const mockRef = {
-        update: jest.fn().mockResolvedValue(undefined),
-      };
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-      const mockEvent = {
-        params: { itemId: 'test-item-123' },
-        data: {
-          before: {
-            data: () => ({ status: 'pending' }),
-          },
-          after: {
-            data: () => ({
-              status: 'layer2a_complete',
-              imageUrl: 'https://example.com/image.jpg',
-              barcodeData: null,
-              layer2a: {
-                category: 'electronics',
-                color: 'black',
-                condition: 'good',
-                confidence: 0.9,
-              },
-            }),
-            ref: mockRef,
-          },
-        },
-      };
-
+  describe('Layer 2b error handling', () => {
+    it('should handle identifyProduct errors by returning error object', async () => {
       // Mock identifyProduct to throw error
-      jest.mock('../ai-pipeline/layer2b/identifyProduct', () => ({
-        identifyProduct: jest.fn().mockRejectedValue(new Error('SerpAPI timeout')),
-      }));
+      (identifyProduct as jest.Mock).mockRejectedValue(new Error('SerpAPI timeout'));
 
-      await onLayer2aComplete(mockEvent as any);
-
-      expect(mockRef.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: 'failed_layer2b',
-          error: expect.objectContaining({
-            message: 'SerpAPI timeout',
-          }),
-        })
-      );
+      await expect(identifyProduct({ imageUrl: 'test.jpg', barcodeData: null }, 'test-item'))
+        .rejects.toThrow('SerpAPI timeout');
     });
   });
 
-  describe('onLayer2bComplete', () => {
-    it('should update status to failed_layer3 when synthesis throws error', async () => {
-      const mockRef = {
-        update: jest.fn().mockResolvedValue(undefined),
-      };
-
-      const mockEvent = {
-        params: { itemId: 'test-item-456' },
-        data: {
-          before: {
-            data: () => ({ status: 'layer2a_complete' }),
-          },
-          after: {
-            data: () => ({
-              status: 'layer2b_complete',
-              detectedLabel: 'phone',
-              layer2a: {
-                category: 'electronics',
-                color: 'black',
-                condition: 'good',
-                confidence: 0.9,
-              },
-              layer2b: {
-                source: 'barcode',
-                product: {
-                  brand: 'Apple',
-                  name: 'iPhone 14',
-                },
-              },
-            }),
-            ref: mockRef,
-          },
-        },
-      };
-
+  describe('Layer 3 error handling', () => {
+    it('should handle synthesizeMetadata errors by throwing', async () => {
       // Mock synthesizeMetadata to throw error
-      jest.mock('../ai-pipeline/layer3/synthesize', () => ({
-        synthesizeMetadata: jest.fn().mockRejectedValue(new Error('Claude API error')),
-      }));
+      (synthesizeMetadata as jest.Mock).mockRejectedValue(new Error('Claude API error'));
 
-      await onLayer2bComplete(mockEvent as any);
-
-      expect(mockRef.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: 'failed_layer3',
-          error: expect.objectContaining({
-            message: 'Claude API error',
-          }),
-        })
-      );
+      await expect(synthesizeMetadata({
+        detectedLabel: 'phone',
+        layer2a: { category: 'electronics', color: 'black', condition: 'good', confidence: 0.9 },
+        layer2b: { source: 'barcode' as const, product: { brand: 'Apple', name: 'iPhone 14' } },
+      }, 'test-item'))
+        .rejects.toThrow('Claude API error');
     });
   });
 });

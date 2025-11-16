@@ -1,5 +1,5 @@
 import { OpenFoodFactsProvider, RateLimitError as OFFRateLimitError } from '../providers/OpenFoodFactsProvider';
-import { UPCitemdbProvider, RateLimitError as UPCRateLimitError } from '../providers/UPCitemdbProvider';
+import { UPCitemdbProvider } from '../providers/UPCitemdbProvider';
 import { BarcodeProduct } from '../providers/OpenFoodFactsProvider';
 
 export interface BarcodeData {
@@ -16,6 +16,19 @@ export class BarcodeHybridLookup {
     this.upcitemdb = new UPCitemdbProvider();
   }
 
+  private isValidBarcode(barcode: string, type: string): boolean {
+    // EAN-13: 13 digits
+    if (type === 'EAN-13') return /^\d{13}$/.test(barcode);
+    // UPC-A: 12 digits
+    if (type === 'UPC-A') return /^\d{12}$/.test(barcode);
+    // UPC-E: 8 digits
+    if (type === 'UPC-E') return /^\d{8}$/.test(barcode);
+    // CODE-128: alphanumeric, 1-48 chars
+    if (type === 'CODE-128') return /^[\x20-\x7E]{1,48}$/.test(barcode);
+    // Generic fallback: at least 8 characters
+    return barcode.length >= 8;
+  }
+
   async lookup(barcodeData: BarcodeData | null, itemId: string): Promise<BarcodeProduct | null> {
     if (!barcodeData || !barcodeData.value) {
       console.log(`[BarcodeHybrid] No barcode data for item ${itemId}`);
@@ -23,6 +36,12 @@ export class BarcodeHybridLookup {
     }
 
     const barcode = barcodeData.value;
+
+    // Validate barcode format before making API calls
+    if (!this.isValidBarcode(barcode, barcodeData.type)) {
+      console.log(`[BarcodeHybrid] Invalid barcode format: ${barcode} (${barcodeData.type})`);
+      return null;
+    }
 
     console.log(`[BarcodeHybrid] Starting hybrid lookup for barcode ${barcode} (item ${itemId})`);
 
