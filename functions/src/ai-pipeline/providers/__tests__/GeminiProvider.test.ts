@@ -119,5 +119,50 @@ describe('GeminiProvider', () => {
         );
       }).rejects.toThrow();
     });
+
+    it('should retry on transient errors', async () => {
+      process.env.GOOGLE_API_KEY = 'test_api_key';
+
+      const fetch = require('node-fetch');
+      const mockFetch = jest.fn().mockResolvedValue({
+        arrayBuffer: jest.fn().mockResolvedValue(
+          Buffer.from('fake-image-data').buffer
+        )
+      });
+      (fetch as jest.Mock).mockImplementation(mockFetch);
+
+      const provider = new GeminiProvider();
+
+      // First call fails with transient error, second succeeds
+      const mockGenerateContent = jest.fn()
+        .mockRejectedValueOnce(new Error('quota exceeded'))
+        .mockResolvedValueOnce({
+          text: JSON.stringify({
+            category: 'camping',
+            color: 'green',
+            condition: 'good'
+          }),
+          usageMetadata: {
+            promptTokenCount: 258,
+            candidatesTokenCount: 100,
+            totalTokenCount: 358
+          }
+        });
+
+      (provider as any).genAI = {
+        models: {
+          generateContent: mockGenerateContent
+        }
+      };
+
+      const result = await provider.extractAttributes(
+        'https://storage.googleapis.com/test/image.jpg',
+        'user123',
+        'item456'
+      );
+
+      expect(result.category).toBe('camping');
+      expect(mockGenerateContent).toHaveBeenCalledTimes(2);
+    });
   });
 });
