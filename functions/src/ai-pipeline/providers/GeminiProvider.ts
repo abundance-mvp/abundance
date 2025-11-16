@@ -31,7 +31,7 @@ export class GeminiProvider {
     const arrayBuffer = await imageResponse.arrayBuffer();
     const base64Image = Buffer.from(arrayBuffer).toString('base64');
 
-    // Generate content with image using new SDK API
+    // Generate content with image using SDK API
     const result = await this.genAI.models.generateContent({
       model: 'gemini-2.5-flash-lite',
       contents: [
