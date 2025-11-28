@@ -18,7 +18,8 @@ The apple-docs-fetcher skill can exceed 25,000 token limits when fetching large 
 1. **Search first, fetch selectively**: Use `mcp__sosumi__searchAppleDocumentation` to find relevant docs
 2. **Targeted fetching**: Only fetch specific, focused documentation paths
 3. **Summarization**: Extract only the essential information needed for verification
-4. **Fallback**: If fetch fails, use search results only
+4. **API Fallback**: If MCP unavailable, use sosumi.ai API via WebFetch
+5. **Search-only Fallback**: If all fetching fails, use search results only
 
 ## Usage Pattern
 
@@ -188,18 +189,22 @@ Use apple-docs-fetcher-lite pattern:
 
 ## Fallback Strategy
 
-If MCP fetch consistently fails:
+If MCP tools are unavailable or consistently fail:
 
-**Plan B: Use search results only**
+**Plan B: Use sosumi.ai API via WebFetch**
+```
+Search: WebFetch("https://sosumi.ai/api/search?q={query}", "Extract documentation paths and descriptions")
+Fetch: WebFetch("https://sosumi.ai/api/docs{path}", "Extract API documentation, methods, and availability")
+```
+- Works when MCP server is unavailable
+- Provides same documentation content
+- Automatic fallback - try MCP first, then sosumi.ai API
+
+**Plan C: Use search results only**
 - Search provides: API names, brief descriptions, paths
 - Sufficient for verification: "API exists, available in iOS X+"
 - Document limitation in validation report
 - Include official URLs for manual review
-
-**Plan C: Use WebFetch on developer.apple.com**
-- Construct URL: `https://developer.apple.com/documentation/vision/vncoremlrequest`
-- WebFetch with prompt: "Extract API availability, purpose, and key methods"
-- Less reliable than MCP but works when MCP fails
 
 ## Success Criteria
 

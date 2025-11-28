@@ -18,63 +18,86 @@ Call with feature path, API name, or concept:
 
 ## Lookup Strategy
 
-1. **Context Map Lookup:** Read `docs/apple-context-map.json` and check for feature path match
-2. **Search Fallback:** Call `mcp__sosumi__searchAppleDocumentation` if not in context map
-3. **Fetch:** Call `mcp__sosumi__fetchAppleDocumentation` with resolved path
+1. **MCP Search:** Call `mcp__sosumi__searchAppleDocumentation` to find documentation
+2. **MCP Fetch:** Call `mcp__sosumi__fetchAppleDocumentation` with resolved path
+3. **API Fallback:** If MCP unavailable, use sosumi.ai API via WebFetch
 
 ## Implementation
 
 **Step 1: Parse input**
-- If input matches pattern `category.feature` → Context map lookup
-- Otherwise → Search fallback
+- Clean and normalize the query string
+- Identify if it's a full path or search term
 
-**Step 2: Context map lookup**
+**Step 2: Try MCP tools (primary method)**
 ```
-Read docs/apple-context-map.json
-Parse input as category.feature (e.g., "swift_language.basics")
-If found, extract primary_api path
-Return path for fetching
-```
-
-**Step 3: Search fallback**
-```
-Call mcp__sosumi__searchAppleDocumentation(query=input)
+Try mcp__sosumi__searchAppleDocumentation(query=input)
+If MCP unavailable or timeout → Go to Step 4 (Fallback)
 If 0 results: Report "No documentation found"
 If 1 result: Use it
 If 2+ results: Present top 3 to user for selection
 ```
 
-**Step 4: Fetch documentation**
+**Step 3: Fetch documentation via MCP**
 ```
 Call mcp__sosumi__fetchAppleDocumentation(path=resolved_path)
 Return markdown content to agent
 Content stays in session memory only
 ```
 
+**Step 4: Fallback to sosumi.ai API**
+```
+If MCP unavailable or timeout:
+  WebFetch("https://sosumi.ai/api/search?q={query}", "Extract doc paths")
+  Parse search results
+  WebFetch("https://sosumi.ai/api/docs{path}", "Extract API documentation")
+  Return formatted documentation
+```
+
 ## Error Handling
 
-- Context map missing/malformed: Log warning, proceed to search
-- MCP timeout: Report error with connection check suggestion
+- MCP unavailable: Fall back to sosumi.ai API via WebFetch
+- MCP timeout: Fall back to sosumi.ai API via WebFetch
 - No search results: Report "No documentation found for [query]"
 - Ambiguous results: Present options to user
 
+## Fallback Strategy: sosumi.ai API
+
+When MCP tools (`mcp__sosumi__*`) are unavailable or timeout:
+
+**Use WebFetch with sosumi.ai API:**
+
+```
+Search: WebFetch("https://sosumi.ai/api/search?q={query}", "Extract documentation paths and descriptions")
+Fetch: WebFetch("https://sosumi.ai/api/docs{path}", "Extract API documentation, methods, and availability")
+```
+
+**Example fallback flow:**
+```
+Input: "AVCaptureSession"
+→ MCP unavailable
+→ WebFetch("https://sosumi.ai/api/search?q=AVCaptureSession", ...)
+→ Parse results for documentation path
+→ WebFetch("https://sosumi.ai/api/docs/documentation/avfoundation/avcapturesession", ...)
+→ Return formatted docs
+```
+
 ## Example Flows
 
-**Context map hit:**
+**MCP available (primary):**
 ```
-Input: "swift_language.concurrency"
-→ Read context map
-→ Find /documentation/swift/swift_standard_library/concurrency
-→ Fetch directly
+Input: "URLSession"
+→ mcp__sosumi__searchAppleDocumentation("URLSession")
+→ Single result found
+→ mcp__sosumi__fetchAppleDocumentation("/documentation/foundation/urlsession")
 → Return docs
 ```
 
-**Search fallback:**
+**MCP unavailable (fallback):**
 ```
-Input: "URLSession"
-→ Read context map (no match)
-→ Search MCP
-→ Single result found
-→ Fetch /documentation/foundation/urlsession
+Input: "swift concurrency"
+→ MCP tools unavailable
+→ WebFetch("https://sosumi.ai/api/search?q=swift+concurrency", ...)
+→ Parse results → path: /documentation/swift/concurrency
+→ WebFetch("https://sosumi.ai/api/docs/documentation/swift/concurrency", ...)
 → Return docs
 ```
