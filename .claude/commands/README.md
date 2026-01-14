@@ -125,11 +125,11 @@ Triage and prioritize captured issues.
 
 #### `/dispatch`
 
-Dispatch parallel agents for independent tasks.
+Dispatch parallel agents for independent tasks (triaged issues).
 
 **Example**: `/dispatch`
 
-**Note**: For iOS work, agents use ios-superpowers; for non-iOS work, agents use raw superpowers.
+**Note**: Agents use ios-superpowers which auto-detects iOS context.
 
 **See**: `.claude/commands/dispatch.md`
 
