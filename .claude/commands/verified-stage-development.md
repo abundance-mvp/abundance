@@ -3,10 +3,14 @@ Orchestrate stage development with research verification, planning, execution, a
 Invoke the Skill tool with skill="verified-stage-development" to dispatch a stage orchestration agent that will:
 1. Load required context from docs/context-map.json for the specified stage
 2. Research & verify technical claims (creates RESEARCH-VALIDATION-stage-X.Y.md)
-3. Create implementation plan via `/superpowers:write-plan`
-4. Gate 1: Get your approval before execution
-5. Execute plan via `/superpowers:execute-plan` with batch review
-6. Gate 2: Generate checkpoint and validate against master documents
+3. **For iOS stages**: Use `/ios-superpowers plan` for implementation planning
+4. **For non-iOS stages**: Use `/superpowers:write-plan`
+5. Gate 1: Get your approval before execution
+6. **For iOS stages**: Use `/ios-superpowers execute` for plan execution
+7. **For non-iOS stages**: Use `/superpowers:execute-plan` with batch review
+8. Gate 2: Generate checkpoint and validate against master documents
+
+**iOS stages** (require ios-superpowers): 2.2, 3.1, 4.1, and any stage touching Swift code
 
 Stage: $ARGUMENTS
 
