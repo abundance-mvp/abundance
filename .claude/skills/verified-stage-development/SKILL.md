@@ -16,6 +16,31 @@ Orchestrates stage development with research verification and quality gates.
 
 ---
 
+## Agent Routing
+
+When dispatching sub-agents during execution, route to specialized skills based on task domain:
+
+| Task Type | Skill | MCP Servers |
+|-----------|-------|-------------|
+| iOS UI/Logic | ios-superpowers | sosumi |
+| Swift/SwiftUI | ios-superpowers | sosumi |
+| Firestore operations | firebase-superpowers | firebase |
+| Cloud Functions | firebase-superpowers | firebase |
+| Firebase Auth | firebase-superpowers | firebase |
+| Firebase Storage | firebase-superpowers | firebase |
+| Security Rules | firebase-superpowers | firebase |
+| Non-Firebase GCP | gcp-superpowers | gcloud, observability, storage |
+| AI/Gemini pipeline | gemini-integration | gcloud |
+| Documentation/ADRs | general-purpose | - |
+
+**Key principles:**
+- iOS stages (2.2, 3.1, 4.1) → Always use `ios-superpowers` for code tasks
+- Backend stages → Use `firebase-superpowers` for Firebase, `gcp-superpowers` for other GCP
+- AI pipeline stages → Use `gemini-integration` for Gemini tool calling patterns
+- Research/docs → Use general-purpose agent
+
+---
+
 ## Phase 1 Scope
 
 This is Phase 1 implementation:
