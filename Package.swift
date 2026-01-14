@@ -8,6 +8,7 @@ let package: Package = Package(
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
         .library(name: "CameraFeature", targets: ["CameraFeature"]),
         .library(name: "InventoryFeature", targets: ["InventoryFeature"]),
+        .library(name: "ProfileFeature", targets: ["ProfileFeature"]),
         .library(name: "Persistence", targets: ["Persistence"]),
         .library(name: "VisionCore", targets: ["VisionCore"]),
         .library(name: "Core", targets: ["Core"]),
@@ -74,6 +75,21 @@ let package: Package = Package(
                 "Persistence",
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
             ]
+        ),
+        .target(
+            name: "ProfileFeature",
+            dependencies: [
+                "Core",
+                "Persistence",
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
+            ]
+        ),
+        .testTarget(
+            name: "ProfileFeatureTests",
+            dependencies: ["ProfileFeature"]
         ),
 
         // Core

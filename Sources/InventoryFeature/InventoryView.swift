@@ -4,6 +4,7 @@ import Persistence
 
 public struct InventoryView: View {
     @StateObject var viewModel: InventoryViewModel
+    @State private var searchText = ""
     var onOpenCamera: (() -> Void)?
 
     public init(
@@ -14,19 +15,42 @@ public struct InventoryView: View {
         self.onOpenCamera = onOpenCamera
     }
 
+    /// Filters items based on search text matching category or color
+    private var filteredItems: [Item] {
+        if searchText.isEmpty {
+            return viewModel.items
+        }
+        return viewModel.items.filter { item in
+            item.category?.localizedCaseInsensitiveContains(searchText) == true ||
+            item.color?.localizedCaseInsensitiveContains(searchText) == true
+        }
+    }
+
     public var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    ProgressView("Loading items...")
-                } else if let error = viewModel.error {
-                    ErrorView(message: error, retry: {
-                        Task { await viewModel.loadItems() }
-                    })
-                } else if viewModel.items.isEmpty {
-                    EmptyInventoryView(onOpenCamera: onOpenCamera)
-                } else {
-                    ItemGridView(items: viewModel.items)
+            VStack(spacing: 0) {
+                // Search bar at top when items exist
+                if !viewModel.items.isEmpty && !viewModel.isLoading {
+                    SearchBar(text: $searchText)
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                }
+
+                Group {
+                    if viewModel.isLoading {
+                        ProgressView("Loading items...")
+                    } else if let error = viewModel.error {
+                        ErrorView(message: error, retry: {
+                            Task { await viewModel.loadItems() }
+                        })
+                    } else if viewModel.items.isEmpty {
+                        EmptyInventoryView(onOpenCamera: onOpenCamera)
+                    } else if filteredItems.isEmpty {
+                        // No search results
+                        ContentUnavailableView.search(text: searchText)
+                    } else {
+                        ItemGridView(items: filteredItems)
+                    }
                 }
             }
             .navigationTitle("Inventory")
