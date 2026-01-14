@@ -67,7 +67,7 @@
 
 **References:**
 - [DESIGN-021-cloud-functions-orchestration](../design/DESIGN-021-cloud-functions-orchestration.md): Cloud Functions Orchestration
-- [CODE-EXAMPLE-007-ai-pipeline-orchestration](../design/CODE-EXAMPLE-007-ai-pipeline-orchestration.md): AI Pipeline Orchestration
+- [AI-INTEGRATION-LAYER-002-gemini-3-pro-orchestration](../design/AI-INTEGRATION-LAYER-002-gemini-3-pro-orchestration.md): AI Pipeline Orchestration *(updated for Gemini 3 Pro)*
 
 ---
 

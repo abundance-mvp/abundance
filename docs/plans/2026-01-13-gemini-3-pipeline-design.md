@@ -18,7 +18,7 @@ This document specifies the refactored AI pipeline for cataloging household item
 **Benefits:**
 - Simpler architecture (1 model vs 4)
 - Better reasoning (Gemini 3 Pro benchmarks)
-- Similar cost (~$0.02-0.03 per item)
+- Similar cost (~$0.03-0.04 per item)
 - Unified tool calling (barcode, Google Lens, web search)
 
 ---
@@ -56,7 +56,7 @@ This document specifies the refactored AI pipeline for cataloging household item
 │  │ - Outputs final catalog entry (or multiple if multi-object)  │ │
 │  │                                                               │ │
 │  │ Model: Gemini 3 Pro                                          │ │
-│  │ Cost: ~$0.02-0.03 per item                                   │ │
+│  │ Cost: ~$0.03-0.04 per item                                   │ │
 │  └──────────────────────────────────────────────────────────────┘ │
 └───────────────────────────────────────────────────────────────────┘
 ```
@@ -342,8 +342,8 @@ iOS App                    Cloud Function              Gemini 3 Pro
 
 | Path | Components | Cost |
 |------|------------|------|
-| **Visual + Pricing** | Gemini 3 Pro + Google Lens + Web Search | $0.004 + $0.015 + $0.002 = **$0.021** |
-| **Barcode + Visual + Pricing** | Gemini 3 Pro + Barcode + Google Lens + Web Search | $0.004 + $0.01 + $0.015 + $0.002 = **$0.031** |
+| **Visual + Pricing** | Gemini 3 Pro + Google Lens + Web Search | $0.004 + $0.015 + $0.014 = **$0.033** |
+| **Barcode + Visual + Pricing** | Gemini 3 Pro + Barcode + Google Lens + Web Search | $0.004 + $0.01 + $0.015 + $0.014 = **$0.043** |
 
 **Component Costs**
 
@@ -352,7 +352,7 @@ iOS App                    Cloud Function              Gemini 3 Pro
 | Gemini 3 Pro | ~$0.004 | $2-4/M input, $12-18/M output |
 | Google Lens (SerpAPI) | $0.015 | Per search |
 | Barcode (UPCitemdb) | $0.01 | Per lookup |
-| Web Search | ~$0.002 | Built-in Google Search grounding |
+| Web Search | ~$0.014 | Google Search grounding ($14/1K queries) |
 
 **Comparison to Old Architecture**
 
