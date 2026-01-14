@@ -1,11 +1,17 @@
 # ADR-014: Cloud AI Provider Selection
 
-**Status**: Approved
+**Status**: Superseded
 **Date**: 2025-11-08
+**Superseded By**: docs/plans/2026-01-13-gemini-3-pipeline-design.md
+**Superseded Date**: 2026-01-13
 **Decision Makers**: Engineering Leadership, Computer Vision & ML Engineer
 **Related Documents**:
 - docs/validation/RESEARCH-VALIDATION-stage-2.0.md
 - docs/design/DESIGN-004-computer-vision-pipeline.md
+
+> **⚠️ SUPERSEDED**: This ADR has been replaced by the Gemini 3 Pro pipeline design.
+> The new architecture consolidates Layer 2a, 2b, and 3 into a single Gemini 3 Pro model
+> with native tool calling. See `docs/plans/2026-01-13-gemini-3-pipeline-design.md`.
 
 ---
 

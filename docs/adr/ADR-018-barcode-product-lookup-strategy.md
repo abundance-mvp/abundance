@@ -1,9 +1,16 @@
 # ADR-018: Barcode Product Lookup Strategy
 
-**Status**: Proposed (Research Complete)
+**Status**: Partially Superseded
 **Date**: 2025-11-06
+**Updated**: 2026-01-13
 **Decision Makers**: Product Leadership, Tech Lead, ML/AI
 **Related**: ADR-013 (Vision Framework Strategy), ADR-015 (AI Reasoning Layer), DESIGN-004 (Computer Vision Pipeline), RESEARCH-BARCODE-API-2025-11-06 (API Selection Research)
+
+> **⚠️ PARTIALLY SUPERSEDED (2026-01-13)**:
+> - **Layer 1 barcode detection**: Disabled for MVP. Gemini 3 Pro handles barcode detection.
+> - **Barcode API**: Consolidated to UPCitemdb only. OpenFoodFacts removed.
+> - **Architecture**: Barcode lookup is now a tool called by Gemini 3 Pro.
+> See `docs/plans/2026-01-13-gemini-3-pipeline-design.md`.
 
 ---
 

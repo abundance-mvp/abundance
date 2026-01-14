@@ -1,11 +1,17 @@
 # ADR-015: AI Reasoning Layer Architecture
 
-**Status**: Approved
+**Status**: Superseded
 **Date**: 2025-11-08
+**Superseded By**: docs/plans/2026-01-13-gemini-3-pipeline-design.md
+**Superseded Date**: 2026-01-13
 **Decision Makers**: Engineering Leadership, Computer Vision & ML Engineer
 **Related Documents**:
 - docs/validation/RESEARCH-VALIDATION-stage-2.0.md
 - docs/design/DESIGN-004-computer-vision-pipeline.md
+
+> **⚠️ SUPERSEDED**: Layer 3 has been eliminated. The new Gemini 3 Pro pipeline
+> consolidates all reasoning, synthesis, and conflict resolution into a single model.
+> See `docs/plans/2026-01-13-gemini-3-pipeline-design.md`.
 
 ---
 

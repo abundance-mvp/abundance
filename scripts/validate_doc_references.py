@@ -23,10 +23,16 @@ def validate_references(docs_root: Path) -> List[Dict[str, str]]:
     # Pattern to match markdown links
     link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
 
-    # Find all markdown files (excluding plans/ which may reference future files)
+    # Find all markdown files (excluding plans/, archive/, checkpoints/)
     for md_file in docs_root.rglob('*.md'):
         # Skip plans directory - contains future-looking documents
         if 'plans' in md_file.parts:
+            continue
+        # Skip archive directory - contains historical docs with intentionally broken refs
+        if 'archive' in md_file.parts:
+            continue
+        # Skip checkpoints directory - contains historical stage completions
+        if 'checkpoints' in md_file.parts:
             continue
         content = md_file.read_text()
 

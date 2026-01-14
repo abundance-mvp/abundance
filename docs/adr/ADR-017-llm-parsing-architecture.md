@@ -1,11 +1,17 @@
 # ADR-017: LLM Parsing Architecture
 
-**Status**: Approved
+**Status**: Superseded
 **Date**: 2025-11-08
+**Superseded By**: docs/plans/2026-01-13-gemini-3-pipeline-design.md
+**Superseded Date**: 2026-01-13
 **Decision Makers**: Engineering Leadership, Computer Vision & ML Engineer
 **Related Documents**:
 - docs/validation/RESEARCH-VALIDATION-stage-2.0.md
 - docs/design/DESIGN-004-computer-vision-pipeline.md
+
+> **⚠️ SUPERSEDED**: Claude Haiku parsing has been eliminated. The new Gemini 3 Pro
+> pipeline handles all tool result parsing natively within a single model.
+> See `docs/plans/2026-01-13-gemini-3-pipeline-design.md`.
 
 ---
 

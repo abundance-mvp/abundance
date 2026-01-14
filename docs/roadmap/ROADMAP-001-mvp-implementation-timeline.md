@@ -61,7 +61,7 @@ This roadmap synthesizes all architectural decisions (Stages 2.0-2.6), implement
 
 ### Sprint 4-6: AI Pipeline (Layers 2a, 2b, 3)
 **Theme**: Cloud AI integration (Gemini, SerpAPI, Claude)
-**Documents**: [SPRINT-PLAN-004](./SPRINT-PLAN-004.md), [SPRINT-PLAN-005](./SPRINT-PLAN-005.md)
+**Documents**: [SPRINT-PLAN-004](../archive/pre-gemini-3/roadmap/SPRINT-PLAN-004.md), [SPRINT-PLAN-005](../archive/pre-gemini-3/roadmap/SPRINT-PLAN-005.md) *(archived - superseded by Gemini 3 Pro pipeline)*
 **Key Deliverables**:
 - Layer 2a: Gemini attribute extraction (> 80% accuracy)
 - Layer 2b: Barcode lookup + SerpAPI product ID (> 75% accuracy)

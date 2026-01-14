@@ -2,7 +2,8 @@
 
 **Created**: 2025-11-08
 **Stage**: 2.0 - Computer Vision & AI Research
-**Status**: Draft
+**Status**: Superseded (Layer 2+3 architecture)
+**Superseded By**: docs/plans/2026-01-13-gemini-3-pipeline-design.md
 **References**:
 - docs/validation/RESEARCH-VALIDATION-stage-2.0.md
 - docs/plans/PLAN-SUMMARY-stage-2.0.md
@@ -10,6 +11,14 @@
 - docs/adr/ADR-014-cloud-ai-provider-selection.md
 - docs/adr/ADR-015-ai-reasoning-layer-architecture.md
 - docs/adr/ADR-018-barcode-product-lookup-strategy.md
+
+> **⚠️ PARTIALLY SUPERSEDED (2026-01-13)**:
+> - **Layer 1**: Still valid (quality-focused detection, subject masking)
+> - **Layer 2a/2b/3**: Superseded by single Gemini 3 Pro model with tool calling
+> - **New architecture**: See `docs/plans/2026-01-13-gemini-3-pipeline-design.md`
+>
+> Layer 1 sections of this document remain the authoritative reference for on-device
+> object detection, quality assessment, and image cropping.
 
 ---
 
