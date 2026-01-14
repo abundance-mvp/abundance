@@ -8,10 +8,12 @@
 ## Quick Commands
 
 ```bash
+/ios-sprint <spec>      # Start iOS sprint from spec document
+/ios-debug <issue>      # Debug iOS issue with Axiom skills
+/gcp-deploy <fn>        # Deploy Cloud Function with verification
 /validate-docs          # Check docs for broken links, staleness
-/check-drift           # Verify ADR compliance (P0/P1/P2)
-/troubleshoot          # Debug CI/CD failures
-/show-sprint-status    # Display sprint progress
+/check-drift            # Verify ADR compliance (P0/P1/P2)
+/show-sprint-status     # Display sprint progress
 ```
 
 ---
@@ -130,7 +132,7 @@ firebase deploy --only firestore:rules
 
 ---
 
-**Updated:** 2026-01-11
-- Added ios-superpowers orchestrator for Apple docs integration
-- Updated ADR-010 constraint (infrastructure UIKit OK)
-- use trash instead of rm -rf
+**Updated:** 2026-01-14
+- Added /ios-sprint, /ios-debug, /gcp-deploy commands
+- Added firebase-superpowers, gcp-superpowers, gemini-integration skills
+- Updated verified-stage-development with agent routing matrix
