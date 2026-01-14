@@ -1,30 +1,34 @@
+jest.mock('../../gemini/vertexai-config');
+import { createVertexAIClient } from '../../gemini/vertexai-config';
 import { searchWeb } from '../web-search';
 
-jest.mock('@google/genai', () => ({
-  GoogleGenAI: jest.fn().mockImplementation(() => ({
-    models: {
-      generateContent: jest.fn()
-    }
-  }))
-}));
-
-import { GoogleGenAI } from '@google/genai';
-
 describe('Web Search Tool', () => {
-  const MockGoogleGenAI = GoogleGenAI as jest.MockedClass<typeof GoogleGenAI>;
+  const mockCreateVertexAIClient = createVertexAIClient as jest.MockedFunction<typeof createVertexAIClient>;
+
+  let mockGenerateContent: jest.Mock;
+  let mockAIClient: { models: { generateContent: jest.Mock } };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.GOOGLE_API_KEY = 'test-api-key';
+    process.env.GOOGLE_CLOUD_PROJECT = 'test-project';
+    process.env.GOOGLE_CLOUD_LOCATION = 'global';
+
+    mockGenerateContent = jest.fn();
+    mockAIClient = {
+      models: {
+        generateContent: mockGenerateContent
+      }
+    };
+    mockCreateVertexAIClient.mockReturnValue(mockAIClient as any);
   });
 
   afterEach(() => {
-    delete process.env.GOOGLE_API_KEY;
+    delete process.env.GOOGLE_CLOUD_PROJECT;
+    delete process.env.GOOGLE_CLOUD_LOCATION;
   });
 
   it('should return prices from search results', async () => {
-    const mockInstance = new MockGoogleGenAI({ apiKey: 'test' });
-    (mockInstance.models.generateContent as jest.Mock).mockResolvedValueOnce({
+    mockGenerateContent.mockResolvedValueOnce({
       text: JSON.stringify({
         prices: [
           { source: 'Amazon', price: 89.99, condition: 'new' },
@@ -33,22 +37,18 @@ describe('Web Search Tool', () => {
       })
     });
 
-    MockGoogleGenAI.mockImplementation(() => mockInstance);
-
     const result = await searchWeb('Nike Air Max 90 size 10 price');
 
     expect(result.prices).toHaveLength(2);
     expect(result.prices[0].source).toBe('Amazon');
     expect(result.prices[0].price).toBe(89.99);
+    expect(mockCreateVertexAIClient).toHaveBeenCalled();
   });
 
   it('should return empty prices on parse error', async () => {
-    const mockInstance = new MockGoogleGenAI({ apiKey: 'test' });
-    (mockInstance.models.generateContent as jest.Mock).mockResolvedValueOnce({
+    mockGenerateContent.mockResolvedValueOnce({
       text: 'Invalid JSON response'
     });
-
-    MockGoogleGenAI.mockImplementation(() => mockInstance);
 
     const result = await searchWeb('Unknown product price');
 
@@ -56,10 +56,12 @@ describe('Web Search Tool', () => {
     expect(result.raw).toBe('Invalid JSON response');
   });
 
-  it('should throw error when API key is missing', async () => {
-    delete process.env.GOOGLE_API_KEY;
+  it('should throw error when project is not configured', async () => {
+    mockCreateVertexAIClient.mockImplementation(() => {
+      throw new Error('GOOGLE_CLOUD_PROJECT environment variable is required for Vertex AI');
+    });
 
     await expect(searchWeb('Test query'))
-      .rejects.toThrow('GOOGLE_API_KEY environment variable is required');
+      .rejects.toThrow('GOOGLE_CLOUD_PROJECT environment variable is required for Vertex AI');
   });
 });

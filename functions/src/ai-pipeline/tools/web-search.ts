@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { createVertexAIClient } from '../gemini/vertexai-config';
 
 export interface WebSearchResult {
   prices: Array<{
@@ -14,16 +14,11 @@ export interface WebSearchResult {
  *
  * @param query - Search query for product pricing
  * @returns WebSearchResult with extracted prices from e-commerce sites
- * @throws Error if GOOGLE_API_KEY is not set
+ * @throws Error if Vertex AI is not configured
  */
 export async function searchWeb(query: string): Promise<WebSearchResult> {
-  const apiKey = process.env.GOOGLE_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY environment variable is required');
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Gemini 3 models require Vertex AI (not API keys)
+  const ai = createVertexAIClient();
 
   try {
     const response = await ai.models.generateContent({
