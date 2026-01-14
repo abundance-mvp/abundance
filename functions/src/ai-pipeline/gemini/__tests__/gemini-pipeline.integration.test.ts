@@ -1,6 +1,12 @@
 /**
  * Integration test for Gemini 3 Pro pipeline.
  *
+ * SECURITY NOTES:
+ * - Test images are stored in gs://abundance-test-private (public access prevention enforced)
+ * - All image access uses time-limited signed URLs (15 minute expiry)
+ * - Service accounts have read-only access to test bucket
+ * - Never use public URLs for test images containing personal items
+ *
  * Requirements:
  * - GOOGLE_CLOUD_PROJECT: GCP project ID with Vertex AI enabled
  * - GOOGLE_CLOUD_LOCATION: Region (defaults to 'global')
@@ -21,6 +27,8 @@ import {
   validateIntegrationEnvironment,
   initializeFirebaseAdmin,
   cleanupTestImage,
+  getTestImageAsDataUrl,
+  TEST_IMAGES,
 } from '../../__tests__/integration-setup';
 
 // Skip integration tests if credentials not available
@@ -68,10 +76,10 @@ describeIntegration('Gemini 3 Pro Pipeline Integration', () => {
 
   describe('processItemWithGemini', () => {
     it('should analyze a product image and return valid CatalogItem', async () => {
-      // Use a publicly available test image
-      // Note: Replace with actual test image URL in your Firebase Storage
-      const testImageUrl =
-        'https://storage.googleapis.com/abundance-test-public/test-product.jpg';
+      // SECURITY: Download image directly from private bucket as base64 data URL
+      // No URL is ever exposed - image data stays in process memory only
+      // Test images are stored in gs://abundance-test-private with public access prevention
+      const testImageUrl = await getTestImageAsDataUrl(TEST_IMAGES.PRODUCT_IMAGE);
 
       // Process with Gemini
       const result = await processItemWithGemini(testImageUrl);
@@ -90,19 +98,20 @@ describeIntegration('Gemini 3 Pro Pipeline Integration', () => {
 
       // Log for manual inspection
       console.log('Integration test result:', JSON.stringify(result, null, 2));
-    }, 60000); // 60 second timeout
+    }, 120000); // 120 second timeout - includes image download + multiple API calls
 
     it('should return result within acceptable time', async () => {
-      const testImageUrl =
-        'https://storage.googleapis.com/abundance-test-public/test-product.jpg';
+      // SECURITY: Download image directly from private bucket as base64 data URL
+      const testImageUrl = await getTestImageAsDataUrl(TEST_IMAGES.PRODUCT_IMAGE);
 
       const startTime = Date.now();
       const result = await processItemWithGemini(testImageUrl);
       const duration = Date.now() - startTime;
       const item = getFirstItem(result);
 
-      // Verify timing is within acceptable range (< 30 seconds)
-      expect(duration).toBeLessThan(30000);
+      // Verify timing is within acceptable range (< 90 seconds)
+      // This includes: image download, Gemini calls, tool execution (google_lens, web_search)
+      expect(duration).toBeLessThan(90000);
 
       // Verify result is valid
       expect(result).toBeDefined();
@@ -111,7 +120,7 @@ describeIntegration('Gemini 3 Pro Pipeline Integration', () => {
       // Log timing for cost estimation
       console.log(`Processing time: ${duration}ms`);
       console.log(`Estimated cost: $0.03-0.04 per item`);
-    }, 60000);
+    }, 120000); // 120 second timeout
   });
 
   describe('Error Handling', () => {

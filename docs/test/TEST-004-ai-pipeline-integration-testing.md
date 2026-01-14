@@ -2,8 +2,8 @@
 
 **Extends**: TEST-STRATEGY-001
 **Sprint**: 4-5 (AI Pipeline Layer 2a, Layers 2b & 3)
-**Tool**: Mocha + Chai (Backend), Golden Dataset
-**Last Updated**: 2025-11-12
+**Tool**: Jest (Backend), Golden Dataset
+**Last Updated**: 2026-01-14
 
 ---
 
@@ -12,6 +12,55 @@
 Validate AI pipeline accuracy across all layers (1-3) using golden dataset methodology. Ensures AI providers meet quality thresholds before production deployment.
 
 **Referenced by**: ios-sprint-executor (Sprint 4-5 acceptance criteria)
+
+---
+
+## Security Requirements
+
+**CRITICAL**: Test images may contain personal items. Privacy must be enforced at all levels.
+
+### Private Test Bucket
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| Bucket Name | `gs://abundance-test-private` | Dedicated test image storage |
+| Public Access Prevention | **Enforced** | Prevents accidental public exposure |
+| Uniform Bucket-Level Access | **Enabled** | IAM-only access control |
+| Location | `us-west1` | Colocated with Vertex AI |
+
+### IAM Configuration
+
+Only authorized service accounts have access:
+
+| Service Account | Role | Purpose |
+|-----------------|------|---------|
+| `firebase-adminsdk-fbsvc@abundance-mvp.iam.gserviceaccount.com` | `storage.objectViewer` | Integration test execution |
+| `github-actions-deployer@abundance-mvp.iam.gserviceaccount.com` | `storage.objectViewer` | CI/CD pipeline |
+| `abundance-app-sa@abundance-mvp.iam.gserviceaccount.com` | `storage.objectViewer` | App service access |
+
+### Signed URL Security
+
+All test image access uses time-limited signed URLs:
+
+```typescript
+// From integration-setup.ts
+const [signedUrl] = await file.getSignedUrl({
+  action: 'read',
+  expires: Date.now() + 15 * 60 * 1000, // 15 minute expiry
+});
+```
+
+**Never use public URLs for test images.**
+
+### Test Images
+
+Pre-uploaded test images in `gs://abundance-test-private/integration-tests/`:
+
+| File | Purpose |
+|------|---------|
+| `test-01-p1.jpg` | Product image for cataloging tests |
+| `test-01-p4_obj-1.png` | Object detection test 1 |
+| `test-01-p4_obj-2.png` | Object detection test 2 |
 
 ---
 

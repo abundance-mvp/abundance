@@ -7,7 +7,7 @@
       }
     }
   },
-  "enabledPlugins": [
-    "superpowers@superpowers-marketplace"
-  ]
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true
+  }
 }

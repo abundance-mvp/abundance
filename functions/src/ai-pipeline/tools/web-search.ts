@@ -37,7 +37,9 @@ Return JSON in this exact format:
 
 Only include prices you found. If no prices found, return {"prices": []}`,
       config: {
-        tools: [{ googleSearchRetrieval: {} }],
+        // Use googleSearch (not legacy googleSearchRetrieval) for Gemini 2.0+ models
+        // See: https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-with-google-search
+        tools: [{ googleSearch: {} }],
         temperature: 0.1,
         maxOutputTokens: 512
       }

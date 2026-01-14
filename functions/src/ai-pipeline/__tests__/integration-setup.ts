@@ -109,6 +109,75 @@ export async function cleanupTestImage(
 }
 
 /**
+ * Private test bucket for integration tests.
+ * SECURITY: This bucket has public access prevention enforced.
+ * All access requires authenticated service accounts.
+ */
+export const TEST_BUCKET_NAME = 'abundance-test-private';
+
+/**
+ * Pre-uploaded test images in the private bucket.
+ * These images are used for integration testing without exposing personal data.
+ */
+export const TEST_IMAGES = {
+  PRODUCT_IMAGE: 'integration-tests/test-01-p1.jpg',
+  OBJECT_1: 'integration-tests/test-01-p4_obj-1.png',
+  OBJECT_2: 'integration-tests/test-01-p4_obj-2.png',
+} as const;
+
+/**
+ * Downloads a test image from the private bucket and returns it as a base64 data URL.
+ * SECURITY: Image data stays in memory, never exposed via public URL.
+ *
+ * This approach is more secure than signed URLs because:
+ * - No URL is ever exposed or logged
+ * - Image data is only in process memory
+ * - No time-limited URL that could be captured/replayed
+ *
+ * @param imagePath - Path to the image within the test bucket
+ * @returns Base64 data URL (data:image/jpeg;base64,...)
+ */
+export async function getTestImageAsDataUrl(imagePath: string): Promise<string> {
+  const storage = admin.storage();
+  const bucket = storage.bucket(TEST_BUCKET_NAME);
+  const file = bucket.file(imagePath);
+
+  const [buffer] = await file.download();
+  const base64 = buffer.toString('base64');
+
+  // Determine MIME type from file extension
+  const ext = imagePath.split('.').pop()?.toLowerCase();
+  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+  return `data:${mimeType};base64,${base64}`;
+}
+
+/**
+ * @deprecated Use getTestImageAsDataUrl instead for better security.
+ * Gets a time-limited signed URL for a test image in the private bucket.
+ * SECURITY: Signed URLs expire after 15 minutes to minimize exposure.
+ *
+ * @param imagePath - Path to the image within the test bucket
+ * @param expirationMinutes - URL expiration time in minutes (default: 15)
+ * @returns Time-limited signed URL for authenticated access
+ */
+export async function getTestImageSignedUrl(
+  imagePath: string,
+  expirationMinutes: number = 15
+): Promise<string> {
+  const storage = admin.storage();
+  const bucket = storage.bucket(TEST_BUCKET_NAME);
+  const file = bucket.file(imagePath);
+
+  const [signedUrl] = await file.getSignedUrl({
+    action: 'read',
+    expires: Date.now() + expirationMinutes * 60 * 1000,
+  });
+
+  return signedUrl;
+}
+
+/**
  * Creates a test item document structure for integration testing.
  */
 export function createTestItemDocument(imageUrl: string, barcode?: string): Record<string, unknown> {

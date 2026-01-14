@@ -132,7 +132,8 @@ export const CATALOG_TOOLS: Tool[] = [
 export const GENERATION_CONFIG = {
   temperature: 0.1,
   topP: 0.95,
-  maxOutputTokens: 1024,
+  // Increased from 1024 - tool calling + JSON response needs more tokens
+  maxOutputTokens: 8192,
   responseMimeType: 'application/json',
   responseSchema: CATALOG_ITEM_SCHEMA
 };
