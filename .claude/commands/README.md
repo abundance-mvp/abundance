@@ -4,15 +4,36 @@ Custom slash commands for the Abundance MVP project.
 
 ## Available Commands
 
-### iOS Development Commands
+### iOS Development (REQUIRED: ios-superpowers)
+
+**CRITICAL:** For ALL iOS/Swift work, use `/ios-superpowers` instead of raw superpowers skills.
+
+#### `/ios-superpowers <action> <context>`
+
+iOS-aware orchestrator that ensures Apple documentation is fetched before any superpowers workflow.
+
+**Actions:**
+| Action | Example | Replaces |
+|--------|---------|----------|
+| `brainstorm <topic>` | `/ios-superpowers brainstorm biometric auth` | `superpowers:brainstorming` |
+| `plan <feature>` | `/ios-superpowers plan camera capture` | `superpowers:writing-plans` |
+| `execute <plan-path>` | `/ios-superpowers execute docs/plans/xxx.md` | `superpowers:executing-plans` |
+| `review` | `/ios-superpowers review` | `superpowers:requesting-code-review` |
+| `debug <issue>` | `/ios-superpowers debug CI failure` | `superpowers:systematic-debugging` |
+| `tdd <feature>` | `/ios-superpowers tdd HouseholdItemDetector` | `superpowers:test-driven-development` |
+| `parallel <tasks>` | `/ios-superpowers parallel "task1, task2"` | `superpowers:dispatching-parallel-agents` |
+
+**See**: `.claude/commands/ios-superpowers.md`
+
+---
 
 #### `/ios-sprint-executor {sprint-number}`
 
-Orchestrate iOS sprint development with superpowers integration.
+Orchestrate iOS sprint development with ios-superpowers integration.
 
 **Example**: `/ios-sprint-executor sprint-1`
 
-**Invokes**: `ios-sprint-executor` skill
+**Note**: Uses ios-superpowers orchestrator internally for all superpowers interactions.
 
 **See**: `.claude/skills/ios-sprint-executor/SKILL.md`
 
@@ -24,7 +45,7 @@ Orchestrate stage development with research verification and approval gates.
 
 **Example**: `/verified-stage-development stage-6.2`
 
-**Invokes**: `verified-stage-development` skill
+**Note**: iOS stages (2.2, 3.1, 4.1) use ios-superpowers; non-iOS stages use raw superpowers.
 
 **See**: `.claude/skills/verified-stage-development/SKILL.md`
 
@@ -35,8 +56,6 @@ Orchestrate stage development with research verification and approval gates.
 Fetch Apple Developer documentation via MCP.
 
 **Example**: `/apple-docs-fetcher SwiftUI.View`
-
-**Invokes**: `apple-docs-fetcher` skill
 
 **See**: `.claude/skills/apple-docs-fetcher/SKILL.md`
 
@@ -52,8 +71,6 @@ Run documentation validator to check for broken links and stale content.
 
 **Uses**: `.claude/agents/doc-reviewer.md` agent specification
 
-**Output**: File:line locations of issues with fix suggestions
-
 ---
 
 #### `/check-drift`
@@ -64,8 +81,6 @@ Check for architecture drift from ADRs with severity-based reporting (P0/P1/P2).
 
 **Uses**: `.claude/agents/drift-detector.md` agent specification
 
-**Output**: Violations categorized by severity
-
 ---
 
 #### `/show-sprint-status`
@@ -74,28 +89,49 @@ Display current sprint progress from git branch and sprint plan.
 
 **Example**: `/show-sprint-status`
 
-**Uses**: Git status + docs/roadmap/SPRINT-PLAN-{N}.md
+---
 
-**Output**: Task completion percentage with next steps
+### Issue Management Commands
+
+#### `/capture-issue`
+
+Capture bugs, UX issues, or spec drift during testing.
+
+**Example**: `/capture-issue "Camera preview shows black screen on iOS 17"`
+
+**See**: `.claude/skills/capture-issue/SKILL.md`
 
 ---
 
-#### `/super-code-review {target}`
+#### `/enrich-issue {issue-file}`
 
-Perform comprehensive code review using superpowers plugin.
+Post-capture issue enrichment with log analysis and Apple docs.
 
-**Example**: `/super-code-review`
+**Example**: `/enrich-issue .claude/.debug/issues/raw/2026-01-13-camera-black-screen.json`
 
-**Invokes**: `superpowers:requesting-code-review` skill
+**See**: `.claude/commands/enrich-issue.md`
 
-**Features**:
-- Reviews code against CLAUDE.md requirements and project standards
-- Detects potential bugs and edge cases in changes
-- Analyzes historical context via git blame
-- Provides confidence-scored feedback (threshold: 80)
-- Skips closed, draft, or previously reviewed PRs
+---
 
-**Prerequisites**: Requires superpowers plugin
+#### `/triage-issues`
+
+Triage and prioritize captured issues.
+
+**Example**: `/triage-issues`
+
+**See**: `.claude/commands/triage-issues.md`
+
+---
+
+#### `/dispatch`
+
+Dispatch parallel agents for independent tasks.
+
+**Example**: `/dispatch`
+
+**Note**: For iOS work, agents use ios-superpowers; for non-iOS work, agents use raw superpowers.
+
+**See**: `.claude/commands/dispatch.md`
 
 ---
 
@@ -108,7 +144,7 @@ Commands in this project follow two patterns:
 Commands that invoke project-specific skills:
 - Command file (`.claude/commands/feature.md`) invokes skill via Skill tool
 - Skill file (`.claude/skills/feature-name/SKILL.md`) contains full implementation
-- Integrates with superpowers plugin workflows
+- **iOS commands**: Use ios-superpowers orchestrator for Apple docs grounding
 
 ### Standalone Commands
 
@@ -126,18 +162,9 @@ Some commands are also invoked by GitHub Actions:
 
 See `.github/workflows/` for automation configurations.
 
-## Integration with Superpowers
-
-Many skills integrate with the superpowers plugin via SlashCommand tool:
-- `/superpowers:write-plan` - Create implementation plans
-- `/superpowers:execute-plan` - Execute plans with batch review
-
-See individual skill documentation for integration details.
-
 ## References
 
 - **Best Practices**: https://code.claude.com/docs/en/common-workflows#create-custom-slash-commands
 - **Skill Documentation**: `.claude/skills/*/SKILL.md`
 - **Agent Specifications**: `.claude/agents/*.md`
-- **CI/CD Architecture**: `.github/workflows/` (see workflow files directly)
 - **Context Map**: `docs/context-map.json`
