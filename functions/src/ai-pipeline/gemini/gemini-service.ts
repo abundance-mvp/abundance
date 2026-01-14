@@ -5,7 +5,8 @@
  * This is the main entry point for processing images through the AI pipeline.
  */
 
-import { GoogleGenAI, Content, Part, FunctionCall } from '@google/genai';
+import { Content, Part, FunctionCall } from '@google/genai';
+import { createVertexAIClient } from './vertexai-config';
 import { CatalogItem } from './schemas/catalog-item';
 import { SYSTEM_PROMPT, CATALOG_TOOLS, GENERATION_CONFIG, GEMINI_MODEL_ID } from './prompts';
 import { executeToolCall } from '../tools/tool-executor';
@@ -21,20 +22,15 @@ import { executeToolCall } from '../tools/tool-executor';
  *
  * @param imageUrl - Public URL of the image to process
  * @returns CatalogItem or array of CatalogItems
- * @throws Error if API key is missing, image fetch fails, or Gemini returns no response
+ * @throws Error if Vertex AI config is missing, image fetch fails, or Gemini returns no response
  */
 export async function processItemWithGemini(
   imageUrl: string
 ): Promise<CatalogItem | CatalogItem[]> {
-  const apiKey = process.env.GOOGLE_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY environment variable is required');
-  }
-
   const imageBase64 = await fetchImageBase64(imageUrl);
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Gemini 3 models require Vertex AI (not API keys)
+  const ai = createVertexAIClient();
 
   const toolDeclarations = CATALOG_TOOLS.flatMap(t => t.functionDeclarations || []);
 

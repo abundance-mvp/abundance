@@ -2,22 +2,26 @@ import { processItemWithGemini } from '../gemini-service';
 
 jest.mock('@google/genai');
 jest.mock('../../tools/tool-executor');
+jest.mock('../vertexai-config');
 
-import { GoogleGenAI } from '@google/genai';
 import { executeToolCall } from '../../tools/tool-executor';
+import { createVertexAIClient } from '../vertexai-config';
 
 describe('Gemini Service', () => {
-  const MockGoogleGenAI = GoogleGenAI as jest.MockedClass<typeof GoogleGenAI>;
   const mockExecuteToolCall = executeToolCall as jest.MockedFunction<typeof executeToolCall>;
+  const mockCreateVertexAIClient = createVertexAIClient as jest.MockedFunction<typeof createVertexAIClient>;
   const originalFetch = global.fetch;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.GOOGLE_API_KEY = 'test-api-key';
+    // Vertex AI config for Gemini 3 models
+    process.env.GOOGLE_CLOUD_PROJECT = 'test-project';
+    process.env.GOOGLE_CLOUD_LOCATION = 'global';
   });
 
   afterEach(() => {
-    delete process.env.GOOGLE_API_KEY;
+    delete process.env.GOOGLE_CLOUD_PROJECT;
+    delete process.env.GOOGLE_CLOUD_LOCATION;
     global.fetch = originalFetch;
   });
 
@@ -49,22 +53,37 @@ describe('Gemini Service', () => {
       text: JSON.stringify(mockCatalogItem)
     });
 
-    MockGoogleGenAI.mockImplementation(() => ({
+    mockCreateVertexAIClient.mockReturnValue({
       models: {
         generateContent: mockGenerateContent
       }
-    } as any));
+    } as any);
 
     const result = await processItemWithGemini('https://example.com/image.jpg');
 
     expect(result).toEqual(mockCatalogItem);
   });
 
-  it('should throw error when API key is missing', async () => {
-    delete process.env.GOOGLE_API_KEY;
+  it('should throw error when project is not configured', async () => {
+    delete process.env.GOOGLE_CLOUD_PROJECT;
+
+    // Mock fetch so the test can proceed to the Vertex AI client creation
+    const imageBuffer = Buffer.from('fake-image-data');
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      headers: {
+        get: (name: string) => name === 'content-type' ? 'image/jpeg' : null
+      },
+      arrayBuffer: async () => imageBuffer.buffer
+    });
+
+    // Mock createVertexAIClient to throw when project is missing
+    mockCreateVertexAIClient.mockImplementation(() => {
+      throw new Error('GOOGLE_CLOUD_PROJECT environment variable is required for Vertex AI');
+    });
 
     await expect(processItemWithGemini('https://example.com/image.jpg'))
-      .rejects.toThrow('GOOGLE_API_KEY environment variable is required');
+      .rejects.toThrow('GOOGLE_CLOUD_PROJECT environment variable is required for Vertex AI');
   });
 
   it('should throw error when image fetch fails', async () => {
@@ -116,11 +135,11 @@ describe('Gemini Service', () => {
         text: JSON.stringify(mockCatalogItem)
       });
 
-    MockGoogleGenAI.mockImplementation(() => ({
+    mockCreateVertexAIClient.mockReturnValue({
       models: {
         generateContent: mockGenerateContent
       }
-    } as any));
+    } as any);
 
     mockExecuteToolCall.mockResolvedValueOnce({
       exact_matches: true,
@@ -183,11 +202,11 @@ describe('Gemini Service', () => {
         text: JSON.stringify(mockCatalogItem)
       });
 
-    MockGoogleGenAI.mockImplementation(() => ({
+    mockCreateVertexAIClient.mockReturnValue({
       models: {
         generateContent: mockGenerateContent
       }
-    } as any));
+    } as any);
 
     mockExecuteToolCall
       .mockResolvedValueOnce({
@@ -220,11 +239,11 @@ describe('Gemini Service', () => {
       text: null
     });
 
-    MockGoogleGenAI.mockImplementation(() => ({
+    mockCreateVertexAIClient.mockReturnValue({
       models: {
         generateContent: mockGenerateContent
       }
-    } as any));
+    } as any);
 
     await expect(processItemWithGemini('https://example.com/image.jpg'))
       .rejects.toThrow('No text response from Gemini');
@@ -261,11 +280,11 @@ describe('Gemini Service', () => {
       text: null
     });
 
-    MockGoogleGenAI.mockImplementation(() => ({
+    mockCreateVertexAIClient.mockReturnValue({
       models: {
         generateContent: mockGenerateContent
       }
-    } as any));
+    } as any);
 
     mockExecuteToolCall.mockResolvedValue({
       exact_matches: false,
