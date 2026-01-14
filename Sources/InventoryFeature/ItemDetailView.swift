@@ -1,9 +1,11 @@
 import SwiftUI
+import Core
 import Persistence
 
 public struct ItemDetailView: View {
-    let item: Item
+    public let item: Item
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var scrollOffset: CGFloat = 0
     @State private var showEditSheet = false
 
@@ -56,7 +58,7 @@ public struct ItemDetailView: View {
                         }
                     )
 
-                // Metadata Card
+                // Metadata Card with Liquid Glass
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Text(item.category ?? "Uncategorized")
@@ -72,6 +74,7 @@ public struct ItemDetailView: View {
                                 .font(.system(size: 20))
                                 .foregroundStyle(.primary)
                         }
+                        .accessibilityLabel("Edit item")
                     }
 
                     // Category Badge
@@ -100,6 +103,8 @@ public struct ItemDetailView: View {
                                 .font(.system(size: 20, weight: .bold, design: .rounded))
                                 .foregroundStyle(.green)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Estimated value: $\(value, specifier: "%.2f")")
                     }
 
                     // Metadata Rows
@@ -107,21 +112,38 @@ public struct ItemDetailView: View {
                     MetadataRow(label: "Material", value: item.material)
                     MetadataRow(label: "Condition", value: item.condition)
 
-                    // Confidence Score
+                    // Confidence Score with Icon and Label
                     if let confidence = item.confidence {
                         HStack {
+                            Image(systemName: confidenceIcon(confidence))
+                                .foregroundStyle(confidenceColor(confidence))
                             Text("AI Confidence")
                                 .font(.system(size: 15, design: .rounded))
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(Int(confidence * 100))%")
+                            Text("\(confidenceLevel(confidence)) (\(Int(confidence * 100))%)")
                                 .font(.system(size: 15, weight: .semibold, design: .rounded))
                                 .foregroundStyle(confidenceColor(confidence))
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("AI Confidence: \(confidenceLevel(confidence)), \(Int(confidence * 100)) percent")
                     }
                 }
                 .padding(24)
-                .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 24))
+                .background {
+                    if #available(iOS 26.0, macOS 26.0, *) {
+                        if !reduceTransparency {
+                            Color.clear
+                                .glassEffect(in: metadataCardShape)
+                        } else {
+                            Color.backgroundDefault
+                                .clipShape(metadataCardShape)
+                        }
+                    } else {
+                        Color.clear
+                            .background(.ultraThickMaterial, in: metadataCardShape)
+                    }
+                }
                 .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: -8)
                 .padding(.horizontal, 16)
                 .offset(y: -60) // Overlap hero
@@ -141,14 +163,34 @@ public struct ItemDetailView: View {
         }
     }
 
+    // MARK: - Computed Properties
+
+    private var metadataCardShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: 24)
+    }
+
+    // MARK: - Confidence Helper Functions
+
     private func confidenceColor(_ confidence: Double) -> Color {
-        if confidence >= 0.7 {
+        if confidence >= 0.80 {
             return .green
-        } else if confidence >= 0.4 {
+        } else if confidence >= 0.60 {
             return .orange
         } else {
             return .red
         }
+    }
+
+    private func confidenceLevel(_ confidence: Double) -> String {
+        if confidence >= 0.80 { return "High" }
+        else if confidence >= 0.60 { return "Medium" }
+        else { return "Low" }
+    }
+
+    private func confidenceIcon(_ confidence: Double) -> String {
+        if confidence >= 0.80 { return "checkmark.circle.fill" }
+        else if confidence >= 0.60 { return "exclamationmark.triangle.fill" }
+        else { return "questionmark.circle.fill" }
     }
 }
 

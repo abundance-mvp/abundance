@@ -9,6 +9,7 @@ public struct CameraDetectionView: View {
     @StateObject private var viewModel: CameraDetectionViewModel
     private let cameraService: CameraService
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var sparkleCenter: CGPoint?
 
     /// Initialize with detection view model and optional camera service
@@ -115,24 +116,54 @@ public struct CameraDetectionView: View {
         viewModel.stopFrameProcessing()
     }
 
-    /// Mode indicator (Auto/Manual)
+    /// Mode indicator (Auto/Manual) with Liquid Glass styling
+    /// Uses glassEffect() for iOS 26+, .ultraThickMaterial fallback for iOS 25-
+    /// Respects @Environment(\.accessibilityReduceTransparency)
     private var modeIndicator: some View {
         Text("Mode: Auto")
             .font(.system(size: 12, weight: .semibold, design: .rounded))
             .foregroundStyle(.white)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(.ultraThickMaterial, in: Capsule())
+            .background {
+                if #available(iOS 26.0, macOS 26.0, *) {
+                    if !reduceTransparency {
+                        Color.clear
+                            .glassEffect(in: Capsule())
+                    } else {
+                        Color.black.opacity(0.6)
+                            .clipShape(Capsule())
+                    }
+                } else {
+                    Capsule()
+                        .fill(.ultraThickMaterial)
+                }
+            }
     }
 
-    /// Instruction label at bottom
+    /// Instruction label at bottom with Liquid Glass styling
+    /// Uses glassEffect() for iOS 26+, .ultraThickMaterial fallback for iOS 25-
+    /// Respects @Environment(\.accessibilityReduceTransparency)
     private var instructionLabel: some View {
         Text("Double-tap grey objects to catalog manually")
-            .font(.system(size: 15, design: .rounded))
+            .font(.system(size: 15, weight: .regular, design: .rounded))
             .foregroundStyle(.secondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.ultraThickMaterial, in: Capsule())
+            .background {
+                if #available(iOS 26.0, macOS 26.0, *) {
+                    if !reduceTransparency {
+                        Color.clear
+                            .glassEffect(in: Capsule())
+                    } else {
+                        Color.black.opacity(0.6)
+                            .clipShape(Capsule())
+                    }
+                } else {
+                    Capsule()
+                        .fill(.ultraThickMaterial)
+                }
+            }
     }
 
     /// Handle double-tap gesture on object

@@ -8,6 +8,7 @@ public struct OrganicBorderOverlay: View {
 
     let object: DetectedObject
     @State private var isAnimating = false
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     public nonisolated init(object: DetectedObject) {
         self.object = object
@@ -53,6 +54,7 @@ public struct OrganicBorderOverlay: View {
     }
 
     /// Confidence badge with label
+    /// Uses Liquid Glass effect on iOS 26+ with ultraThickMaterial fallback
     private var confidenceBadge: some View {
         HStack(spacing: 4) {
             Text("\(Int(object.confidence * 100))%")
@@ -65,7 +67,22 @@ public struct OrganicBorderOverlay: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(.ultraThickMaterial, in: Capsule())
+        .background {
+            if #available(iOS 26.0, macOS 26.0, *) {
+                if !reduceTransparency {
+                    Color.clear
+                        .glassEffect(in: Capsule())
+                } else {
+                    // Accessibility fallback: solid background for reduced transparency
+                    Capsule()
+                        .fill(Color(white: 0.95))
+                }
+            } else {
+                // iOS 25- fallback: material effect
+                Capsule()
+                    .fill(.ultraThickMaterial)
+            }
+        }
         .offset(y: -8)
     }
 }
