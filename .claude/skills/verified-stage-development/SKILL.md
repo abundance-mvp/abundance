@@ -344,11 +344,23 @@ When stage requires iOS/Swift implementation:
 
 ---
 
-### Phase 3: Planning Integration (write-plan)
+### Phase 3: Planning Integration
 
-**Purpose:** Create implementation plan with verified context via plugin (superpowers:write-plan).
+**Purpose:** Create implementation plan with verified context.
 
-**Implementation:** Invoke superpowers:write-plan via SlashCommand tool.
+**iOS Stage Detection:**
+
+First, check if this is an iOS stage:
+- iOS stages: 2.2, 3.1, 4.1 (any stage with `apple_docs: true` in context-map.json)
+- Check: `required_inputs` includes Swift/iOS files or `apple_docs` flag is set
+
+**If iOS stage detected:**
+- Use ios-superpowers orchestrator instead of raw superpowers
+- This ensures Apple documentation is fetched and verified before planning
+
+**Implementation:**
+- For iOS stages: Invoke ios-superpowers plan via Skill tool
+- For non-iOS stages: Invoke superpowers:write-plan via SlashCommand tool
 
 **Steps:**
 
@@ -430,17 +442,28 @@ When stage requires iOS/Swift implementation:
    This becomes the master reference for Stage X.X.
    ```
 
-2. **Invoke write-plan**
+2. **Invoke planning skill**
+
+   **For iOS stages (2.2, 3.1, 4.1):**
+
+   ```
+   Tool: Skill
+   Parameters:
+     skill: ios-superpowers
+     args: plan [stage description from context]
+   ```
+
+   **For non-iOS stages:**
 
    ```
    Tool: SlashCommand
    Command: /superpowers:write-plan
+   ```
 
    Pass context:
    - All Phase 1 files
    - Research validation report
    - Enhanced instructions from step 1
-   ```
 
 3. **Wait for write-plan completion**
 
@@ -544,7 +567,9 @@ When stage requires iOS/Swift implementation:
 
 **Purpose:** Create all stage artifacts per verified plan.
 
-**Implementation:** Invoke plugin superpowers:execute-plan via SlashCommand tool.
+**Implementation:**
+- For iOS stages: Invoke ios-superpowers execute via Skill tool
+- For non-iOS stages: Invoke superpowers:execute-plan via SlashCommand tool
 
 **Steps:**
 
@@ -608,18 +633,29 @@ When stage requires iOS/Swift implementation:
    Present work for review between logical groups.
    ```
 
-2. **Invoke execute-plan**
+2. **Invoke execution skill**
+
+   **For iOS stages (2.2, 3.1, 4.1):**
+
+   ```
+   Tool: Skill
+   Parameters:
+     skill: ios-superpowers
+     args: execute [plan path from Phase 3]
+   ```
+
+   **For non-iOS stages:**
 
    ```
    Tool: SlashCommand
    Command: /superpowers:execute-plan
+   ```
 
    Pass context:
    - All Phase 1 files
    - Research validation report
    - Plans from Phase 3
    - Enhanced instructions from step 1
-   ```
 
 3. **Monitor execution**
 
