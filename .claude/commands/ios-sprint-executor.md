@@ -3,12 +3,14 @@ Orchestrate iOS sprint development with superpowers integration, Apple docs fetc
 Invoke the Skill tool with skill="ios-sprint-executor" to dispatch a specialized iOS development agent that will:
 
 1. Load sprint plan and context from docs/roadmap/SPRINT-PLAN-{N}.md
-2. Fetch relevant Apple documentation via apple-docs-fetcher skill (if iOS work detected)
-3. Create implementation plan via `/superpowers:write-plan`
+2. Detect iOS frameworks and fetch Apple documentation via apple-docs-fetcher
+3. **Create implementation plan** via `/ios-superpowers plan` (ensures Apple docs grounding)
 4. Get your approval before proceeding (Gate 1)
-5. Execute plan via `/superpowers:execute-plan` with quality checkpoints
-6. Run code review via superpowers:requesting-code-review
+5. **Execute plan** via `/ios-superpowers execute` with quality checkpoints
+6. **Run code review** via `/ios-superpowers review`
 7. Create pull request with comprehensive documentation cross-references
+
+**Note:** This skill uses ios-superpowers orchestrator for all superpowers interactions, ensuring Apple documentation is verified at every step.
 
 Sprint: $ARGUMENTS
 
