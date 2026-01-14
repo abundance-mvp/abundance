@@ -825,9 +825,9 @@ This skill guarantees deterministic agentic development by:
 
    ## Agent Execution Summary
 
-   - Planning: superpowers:write-plan (22K tokens)
-   - Execution: superpowers:execute-plan (4 batches, 3.5 hours)
-   - Code Review: superpowers:requesting-code-review (passed)
+   - Planning: ios-superpowers plan (22K tokens)
+   - Execution: ios-superpowers execute (4 batches, 3.5 hours)
+   - Code Review: ios-superpowers review (passed)
    - Apple Docs: apple-docs-fetcher (7.6K tokens, 4 APIs)
 
    ## Notes

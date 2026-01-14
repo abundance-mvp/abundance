@@ -8,10 +8,10 @@ The `ios-sprint-executor` skill orchestrates deterministic agentic development f
 
 1. **Automatic iOS Detection**: Scans sprint plans for iOS-specific keywords (Vision, SwiftUI, AVFoundation, etc.)
 2. **Apple Docs Integration**: Automatically fetches Apple documentation using apple-docs-fetcher pattern (8K per API, 25K max)
-3. **Superpowers Orchestration**: Wraps `/superpowers:write-plan` → `/superpowers:execute-plan` workflow
+3. **ios-superpowers Orchestration**: Wraps `ios-superpowers plan` → `ios-superpowers execute` workflow
 4. **Token Budget Enforcement**: Ensures 18K-25K token budget per sprint
 5. **Git Workflow Integration**: Creates feature branches, commits, and PRs following Stage 5.2 patterns
-6. **Code Review Integration**: Uses `superpowers:requesting-code-review` after execution
+6. **Code Review Integration**: Uses `ios-superpowers review` after execution
 
 ## Usage
 
@@ -24,10 +24,10 @@ This will:
 2. Detect iOS work (Vision Framework, AVFoundation)
 3. Fetch Apple docs (VNCoreMLRequest, AVCaptureSession, etc.)
 4. Create feature branch (feature/sprint-2-camera-capture-vision)
-5. Run superpowers:write-plan to generate implementation plan
+5. Run ios-superpowers plan to generate implementation plan
 6. Wait for human approval
-7. Run superpowers:execute-plan in batches
-8. Run code review
+7. Run ios-superpowers execute in batches
+8. Run ios-superpowers review
 9. Create PR with proper template
 
 ## Dependencies
@@ -100,9 +100,10 @@ This skill is designed to be used after Stage 5.2 completes and all sprint plans
 
 ## Related Skills
 
+- `ios-superpowers`: Orchestrator for all iOS superpowers interactions (ensures Apple docs grounding)
 - `verified-stage-development`: Executes pipeline stages (Stages 1.1 through 6.2)
 - `apple-docs-fetcher`: Fetches Apple docs with token budget constraints
-- Superpowers plugin skills:
+- Underlying superpowers skills (accessed via ios-superpowers):
   - `superpowers:write-plan`: Creates implementation plans
   - `superpowers:execute-plan`: Executes plans in batches
   - `superpowers:requesting-code-review`: Reviews code after execution
