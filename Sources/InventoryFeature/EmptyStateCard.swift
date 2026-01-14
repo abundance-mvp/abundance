@@ -37,12 +37,21 @@ struct EmptyStateCard: View {
         }
         .padding(32)
         .frame(maxWidth: .infinity)
-        .background(backgroundMaterial, in: outerShape)
+        .background {
+            if #available(iOS 26.0, macOS 26.0, *) {
+                if !reduceTransparency {
+                    Color.clear
+                        .glassEffect(in: outerShape)
+                } else {
+                    Color.backgroundDefault
+                        .clipShape(outerShape)
+                }
+            } else {
+                Color.clear
+                    .background(.thickMaterial, in: outerShape)
+            }
+        }
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-    }
-
-    private var backgroundMaterial: AnyShapeStyle {
-        reduceTransparency ? AnyShapeStyle(Color.backgroundDefault) : AnyShapeStyle(.thickMaterial)
     }
 
     private var outerShape: RoundedRectangle {

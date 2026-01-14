@@ -58,7 +58,20 @@ struct ItemCard: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
             }
-            .background(backgroundMaterial, in: outerShape)
+            .background {
+                if #available(iOS 26.0, macOS 26.0, *) {
+                    if !reduceTransparency {
+                        Color.clear
+                            .glassEffect(in: outerShape)
+                    } else {
+                        Color.backgroundDefault
+                            .clipShape(outerShape)
+                    }
+                } else {
+                    Color.clear
+                        .background(.thickMaterial, in: outerShape)
+                }
+            }
             .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
@@ -73,10 +86,6 @@ struct ItemCard: View {
 
     private var imageHeight: CGFloat {
         dynamicTypeSize >= .xxxLarge ? 120 : 160
-    }
-
-    private var backgroundMaterial: AnyShapeStyle {
-        reduceTransparency ? AnyShapeStyle(Color.backgroundDefault) : AnyShapeStyle(.thickMaterial)
     }
 
     private var outerShape: RoundedRectangle {
