@@ -22,8 +22,8 @@ Documents in `docs/` contain references like:
 These should be converted to proper markdown links:
 ```markdown
 **References:**
-- [CODE-EXAMPLE-011-layer-2a-cloud-function](docs/design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function
-- [DESIGN-042-layer-2a-error-handling](docs/design/DESIGN-042-layer-2a-error-handling.md): Layer 2a Error Handling
+- [CODE-EXAMPLE-011-layer-2a-cloud-function](../design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function
+- [DESIGN-042-layer-2a-error-handling](../design/DESIGN-042-layer-2a-error-handling.md): Layer 2a Error Handling
 ```
 
 **Pattern:** Document IDs share a prefix with actual filenames (e.g., `CODE-EXAMPLE-011` → `CODE-EXAMPLE-011-layer-2a-cloud-function.md`)
@@ -154,7 +154,7 @@ def test_extracts_references_from_markdown():
 **References:**
 - CODE-EXAMPLE-011: Layer 2a Cloud Function
 - DESIGN-042: Layer 2a Error Handling
-- [ADR-005-authentication-strategy](docs/adr/ADR-005-authentication-strategy.md): Authentication Strategy
+- [ADR-005-authentication-strategy](../adr/ADR-005-authentication-strategy.md): Authentication Strategy
 """
 
     extractor = ReferenceExtractor()
@@ -287,7 +287,7 @@ def test_generates_markdown_link():
 
     new_link = generator.generate(reference, resolved_path)
 
-    expected = '- [CODE-EXAMPLE-011-layer-2a-cloud-function](docs/design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function'
+    expected = '- [CODE-EXAMPLE-011-layer-2a-cloud-function](../design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function'
     assert new_link == expected
 
 def test_handles_missing_documents():
@@ -702,7 +702,7 @@ git diff docs/roadmap/SPRINT-PLAN-004.md
 Expected: See reference lines converted from:
 ```diff
 -- CODE-EXAMPLE-011: Layer 2a Cloud Function
-+- [CODE-EXAMPLE-011-layer-2a-cloud-function](docs/design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function
++- [CODE-EXAMPLE-011-layer-2a-cloud-function](../design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function
 ```
 
 **Step 3: Run tests to ensure no breakage**
@@ -1007,7 +1007,7 @@ Automatically fixes broken document references in markdown files by converting:
 To:
 
 ```markdown
-- [CODE-EXAMPLE-011-layer-2a-cloud-function](docs/design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Description
+- [CODE-EXAMPLE-011-layer-2a-cloud-function](../design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Description
 ```
 
 **Usage:**

@@ -2,9 +2,11 @@ import Foundation
 @preconcurrency import FirebaseStorage
 #if os(iOS)
 import UIKit
+/// Platform-agnostic image type (UIImage on iOS)
 public typealias PlatformImage = UIImage
 #elseif os(macOS)
 import AppKit
+/// Platform-agnostic image type (NSImage on macOS)
 public typealias PlatformImage = NSImage
 #endif
 
@@ -64,9 +66,10 @@ public final class StorageService: StorageServiceProtocol {
         }
         #endif
 
-        // Create storage reference: users/{userId}/items/{itemId}/cropped.jpg
+        // Create storage reference: users/{userId}/items/{itemId}.jpg
+        // Note: Every image uploaded via this service is a cropped object, no need for /cropped suffix
         let ref: StorageReference = storage.reference()
-            .child("users/\(userId)/items/\(itemId)/cropped.jpg")
+            .child("users/\(userId)/items/\(itemId).jpg")
 
         // Set metadata
         let metadata: StorageMetadata = StorageMetadata()

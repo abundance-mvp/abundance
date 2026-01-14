@@ -37,8 +37,8 @@
 - Create: Packages/Core/Firebase/Tests/StorageUploaderTests.swift
 
 **References:**
-- [ADR-008-image-storage-architecture](docs/adr/ADR-008-image-storage-architecture.md): Image Storage Architecture
-- [DESIGN-016-cloud-storage-upload-patterns](docs/design/DESIGN-016-cloud-storage-upload-patterns.md): Cloud Storage Upload Patterns
+- [ADR-008-image-storage-architecture](../adr/ADR-008-image-storage-architecture.md): Image Storage Architecture
+- [DESIGN-016-cloud-storage-upload-patterns](../design/DESIGN-016-cloud-storage-upload-patterns.md): Cloud Storage Upload Patterns
 
 ---
 
@@ -66,8 +66,8 @@
 - Create: functions/src/__tests__/triggers.test.ts
 
 **References:**
-- [DESIGN-021-cloud-functions-orchestration](docs/design/DESIGN-021-cloud-functions-orchestration.md): Cloud Functions Orchestration
-- [CODE-EXAMPLE-007-ai-pipeline-orchestration](docs/design/CODE-EXAMPLE-007-ai-pipeline-orchestration.md): AI Pipeline Orchestration
+- [DESIGN-021-cloud-functions-orchestration](../design/DESIGN-021-cloud-functions-orchestration.md): Cloud Functions Orchestration
+- [CODE-EXAMPLE-007-ai-pipeline-orchestration](../design/CODE-EXAMPLE-007-ai-pipeline-orchestration.md): AI Pipeline Orchestration
 
 ---
 
@@ -91,7 +91,7 @@
 - Create: functions/src/scheduled/checkSubscriptionExpiry.ts
 
 **References:**
-- [CLOUD-FUNCTIONS-001-function-structure](docs/design/CLOUD-FUNCTIONS-001-function-structure.md): Function Structure
+- [CLOUD-FUNCTIONS-001-function-structure](../design/CLOUD-FUNCTIONS-001-function-structure.md): Function Structure
 
 ---
 
@@ -116,8 +116,8 @@
 - Create: tests/golden-dataset/validation-report.md
 
 **References:**
-- [TEST-EXAMPLE-004-ml-cv-testing-patterns](docs/test/TEST-EXAMPLE-004-ml-cv-testing-patterns.md): ML/CV Testing Patterns
-- [DESIGN-040-layer-1-edge-case-handling](docs/design/DESIGN-040-layer-1-edge-case-handling.md): Layer 1 Edge Case Handling
+- [TEST-EXAMPLE-004-ml-cv-testing-patterns](../test/TEST-EXAMPLE-004-ml-cv-testing-patterns.md): ML/CV Testing Patterns
+- [DESIGN-040-layer-1-edge-case-handling](../design/DESIGN-040-layer-1-edge-case-handling.md): Layer 1 Edge Case Handling
 
 ---
 

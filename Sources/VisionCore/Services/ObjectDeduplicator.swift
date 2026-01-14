@@ -39,11 +39,12 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
 
     /// Generates a perceptual fingerprint for an object region
     /// - Parameters:
-    ///   - pixelBuffer: The CVPixelBuffer containing the image data
+    ///   - pixelBuffer: The CVPixelBuffer containing the image data (must be copied before crossing isolation boundaries)
     ///   - boundingBox: The normalized bounding box (0.0-1.0) of the object region
     /// - Returns: String identifier for the fingerprint
-    /// - Note: For perceptual similarity deduplication, use `isSimilarToRecent()` instead
-    public nonisolated func generateFingerprint(
+    /// - Note: Actor-isolated to ensure thread-safe access to CVPixelBuffer per Swift 6 concurrency requirements.
+    ///   For perceptual similarity deduplication, use `isSimilarToRecent()` instead.
+    public func generateFingerprint(
         pixelBuffer: CVPixelBuffer,
         boundingBox: CGRect
     ) async -> String? {
@@ -63,7 +64,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
             try handler.perform([request])
 
             // Extract results
-            guard let results = request.results as? [VNFeaturePrintObservation],
+            guard let results = request.results,
                   let featurePrint = results.first else {
                 return nil
             }
@@ -180,7 +181,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
 
             try handler.perform([request])
 
-            guard let results = request.results as? [VNFeaturePrintObservation],
+            guard let results = request.results,
                   let newFingerprint = results.first else {
                 return false
             }

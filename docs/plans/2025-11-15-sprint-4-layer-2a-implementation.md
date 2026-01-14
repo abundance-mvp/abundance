@@ -1277,9 +1277,9 @@ firebase functions:log --only onItemCreated
 
 **References:**
 
-- CODE-EXAMPLE-010: Gemini attribute extraction patterns
-- CODE-EXAMPLE-011: Layer 2a Cloud Function patterns
-- DESIGN-041: Layer 2a JSON Schema specification
+- [CODE-EXAMPLE-010-vertex-ai-attribute-extraction](../design/CODE-EXAMPLE-010-vertex-ai-attribute-extraction.md): Gemini attribute extraction patterns
+- [CODE-EXAMPLE-011-layer-2a-cloud-function](../design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function patterns
+- [DESIGN-041-layer-2a-json-schema](../design/DESIGN-041-layer-2a-json-schema.md): Layer 2a JSON Schema specification
 - GOOGLE-GENAI-SDK-USAGE: SDK implementation guide
 - @superpowers:test-driven-development: TDD workflow
 - @superpowers:verification-before-completion: Verification requirements

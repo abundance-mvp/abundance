@@ -5,8 +5,8 @@
 **Status:** APPROVED
 **Related Documents:**
 - DESIGN-005: Layer 2b Product Search Architecture
-- [ADR-016-image-hosting-strategy](docs/adr/ADR-016-image-hosting-strategy.md): Image Hosting Strategy (GCS + Cloud CDN)
-- [ADR-017-llm-parsing-architecture](docs/adr/ADR-017-llm-parsing-architecture.md): LLM Parsing Architecture (Claude Haiku)
+- [ADR-016-image-hosting-strategy](../adr/ADR-016-image-hosting-strategy.md): Image Hosting Strategy (GCS + Cloud CDN)
+- [ADR-017-llm-parsing-architecture](../adr/ADR-017-llm-parsing-architecture.md): LLM Parsing Architecture (Claude Haiku)
 - TECH-STACK-001: Complete Technology Map
 
 ---

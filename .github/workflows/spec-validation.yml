@@ -18,25 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check for broken links
-        run: |
-          # Find all markdown files (excluding docs/archive/)
-          find docs -path docs/archive -prune -o -name "*.md" -type f -print | while read file; do
-            echo "Checking $file for broken links..."
-            # Extract markdown links [text](path)
-            grep -oP '\[.*?\]\(\K[^)]+' "$file" | while read link; do
-              # Skip external URLs
-              if [[ $link == http* ]]; then
-                continue
-              fi
-              # Resolve relative paths with normalization
-              dir=$(dirname "$file")
-              target=$(realpath -m "$dir/$link" 2>/dev/null)
-              if [[ ! -f "$target" ]]; then
-                echo "ERROR: Broken link in $file: $link (resolved to $target)"
-                exit 1
-              fi
-            done
-          done
+        run: python3 scripts/validate_doc_references.py
 
       - name: Validate ADR numbering
         run: |

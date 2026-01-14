@@ -6,7 +6,10 @@ import AppKit
 #endif
 @testable import VisionCore
 
-final class MockBarcodeDetector: BarcodeDetectorProtocol {
+/// Test mock for BarcodeDetectorProtocol
+/// Uses @unchecked Sendable because test mocks need mutable state for stubbing/verification
+/// This is safe in test contexts where mocks are used from a single test thread
+final class MockBarcodeDetector: BarcodeDetectorProtocol, @unchecked Sendable {
 
     var stubbedBarcodes: [BarcodeResult] = []
     var shouldFail: Bool = false

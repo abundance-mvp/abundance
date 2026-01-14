@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import AVFoundation
+import CoreVideo
 @testable import CameraFeature
 
 /// Mock implementation of CameraServiceProtocol for testing
@@ -11,6 +12,11 @@ final class MockCameraService: CameraServiceProtocol, @unchecked Sendable {
     private let sessionStateSubject = CurrentValueSubject<CameraSessionState, Never>(.notStarted)
     var sessionState: AnyPublisher<CameraSessionState, Never> {
         sessionStateSubject.eraseToAnyPublisher()
+    }
+
+    private let frameSubject = PassthroughSubject<CVPixelBuffer, Never>()
+    var framePublisher: AnyPublisher<CVPixelBuffer, Never> {
+        frameSubject.eraseToAnyPublisher()
     }
 
     // MARK: - Stubbed Values
@@ -38,7 +44,7 @@ final class MockCameraService: CameraServiceProtocol, @unchecked Sendable {
         }
 
         sessionStateSubject.send(.configuring)
-        try await Task.sleep(for: .milliseconds(10))
+        await Task.yield()
         sessionStateSubject.send(.running)
     }
 
@@ -82,5 +88,10 @@ final class MockCameraService: CameraServiceProtocol, @unchecked Sendable {
         didCallStopSession = false
         didCallCapturePhoto = false
         didCallCheckAuthorization = false
+    }
+
+    /// Helper method for testing frame processing
+    func emitFrame(_ pixelBuffer: CVPixelBuffer) {
+        frameSubject.send(pixelBuffer)
     }
 }

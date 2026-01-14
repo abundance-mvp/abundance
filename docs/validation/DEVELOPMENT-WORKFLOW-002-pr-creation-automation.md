@@ -41,7 +41,7 @@ Metrics from Superpowers workflow:
 - Planning tokens (from /superpowers:write-plan)
 - Execution batches (from /superpowers:execute-plan)
 - Code review result (from superpowers:requesting-code-review)
-- Apple docs fetched (from apple-docs-fetcher-lite)
+- Apple docs fetched (from apple-docs-fetcher)
 
 **Purpose**: Track AI-assisted development metrics.
 
@@ -247,7 +247,7 @@ gh pr create \
 ### ADRs
 - [ADR-010: SwiftUI Architecture Pattern](../adr/ADR-010-swiftui-architecture-pattern.md) - MVVM pattern for camera views
 - [ADR-011: iOS Module Structure](../adr/ADR-011-ios-module-structure.md) - CameraFeature module organization
-- [ADR-013: Vision Framework Strategy](../adr/ADR-013-vision-framework-strategy.md) - On-device object detection
+- [ADR-013: Vision Framework Strategy](../adr/ADR-025-vision-framework-strategy.md) - On-device object detection
 
 ### Design Docs
 - [DESIGN-027: Camera Capture View Specification](../design/DESIGN-027-camera-capture-view-specification.md) - UI layout, controls
@@ -286,7 +286,7 @@ gh pr create \
 - Planning: superpowers:write-plan (18K tokens, 12 tasks, 3 batches)
 - Execution: superpowers:execute-plan (3 batches, 2.5 hours)
 - Code Review: superpowers:requesting-code-review (passed, 0 issues)
-- Apple Docs: apple-docs-fetcher-lite (7.6K tokens, 4 APIs: AVCaptureSession, VNCoreMLRequest, VNDetectBarcodesRequest, Task.detached)
+- Apple Docs: apple-docs-fetcher (7.6K tokens, 4 APIs: AVCaptureSession, VNCoreMLRequest, VNDetectBarcodesRequest, Task.detached)
 
 ## Notes
 - Deferred Firebase Storage upload optimization to Sprint 3 (not blocking for Layer 1)

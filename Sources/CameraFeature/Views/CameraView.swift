@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// SwiftUI view for camera capture with MVVM pattern
-public struct CameraView: View {
+/// SwiftUI view for camera preview only (capture functionality removed).
+/// - Important: Use CameraDetectionView for real-time detection with capture.
+@available(*, deprecated, message: "Use CameraDetectionView for real-time detection experience.")
+public struct LegacyCameraView: View {
 
     @StateObject private var viewModel: CameraViewModel
     @Environment(\.dismiss) private var dismiss
@@ -23,11 +25,14 @@ public struct CameraView: View {
                     .ignoresSafeArea()
             }
 
-            // Capture button overlay
+            // Deprecation notice overlay
             VStack {
                 Spacer()
 
-                captureButton
+                Text("This view is deprecated.\nUse CameraDetectionView instead.")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
                     .padding(.bottom, 40)
             }
 
@@ -38,13 +43,6 @@ public struct CameraView: View {
                     Spacer()
                 }
             }
-
-            // Loading indicator
-            if viewModel.isCapturing {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .scaleEffect(2)
-            }
         }
         .task {
             await viewModel.checkCameraPermission()
@@ -52,33 +50,9 @@ public struct CameraView: View {
         .onDisappear {
             viewModel.stopCamera()
         }
-        .onChange(of: viewModel.capturedPhotoData) { _, newValue in
-            if newValue != nil {
-                dismiss()
-            }
-        }
     }
 
     // MARK: - Subviews
-
-    private var captureButton: some View {
-        Button {
-            Task {
-                await viewModel.capturePhoto()
-            }
-        } label: {
-            Circle()
-                .fill(Color.white)
-                .frame(width: 70, height: 70)
-                .overlay {
-                    Circle()
-                        .stroke(Color.white, lineWidth: 3)
-                        .frame(width: 80, height: 80)
-                }
-        }
-        .disabled(viewModel.isCapturing || viewModel.sessionState != .running)
-        .opacity(viewModel.isCapturing ? 0.5 : 1.0)
-    }
 
     private func errorBanner(message: String) -> some View {
         Text(message)
@@ -89,3 +63,8 @@ public struct CameraView: View {
             .padding()
     }
 }
+
+/// Backward compatibility alias
+/// - Warning: Deprecated. Use CameraDetectionView instead.
+@available(*, deprecated, renamed: "LegacyCameraView", message: "Use CameraDetectionView for real-time detection")
+public typealias CameraView = LegacyCameraView

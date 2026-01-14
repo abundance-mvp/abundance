@@ -1932,13 +1932,13 @@ AbundanceApp (root)
 
 **Related Documents:**
 - TECH-STACK-001: Complete Technology Stack Map
-- [DESIGN-004-computer-vision-pipeline](docs/design/DESIGN-004-computer-vision-pipeline.md): 4-Layer AI Pipeline Architecture
+- [DESIGN-004-computer-vision-pipeline](DESIGN-004-computer-vision-pipeline.md): 4-Layer AI Pipeline Architecture
 - DESIGN-005: SerpAPI Google Lens Integration
-- [SERPAPI-INTEGRATION-001-swift-rest-api-patterns](docs/design/SERPAPI-INTEGRATION-001-swift-rest-api-patterns.md): Swift REST API Integration Patterns
-- [ADR-004-ios-26-only-launch](docs/adr/ADR-004-ios-26-only-launch.md): iOS 26-Only Launch Strategy
-- [ADR-013-vision-framework-strategy](docs/adr/ADR-013-vision-framework-strategy.md): Vision Framework Strategy
-- [ADR-014-cloud-ai-provider-selection](docs/adr/ADR-014-cloud-ai-provider-selection.md): Multi-AI Pipeline Architecture
-- [ADR-016-image-hosting-strategy](docs/adr/ADR-016-image-hosting-strategy.md): Image Hosting Strategy (GCS + Cloud CDN)
+- [SERPAPI-INTEGRATION-001-swift-rest-api-patterns](SERPAPI-INTEGRATION-001-swift-rest-api-patterns.md): Swift REST API Integration Patterns
+- [ADR-004-ios-26-only-launch](../adr/ADR-004-ios-26-only-launch.md): iOS 26-Only Launch Strategy
+- [ADR-025-vision-framework-strategy](../adr/ADR-025-vision-framework-strategy.md): Vision Framework Strategy
+- [ADR-014-cloud-ai-provider-selection](../adr/ADR-014-cloud-ai-provider-selection.md): Multi-AI Pipeline Architecture
+- [ADR-016-image-hosting-strategy](../adr/ADR-016-image-hosting-strategy.md): Image Hosting Strategy (GCS + Cloud CDN)
 - ROADMAP-Stage-2.2: 6-Week Implementation Timeline
 
 ---

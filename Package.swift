@@ -10,6 +10,7 @@ let package: Package = Package(
         .library(name: "InventoryFeature", targets: ["InventoryFeature"]),
         .library(name: "Persistence", targets: ["Persistence"]),
         .library(name: "VisionCore", targets: ["VisionCore"]),
+        .library(name: "Core", targets: ["Core"]),
         .executable(name: "AbundanceApp", targets: ["AbundanceApp"])
     ],
     dependencies: [
@@ -39,7 +40,8 @@ let package: Package = Package(
             name: "CameraFeature",
             dependencies: [
                 "Persistence",
-                "VisionCore"
+                "VisionCore",
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
@@ -50,17 +52,27 @@ let package: Package = Package(
             dependencies: [
                 "CameraFeature",
                 "Persistence",
-                "VisionCore"
+                "VisionCore",
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ]
         ),
         .target(
             name: "InventoryFeature",
             dependencies: [
+                "Core",
                 "Persistence",
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
+            ]
+        ),
+        .testTarget(
+            name: "InventoryFeatureTests",
+            dependencies: [
+                "InventoryFeature",
+                "Persistence",
+                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
             ]
         ),
 
@@ -97,6 +109,13 @@ let package: Package = Package(
             dependencies: ["VisionCore"],
             resources: [
                 .copy("Resources")
+            ]
+        ),
+        .target(
+            name: "Core",
+            dependencies: [],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
 

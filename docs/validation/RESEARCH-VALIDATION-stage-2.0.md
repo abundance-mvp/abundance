@@ -413,7 +413,7 @@ Blended cost calculation for AI cataloging (free tier vs premium tier):
 
 - ⚠️ **Vision Framework iOS version compatibility** - VNCoreMLRequest and VNDetectBarcodesRequest available since iOS 11.0. ADR-004 specifies iOS 26 launch, but backward compatibility testing recommended if user base includes iOS 18+.
 
-- ⚠️ **Token budget for research** - Total Apple docs MCP fetches: ~5,000 tokens. Web searches/fetches: ~6,000 tokens. Total research: ~11,000 tokens (well under 25,000 target). apple-docs-fetcher-lite pattern successful.
+- ⚠️ **Token budget for research** - Total Apple docs MCP fetches: ~5,000 tokens. Web searches/fetches: ~6,000 tokens. Total research: ~11,000 tokens (well under 25,000 target). apple-docs-fetcher pattern successful.
 
 ## Verification Summary
 
@@ -451,7 +451,7 @@ No reliance on blogs, forums, or unofficial sources. All pricing current as of N
 - **Web fetches**: ~6,000 tokens (6 fetches)
 - **Total tokens**: ~11,000 tokens (well under 25,000 target)
 
-**apple-docs-fetcher-lite pattern success**: By searching first and fetching only specific APIs (VNCoreMLRequest, VNDetectBarcodesRequest, VNBarcodeSymbology), total Apple docs consumption stayed under 5,000 tokens. Avoided broad framework fetches like `/documentation/vision` or `/documentation/coreml` which would have exceeded budget.
+**apple-docs-fetcher pattern success**: By searching first and fetching only specific APIs (VNCoreMLRequest, VNDetectBarcodesRequest, VNBarcodeSymbology), total Apple docs consumption stayed under 5,000 tokens. Avoided broad framework fetches like `/documentation/vision` or `/documentation/coreml` which would have exceeded budget.
 
 ---
 

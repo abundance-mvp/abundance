@@ -295,7 +295,7 @@
 **Phase 1: Pre-Sprint Setup**
 - Loads: SPRINT-PLAN-00X (from Stage 5.1)
 - Detects: iOS work (Vision, SwiftUI, AVFoundation keywords)
-- Fetches: Apple docs via apple-docs-fetcher-lite (if iOS work detected)
+- Fetches: Apple docs via apple-docs-fetcher (if iOS work detected)
 - Creates: Feature branch + git worktree (per DEVELOPMENT-WORKFLOW-001)
 - References: DEVELOPMENT-WORKFLOW-003 (sprint lifecycle)
 
@@ -333,13 +333,13 @@
 - Optional: Git worktree cleanup (per DEVELOPMENT-WORKFLOW-001)
 
 **Supporting Documentation Created**:
-- [DEVELOPMENT-WORKFLOW-001-git-branching-strategy](docs/validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md): Git branching + worktrees (Phase 1, 6)
-- [DEVELOPMENT-WORKFLOW-002-pr-creation-automation](docs/validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md): PR automation + template (Phase 5)
-- [DEVELOPMENT-WORKFLOW-003-sprint-execution-guide](docs/validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md): 7-phase sprint lifecycle (all phases)
-- [READINESS-VALIDATION-REPORT-001](docs/validation/READINESS-VALIDATION-REPORT-001.md): Confirms zero blockers (Phase 1 prerequisite check)
-- [SCAFFOLDING-VALIDATION-REPORT-001](docs/validation/SCAFFOLDING-VALIDATION-REPORT-001.md): Confirms scaffolding ready (Phase 1 prerequisite check)
-- [DEVELOPMENT-READINESS-CHECKLIST-001](docs/validation/DEVELOPMENT-READINESS-CHECKLIST-001.md): Developer onboarding (pre-Phase 1)
-- [QUICK-START-GUIDE-001](docs/validation/QUICK-START-GUIDE-001.md): Sprint 1 walkthrough (Phase 1-6 examples)
+- [DEVELOPMENT-WORKFLOW-001-git-branching-strategy](../validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md): Git branching + worktrees (Phase 1, 6)
+- [DEVELOPMENT-WORKFLOW-002-pr-creation-automation](../validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md): PR automation + template (Phase 5)
+- [DEVELOPMENT-WORKFLOW-003-sprint-execution-guide](../validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md): 7-phase sprint lifecycle (all phases)
+- [READINESS-VALIDATION-REPORT-001](../validation/READINESS-VALIDATION-REPORT-001.md): Confirms zero blockers (Phase 1 prerequisite check)
+- [SCAFFOLDING-VALIDATION-REPORT-001](../validation/SCAFFOLDING-VALIDATION-REPORT-001.md): Confirms scaffolding ready (Phase 1 prerequisite check)
+- [DEVELOPMENT-READINESS-CHECKLIST-001](../validation/DEVELOPMENT-READINESS-CHECKLIST-001.md): Developer onboarding (pre-Phase 1)
+- [QUICK-START-GUIDE-001](../validation/QUICK-START-GUIDE-001.md): Sprint 1 walkthrough (Phase 1-6 examples)
 - TEST-003 through TEST-006: Test strategies for Sprint 8 acceptance criteria
 
 ---
@@ -372,31 +372,31 @@
 ## Cross-References
 
 **ADRs Referenced** (42 total across all docs):
-- [ADR-004-ios-26-only-launch](docs/adr/ADR-004-ios-26-only-launch.md): iOS 26+ Only Launch (TEST-005)
-- [ADR-005-authentication-strategy](docs/adr/ADR-005-authentication-strategy.md): Authentication Strategy (QUICK-START-GUIDE-001)
-- [ADR-006-database-selection](docs/adr/ADR-006-database-selection.md): AI Provider Selection (TEST-004)
-- [ADR-007-api-architecture](docs/adr/ADR-007-api-architecture.md): AI Pipeline Architecture (TEST-004)
-- [ADR-010-swiftui-architecture-pattern](docs/adr/ADR-010-swiftui-architecture-pattern.md): MVVM Architecture (TEST-003, DEVELOPMENT-WORKFLOW-003)
-- [ADR-011-ios-module-structure](docs/adr/ADR-011-ios-module-structure.md): iOS Module Structure (SCAFFOLDING-VALIDATION-REPORT-001)
-- [ADR-012-state-management-strategy](docs/adr/ADR-012-state-management-strategy.md): State Management (DEVELOPMENT-WORKFLOW-003)
-- [ADR-013-vision-framework-strategy](docs/adr/ADR-013-vision-framework-strategy.md): Dependency Injection (DEVELOPMENT-WORKFLOW-003)
+- [ADR-004-ios-26-only-launch](../adr/ADR-004-ios-26-only-launch.md): iOS 26+ Only Launch (TEST-005)
+- [ADR-005-authentication-strategy](../adr/ADR-005-authentication-strategy.md): Authentication Strategy (QUICK-START-GUIDE-001)
+- [ADR-006-database-selection](../adr/ADR-006-database-selection.md): AI Provider Selection (TEST-004)
+- [ADR-007-api-architecture](../adr/ADR-007-api-architecture.md): AI Pipeline Architecture (TEST-004)
+- [ADR-010-swiftui-architecture-pattern](../adr/ADR-010-swiftui-architecture-pattern.md): MVVM Architecture (TEST-003, DEVELOPMENT-WORKFLOW-003)
+- [ADR-011-ios-module-structure](../adr/ADR-011-ios-module-structure.md): iOS Module Structure (SCAFFOLDING-VALIDATION-REPORT-001)
+- [ADR-012-state-management-strategy](../adr/ADR-012-state-management-strategy.md): State Management (DEVELOPMENT-WORKFLOW-003)
+- [ADR-013-vision-framework-strategy](../adr/ADR-013-vision-framework-strategy.md): Dependency Injection (DEVELOPMENT-WORKFLOW-003)
 
 **DESIGN Docs Referenced** (38 total across all docs):
-- [DESIGN-006-ios-module-dependencies](docs/design/DESIGN-006-ios-module-dependencies.md): Onboarding Flow (TEST-003)
-- [DESIGN-007-firebase-sdk-integration](docs/design/DESIGN-007-firebase-sdk-integration.md): Camera Capture UI (TEST-003)
-- [DESIGN-012-camera-capture-implementation](docs/design/DESIGN-012-camera-capture-implementation.md): Catalog View (TEST-003)
-- [DESIGN-013-vision-framework-integration-patterns](docs/design/DESIGN-013-vision-framework-integration-patterns.md): Item Detail Screen (TEST-003)
-- [DESIGN-027-camera-capture-view-specification](docs/design/DESIGN-027-camera-capture-view-specification.md): AI Pipeline Layers (TEST-004)
-- [DESIGN-030-profile-export-view-specification](docs/design/DESIGN-030-profile-export-view-specification.md): Performance Requirements (TEST-006)
+- [DESIGN-006-ios-module-dependencies](../design/DESIGN-006-ios-module-dependencies.md): Onboarding Flow (TEST-003)
+- [DESIGN-007-firebase-sdk-integration](../design/DESIGN-007-firebase-sdk-integration.md): Camera Capture UI (TEST-003)
+- [DESIGN-012-camera-capture-implementation](../design/DESIGN-012-camera-capture-implementation.md): Catalog View (TEST-003)
+- [DESIGN-013-vision-framework-integration-patterns](../design/DESIGN-013-vision-framework-integration-patterns.md): Item Detail Screen (TEST-003)
+- [DESIGN-027-camera-capture-view-specification](../design/DESIGN-027-camera-capture-view-specification.md): AI Pipeline Layers (TEST-004)
+- [DESIGN-030-profile-export-view-specification](../design/DESIGN-030-profile-export-view-specification.md): Performance Requirements (TEST-006)
 
 **CODE-EXAMPLEs Referenced** (24 total across all docs):
-- [CODE-EXAMPLE-003-firebase-ios-integration](docs/design/CODE-EXAMPLE-003-firebase-ios-integration.md): Firebase iOS Integration (QUICK-START-GUIDE-001)
-- [CODE-EXAMPLE-004-vision-framework-patterns](docs/design/CODE-EXAMPLE-004-vision-framework-patterns.md): Camera Capture (TEST-003)
+- [CODE-EXAMPLE-003-firebase-ios-integration](../design/CODE-EXAMPLE-003-firebase-ios-integration.md): Firebase iOS Integration (QUICK-START-GUIDE-001)
+- [CODE-EXAMPLE-004-vision-framework-patterns](../design/CODE-EXAMPLE-004-vision-framework-patterns.md): Camera Capture (TEST-003)
 - CODE-EXAMPLE-010 through 018: AI Provider Implementations (TEST-004)
 
 **TEST-EXAMPLEs Referenced** (7 total across all docs):
-- [TEST-EXAMPLE-002-ios-testing-patterns](docs/test/TEST-EXAMPLE-002-ios-testing-patterns.md): Firebase Auth Tests (QUICK-START-GUIDE-001)
-- [TEST-EXAMPLE-004-ml-cv-testing-patterns](docs/test/TEST-EXAMPLE-004-ml-cv-testing-patterns.md): XCUITest Patterns (TEST-003)
+- [TEST-EXAMPLE-002-ios-testing-patterns](../test/TEST-EXAMPLE-002-ios-testing-patterns.md): Firebase Auth Tests (QUICK-START-GUIDE-001)
+- [TEST-EXAMPLE-004-ml-cv-testing-patterns](../test/TEST-EXAMPLE-004-ml-cv-testing-patterns.md): XCUITest Patterns (TEST-003)
 
 ---
 
@@ -428,7 +428,7 @@
 
 **Mechanism**:
 - ios-sprint-executor loads ONLY relevant documents per sprint (from sprint plan cross-references)
-- apple-docs-fetcher-lite fetches ONLY APIs needed (3-5 APIs, 8K per API max, 25K total max)
+- apple-docs-fetcher fetches ONLY APIs needed (3-5 APIs, 8K per API max, 25K total max)
 - Superpowers plans generated with sprint-specific context (not all 8 sprints loaded)
 
 **Analysis**:

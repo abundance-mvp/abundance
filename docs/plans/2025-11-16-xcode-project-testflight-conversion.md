@@ -246,7 +246,8 @@ Expected: All files visible in Project Navigator
 Manual steps in Xcode:
 1. File → Add Package Dependencies
 2. Enter URL: `https://github.com/firebase/firebase-ios-sdk.git`
-3. Dependency Rule: "Up to Next Major Version" 11.11.0
+3. Dependency Rule: "Up to Next Major Version" 12.6.0
+   - **Note**: Using Firebase 12.x instead of 11.x for better Swift 6 concurrency support, iOS 18 compatibility, and Xcode 26.0 beta compatibility
 4. Click "Add Package"
 
 Expected: Package resolution begins
@@ -820,3 +821,260 @@ cd abundance-mvp
 - Provisioning profile mismatches (use Automatic)
 - Missing camera permissions in Info.plist
 - YOLO model not included in Copy Bundle Resources
+
+---
+
+## Appendix A: Related Documentation & Research
+
+This section contains references to existing project documentation and Apple Developer resources that inform this conversion plan.
+
+### Project-Specific Documentation
+
+#### Architecture Decision Records
+
+**ADR-009: iOS Deployment & CI/CD Strategy**
+- Location: `docs/adr/ADR-009-ios-deployment-cicd.md`
+- Relevance: Defines TestFlight beta testing strategy and GitHub Actions CI/CD
+- Key Points:
+  - TestFlight for internal (25 users) + external (10,000 users) beta testing
+  - Fastlane automation for build and upload
+  - Xcode Automatic Signing (no manual certificate management)
+  - GitHub Actions macOS runner for CI/CD
+  - Versioning: Semantic (1.0.0-beta.1, 1.0.0)
+- **Note**: This ADR assumes Xcode project structure, which this conversion enables
+
+**ADR-011: iOS Module Structure**
+- Location: `docs/adr/ADR-011-ios-module-structure.md`
+- Relevance: Documents current SPM modular architecture being converted FROM
+- Key Points:
+  - Swift Package Manager with Feature/Core/Shared modules
+  - 6 separate packages (OnboardingFeature, CameraFeature, InventoryFeature, Persistence, VisionCore, AbundanceApp)
+  - SPM enforces dependency rules at compile time
+- **Conversion Impact**: SPM module structure becomes single Xcode target with subdirectories
+
+**ADR-010: SwiftUI Architecture Pattern**
+- Location: `docs/adr/ADR-010-swiftui-architecture-pattern.md`
+- Relevance: MVVM pattern requirements remain unchanged after conversion
+- **Note**: SwiftUI-only rule (ADR-010) is P0 violation - `import UIKit` blocks PR
+
+#### Design Documents
+
+**DESIGN-007: Firebase SDK Integration**
+- Location: `docs/design/DESIGN-007-firebase-sdk-integration.md`
+- Relevance: Firebase Auth, Firestore, Storage integration patterns
+- Critical: GoogleService-Info.plist configuration must match new bundle ID
+- Code patterns for: Apple Sign-In, real-time Firestore listeners, image uploads
+
+**DESIGN-012: Xcode Project Structure**
+- Location: `docs/design/DESIGN-012-xcode-project-structure.md`
+- Relevance: Original Xcode project structure design (before SPM)
+- **Note**: Stage 3.1 implementation research document, now being implemented in practice
+
+#### Technical Stack
+
+**README-iOS-Setup.md**
+- Location: `docs/tech-stack/README-iOS-Setup.md`
+- Relevance: Developer onboarding guide for SPM structure
+- **Post-Conversion**: Needs update to reflect Xcode project workflow
+
+**TECH-STACK-MAP-001**
+- Location: `docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md`
+- Relevance: Complete technology stack including Firebase iOS SDK versions
+- Critical dependencies: Firebase iOS SDK 11.11.0+, SwiftProtobuf 1.28.2
+
+#### Critical Blockers
+
+**BLOCKER: Firebase Bundle ID Mismatch**
+- Location: `docs/BLOCKER-firebase-bundle-id-mismatch.md`
+- **CRITICAL**: Documents WHY SPM → Xcode conversion is necessary
+- Root Cause: SPM auto-generates bundle ID `abundance-mvp.AbundanceApp` but Firebase expects `com.abundance.mvp`
+- SPM Limitations:
+  - ❌ No custom bundle identifier support for executables
+  - ❌ No code signing for iOS distribution
+  - ❌ No provisioning profile management
+  - ❌ No proper .app bundle generation
+  - ❌ No TestFlight/App Store distribution support
+- **This conversion solves the blocker by enabling custom bundle IDs**
+
+**BUILDING-FOR-DEVICE.md**
+- Location: `docs/BUILDING-FOR-DEVICE.md`
+- Relevance: Current device testing workflow using SPM
+- **Post-Conversion**: Process remains similar but uses Xcode project instead of Package.swift
+
+### Apple Developer Documentation Research
+
+#### Distribution & TestFlight
+
+**Distributing your app for beta testing and releases**
+- Source: Apple Developer Documentation
+- URL: https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases
+- Key Topics:
+  - Creating archives in Xcode (Product → Archive)
+  - Distribution methods: TestFlight, App Store, Ad Hoc, Development
+  - Validation before upload (recommended: Validate App button)
+  - Cloud-managed signing certificates
+- **Relevant to**: Tasks 6-9 (archive creation, upload, TestFlight)
+
+**TestFlight Overview**
+- Source: App Store Connect Help
+- Key Features:
+  - Internal testing: 25 users (no Apple review)
+  - External testing: 10,000 users (requires Apple review for builds)
+  - Automatic update notifications for beta testers
+  - Crash reporting integrated with Xcode Organizer
+  - Beta testing duration: 90 days per build
+
+#### Code Signing & Provisioning
+
+**TN3125: Inside Code Signing: Provisioning Profiles**
+- Source: Apple Technical Note
+- URL: https://developer.apple.com/documentation/technotes/tn3125-inside-code-signing-provisioning-profiles
+- Critical Concepts:
+  - Provisioning profile = Who + What + Where + When + How
+  - **Who**: Developer certificates in profile
+  - **What**: App ID (prefix + bundle ID, supports wildcards)
+  - **Where**: Device UDIDs (or ProvisionsAllDevices for App Store)
+  - **When**: ExpirationDate (typically 1 year)
+  - **How**: Entitlements allowlist
+- Profile Location: `MyApp.app/embedded.mobileprovision` (iOS)
+- **Xcode Automatic Signing**: Xcode manages certificate/profile creation via App Store Connect API
+- **Relevant to**: Task 4 (code signing configuration)
+
+**Provisioning Profile Fundamentals**
+- Apple platforms (except macOS) require provisioning profiles for ALL third-party code
+- Profile validates:
+  - Code signature matches developer certificate
+  - Bundle ID matches allowed App IDs
+  - Device UDID is in allowed list (for dev/ad-hoc profiles)
+  - Entitlements claimed by app are authorized by profile
+- App Store distribution profiles have NO ProvisionedDevices (run on all devices)
+
+#### Info.plist & Entitlements
+
+**About Info.plist Keys and Values**
+- Source: Apple Developer Archive
+- URL: https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/
+- Required Keys for iOS App:
+  - `CFBundleIdentifier`: Bundle identifier (e.g., `com.abundance.mvp`)
+  - `CFBundleDisplayName`: User-visible app name
+  - `CFBundleVersion`: Build number
+  - `CFBundleShortVersionString`: Version string (e.g., `1.0`)
+  - `NSCameraUsageDescription`: Camera permission explanation
+  - `NSPhotoLibraryUsageDescription`: Photo library permission
+- **Relevant to**: Task 1 (Info.plist creation)
+
+**Entitlements Documentation**
+- Source: Bundle Resources
+- URL: https://developer.apple.com/documentation/bundleresources/entitlements
+- Entitlements = key-value pairs granting permissions
+- Required for Abundance:
+  - `com.apple.developer.associated-domains`: For Firebase Dynamic Links
+  - `keychain-access-groups`: For Firebase Auth token storage
+- Entitlements must be:
+  1. Authorized by provisioning profile (allowlist)
+  2. Claimed in app's code signature
+- **Relevant to**: Task 1 (entitlements file creation)
+
+**Requesting authorization to capture and save media**
+- Source: AVFoundation Documentation
+- Required Info.plist keys:
+  - `NSCameraUsageDescription`: "Abundance needs camera access to capture and identify items in your household inventory."
+  - `NSPhotoLibraryUsageDescription`: "Abundance needs photo library access to save captured item images."
+- Runtime permission flow: Request → User allows/denies → Store in Settings
+- **Relevant to**: Task 1 (Info.plist permissions)
+
+#### Build Settings & Archives
+
+**Creating a workflow that builds your app for distribution**
+- Source: Xcode Documentation
+- Workflow steps:
+  1. Select scheme (Product → Scheme → Edit Scheme)
+  2. Set Archive build configuration to Release
+  3. Enable optimizations: -O (speed) or -Osize (size)
+  4. Strip debug symbols (Release only)
+  5. Product → Archive
+  6. Validate App (optional, recommended)
+  7. Distribute App → App Store Connect
+- **Relevant to**: Task 6 (distribution configuration)
+
+### Additional Context
+
+#### Why SPM Cannot Replace Xcode for iOS Apps
+
+**SPM Limitations** (from BLOCKER document):
+1. **Bundle ID Generation**: SPM auto-generates from package name (`<package>.<target>`)
+   - No override mechanism for executables
+   - Info.plist CFBundleIdentifier ignored
+2. **Distribution**: SPM builds executables, not iOS .app bundles
+   - Missing: Code signature resources
+   - Missing: Provisioning profile embedding
+   - Missing: Asset catalog compilation
+3. **Code Signing**: No integration with Apple Developer Portal
+   - Cannot create/manage certificates
+   - Cannot create/manage provisioning profiles
+   - Cannot sign for App Store distribution
+
+#### Bundle ID Naming Convention
+
+**Production Bundle ID**: `com.abundance.mvp`
+- Domain: `com.abundance` (reverse DNS)
+- App identifier: `mvp` (Minimum Viable Product)
+- Must match:
+  - Firebase project configuration (GoogleService-Info.plist)
+  - App Store Connect app record
+  - Provisioning profile App ID
+  - Xcode project Info.plist
+- **Critical**: All four locations must use EXACT same bundle ID
+
+#### Conversion Prerequisites Checklist
+
+Before starting conversion:
+- [ ] Apple Developer Program membership (required for TestFlight)
+- [ ] Access to Firebase Console (to verify/update bundle ID)
+- [ ] Xcode Beta installed (for Swift 6.0 / iOS 26.0 support)
+- [ ] Backup of current SPM project (or git branch)
+- [ ] 2-3 hours uninterrupted time for manual GUI steps
+
+### References to Related Plans
+
+**Sprint Plans** (for post-conversion work):
+- `docs/roadmap/SPRINT-PLAN-001.md`: Project setup (includes Xcode project init)
+- `docs/roadmap/SPRINT-PLAN-002.md`: Camera + Vision + Backend (depends on working Xcode project)
+
+**Stage Checkpoints**:
+- `docs/checkpoints/CHECKPOINT-stage-4.1.md`: iOS Project Scaffolding (Xcode structure defined)
+- `docs/checkpoints/CHECKPOINT-stage-5.3.md`: CI/CD Pipeline (GitHub Actions with Xcode builds)
+
+---
+
+## Appendix B: Apple Developer Resources Quick Links
+
+### TestFlight & Distribution
+- [TestFlight Beta Testing Guide](https://developer.apple.com/testflight/)
+- [Distributing Apps](https://developer.apple.com/documentation/xcode/distributing-your-app-for-beta-testing-and-releases)
+- [App Store Connect](https://appstoreconnect.apple.com)
+
+### Code Signing
+- [TN3125: Provisioning Profiles](https://developer.apple.com/documentation/technotes/tn3125-inside-code-signing-provisioning-profiles)
+- [TN3161: Certificates](https://developer.apple.com/documentation/technotes/tn3161-inside-code-signing-certificates)
+- [Code Signing Guide](https://developer.apple.com/support/code-signing/)
+
+### Configuration
+- [Info.plist Keys Reference](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/)
+- [Entitlements Documentation](https://developer.apple.com/documentation/bundleresources/entitlements)
+- [Bundle Resources](https://developer.apple.com/documentation/bundleresources)
+
+### Help & Support
+- [App Store Connect Help](https://developer.apple.com/help/app-store-connect/)
+- [Xcode Help](https://help.apple.com/xcode/)
+- [Developer Forums](https://developer.apple.com/forums/)
+
+---
+
+**Research Completed**: 2025-11-16
+**Documentation Sources**:
+- Project ADRs, Design Docs, Tech Stack (12 documents)
+- Apple Developer Documentation (8 primary sources)
+- Technical Notes (TN3125, TN3161)
+
+🤖 Research findings compiled with [Claude Code](https://claude.com/claude-code)

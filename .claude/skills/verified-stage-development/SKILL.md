@@ -8,7 +8,7 @@ description: Orchestrates deterministic stage development with research verifica
 
 Orchestrates stage development with research verification and quality gates.
 
-**Design:** `docs/plans/2025-11-02-verified-stage-development-design.md`
+**Design:** Embedded in this skill file (Phase 1 implementation)
 
 **Invocation:** `/verified-stage-development stage-X.X`
 
@@ -319,14 +319,14 @@ This is Phase 1 implementation:
 
 ### Apple Documentation Verification (iOS stages only)
 
-**IMPORTANT:** Use apple-docs-fetcher-lite pattern to avoid token limit failures.
+**IMPORTANT:** Use apple-docs-fetcher pattern to avoid token limit failures.
 
 When stage requires iOS/Swift implementation:
 
 1. Read TECH-STACK-MAP to identify specific APIs to verify (not broad frameworks)
 2. Identify 3-5 focused APIs for verification (e.g., VNCoreMLRequest, VNDetectBarcodesRequest)
 3. Pass focused API list to research verification agent with token budget
-4. Research agent uses apple-docs-fetcher-lite pattern:
+4. Research agent uses apple-docs-fetcher pattern:
    - Search first: mcp**sosumi**searchAppleDocumentation
    - Extract key info from search results
    - Fetch selectively: Only if search insufficient
@@ -1174,6 +1174,6 @@ This is a warning only, not blocking.
 - This is Phase 1 implementation
 - Phase 2 will add: verification hook (code validation, TDD enforcement)
 - Phase 3 will add: dry-run mode, structured JSON output, advanced recovery
-- Design reference: docs/plans/2025-11-02-verified-stage-development-design.md
+- Design: Embedded in this skill file (see header)
 
 ---

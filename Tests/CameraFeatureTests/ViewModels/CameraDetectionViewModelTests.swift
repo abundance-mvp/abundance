@@ -2,6 +2,7 @@ import XCTest
 @preconcurrency import CoreVideo
 @testable import CameraFeature
 @testable import VisionCore
+@testable import Persistence
 
 @MainActor
 final class CameraDetectionViewModelTests: XCTestCase, @unchecked Sendable {
@@ -25,7 +26,9 @@ final class CameraDetectionViewModelTests: XCTestCase, @unchecked Sendable {
                 yoloDetector: mockDetector,
                 qualityAssessor: mockQualityAssessor,
                 deduplicator: mockDeduplicator,
-                maskGenerator: mockMaskGenerator
+                maskGenerator: mockMaskGenerator,
+                storageService: nil,
+                itemService: nil
             )
         }
     }
@@ -163,6 +166,127 @@ final class CameraDetectionViewModelTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(sut.detectedObjects.count, 0, "Low confidence objects should be ignored")
     }
 
+    // MARK: - Boundary Condition Tests
+
+    func testCatalogMode_atAutomaticConfidenceThreshold_withHighQuality_isAutomatic() async throws {
+        // Given: Exactly at automatic threshold (0.70) with high quality
+        let pixelBuffer = try createTestPixelBuffer()
+        let yoloResult = YOLOResult(
+            label: "backpack",
+            confidence: 0.70, // Exactly at automatic confidence threshold
+            boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.3)
+        )
+        mockDetector.stubbedYOLOResults = [yoloResult]
+        await mockQualityAssessor.setStubbedScore(0.80) // > 0.65 (quality threshold)
+        await mockDeduplicator.setStubbedSimilar(false)
+
+        // When
+        await sut.processFrame(pixelBuffer)
+
+        // Then
+        XCTAssertEqual(sut.detectedObjects.count, 1)
+        XCTAssertEqual(sut.detectedObjects.first?.catalogMode, .automatic)
+    }
+
+    func testCatalogMode_atQualityThreshold_withHighConfidence_isAutomatic() async throws {
+        // Given: High confidence with exactly at quality threshold (0.65)
+        let pixelBuffer = try createTestPixelBuffer()
+        let yoloResult = YOLOResult(
+            label: "tent",
+            confidence: 0.85, // > 0.70 (automatic confidence threshold)
+            boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.3)
+        )
+        mockDetector.stubbedYOLOResults = [yoloResult]
+        await mockQualityAssessor.setStubbedScore(0.65) // Exactly at quality threshold
+        await mockDeduplicator.setStubbedSimilar(false)
+
+        // When
+        await sut.processFrame(pixelBuffer)
+
+        // Then
+        XCTAssertEqual(sut.detectedObjects.count, 1)
+        XCTAssertEqual(sut.detectedObjects.first?.catalogMode, .automatic)
+    }
+
+    func testCatalogMode_atManualConfidenceThreshold_isManual() async throws {
+        // Given: Exactly at manual threshold (0.40)
+        let pixelBuffer = try createTestPixelBuffer()
+        let yoloResult = YOLOResult(
+            label: "cup",
+            confidence: 0.40, // Exactly at manual confidence threshold
+            boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.3)
+        )
+        mockDetector.stubbedYOLOResults = [yoloResult]
+        await mockQualityAssessor.setStubbedScore(0.70) // High quality doesn't matter
+        await mockDeduplicator.setStubbedSimilar(false)
+
+        // When
+        await sut.processFrame(pixelBuffer)
+
+        // Then
+        XCTAssertEqual(sut.detectedObjects.count, 1)
+        XCTAssertEqual(sut.detectedObjects.first?.catalogMode, .manual)
+    }
+
+    func testCatalogMode_justBelowManualThreshold_isIgnored() async throws {
+        // Given: Just below manual threshold (0.40)
+        let pixelBuffer = try createTestPixelBuffer()
+        let yoloResult = YOLOResult(
+            label: "unknown",
+            confidence: 0.39, // Just below manual threshold
+            boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.3)
+        )
+        mockDetector.stubbedYOLOResults = [yoloResult]
+        await mockQualityAssessor.setStubbedScore(0.90) // Quality doesn't matter
+        await mockDeduplicator.setStubbedSimilar(false)
+
+        // When
+        await sut.processFrame(pixelBuffer)
+
+        // Then
+        XCTAssertEqual(sut.detectedObjects.count, 0, "Objects below manual threshold should be ignored")
+    }
+
+    func testCatalogMode_justBelowAutomaticThreshold_isManual() async throws {
+        // Given: Just below automatic confidence threshold (0.70) with high quality
+        let pixelBuffer = try createTestPixelBuffer()
+        let yoloResult = YOLOResult(
+            label: "bottle",
+            confidence: 0.69, // Just below automatic threshold
+            boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.3)
+        )
+        mockDetector.stubbedYOLOResults = [yoloResult]
+        await mockQualityAssessor.setStubbedScore(0.80) // High quality
+        await mockDeduplicator.setStubbedSimilar(false)
+
+        // When
+        await sut.processFrame(pixelBuffer)
+
+        // Then
+        XCTAssertEqual(sut.detectedObjects.count, 1)
+        XCTAssertEqual(sut.detectedObjects.first?.catalogMode, .manual)
+    }
+
+    func testCatalogMode_highConfidence_justBelowQualityThreshold_isManual() async throws {
+        // Given: High confidence but just below quality threshold (0.65)
+        let pixelBuffer = try createTestPixelBuffer()
+        let yoloResult = YOLOResult(
+            label: "chair",
+            confidence: 0.85, // > 0.70 (automatic confidence threshold)
+            boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.3)
+        )
+        mockDetector.stubbedYOLOResults = [yoloResult]
+        await mockQualityAssessor.setStubbedScore(0.64) // Just below quality threshold
+        await mockDeduplicator.setStubbedSimilar(false)
+
+        // When
+        await sut.processFrame(pixelBuffer)
+
+        // Then
+        XCTAssertEqual(sut.detectedObjects.count, 1)
+        XCTAssertEqual(sut.detectedObjects.first?.catalogMode, .manual)
+    }
+
     // MARK: - Double-Tap Handler Tests
 
     func testHandleDoubleTap_onDetectedObject_changesCatalogMode() async throws {
@@ -172,7 +296,7 @@ final class CameraDetectionViewModelTests: XCTestCase, @unchecked Sendable {
             confidence: 0.85,
             boundingBox: CGRect(x: 0.1, y: 0.2, width: 0.3, height: 0.4),
             qualityScore: 0.75,
-            catalogMode: .automatic,
+            catalogMode: .manual,
             fingerprint: "test-123"
         )
         sut.addObject(object)
@@ -182,7 +306,7 @@ final class CameraDetectionViewModelTests: XCTestCase, @unchecked Sendable {
         await sut.handleDoubleTap(at: tapLocation)
 
         // Then
-        XCTAssertEqual(sut.detectedObjects.first?.catalogMode, .manual)
+        XCTAssertEqual(sut.detectedObjects.first?.catalogMode, .automatic)
     }
 
     func testHandleDoubleTap_outsideBounds_doesNothing() async throws {

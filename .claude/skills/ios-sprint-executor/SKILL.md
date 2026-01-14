@@ -822,7 +822,7 @@ This skill guarantees deterministic agentic development by:
    - Planning: superpowers:write-plan (22K tokens)
    - Execution: superpowers:execute-plan (4 batches, 3.5 hours)
    - Code Review: superpowers:requesting-code-review (passed)
-   - Apple Docs: apple-docs-fetcher-lite (7.6K tokens, 4 APIs)
+   - Apple Docs: apple-docs-fetcher (7.6K tokens, 4 APIs)
 
    ## Notes
 
@@ -1161,10 +1161,10 @@ Run Stage 5.1 first to generate sprint plans:
 ```
 ERROR: Apple documentation fetch failed.
 
-iOS work detected but apple-docs-fetcher-lite failed.
+iOS work detected but apple-docs-fetcher failed.
 
 Options:
-1. Type 'retry' to re-run apple-docs-fetcher-lite
+1. Type 'retry' to re-run apple-docs-fetcher
 2. Type 'skip' to continue without Apple docs (NOT RECOMMENDED)
 3. Type 'abort' to stop
 ```
@@ -1181,7 +1181,7 @@ Possible causes:
 - Too many documents loaded from sprint plan
 - Apple docs fetch exceeded 25K limit
 
-Recommendation: Reduce apple-docs-fetcher-lite scope (fewer APIs)
+Recommendation: Reduce apple-docs-fetcher scope (fewer APIs)
 ```
 
 ### Superpowers plugin not available

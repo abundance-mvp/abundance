@@ -27,10 +27,10 @@ User → /ios-sprint-executor → Superpowers Plugin → Code Implementation →
 ```
 
 **Existing Documentation:**
-- [DEVELOPMENT-WORKFLOW-001-git-branching-strategy](docs/validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md): Git branching strategy
-- [DEVELOPMENT-WORKFLOW-002-pr-creation-automation](docs/validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md): PR creation automation
-- [DEVELOPMENT-WORKFLOW-003-sprint-execution-guide](docs/validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md): Sprint execution guide (7-phase lifecycle)
-- [DEVELOPMENT-READINESS-CHECKLIST-001](docs/validation/DEVELOPMENT-READINESS-CHECKLIST-001.md): Prerequisites
+- [DEVELOPMENT-WORKFLOW-001-git-branching-strategy](../validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md): Git branching strategy
+- [DEVELOPMENT-WORKFLOW-002-pr-creation-automation](../validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md): PR creation automation
+- [DEVELOPMENT-WORKFLOW-003-sprint-execution-guide](../validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md): Sprint execution guide (7-phase lifecycle)
+- [DEVELOPMENT-READINESS-CHECKLIST-001](../validation/DEVELOPMENT-READINESS-CHECKLIST-001.md): Prerequisites
 
 **Gap Identified**: Documentation exists but enforcement mechanisms are **manual** - no automated guardrails.
 
@@ -886,10 +886,10 @@ jobs:
 - https://blog.fsck.com/2025/10/09/superpowers/
 
 **Project Documents**:
-- [DEVELOPMENT-WORKFLOW-001-git-branching-strategy](docs/validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md): Git branching strategy
-- [DEVELOPMENT-WORKFLOW-002-pr-creation-automation](docs/validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md): PR creation automation
-- [DEVELOPMENT-WORKFLOW-003-sprint-execution-guide](docs/validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md): Sprint execution guide
-- [DEVELOPMENT-READINESS-CHECKLIST-001](docs/validation/DEVELOPMENT-READINESS-CHECKLIST-001.md): Prerequisites
+- [DEVELOPMENT-WORKFLOW-001-git-branching-strategy](../validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md): Git branching strategy
+- [DEVELOPMENT-WORKFLOW-002-pr-creation-automation](../validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md): PR creation automation
+- [DEVELOPMENT-WORKFLOW-003-sprint-execution-guide](../validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md): Sprint execution guide
+- [DEVELOPMENT-READINESS-CHECKLIST-001](../validation/DEVELOPMENT-READINESS-CHECKLIST-001.md): Prerequisites
 
 **Anthropic Examples**:
 - bash_command_validator_example.py: https://github.com/anthropics/claude-code/blob/main/examples/hooks/bash_command_validator_example.py

@@ -6,7 +6,7 @@ import AppKit
 #endif
 
 /// Protocol for barcode detection using Vision Framework
-public protocol BarcodeDetectorProtocol {
+public protocol BarcodeDetectorProtocol: Sendable {
     /// Detect barcodes in an image using VNDetectBarcodesRequest
     /// - Parameter image: Input image to scan
     /// - Returns: Array of detected barcodes with payload values

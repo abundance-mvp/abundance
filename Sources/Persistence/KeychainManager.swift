@@ -5,7 +5,7 @@ import Security
 public struct KeychainManager: Sendable {
     private let service: String
 
-    public init(service: String = "com.abundance.app") {
+    public init(service: String = "com.abundance.mvp") {
         self.service = service
     }
 

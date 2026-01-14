@@ -24,11 +24,11 @@ description: Use when executing iOS sprints, reviewing iOS code with latest APIs
 
 ---
 
-### 2. Replaced apple-docs-fetcher-lite with apple-docs-fetcher
+### 2. Replaced apple-docs-fetcher with apple-docs-fetcher
 
 **Before (Line 91):**
 ```markdown
-Use apple-docs-fetcher-lite pattern (NOT full apple-docs-fetcher)
+Use apple-docs-fetcher pattern (NOT full apple-docs-fetcher)
 ```
 
 **After (Line 103):**

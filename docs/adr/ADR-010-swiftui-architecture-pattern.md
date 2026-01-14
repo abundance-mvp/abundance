@@ -388,10 +388,51 @@ class MockCatalogRepository: CatalogRepository {
 
 ---
 
+## Clarifications
+
+### Infrastructure Layer UIKit Usage (2026-01-11)
+
+**Decision:** UIKit imports are permitted in infrastructure/service layers for platform-specific types (e.g., `UIImage`, `CGImage`) that have no SwiftUI equivalent.
+
+**This exception does NOT apply to:**
+- Views or ViewModels (UI layer must be pure SwiftUI)
+- UI components (`UIButton`, `UIView`, `UIViewController`, etc.)
+- UIKit layout or navigation APIs
+
+**Rationale:**
+
+1. **ADR-010 scope is architecture patterns**: This ADR addresses MVVM vs TCA vs MV architecture choices, not framework restrictions. Adding a blanket "no UIKit" rule would be scope creep.
+
+2. **Platform interop is unavoidable**: `UIImage` is the native iOS type for image handling. SwiftUI's `Image` cannot:
+   - Compress images to JPEG (`image.jpegData(compressionQuality:)`)
+   - Handle raw image data for upload
+   - Interface with Vision Framework outputs
+
+3. **Infrastructure is not UI**: `StorageService` (in `Sources/Persistence/Firebase/`) is a data layer service. Using `UIKit.UIImage` for JPEG compression is standard practice and does not violate SwiftUI-only UI architecture.
+
+4. **Practical impact**: Avoiding `UIImage` in infrastructure would require CoreGraphics-only implementations with significantly more complexity for zero architectural benefit.
+
+**Example - Permitted:**
+```swift
+// Sources/Persistence/Firebase/StorageService.swift
+import UIKit  // OK: Infrastructure layer, platform image type
+public typealias PlatformImage = UIImage
+```
+
+**Example - NOT Permitted:**
+```swift
+// Sources/CameraFeature/ViewModels/CameraViewModel.swift
+import UIKit  // NOT OK: ViewModel is UI layer
+// Use SwiftUI types or abstract via protocol
+```
+
+---
+
 ## Revision History
 
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
+| 2026-01-11 | 1.1 | Clarified UIKit usage in infrastructure layers | Claude |
 | 2025-11-08 | 1.0 | Initial ADR, MVVM pattern selected | iOS Architecture Expert |
 
 ---

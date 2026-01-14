@@ -20,6 +20,9 @@ public enum CameraError: Error, LocalizedError, Equatable, Sendable {
     /// Invalid image data received from camera
     case invalidImageData
 
+    /// Photo capture already in progress
+    case captureInProgress
+
     // MARK: - LocalizedError
 
     public var errorDescription: String? {
@@ -36,6 +39,8 @@ public enum CameraError: Error, LocalizedError, Equatable, Sendable {
             return "Failed to capture photo"
         case .invalidImageData:
             return "Invalid image data"
+        case .captureInProgress:
+            return "Photo capture already in progress"
         }
     }
 }

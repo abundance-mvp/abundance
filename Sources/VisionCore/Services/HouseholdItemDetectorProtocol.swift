@@ -6,13 +6,6 @@ import UIKit
 import AppKit
 #endif
 
-// Platform-agnostic image type alias
-#if os(iOS)
-public typealias PlatformImage = UIImage
-#elseif os(macOS)
-public typealias PlatformImage = NSImage
-#endif
-
 /// Protocol for household item detection using Vision Framework
 public protocol HouseholdItemDetectorProtocol: Sendable {
     /// Detect household items in an image using Vision Framework

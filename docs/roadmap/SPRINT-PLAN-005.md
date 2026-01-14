@@ -37,8 +37,8 @@
 - Create: functions/src/ai-pipeline/__tests__/BarcodeProvider.test.ts
 
 **References:**
-- [CODE-EXAMPLE-012-barcode-hybrid-lookup](docs/design/CODE-EXAMPLE-012-barcode-hybrid-lookup.md): Barcode Hybrid Lookup
-- [ADR-018-barcode-product-lookup-strategy](docs/adr/ADR-018-barcode-product-lookup-strategy.md): Barcode Product Lookup Strategy
+- [CODE-EXAMPLE-012-barcode-hybrid-lookup](../design/CODE-EXAMPLE-012-barcode-hybrid-lookup.md): Barcode Hybrid Lookup
+- [ADR-018-barcode-product-lookup-strategy](../adr/ADR-018-barcode-product-lookup-strategy.md): Barcode Product Lookup Strategy
 
 ---
 
@@ -63,8 +63,8 @@
 - Create: functions/src/ai-pipeline/providers/AnthropicProvider.ts
 
 **References:**
-- [CODE-EXAMPLE-013-serpapi-google-lens](docs/design/CODE-EXAMPLE-013-serpapi-google-lens.md): SerpAPI Google Lens
-- [CODE-EXAMPLE-014-claude-haiku-parsing](docs/design/CODE-EXAMPLE-014-claude-haiku-parsing.md): Claude Haiku Parsing
+- [CODE-EXAMPLE-013-serpapi-google-lens](../design/CODE-EXAMPLE-013-serpapi-google-lens.md): SerpAPI Google Lens
+- [CODE-EXAMPLE-014-claude-haiku-parsing](../design/CODE-EXAMPLE-014-claude-haiku-parsing.md): Claude Haiku Parsing
 
 ---
 
@@ -89,7 +89,7 @@
 - Create: functions/src/ai-pipeline/layer2b/identifyProduct.ts
 
 **References:**
-- [CODE-EXAMPLE-015-layer-2b-orchestration](docs/design/CODE-EXAMPLE-015-layer-2b-orchestration.md): Layer 2b Orchestration
+- [CODE-EXAMPLE-015-layer-2b-orchestration](../design/CODE-EXAMPLE-015-layer-2b-orchestration.md): Layer 2b Orchestration
 
 ---
 
@@ -114,8 +114,8 @@
 - Create: functions/src/ai-pipeline/layer3/synthesize.ts
 
 **References:**
-- [CODE-EXAMPLE-016-claude-sonnet-synthesis](docs/design/CODE-EXAMPLE-016-claude-sonnet-synthesis.md): Claude Sonnet Synthesis
-- [CODE-EXAMPLE-017-conflict-resolution-patterns](docs/design/CODE-EXAMPLE-017-conflict-resolution-patterns.md): Conflict Resolution Patterns
+- [CODE-EXAMPLE-016-claude-sonnet-synthesis](../design/CODE-EXAMPLE-016-claude-sonnet-synthesis.md): Claude Sonnet Synthesis
+- [CODE-EXAMPLE-017-conflict-resolution-patterns](../design/CODE-EXAMPLE-017-conflict-resolution-patterns.md): Conflict Resolution Patterns
 
 ---
 

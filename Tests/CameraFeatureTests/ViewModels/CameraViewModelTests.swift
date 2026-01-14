@@ -1,31 +1,20 @@
 import XCTest
 import Combine
 @testable import CameraFeature
-@testable import Persistence
-#if os(iOS)
-import UIKit
-public typealias PlatformImage = UIImage
-#elseif os(macOS)
-import AppKit
-public typealias PlatformImage = NSImage
-#endif
 
 @MainActor
 final class CameraViewModelTests: XCTestCase {
 
     nonisolated(unsafe) var sut: CameraViewModel!
     nonisolated(unsafe) var mockCameraService: MockCameraService!
-    nonisolated(unsafe) var mockStorageService: MockStorageService!
     nonisolated(unsafe) var cancellables: Set<AnyCancellable>!
 
     nonisolated override func setUp() {
         super.setUp()
         mockCameraService = MockCameraService()
-        mockStorageService = MockStorageService()
         let service = mockCameraService!
-        let storage = mockStorageService!
         sut = MainActor.assumeIsolated {
-            CameraViewModel(cameraService: service, storageService: storage)
+            CameraViewModel(cameraService: service)
         }
         cancellables = []
     }
@@ -34,23 +23,12 @@ final class CameraViewModelTests: XCTestCase {
         cancellables = nil
         sut = nil
         mockCameraService = nil
-        mockStorageService = nil
         super.tearDown()
     }
 
     func testInit_sessionStateIsNotStarted() {
         // Then
         XCTAssertEqual(sut.sessionState, .notStarted)
-    }
-
-    func testInit_capturedPhotoIsNil() {
-        // Then
-        XCTAssertNil(sut.capturedPhotoData)
-    }
-
-    func testInit_isCapturingIsFalse() {
-        // Then
-        XCTAssertFalse(sut.isCapturing)
     }
 
     func testInit_errorMessageIsNil() {
@@ -87,115 +65,50 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertTrue(sut.errorMessage!.contains("denied"))
     }
 
-    func testCapturePhoto_whenSessionRunning_capturesPhoto() async {
+    func testStartCamera_whenSucceeds_clearsErrorMessage() async {
         // Given
-        try? await mockCameraService.startSession()
-        sut.sessionState = .running
-        let testPhotoData = Data([0xFF, 0xD8, 0xFF, 0xE0]) // JPEG header
-        mockCameraService.stubbedPhotoData = testPhotoData
+        mockCameraService.stubbedAuthStatus = .authorized
+        sut.errorMessage = "Previous error"
 
         // When
-        await sut.capturePhoto()
+        await sut.startCamera()
 
         // Then
-        XCTAssertTrue(mockCameraService.didCallCapturePhoto)
-        XCTAssertEqual(sut.capturedPhotoData, testPhotoData)
-        XCTAssertFalse(sut.isCapturing)
+        XCTAssertTrue(mockCameraService.didCallStartSession)
         XCTAssertNil(sut.errorMessage)
     }
 
-    func testCapturePhoto_whenSessionNotRunning_doesNotCapture() async {
+    func testStartCamera_whenFails_setsErrorMessage() async {
         // Given
-        sut.sessionState = .notStarted
+        mockCameraService.shouldFailStartSession = true
 
         // When
-        await sut.capturePhoto()
+        await sut.startCamera()
 
         // Then
-        XCTAssertFalse(mockCameraService.didCallCapturePhoto)
-        XCTAssertNil(sut.capturedPhotoData)
-    }
-
-    func testCapturePhoto_whenCaptureFails_showsError() async {
-        // Given
-        try? await mockCameraService.startSession()
-        sut.sessionState = .running
-        mockCameraService.shouldFailCapturePhoto = true
-
-        // When
-        await sut.capturePhoto()
-
-        // Then
-        XCTAssertTrue(mockCameraService.didCallCapturePhoto)
-        XCTAssertNil(sut.capturedPhotoData)
+        XCTAssertTrue(mockCameraService.didCallStartSession)
         XCTAssertNotNil(sut.errorMessage)
+        XCTAssertTrue(sut.errorMessage!.contains("Failed to start camera"))
     }
 
-    func testCapturePhoto_WithValidImage_UploadsToStorage() async throws {
-        // Given
-        let mockStorage = MockStorageService()
-
-        // Create a proper JPEG image data
-        #if os(iOS)
-        let size = CGSize(width: 100, height: 100)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        let testImage = renderer.image { context in
-            UIColor.blue.setFill()
-            context.fill(CGRect(origin: .zero, size: size))
-        }
-        let testPhotoData = testImage.jpegData(compressionQuality: 0.8)!
-        #elseif os(macOS)
-        let testImage = NSImage(size: NSSize(width: 100, height: 100))
-        testImage.lockFocus()
-        NSColor.blue.setFill()
-        NSRect(x: 0, y: 0, width: 100, height: 100).fill()
-        testImage.unlockFocus()
-
-        guard let cgImage = testImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            XCTFail("Could not create test image")
-            return
-        }
-        let imageRep = NSBitmapImageRep(cgImage: cgImage)
-        let testPhotoData = imageRep.representation(using: .jpeg, properties: [:])!
-        #endif
-
-        mockCameraService.stubbedPhotoData = testPhotoData
-
-        let viewModel = CameraViewModel(
-            cameraService: mockCameraService,
-            storageService: mockStorage
-        )
-
-        try? await mockCameraService.startSession()
-        viewModel.sessionState = .running
-
+    func testStopCamera_callsStopSession() {
         // When
-        await viewModel.capturePhoto()
+        sut.stopCamera()
 
         // Then
-        XCTAssertTrue(mockStorage.uploadCalled, "Storage upload should have been called")
-        XCTAssertNotNil(mockStorage.lastUploadedImage, "Last uploaded image should not be nil")
-        XCTAssertEqual(viewModel.uploadProgress, 1.0, "Upload progress should be 1.0")
+        XCTAssertTrue(mockCameraService.didCallStopSession)
+    }
+
+    func testGetCaptureSession_returnsCameraServiceSession() {
+        // When
+        let session = sut.getCaptureSession()
+
+        // Then
+        // MockCameraService returns nil for getCaptureSession
+        XCTAssertNil(session)
     }
 }
 
-// MARK: - Mock StorageService
-
-final class MockStorageService: StorageServiceProtocol, @unchecked Sendable {
-    var uploadCalled = false
-    var lastUploadedImage: PlatformImage?
-    var lastItemId: String?
-    var lastUserId: String?
-
-    func uploadCroppedObject(
-        _ image: PlatformImage,
-        itemId: String,
-        userId: String
-    ) async throws -> URL {
-        uploadCalled = true
-        lastUploadedImage = image
-        lastItemId = itemId
-        lastUserId = userId
-        return URL(string: "https://firebasestorage.googleapis.com/test/image.jpg")!
-    }
-}
+// Note: Tests for photo capture functionality have been removed.
+// Photo capture is now handled by CameraDetectionViewModel.
+// See CameraDetectionViewModelTests for real-time detection tests.

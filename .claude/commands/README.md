@@ -42,20 +42,6 @@ Fetch Apple Developer documentation via MCP.
 
 ---
 
-#### `/apple-docs-fetcher-lite {query}`
-
-Lightweight Apple docs fetcher with automatic token limit protection.
-
-**Example**: `/apple-docs-fetcher-lite SwiftUI.View`
-
-**Invokes**: `apple-docs-fetcher-lite` skill
-
-**See**: `.claude/skills/apple-docs-fetcher-lite/SKILL.md`
-
-**When to use**: When token limits prevent using the full `apple-docs-fetcher` skill
-
----
-
 ### Project Management Commands
 
 #### `/validate-docs`
@@ -153,5 +139,5 @@ See individual skill documentation for integration details.
 - **Best Practices**: https://code.claude.com/docs/en/common-workflows#create-custom-slash-commands
 - **Skill Documentation**: `.claude/skills/*/SKILL.md`
 - **Agent Specifications**: `.claude/agents/*.md`
-- **CI/CD Architecture**: `docs/tech-stack/GITHUB-ACTIONS-ARCHITECTURE-001.md`
+- **CI/CD Architecture**: `.github/workflows/` (see workflow files directly)
 - **Context Map**: `docs/context-map.json`

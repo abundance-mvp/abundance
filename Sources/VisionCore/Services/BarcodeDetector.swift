@@ -7,7 +7,7 @@ import AppKit
 #endif
 
 /// Barcode detector using Vision Framework VNDetectBarcodesRequest
-public final class BarcodeDetector: BarcodeDetectorProtocol {
+public final class BarcodeDetector: BarcodeDetectorProtocol, Sendable {
 
     // MARK: - Properties
 
@@ -56,7 +56,7 @@ public final class BarcodeDetector: BarcodeDetectorProtocol {
                 do {
                     try handler.perform([request])
 
-                    guard let results = request.results as? [VNBarcodeObservation] else {
+                    guard let results = request.results else {
                         continuation.resume(returning: [])
                         return
                     }

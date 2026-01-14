@@ -209,11 +209,11 @@ Stage 2.2 has successfully defined the **complete iOS application architecture**
 ### Deviation 3: Additional Artifacts Created
 
 **Original Design Did Not Specify**:
-- [DESIGN-008-vision-framework-integration](docs/design/DESIGN-008-vision-framework-integration.md): Vision Framework Integration
-- [DESIGN-009-ios-networking-layer](docs/design/DESIGN-009-ios-networking-layer.md): iOS Networking Layer
-- [DESIGN-010-ios-data-persistence](docs/design/DESIGN-010-ios-data-persistence.md): iOS Data Persistence
-- [DESIGN-011-ios-data-models](docs/design/DESIGN-011-ios-data-models.md): iOS Data Models
-- [TEST-002-ios-unit-test-strategy](docs/test/TEST-002-ios-unit-test-strategy.md): iOS Unit Test Strategy
+- [DESIGN-008-vision-framework-integration](../design/DESIGN-008-vision-framework-integration.md): Vision Framework Integration
+- [DESIGN-009-ios-networking-layer](../design/DESIGN-009-ios-networking-layer.md): iOS Networking Layer
+- [DESIGN-010-ios-data-persistence](../design/DESIGN-010-ios-data-persistence.md): iOS Data Persistence
+- [DESIGN-011-ios-data-models](../design/DESIGN-011-ios-data-models.md): iOS Data Models
+- [TEST-002-ios-unit-test-strategy](../test/TEST-002-ios-unit-test-strategy.md): iOS Unit Test Strategy
 
 **Actual Execution**: Created 5 additional design/test documents
 
@@ -273,8 +273,8 @@ Stage 2.2 has successfully defined the **complete iOS application architecture**
 The next stage (2.3 - Backend Cloud Architecture) requires:
 
 - ✅ [PLAN-SUMMARY-stage-2.2.md - Complete](../plans/PLAN-SUMMARY-stage-2.2.md)
-- ✅ [ADR-010 through ADR-013 - Complete](../adr/)
-- ✅ [DESIGN-006 through DESIGN-011 - Complete](../design/)
+- ✅ ADR-010 through ADR-013 - Complete
+- ✅ DESIGN-006 through DESIGN-011 - Complete
 - ✅ [TECH-STACK-MAP-001 - Complete (from Stage 2.1)](../tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md)
 - ✅ [API-CONTRACTS-001 - Complete (from Stage 2.1)](../design/API-CONTRACTS-001-rest-endpoints.md)
 

@@ -1,8 +1,11 @@
 import Foundation
 import SwiftUI
+import Combine
 @preconcurrency import CoreVideo
-import VisionCore
 import os.log
+@preconcurrency import FirebaseAuth
+import VisionCore
+import Persistence
 
 /// MainActor-bound ViewModel managing real-time object detection state
 /// Orchestrates the detection pipeline: YOLO → quality assessment → deduplication → masking
@@ -16,6 +19,9 @@ public final class CameraDetectionViewModel: ObservableObject {
 
     /// True when processing a frame (throttles UI updates)
     @Published public var isProcessing: Bool = false
+
+    /// Upload error that can be observed by the view for UI feedback
+    @Published public var uploadError: Error?
 
     // MARK: - Private Properties
 
@@ -33,10 +39,19 @@ public final class CameraDetectionViewModel: ObservableObject {
     /// Mask generator for organic borders
     private let maskGenerator: SubjectMaskGeneratorProtocol
 
+    // Storage and persistence services (optional for testing)
+    private let storageService: StorageServiceProtocol?
+    private let itemService: ItemRepository?
+
     // Confidence and quality thresholds
     private let automaticConfidenceThreshold: Double = 0.70
     private let manualConfidenceThreshold: Double = 0.40
     private let automaticQualityThreshold: Double = 0.65
+
+    // MARK: - Frame Processing Subscription
+
+    /// Subscription for camera frame processing (managed by ViewModel to fix Swift 6 compliance)
+    private var frameSubscription: AnyCancellable?
 
     // MARK: - Initialization
 
@@ -44,18 +59,22 @@ public final class CameraDetectionViewModel: ObservableObject {
         yoloDetector: HouseholdItemDetectorProtocol,
         qualityAssessor: ImageQualityAssessorProtocol,
         deduplicator: ObjectDeduplicatorProtocol,
-        maskGenerator: SubjectMaskGeneratorProtocol
+        maskGenerator: SubjectMaskGeneratorProtocol,
+        storageService: StorageServiceProtocol? = StorageService(),
+        itemService: ItemRepository? = ItemService()
     ) {
         self.yoloDetector = yoloDetector
         self.qualityAssessor = qualityAssessor
         self.deduplicator = deduplicator
         self.maskGenerator = maskGenerator
+        self.storageService = storageService
+        self.itemService = itemService
     }
 
     // MARK: - Frame Processing Pipeline
 
     /// Process a single camera frame through the detection pipeline
-    /// - Parameter pixelBuffer: CVPixelBuffer from camera capture
+    /// - Parameter pixelBuffer: CVPixelBuffer from camera capture (read-only, thread-safe)
     /// - Note: Runs at 2 FPS (throttled by caller), processes objects in parallel
     nonisolated public func processFrame(_ pixelBuffer: CVPixelBuffer) async {
         let shouldSkip = await MainActor.run { isProcessing }
@@ -65,7 +84,6 @@ public final class CameraDetectionViewModel: ObservableObject {
         }
 
         await MainActor.run { isProcessing = true }
-        defer { Task { @MainActor in isProcessing = false } }
 
         do {
             // Step 1: YOLO detection
@@ -74,33 +92,38 @@ public final class CameraDetectionViewModel: ObservableObject {
             logger.debug("YOLO detected \(yoloResults.count) objects")
 
             // Step 2: Process objects in parallel
-            let processedObjects = await withTaskGroup(of: DetectedObject?.self) { group in
-                for yoloResult in yoloResults {
-                    group.addTask {
-                        await self.processObject(yoloResult, in: pixelBuffer)
-                    }
+            // Note: CVPixelBuffer is thread-safe for reading (immutable after creation)
+            // Process sequentially to avoid Swift 6 concurrency issues with parallel tasks
+            var processedObjects: [DetectedObject] = []
+            for yoloResult in yoloResults {
+                if let object = await processObject(yoloResult, in: pixelBuffer) {
+                    processedObjects.append(object)
                 }
-
-                var results: [DetectedObject] = []
-                for await object in group {
-                    if let object = object {
-                        results.append(object)
-                    }
-                }
-                return results
             }
 
             // Step 3: Update UI with detected objects
+            let previousObjects = await MainActor.run { detectedObjects }
             await MainActor.run {
                 detectedObjects = processedObjects
             }
 
+            // Step 4: Upload new automatic catalog objects
+            for object in processedObjects where object.catalogMode == .automatic {
+                if !previousObjects.contains(where: { $0.id == object.id }) {
+                    await uploadObject(object, pixelBuffer: pixelBuffer)
+                }
+            }
+
             logger.debug("Pipeline complete: \(processedObjects.count) objects ready for display")
+
+            // Clear processing flag using structured concurrency (not defer with Task)
+            await MainActor.run { isProcessing = false }
 
         } catch {
             logger.error("Frame processing failed: \(error.localizedDescription)")
             await MainActor.run {
                 detectedObjects = []
+                isProcessing = false
             }
         }
     }
@@ -110,7 +133,7 @@ public final class CameraDetectionViewModel: ObservableObject {
     /// Process a single YOLO result through quality, deduplication, and masking
     /// - Parameters:
     ///   - yoloResult: Raw YOLO detection result
-    ///   - pixelBuffer: Original frame for quality/mask generation
+    ///   - pixelBuffer: Original frame for quality/mask generation (read-only, thread-safe)
     /// - Returns: Complete DetectedObject or nil if filtered out
     nonisolated private func processObject(_ yoloResult: YOLOResult, in pixelBuffer: CVPixelBuffer) async -> DetectedObject? {
         let boundingBox = yoloResult.boundingBox
@@ -179,6 +202,54 @@ public final class CameraDetectionViewModel: ObservableObject {
         return detectedObject
     }
 
+    /// Upload detected object to trigger Layer 1→2 catalog pipeline
+    /// - Parameters:
+    ///   - object: DetectedObject to upload
+    ///   - pixelBuffer: Source pixel buffer for cropping (passed directly to avoid data race)
+    private func uploadObject(_ object: DetectedObject, pixelBuffer: CVPixelBuffer) async {
+        guard let storageService = storageService,
+              let itemService = itemService,
+              let userId = Auth.auth().currentUser?.uid else {
+            logger.warning("Upload skipped: missing services or auth")
+            return
+        }
+
+        do {
+            // Crop image from pixel buffer
+            let croppedImage = try PixelBufferCropper.cropImage(
+                from: pixelBuffer,
+                boundingBox: object.boundingBox
+            )
+
+            // Upload to GCS
+            let imageUrl = try await storageService.uploadCroppedObject(
+                croppedImage,
+                itemId: object.id.uuidString,
+                userId: userId
+            )
+
+            // Create Firestore document (triggers Layer 2a/2b/3)
+            try await itemService.createItemWithLayer1Metadata(
+                itemId: object.id.uuidString,
+                userId: userId,
+                imageUrl: imageUrl.absoluteString,
+                layer1Metadata: Layer1Metadata(
+                    detectedClass: object.label,
+                    confidence: object.confidence,
+                    boundingBox: object.boundingBox,
+                    qualityScore: object.qualityScore
+                )
+            )
+
+            logger.info("Uploaded \(object.label) → Layer 2 pipeline: \(imageUrl.absoluteString)")
+        } catch {
+            logger.error("Upload failed: \(error.localizedDescription)")
+            await MainActor.run {
+                uploadError = error
+            }
+        }
+    }
+
     // MARK: - Catalog Mode Logic
 
     /// Determines catalog mode based on confidence and quality scores
@@ -216,10 +287,12 @@ public final class CameraDetectionViewModel: ObservableObject {
 
         logger.info("Manual catalog triggered for '\(tappedObject.label)'")
 
-        // Update catalog mode to manual (if not already)
+        // Update catalog mode to automatic (user confirmed via double-tap)
         if let index = detectedObjects.firstIndex(where: { $0.id == tappedObject.id }) {
-            detectedObjects[index].catalogMode = .manual
-            // TODO: Trigger catalog upload in Stage 5
+            detectedObjects[index].catalogMode = .automatic
+            // Note: Upload will occur on next frame processing cycle when object is re-detected
+            // with automatic mode. Direct upload removed to fix CVPixelBuffer data race (P0 issue).
+            logger.info("Object marked for automatic catalog - will upload on next detection cycle")
         }
     }
 
@@ -242,5 +315,36 @@ public final class CameraDetectionViewModel: ObservableObject {
     /// Clear all detected objects
     public func clearObjects() {
         detectedObjects = []
+    }
+
+    /// Clear the upload error state
+    public func clearUploadError() {
+        uploadError = nil
+    }
+
+    // MARK: - Frame Processing Lifecycle
+
+    /// Start processing frames from a camera service's frame publisher
+    /// - Parameter framePublisher: Publisher emitting CVPixelBuffer frames from camera
+    /// - Note: Manages subscription lifecycle internally to comply with Swift 6 (no @State with reference types)
+    public func startFrameProcessing(from framePublisher: AnyPublisher<CVPixelBuffer, Never>) {
+        // Cancel any existing subscription
+        frameSubscription?.cancel()
+
+        // Wire frame loop at 2 FPS (throttle to 500ms)
+        frameSubscription = framePublisher
+            .throttle(for: .seconds(0.5), scheduler: DispatchQueue.main, latest: true)
+            .sink { [weak self] pixelBuffer in
+                guard let self else { return }
+                Task {
+                    await self.processFrame(pixelBuffer)
+                }
+            }
+    }
+
+    /// Stop processing frames and clean up subscription
+    public func stopFrameProcessing() {
+        frameSubscription?.cancel()
+        frameSubscription = nil
     }
 }

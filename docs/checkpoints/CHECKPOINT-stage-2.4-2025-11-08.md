@@ -123,15 +123,15 @@ Comparing `docs/abundance-analysis-pipeline-design.md` (Stage 2.4 section, lines
 
 **Expected Outputs (from master design)**:
 ```
-- [DESIGN-004-computer-vision-pipeline](docs/design/DESIGN-004-computer-vision-pipeline.md): Computer Vision Pipeline (detailed 4-layer architecture with sequence diagrams)
+- [DESIGN-004-computer-vision-pipeline](../design/DESIGN-004-computer-vision-pipeline.md): Computer Vision Pipeline (detailed 4-layer architecture with sequence diagrams)
 - DESIGN-005: Layer 2b Product Search Architecture (SerpAPI + Claude Haiku parsing)
-- [ADR-013-vision-framework-strategy](docs/adr/ADR-013-vision-framework-strategy.md): Vision Framework Strategy (VNCoreMLRequest + YOLOv3-Tiny)
-- [ADR-014-cloud-ai-provider-selection](docs/adr/ADR-014-cloud-ai-provider-selection.md): Cloud AI Provider Selection (Gemini 2.5 Flash-Lite for Layer 2a)
-- [ADR-015-ai-reasoning-layer-architecture](docs/adr/ADR-015-ai-reasoning-layer-architecture.md): AI Reasoning Layer Architecture (Claude Sonnet 4.5 for synthesis)
-- [ADR-016-image-hosting-strategy](docs/adr/ADR-016-image-hosting-strategy.md): Image Hosting Strategy (GCS + Cloud CDN for SerpAPI public URLs)
-- [ADR-017-llm-parsing-architecture](docs/adr/ADR-017-llm-parsing-architecture.md): LLM Parsing Architecture (Claude Haiku for brand/model extraction)
+- [ADR-025-vision-framework-strategy](../adr/ADR-025-vision-framework-strategy.md): Vision Framework Strategy (VNCoreMLRequest + YOLOv3-Tiny)
+- [ADR-014-cloud-ai-provider-selection](../adr/ADR-014-cloud-ai-provider-selection.md): Cloud AI Provider Selection (Gemini 2.5 Flash-Lite for Layer 2a)
+- [ADR-015-ai-reasoning-layer-architecture](../adr/ADR-015-ai-reasoning-layer-architecture.md): AI Reasoning Layer Architecture (Claude Sonnet 4.5 for synthesis)
+- [ADR-016-image-hosting-strategy](../adr/ADR-016-image-hosting-strategy.md): Image Hosting Strategy (GCS + Cloud CDN for SerpAPI public URLs)
+- [ADR-017-llm-parsing-architecture](../adr/ADR-017-llm-parsing-architecture.md): LLM Parsing Architecture (Claude Haiku for brand/model extraction)
 - VISION-INTEGRATION-001: iOS Vision Framework Implementation (Swift/Core ML code design)
-- [SERPAPI-INTEGRATION-001-swift-rest-api-patterns](docs/design/SERPAPI-INTEGRATION-001-swift-rest-api-patterns.md): Swift REST API Integration (URLSession patterns, no native SDK)
+- [SERPAPI-INTEGRATION-001-swift-rest-api-patterns](../design/SERPAPI-INTEGRATION-001-swift-rest-api-patterns.md): Swift REST API Integration (URLSession patterns, no native SDK)
 - CLOUD-AI-INTEGRATION-001: Multi-Layer AI Processing (Layer 2a + 2b + 3 orchestration)
 ```
 

@@ -109,7 +109,7 @@ Stage 2.0 successfully completed all research verification and artifact generati
 **Details**:
 
 1. **Research Areas**: All 6 specified areas verified (iOS 26 Vision, Core ML, Barcode APIs, Gemini, SerpAPI, Claude Sonnet)
-2. **Methodology**: Followed apple-docs-fetcher-lite pattern (token budget: 11K of 25K max)
+2. **Methodology**: Followed apple-docs-fetcher pattern (token budget: 11K of 25K max)
 3. **Outputs**: All 5 required docs created (RESEARCH-VALIDATION, DESIGN-004, ADR-013, ADR-014, ADR-018, COST-MODEL-001)
 4. **Success Criteria**: All 6 criteria met (APIs verified, pricing current, no unverified claims, token budget)
 
@@ -202,7 +202,7 @@ Per master document Stage 2.0 specification:
 
 ### What Went Well
 
-1. **Apple MCP Integration**: apple-docs-fetcher-lite pattern successfully avoided token overflow (11K of 25K budget)
+1. **Apple MCP Integration**: apple-docs-fetcher pattern successfully avoided token overflow (11K of 25K budget)
 2. **Research Sub-Agent**: Parallel research execution saved time (1 sub-agent call vs 7 sequential searches)
 3. **Comprehensive ADRs**: 6 ADRs created provide strong foundation for Stage 2.1 decisions
 

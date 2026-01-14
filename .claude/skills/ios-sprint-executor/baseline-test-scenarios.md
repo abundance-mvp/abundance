@@ -9,7 +9,7 @@ Test current skill behavior to identify failures before improvements.
 - Sprint 6 implementation complete
 - Code uses latest Swift 6.0 features (@Observable, @MainActor strict concurrency)
 - Code uses latest SwiftUI features (new animation APIs, containerRelativeFrame)
-- Current skill references apple-docs-fetcher-lite (deprecated)
+- Current skill references apple-docs-fetcher (deprecated)
 
 **Pressure:**
 - Time pressure: "Quick code review needed before PR"
@@ -21,7 +21,7 @@ Ask agent to perform code review using ios-sprint-executor skill.
 
 **Expected FAILURE (baseline):**
 - Agent doesn't fetch Apple docs during review
-- Agent uses deprecated apple-docs-fetcher-lite
+- Agent uses deprecated apple-docs-fetcher
 - Agent makes assumptions about Swift 6.0/SwiftUI APIs without verification
 - Agent rationalizes: "Code compiles, so APIs must be correct"
 

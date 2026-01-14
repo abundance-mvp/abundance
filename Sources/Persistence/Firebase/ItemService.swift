@@ -3,11 +3,35 @@ import FirebaseFirestore
 import Combine
 import os
 
+/// Metadata from Layer 1 (on-device YOLO detection)
+/// Captures detection results before Layer 2 cloud processing
+public struct Layer1Metadata: Sendable {
+    public let detectedClass: String
+    public let confidence: Double
+    public let boundingBox: CGRect
+    public let qualityScore: Double
+
+    public init(detectedClass: String, confidence: Double, boundingBox: CGRect, qualityScore: Double) {
+        self.detectedClass = detectedClass
+        self.confidence = confidence
+        self.boundingBox = boundingBox
+        self.qualityScore = qualityScore
+    }
+}
+
 /// Repository protocol for Item persistence operations
 /// **Pattern:** DESIGN-037 Pattern 1 (Repository Protocol)
 public protocol ItemRepository: Sendable {
     /// Creates a new item document in Firestore
     func createItem(userId: String, imageUrl: String) async throws -> String
+
+    /// Creates a new item document with Layer 1 metadata for Layer 1→2 handoff
+    func createItemWithLayer1Metadata(
+        itemId: String,
+        userId: String,
+        imageUrl: String,
+        layer1Metadata: Layer1Metadata
+    ) async throws
 
     /// Fetches a single item by ID
     func getItem(id: String) async throws -> Item?
@@ -57,6 +81,46 @@ public final class ItemService: ItemRepository {
 
         try await itemRef.setData(data)
         return itemId
+    }
+
+    /// Creates a new item document with Layer 1 metadata for Layer 1→2 handoff
+    /// Triggers Layer 2a extraction via onItemCreated cloud function
+    ///
+    /// - Parameters:
+    ///   - itemId: Unique item ID (from YOLO detection)
+    ///   - userId: Owner's user ID
+    ///   - imageUrl: Public URL of uploaded image in Firebase Storage
+    ///   - layer1Metadata: On-device detection results (class, confidence, bounding box, quality)
+    public func createItemWithLayer1Metadata(
+        itemId: String,
+        userId: String,
+        imageUrl: String,
+        layer1Metadata: Layer1Metadata
+    ) async throws {
+        let itemRef = db.collection("items").document(itemId)
+
+        let data: [String: Any] = [
+            "userId": userId,
+            "imageUrl": imageUrl,
+            "aiAnalysis": [
+                "layer1": [
+                    "detectedClass": layer1Metadata.detectedClass,
+                    "confidence": layer1Metadata.confidence,
+                    "boundingBox": [
+                        "x": layer1Metadata.boundingBox.origin.x,
+                        "y": layer1Metadata.boundingBox.origin.y,
+                        "width": layer1Metadata.boundingBox.size.width,
+                        "height": layer1Metadata.boundingBox.size.height
+                    ],
+                    "qualityScore": layer1Metadata.qualityScore
+                ]
+            ],
+            "status": ItemStatus.pending.rawValue,  // Triggers Cloud Function for Layer 2a
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+
+        try await itemRef.setData(data)
     }
 
     /// Fetches a single item by ID

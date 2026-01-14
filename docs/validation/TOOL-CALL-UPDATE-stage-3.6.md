@@ -218,8 +218,8 @@ The `synthesize_metadata` tool schema enforces:
 
 ### Stage 3.6 Documents
 
-- [CODE-EXAMPLE-016-claude-sonnet-synthesis](docs/design/CODE-EXAMPLE-016-claude-sonnet-synthesis.md): Claude Sonnet synthesis (tool call implementation)
-- [DESIGN-043-layer-3-error-handling](docs/design/DESIGN-043-layer-3-error-handling.md): Layer 3 error handling (malformed tool call handling)
+- [CODE-EXAMPLE-016-claude-sonnet-synthesis](../design/CODE-EXAMPLE-016-claude-sonnet-synthesis.md): Claude Sonnet synthesis (tool call implementation)
+- [DESIGN-043-layer-3-error-handling](../design/DESIGN-043-layer-3-error-handling.md): Layer 3 error handling (malformed tool call handling)
 - CHECKPOINT-stage-3.6: Updated with tool call strategy
 - RESEARCH-VALIDATION-stage-3.6: Original research (noted Claude lacks "native JSON mode" but has tool use)
 

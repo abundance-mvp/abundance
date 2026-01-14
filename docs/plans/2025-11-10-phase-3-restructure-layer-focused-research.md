@@ -430,7 +430,7 @@ Old Stage 3.3 (lines 1279-1321):
 **Expert Agent**: Computer Vision & ML
 
 **Input Documents**:
-- [DESIGN-004-computer-vision-pipeline](docs/design/DESIGN-004-computer-vision-pipeline.md): Computer Vision Pipeline
+- [DESIGN-004-computer-vision-pipeline](../design/DESIGN-004-computer-vision-pipeline.md): Computer Vision Pipeline
 - AI-INTEGRATION-LAYER-001
 - ADR-014 (AI Provider Ranking draft)
 

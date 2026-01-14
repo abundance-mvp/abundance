@@ -19,7 +19,7 @@
 **What happened:**
 - ios-sprint-executor only fetches Apple docs in Phase 1 (Pre-Sprint Setup)
 - Phase 4 (Code Review) doesn't fetch docs to verify latest APIs
-- Uses deprecated `apple-docs-fetcher-lite` instead of `apple-docs-fetcher`
+- Uses deprecated `apple-docs-fetcher` instead of `apple-docs-fetcher`
 
 **User complaint confirmed:**
 > "skill doesn't seem to use apple-docs-fetcher very often when performing code review. this is important since my ios app is using the latest apple APIs and swiftui frameworks."
@@ -27,7 +27,7 @@
 **Root cause:**
 - Lines 89-137: Apple docs fetched only once at sprint start
 - Lines 451-499: Phase 4 (Code Review) has no docs fetching
-- Line 91: References deprecated `apple-docs-fetcher-lite`
+- Line 91: References deprecated `apple-docs-fetcher`
 
 **Impact:** Code using Swift 6.0/latest SwiftUI features doesn't get verified against latest Apple docs.
 
@@ -145,7 +145,7 @@ Current: Single mode (sprint execution)
 
 ### Deprecated References
 
-- Line 91: `apple-docs-fetcher-lite` → Should be `apple-docs-fetcher`
+- Line 91: `apple-docs-fetcher` → Should be `apple-docs-fetcher`
 - Phase 1 (lines 89-137): Lite version → Full version
 
 ### Missing Integrations
@@ -168,7 +168,7 @@ Current: Single mode (sprint execution)
 
 Minimal changes to address failures:
 
-1. **Replace apple-docs-fetcher-lite with apple-docs-fetcher** (all references)
+1. **Replace apple-docs-fetcher with apple-docs-fetcher** (all references)
 2. **Add Phase 4.5: Code Review with Apple Docs** (fetch docs for code being reviewed)
 3. **Add Phase 1.5: UI/UX Brainstorming** (invoke superpowers:brainstorm when gaps identified)
 4. **Add Phase 5.5: Spec Drift Sync** (invoke verified-stage-development before PR)

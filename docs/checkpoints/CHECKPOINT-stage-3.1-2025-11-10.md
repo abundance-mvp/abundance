@@ -135,15 +135,15 @@ The following aspects of stage execution differed from the original design in `d
 **Actual Execution:**
 ```
 Outputs Created:
-- [CODE-EXAMPLE-001-swift6-concurrency-patterns](docs/design/CODE-EXAMPLE-001-swift6-concurrency-patterns.md): Swift 6 Concurrency Patterns
-- [CODE-EXAMPLE-002-catalog-mvvm-implementation](docs/design/CODE-EXAMPLE-002-catalog-mvvm-implementation.md): Catalog MVVM Implementation
-- [CODE-EXAMPLE-003-firebase-ios-integration](docs/design/CODE-EXAMPLE-003-firebase-ios-integration.md): Firebase iOS Integration
-- [CODE-EXAMPLE-004-vision-framework-patterns](docs/design/CODE-EXAMPLE-004-vision-framework-patterns.md): Vision Framework Patterns
-- [DESIGN-012-camera-capture-implementation](docs/design/DESIGN-012-camera-capture-implementation.md): Xcode Project Structure
-- [CODEGEN-001-sourcery-templates](docs/design/CODEGEN-001-sourcery-templates.md): Sourcery Templates
-- [TEST-EXAMPLE-001-viewmodel-unit-tests](docs/test/TEST-EXAMPLE-001-viewmodel-unit-tests.md): ViewModel Unit Tests
-- [TEST-EXAMPLE-002-ios-testing-patterns](docs/test/TEST-EXAMPLE-002-ios-testing-patterns.md): iOS Testing Patterns
-- [RESEARCH-002-wwdc-insights-ios26](docs/research/RESEARCH-002-wwdc-insights-ios26.md): WWDC Insights iOS 26
+- [CODE-EXAMPLE-001-swift6-concurrency-patterns](../design/CODE-EXAMPLE-001-swift6-concurrency-patterns.md): Swift 6 Concurrency Patterns
+- [CODE-EXAMPLE-002-catalog-mvvm-implementation](../design/CODE-EXAMPLE-002-catalog-mvvm-implementation.md): Catalog MVVM Implementation
+- [CODE-EXAMPLE-003-firebase-ios-integration](../design/CODE-EXAMPLE-003-firebase-ios-integration.md): Firebase iOS Integration
+- [CODE-EXAMPLE-004-vision-framework-patterns](../design/CODE-EXAMPLE-004-vision-framework-patterns.md): Vision Framework Patterns
+- [DESIGN-012-camera-capture-implementation](../design/DESIGN-012-camera-capture-implementation.md): Xcode Project Structure
+- [CODEGEN-001-sourcery-templates](../design/CODEGEN-001-sourcery-templates.md): Sourcery Templates
+- [TEST-EXAMPLE-001-viewmodel-unit-tests](../test/TEST-EXAMPLE-001-viewmodel-unit-tests.md): ViewModel Unit Tests
+- [TEST-EXAMPLE-002-ios-testing-patterns](../test/TEST-EXAMPLE-002-ios-testing-patterns.md): iOS Testing Patterns
+- [RESEARCH-002-wwdc-insights-ios26](../research/RESEARCH-002-wwdc-insights-ios26.md): WWDC Insights iOS 26
 ```
 
 **Rationale for Change**:

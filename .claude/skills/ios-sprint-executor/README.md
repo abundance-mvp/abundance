@@ -7,7 +7,7 @@ The `ios-sprint-executor` skill orchestrates deterministic agentic development f
 ## Key Features
 
 1. **Automatic iOS Detection**: Scans sprint plans for iOS-specific keywords (Vision, SwiftUI, AVFoundation, etc.)
-2. **Apple Docs Integration**: Automatically fetches Apple documentation using apple-docs-fetcher-lite pattern (8K per API, 25K max)
+2. **Apple Docs Integration**: Automatically fetches Apple documentation using apple-docs-fetcher pattern (8K per API, 25K max)
 3. **Superpowers Orchestration**: Wraps `/superpowers:write-plan` → `/superpowers:execute-plan` workflow
 4. **Token Budget Enforcement**: Ensures 18K-25K token budget per sprint
 5. **Git Workflow Integration**: Creates feature branches, commits, and PRs following Stage 5.2 patterns
@@ -33,7 +33,7 @@ This will:
 ## Dependencies
 
 - **Superpowers plugin** (required): Must be installed from marketplace
-- **apple-docs-fetcher-lite** (required for iOS sprints): Automatically invoked when iOS work detected
+- **apple-docs-fetcher** (required for iOS sprints): Automatically invoked when iOS work detected
 - **Stage 5.2 deliverables** (required): Workflow documentation, agent prompts, sprint plans
 
 ## Token Budget Strategy
@@ -62,7 +62,7 @@ This skill implements the development workflow documented in Stage 5.2:
 The skill provides clear error messages for:
 - Missing sprint plans (run Stage 5.1 first)
 - Apple docs fetch failures (retry or skip)
-- Token budget exceeded (reduce apple-docs-fetcher-lite scope)
+- Token budget exceeded (reduce apple-docs-fetcher scope)
 - Superpowers plugin not installed (install from marketplace)
 - Git branch conflicts (continue or create new branch)
 
@@ -101,7 +101,7 @@ This skill is designed to be used after Stage 5.2 completes and all sprint plans
 ## Related Skills
 
 - `verified-stage-development`: Executes pipeline stages (Stages 1.1 through 6.2)
-- `apple-docs-fetcher-lite`: Fetches Apple docs with token budget constraints
+- `apple-docs-fetcher`: Fetches Apple docs with token budget constraints
 - Superpowers plugin skills:
   - `superpowers:write-plan`: Creates implementation plans
   - `superpowers:execute-plan`: Executes plans in batches
@@ -113,7 +113,7 @@ This skill is designed to be used after Stage 5.2 completes and all sprint plans
 This skill guarantees deterministic agentic development by:
 
 1. **Enforcing token budgets** to prevent context overflow
-2. **Using apple-docs-fetcher-lite pattern** instead of full apple-docs-fetcher (avoids token explosion)
+2. **Using apple-docs-fetcher pattern** instead of full apple-docs-fetcher (avoids token explosion)
 3. **Following Stage 5.2 workflows** exactly (git, PR, sprint execution)
 4. **Automating iOS detection** so developers don't forget to fetch Apple docs
 5. **Creating structured PRs** with cross-references to ADRs, DESIGN docs, CODE-EXAMPLEs

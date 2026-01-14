@@ -19,4 +19,8 @@ actor MockImageQualityAssessor: ImageQualityAssessorProtocol {
         stubbedQualityScore = 0.75
         didCallAssess = false
     }
+
+    func setQualityScore(_ score: Double) {
+        stubbedQualityScore = score
+    }
 }

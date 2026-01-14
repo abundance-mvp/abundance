@@ -194,7 +194,7 @@
 **Skills Installed** (100% operational):
 - ios-sprint-executor: Sprint orchestration with Superpowers + Apple docs
 - verified-stage-development: Stage execution framework
-- apple-docs-fetcher-lite: JIT Apple docs with token limits
+- apple-docs-fetcher: JIT Apple docs with token limits
 - Superpowers plugin: TDD, git worktrees, debugging, code review
 
 **Token Budgets** (100% feasible):
@@ -252,13 +252,13 @@ No blockers identified. All dependencies resolved:
 - Phase 6: Completion → References DEVELOPMENT-WORKFLOW-001 (cleanup)
 
 **Supporting Documentation Created**:
-- [DEVELOPMENT-WORKFLOW-001-git-branching-strategy](docs/validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md): Git branching strategy with worktrees
-- [DEVELOPMENT-WORKFLOW-002-pr-creation-automation](docs/validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md): PR automation with GitHub CLI
-- [DEVELOPMENT-WORKFLOW-003-sprint-execution-guide](docs/validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md): 7-phase sprint lifecycle (master reference)
-- [READINESS-VALIDATION-REPORT-001](docs/validation/READINESS-VALIDATION-REPORT-001.md): Confirms zero blockers, all prerequisites met
-- [SCAFFOLDING-VALIDATION-REPORT-001](docs/validation/SCAFFOLDING-VALIDATION-REPORT-001.md): Confirms 10/10 files production-ready
-- [DEVELOPMENT-READINESS-CHECKLIST-001](docs/validation/DEVELOPMENT-READINESS-CHECKLIST-001.md): Developer onboarding (30-60 min)
-- [QUICK-START-GUIDE-001](docs/validation/QUICK-START-GUIDE-001.md): Sprint 1 execution (2 min)
+- [DEVELOPMENT-WORKFLOW-001-git-branching-strategy](../validation/DEVELOPMENT-WORKFLOW-001-git-branching-strategy.md): Git branching strategy with worktrees
+- [DEVELOPMENT-WORKFLOW-002-pr-creation-automation](../validation/DEVELOPMENT-WORKFLOW-002-pr-creation-automation.md): PR automation with GitHub CLI
+- [DEVELOPMENT-WORKFLOW-003-sprint-execution-guide](../validation/DEVELOPMENT-WORKFLOW-003-sprint-execution-guide.md): 7-phase sprint lifecycle (master reference)
+- [READINESS-VALIDATION-REPORT-001](../validation/READINESS-VALIDATION-REPORT-001.md): Confirms zero blockers, all prerequisites met
+- [SCAFFOLDING-VALIDATION-REPORT-001](../validation/SCAFFOLDING-VALIDATION-REPORT-001.md): Confirms 10/10 files production-ready
+- [DEVELOPMENT-READINESS-CHECKLIST-001](../validation/DEVELOPMENT-READINESS-CHECKLIST-001.md): Developer onboarding (30-60 min)
+- [QUICK-START-GUIDE-001](../validation/QUICK-START-GUIDE-001.md): Sprint 1 execution (2 min)
 - TEST-003 through TEST-006: Test strategies for Sprint 8 acceptance criteria
 
 ---

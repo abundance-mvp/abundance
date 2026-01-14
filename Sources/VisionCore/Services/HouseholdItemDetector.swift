@@ -10,7 +10,7 @@ import AppKit
 
 /// Production-ready household item detector using Vision Framework + YOLOv3-Tiny
 /// - Note: YOLOv3-Tiny.mlmodel download deferred to Sprint 3
-public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
+public actor HouseholdItemDetector: HouseholdItemDetectorProtocol {
 
     // MARK: - Properties
 
@@ -36,7 +36,7 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
     public init() {
         // Pre-load stream model for real-time detection
         // This avoids lazy initialization issues with Swift 6 concurrency
-        if let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc"),
+        if let modelURL = Bundle.main.url(forResource: "yolo11n", withExtension: "mlmodelc"),
            let mlModel = try? MLModel(contentsOf: modelURL) {
             self.streamModel = try? VNCoreMLModel(for: mlModel)
         } else {
@@ -61,7 +61,7 @@ public final class HouseholdItemDetector: HouseholdItemDetectorProtocol {
         // Load YOLOv11n CoreML model (5.2 MB, trained on COCO 80 classes)
         // YOLOv11n includes built-in NMS and outputs VNRecognizedObjectObservation
         // which Vision Framework can use directly without custom post-processing.
-        guard let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
+        guard let modelURL = Bundle.main.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
             throw VisionError.modelNotFound
         }
 

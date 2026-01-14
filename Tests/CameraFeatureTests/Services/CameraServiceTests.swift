@@ -107,4 +107,42 @@ final class CameraServiceTests: XCTestCase {
             XCTAssertTrue(error is CameraError)
         }
     }
+
+    func testFramePublisher_emitsNoFramesWithoutSession() async {
+        // Given
+        let expectation = XCTestExpectation(description: "Frame publisher doesn't crash")
+        expectation.isInverted = true // We don't expect frames without a running session
+        var frameCount = 0
+
+        sut.framePublisher
+            .sink { _ in
+                frameCount += 1
+                expectation.fulfill()
+            }
+            .store(in: &cancellables)
+
+        // When: Wait briefly without starting session
+
+        // Then: No frames should be emitted
+        await fulfillment(of: [expectation], timeout: 0.5)
+        XCTAssertEqual(frameCount, 0, "No frames should be emitted without session")
+    }
+
+    // MARK: - copyPixelBuffer Failure Path Documentation
+    //
+    // The private copyPixelBuffer() method handles failure gracefully:
+    // - Returns nil if CVPixelBufferCreate fails (e.g., memory pressure)
+    // - Returns nil if pixel buffer locking fails
+    // - Returns nil if base address is inaccessible
+    //
+    // When copyPixelBuffer returns nil, captureOutput(_:didOutput:from:) returns
+    // early without publishing to frameSubject. This is intentional:
+    // - Dropped frames are acceptable (throttled to 2 FPS anyway)
+    // - No crash or data corruption occurs
+    // - Detection pipeline gracefully handles missing frames
+    //
+    // Direct testing of copyPixelBuffer failure is not feasible because:
+    // 1. CVPixelBufferCreate rarely fails except under severe memory pressure
+    // 2. Creating invalid pixel buffers for test purposes is complex
+    // 3. The behavior (silent frame drop) is correct and doesn't need explicit verification
 }

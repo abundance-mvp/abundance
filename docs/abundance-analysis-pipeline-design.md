@@ -569,8 +569,8 @@ This ensures downstream stages know exactly what's available and where to find i
 **Input Documents**:
 
 - PRD-001: Abundance MVP Product Requirements
-- [ADR-003-mvp-scope-phasing](docs/adr/ADR-003-mvp-scope-phasing.md): MVP Scope and Phasing
-- [ADR-004-ios-26-only-launch](docs/adr/ADR-004-ios-26-only-launch.md): iOS 26-Only Launch Strategy
+- [ADR-003-mvp-scope-phasing](adr/ADR-003-mvp-scope-phasing.md): MVP Scope and Phasing
+- [ADR-004-ios-26-only-launch](adr/ADR-004-ios-26-only-launch.md): iOS 26-Only Launch Strategy
 - Feature Prioritization Matrix (barcode scanning requirements)
 - MVP Vision Features (simplifications from Google Lens)
 
@@ -618,7 +618,7 @@ This ensures downstream stages know exactly what's available and where to find i
 
 **Research Methodology**:
 
-- **Apple APIs**: Use apple-docs-fetcher-lite pattern (search-first, selective fetch, token budget: 25K max)
+- **Apple APIs**: Use apple-docs-fetcher pattern (search-first, selective fetch, token budget: 25K max)
 - **Cloud APIs**: Use WebSearch + WebFetch for official documentation
 - **Pricing**: Verify current pricing (2025 rates), calculate blended costs
 - **Capabilities**: Test APIs if possible, otherwise verify via official docs
@@ -694,7 +694,7 @@ This ensures downstream stages know exactly what's available and where to find i
 - ✅ Barcode API selected with verified pricing/limits
 - ✅ Complete 4-layer pipeline designed with costs
 - ✅ No unverified technical claims
-- ✅ Token usage < 25,000 (apple-docs-fetcher-lite pattern successful)
+- ✅ Token usage < 25,000 (apple-docs-fetcher pattern successful)
 
 ---
 
@@ -1315,7 +1315,7 @@ This stage makes ALL foundational technology decisions:
 
 **Input Documents**:
 
-- [DESIGN-004-computer-vision-pipeline](docs/design/DESIGN-004-computer-vision-pipeline.md): Computer Vision Pipeline
+- [DESIGN-004-computer-vision-pipeline](design/DESIGN-004-computer-vision-pipeline.md): Computer Vision Pipeline
 - AI-INTEGRATION-LAYER-001
 - ADR-014 (AI Provider Ranking draft)
 
@@ -1871,9 +1871,9 @@ This stage makes ALL foundational technology decisions:
 12. **Document Apple-Docs-Fetcher Integration** (iOS Sprints Only):
    - **Pre-Sprint Detection**: Read sprint plan, identify iOS work (Vision Framework, SwiftUI, AVFoundation)
    - **Apple Docs Validation**: Check if `docs/apple/` exists and is fresh (< 30 days)
-   - **Automatic Fetching**: If iOS work detected and docs missing/stale → run `apple-docs-fetcher-lite`
+   - **Automatic Fetching**: If iOS work detected and docs missing/stale → run `apple-docs-fetcher`
    - **Focused API List**: Extract 3-5 specific APIs from sprint plan (not broad frameworks)
-   - **Token Budget Enforcement**: 8K tokens per API, 25K max for apple-docs-fetcher-lite
+   - **Token Budget Enforcement**: 8K tokens per API, 25K max for apple-docs-fetcher
    - **Context Loading**: Add fetched docs to context before `/superpowers:write-plan`
    - **Fallback Handling**: If fetch fails → error with clear instructions to run manually
 
@@ -2060,11 +2060,11 @@ This stage makes ALL foundational technology decisions:
 - `.github/ISSUE_TEMPLATE/feature_request.yml` (feature proposals)
 - `.github/ISSUE_TEMPLATE/sprint_task.yml` (sprint task tracking)
 - `.github/dependabot.yml` (automated dependency updates)
-- `docs/tech-stack/GITHUB-ACTIONS-ARCHITECTURE-001.md` (workflow architecture overview)
-- `docs/tech-stack/BRANCH-PROTECTION-RULES-001.md` (branch protection configuration)
-- `docs/tech-stack/REPOSITORY-SETUP-CHECKLIST-001.md` (GitHub repo initialization steps)
-- `docs/tech-stack/LOCAL-DEV-SETUP-001.md` (pre-commit hooks, git hooks, environment validation)
-- `docs/tech-stack/COST-MONITORING-AUTOMATION-001.md` (AI cost tracking per PR)
+- `.claude/docs/GITHUB-ACTIONS-ARCHITECTURE-001.md` (workflow architecture overview)
+- `.claude/docs/BRANCH-PROTECTION-RULES-001.md` (branch protection configuration)
+- `.claude/docs/REPOSITORY-SETUP-CHECKLIST-001.md` (GitHub repo initialization steps)
+- `.claude/docs/LOCAL-DEV-SETUP-001.md` (pre-commit hooks, git hooks, environment validation)
+- `.claude/docs/COST-MONITORING-AUTOMATION-001.md` (AI cost tracking per PR)
 - `scripts/setup-git-hooks.sh` (install pre-commit hooks)
 - `scripts/validate-environment.sh` (check developer machine prerequisites)
 - `docs/checkpoints/CHECKPOINT-stage-5.3.md`

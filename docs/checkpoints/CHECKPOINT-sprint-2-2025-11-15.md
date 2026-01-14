@@ -502,16 +502,16 @@ grep -r "import UIKit" Sources/VisionCore/
 - Checkpoint: `docs/checkpoints/CHECKPOINT-sprint-2-2025-11-15.md`
 
 ### ADRs Referenced
-- ADR-010: SwiftUI Architecture Pattern (MVVM)
-- ADR-012: State Management Strategy (Combine + async/await)
-- ADR-013: Dependency Injection Strategy (protocol-based)
-- ADR-007: API Architecture (REST)
+- [ADR-010-swiftui-architecture-pattern](../adr/ADR-010-swiftui-architecture-pattern.md): SwiftUI Architecture Pattern (MVVM)
+- [ADR-012-state-management-strategy](../adr/ADR-012-state-management-strategy.md): State Management Strategy (Combine + async/await)
+- [ADR-025-vision-framework-strategy](../adr/ADR-025-vision-framework-strategy.md): Dependency Injection Strategy (protocol-based)
+- [ADR-007-api-architecture](../adr/ADR-007-api-architecture.md): API Architecture (REST)
 
 ### Design Documents Referenced
-- DESIGN-012: Camera Capture Implementation
-- CODE-EXAMPLE-009: Household Item Detector
-- DESIGN-014: Barcode Detection Implementation
-- API-CONTRACTS-001: REST Endpoints
+- [DESIGN-012-camera-capture-implementation](../design/DESIGN-012-camera-capture-implementation.md): Camera Capture Implementation
+- [CODE-EXAMPLE-009-household-item-detector](../design/CODE-EXAMPLE-009-household-item-detector.md): Household Item Detector
+- [DESIGN-014-barcode-detection-implementation](../design/DESIGN-014-barcode-detection-implementation.md): Barcode Detection Implementation
+- [API-CONTRACTS-001-rest-endpoints](../design/API-CONTRACTS-001-rest-endpoints.md): REST Endpoints
 
 ---
 

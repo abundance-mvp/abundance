@@ -38,8 +38,8 @@
 - Create: Packages/Features/CatalogFeature/Tests/CatalogViewModelTests.swift
 
 **References:**
-- [CODE-EXAMPLE-002-catalog-mvvm-implementation](docs/design/CODE-EXAMPLE-002-catalog-mvvm-implementation.md): Catalog MVVM Implementation
-- [DESIGN-024-firestore-listener-patterns](docs/design/DESIGN-024-firestore-listener-patterns.md): Firestore Listener Patterns
+- [CODE-EXAMPLE-002-catalog-mvvm-implementation](../design/CODE-EXAMPLE-002-catalog-mvvm-implementation.md): Catalog MVVM Implementation
+- [DESIGN-024-firestore-listener-patterns](../design/DESIGN-024-firestore-listener-patterns.md): Firestore Listener Patterns
 
 ---
 
@@ -66,8 +66,8 @@
 - Create: Packages/Features/CatalogFeature/Tests/CatalogViewTests.swift
 
 **References:**
-- [DESIGN-028-catalog-view-specification](docs/design/DESIGN-028-catalog-view-specification.md): Catalog View Specification
-- [DESIGN-031-swiftui-component-library](docs/design/DESIGN-031-swiftui-component-library.md): SwiftUI Component Library
+- [DESIGN-028-catalog-view-specification](../design/DESIGN-028-catalog-view-specification.md): Catalog View Specification
+- [DESIGN-031-swiftui-component-library](../design/DESIGN-031-swiftui-component-library.md): SwiftUI Component Library
 
 ---
 
@@ -92,7 +92,7 @@
 - Add: Search/filter/sort logic
 
 **References:**
-- [DESIGN-028-catalog-view-specification](docs/design/DESIGN-028-catalog-view-specification.md): Catalog View Specification
+- [DESIGN-028-catalog-view-specification](../design/DESIGN-028-catalog-view-specification.md): Catalog View Specification
 
 ---
 

@@ -154,7 +154,7 @@
 
 - [x] **ios-sprint-executor**: Orchestrates sprint execution with Superpowers + Apple docs integration
 - [x] **verified-stage-development**: Stage execution framework (research → plan → execute)
-- [x] **apple-docs-fetcher-lite**: JIT Apple documentation fetching with token limits
+- [x] **apple-docs-fetcher**: JIT Apple documentation fetching with token limits
 
 **Location**: `.claude/skills/`
 
@@ -181,7 +181,7 @@
 **Dependencies Verified**:
 
 - ✅ Superpowers plugin installed and accessible
-- ✅ apple-docs-fetcher-lite skill installed
+- ✅ apple-docs-fetcher skill installed
 - ✅ DEVELOPMENT-WORKFLOW-003 created (referenced in SKILL.md line 12)
 - ✅ Sprint plans exist (SPRINT-PLAN-001 through 008)
 

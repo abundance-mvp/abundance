@@ -14,7 +14,7 @@
 
 **Files:**
 - Create: Feature branch `feature/claude-automation-improvements`
-- Stage: `.claude/commands/apple-docs-fetcher-lite.md`
+- Stage: `.claude/commands/apple-docs-fetcher.md`
 - Stage: `.claude/commands/super-code-review.md`
 - Stage: `.claude/settings.local.json`
 
@@ -29,7 +29,7 @@ Expected: `Switched to a new branch 'feature/claude-automation-improvements'`
 ### Step 2: Stage Claude automation files
 
 ```bash
-git add .claude/commands/apple-docs-fetcher-lite.md
+git add .claude/commands/apple-docs-fetcher.md
 git add .claude/commands/super-code-review.md
 git add .claude/settings.local.json
 ```
@@ -51,7 +51,7 @@ git commit -m "$(cat <<'EOF'
 feat(claude): add automation slash commands and permissions
 
 Add two new slash commands for development workflow:
-- apple-docs-fetcher-lite: Lightweight Apple docs fetcher with token limit protection
+- apple-docs-fetcher: Lightweight Apple docs fetcher with token limit protection
 - super-code-review: Invoke superpowers code-reviewer for PR reviews
 
 Update settings.local.json to allow Skill(apple-docs-fetcher) without prompt.
@@ -82,13 +82,13 @@ Expected: Branch pushed to remote
 gh pr create --title "feat(claude): add automation slash commands and permissions" --body "$(cat <<'EOF'
 ## Summary
 
-- Add `apple-docs-fetcher-lite` slash command for lightweight Apple documentation fetching
+- Add `apple-docs-fetcher` slash command for lightweight Apple documentation fetching
 - Add `super-code-review` slash command to invoke superpowers code-reviewer
 - Update `.claude/settings.local.json` to allow `Skill(apple-docs-fetcher)` without user prompt
 
 ## Test plan
 
-- [ ] Verify `/apple-docs-fetcher-lite SwiftUI.View` fetches documentation
+- [ ] Verify `/apple-docs-fetcher SwiftUI.View` fetches documentation
 - [ ] Verify `/super-code-review` invokes code-reviewer subagent
 - [ ] Verify `Skill(apple-docs-fetcher)` runs without prompting
 

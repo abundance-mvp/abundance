@@ -10,7 +10,7 @@
 
 **Critical Constraints:**
 
-- ADR-010: SwiftUI-only architecture (UIKit ONLY for framework bridging)
+- [ADR-010-swiftui-architecture-pattern](../adr/ADR-010-swiftui-architecture-pattern.md): SwiftUI-only architecture (UIKit ONLY for framework bridging)
 - TDD workflow: test-fail-implement-pass-commit
 - Swift 6.0 strict concurrency enabled
 - 80%+ test coverage target

@@ -18,13 +18,19 @@ echo "🔍 Running pre-commit checks..."
 # SwiftLint (if iOS files changed)
 if git diff --cached --name-only | grep -q "\.swift$"; then
   echo "Running SwiftLint..."
-  cd ios && swiftlint lint --strict
+  swiftlint lint --strict
 fi
 
 # ESLint (if TypeScript files changed)
 if git diff --cached --name-only | grep -q "\.ts$"; then
   echo "Running ESLint..."
-  cd backend/functions && npm run lint
+  cd functions && npm run lint
+fi
+
+# Document validation (if markdown files in docs/ changed)
+if git diff --cached --name-only | grep -q "^docs/.*\.md$"; then
+  echo "Validating document references..."
+  python3 scripts/validate_doc_references.py
 fi
 
 echo "✅ Pre-commit checks passed"
@@ -45,13 +51,13 @@ echo "🔍 Running pre-push checks..."
 # iOS tests (if iOS files changed)
 if git diff --name-only origin/main...HEAD | grep -q "\.swift$"; then
   echo "Running iOS tests..."
-  cd ios && swift test
+  swift test
 fi
 
 # Backend tests (if backend files changed)
-if git diff --name-only origin/main...HEAD | grep -q "backend/.*\.ts$"; then
+if git diff --name-only origin/main...HEAD | grep -q "functions/.*\.ts$"; then
   echo "Running backend tests..."
-  cd backend/functions && npm test
+  cd functions && npm test
 fi
 
 echo "✅ Pre-push checks passed"

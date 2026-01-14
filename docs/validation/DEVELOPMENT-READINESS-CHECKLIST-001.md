@@ -88,7 +88,7 @@ Complete onboarding checklist for developers (human or AI agents) before startin
   - Click: Install
 - [ ] **Project skills** loaded: `.claude/skills/` directory exists
   - Verify: `ls .claude/skills/`
-  - Expected: `ios-sprint-executor`, `verified-stage-development`, `apple-docs-fetcher-lite`
+  - Expected: `ios-sprint-executor`, `verified-stage-development`, `apple-docs-fetcher`
 
 ---
 
@@ -171,9 +171,9 @@ Complete onboarding checklist for developers (human or AI agents) before startin
   ```
   - Expected: Directory exists
 
-- [ ] **apple-docs-fetcher-lite** skill exists:
+- [ ] **apple-docs-fetcher** skill exists:
   ```bash
-  ls .claude/skills/apple-docs-fetcher-lite/
+  ls .claude/skills/apple-docs-fetcher/
   ```
   - Expected: Directory exists
 

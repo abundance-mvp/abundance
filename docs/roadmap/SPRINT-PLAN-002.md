@@ -39,8 +39,8 @@
 - Create: Packages/Features/CameraFeature/Tests/CameraViewModelTests.swift
 
 **References:**
-- [DESIGN-012-camera-capture-implementation](docs/design/DESIGN-012-camera-capture-implementation.md): Camera Capture Implementation
-- [CODE-EXAMPLE-004-vision-framework-patterns](docs/design/CODE-EXAMPLE-004-vision-framework-patterns.md): Vision Framework Patterns
+- [DESIGN-012-camera-capture-implementation](../design/DESIGN-012-camera-capture-implementation.md): Camera Capture Implementation
+- [CODE-EXAMPLE-004-vision-framework-patterns](../design/CODE-EXAMPLE-004-vision-framework-patterns.md): Vision Framework Patterns
 
 ---
 
@@ -68,8 +68,8 @@
 - Add: YOLOv3-Tiny.mlmodel (34 MB, Resources/)
 
 **References:**
-- [CODE-EXAMPLE-009-household-item-detector](docs/design/CODE-EXAMPLE-009-household-item-detector.md): Household Item Detector
-- [DESIGN-039-layer-1-performance-optimization](docs/design/DESIGN-039-layer-1-performance-optimization.md): Layer 1 Performance Optimization
+- [CODE-EXAMPLE-009-household-item-detector](../design/CODE-EXAMPLE-009-household-item-detector.md): Household Item Detector
+- [DESIGN-039-layer-1-performance-optimization](../design/DESIGN-039-layer-1-performance-optimization.md): Layer 1 Performance Optimization
 
 ---
 
@@ -94,8 +94,8 @@
 - Create: Packages/Core/Vision/Tests/BarcodeDetectorTests.swift
 
 **References:**
-- [DESIGN-014-barcode-detection-implementation](docs/design/DESIGN-014-barcode-detection-implementation.md): Barcode Detection Implementation
-- [ADR-018-barcode-product-lookup-strategy](docs/adr/ADR-018-barcode-product-lookup-strategy.md): Barcode Product Lookup Strategy
+- [DESIGN-014-barcode-detection-implementation](../design/DESIGN-014-barcode-detection-implementation.md): Barcode Detection Implementation
+- [ADR-018-barcode-product-lookup-strategy](../adr/ADR-018-barcode-product-lookup-strategy.md): Barcode Product Lookup Strategy
 
 ---
 
@@ -121,8 +121,8 @@
 - Modify: functions/src/index.ts
 
 **References:**
-- [API-CONTRACTS-001-rest-endpoints](docs/design/API-CONTRACTS-001-rest-endpoints.md): REST Endpoints
-- [CODE-EXAMPLE-005-cloud-functions-patterns](docs/design/CODE-EXAMPLE-005-cloud-functions-patterns.md): Cloud Functions Patterns
+- [API-CONTRACTS-001-rest-endpoints](../design/API-CONTRACTS-001-rest-endpoints.md): REST Endpoints
+- [CODE-EXAMPLE-005-cloud-functions-patterns](../design/CODE-EXAMPLE-005-cloud-functions-patterns.md): Cloud Functions Patterns
 
 ---
 

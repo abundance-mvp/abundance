@@ -1,0 +1,72 @@
+name: Abundance
+options:
+  bundleIdPrefix: com.abundance
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: en
+  xcodeVersion: "16.0"
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: NDAMNXP7RA
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: Apple Development
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    ENABLE_STRICT_CONCURRENCY_CHECKING: YES
+    SWIFT_UPCOMING_FEATURE_FLAGS: StrictConcurrency
+
+targets:
+  Abundance:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+
+    settings:
+      base:
+        PRODUCT_NAME: Abundance
+        PRODUCT_BUNDLE_IDENTIFIER: com.abundance.mvp
+        CODE_SIGN_ENTITLEMENTS: Abundance.entitlements
+        INFOPLIST_FILE: App/Info.plist
+        SWIFT_VERSION: "6.0"
+        DEVELOPMENT_TEAM: NDAMNXP7RA
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+
+    sources:
+      - path: App
+        name: App
+        type: group
+        excludes:
+          - "Info.plist"
+      - path: Sources
+        name: Sources
+        type: group
+        excludes:
+          - "**/.build"
+          - "**/Tests"
+
+    resources:
+      - App/Assets.xcassets
+      - App/GoogleService-Info.plist
+      - Sources/VisionCore/Resources/yolo11n.mlmodelc
+
+    entitlements:
+      path: Abundance.entitlements
+
+    dependencies:
+      - package: firebase-ios-sdk
+        product: FirebaseAnalytics
+      - package: firebase-ios-sdk
+        product: FirebaseAuth
+      - package: firebase-ios-sdk
+        product: FirebaseFirestore
+      - package: firebase-ios-sdk
+        product: FirebaseStorage
+
+packages:
+  firebase-ios-sdk:
+    url: https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks.git
+    from: 11.11.0

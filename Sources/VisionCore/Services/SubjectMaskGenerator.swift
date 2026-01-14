@@ -48,7 +48,7 @@ public actor SubjectMaskGenerator: SubjectMaskGeneratorProtocol {
 
             // Extract results
             // VNGenerateForegroundInstanceMaskRequest.results returns [VNInstanceMaskObservation]
-            guard let results = request.results as? [VNInstanceMaskObservation],
+            guard let results = request.results,
                   let firstMask = results.first else {
                 return nil
             }

@@ -9,7 +9,7 @@
 **Tech Stack:** Swift 6.0, SwiftUI, AVFoundation, Vision, Core ML, YOLOv3-Tiny, TypeScript, Firebase Functions, Jest
 
 **Critical Constraints:**
-- ADR-010: SwiftUI-only architecture (MVVM pattern required)
+- [ADR-010-swiftui-architecture-pattern](../adr/ADR-010-swiftui-architecture-pattern.md): SwiftUI-only architecture (MVVM pattern required)
 - UIKit imports ONLY permitted for framework bridging (AVFoundation, Vision require UIKit types like UIImage)
 - P0 Violation: UIKit imports in non-bridging code blocks PR merge
 - 80%+ test coverage target (TEST-STRATEGY-001)

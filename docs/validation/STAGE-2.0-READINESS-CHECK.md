@@ -51,7 +51,7 @@ Research and verify ALL technical capabilities for AI cataloging pipeline BEFORE
    - VNCoreMLRequest + Core ML models
    - VNDetectBarcodesRequest
    - Performance, accuracy, device requirements
-   - ✅ Will use apple-docs-fetcher-lite (token-safe)
+   - ✅ Will use apple-docs-fetcher (token-safe)
 
 2. **Core ML Object Detection**
    - YOLOv3-Tiny availability and specs
@@ -110,7 +110,7 @@ All required inputs exist and are accessible.
 Previous apple-docs-fetcher caused token limit failures (>25,000 tokens).
 
 ### Solution Implemented
-✅ `.claude/skills/apple-docs-fetcher-lite/SKILL.md` created
+✅ `.claude/skills/apple-docs-fetcher/SKILL.md` created
 ✅ `.claude/skills/verified-stage-development/SKILL.md` updated
 ✅ `docs/tech-stack/MCP-TOKEN-LIMIT-SOLUTION.md` documented
 
@@ -139,7 +139,7 @@ The following archived documents will be IGNORED for Stage 2.0 (fresh research):
 ❌ `docs/archive/stage-2-1/research/serpapi-google-lens-verification-report.md`
 
 **Rationale**:
-- Conduct fresh research using apple-docs-fetcher-lite
+- Conduct fresh research using apple-docs-fetcher
 - Verify current 2025 pricing and capabilities
 - Use token-safe approach throughout
 - Create clean, up-to-date verification
@@ -154,12 +154,12 @@ The following archived documents will be IGNORED for Stage 2.0 (fresh research):
 - [x] Pipeline design updated (Stage 2.0 added)
 - [x] Context map updated (dependencies configured)
 - [x] Required input documents exist
-- [x] apple-docs-fetcher-lite skill created
+- [x] apple-docs-fetcher skill created
 - [x] verified-stage-development skill updated
 - [x] Token limit solution documented
 
 ### Research Tools Available
-- [x] apple-docs-fetcher-lite (for Vision Framework APIs)
+- [x] apple-docs-fetcher (for Vision Framework APIs)
 - [x] mcp__sosumi__searchAppleDocumentation (MCP search)
 - [x] mcp__sosumi__fetchAppleDocumentation (MCP fetch)
 - [x] WebSearch (for cloud AI providers)
@@ -187,7 +187,7 @@ The following archived documents will be IGNORED for Stage 2.0 (fresh research):
 **What will happen**:
 1. Phase 1: Load context (Phase 1 ADRs, specs, pipeline design)
 2. Phase 2: Research verification
-   - Use apple-docs-fetcher-lite for Vision Framework APIs
+   - Use apple-docs-fetcher for Vision Framework APIs
    - WebSearch + WebFetch for cloud AI providers
    - Create RESEARCH-VALIDATION-stage-2.0.md
 3. Phase 3: Create implementation plan
@@ -213,7 +213,7 @@ Stage 2.1 will load all Stage 2.0 outputs and use verified data for tech stack d
 | Pipeline design updated | ✅ | Stage 2.0 added before 2.1 |
 | Context map updated | ✅ | Dependencies configured |
 | Input documents | ✅ | All Phase 1 ADRs and specs exist |
-| Apple MCP solution | ✅ | apple-docs-fetcher-lite ready |
+| Apple MCP solution | ✅ | apple-docs-fetcher ready |
 | Token limit protection | ✅ | <25,000 budget enforced |
 | Archived research | ⚠️ | Will be ignored for fresh research |
 | Execution readiness | ✅ | Ready to run Stage 2.0 |

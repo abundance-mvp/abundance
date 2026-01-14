@@ -7,10 +7,11 @@ import CoreVideo
 public protocol ObjectDeduplicatorProtocol: Actor, Sendable {
     /// Generates a perceptual fingerprint for an object region
     /// - Parameters:
-    ///   - pixelBuffer: The CVPixelBuffer containing the image data
+    ///   - pixelBuffer: The CVPixelBuffer containing the image data (must be copied before crossing isolation boundaries)
     ///   - boundingBox: The normalized bounding box (0.0-1.0) of the object region
     /// - Returns: String identifier for the fingerprint
-    nonisolated func generateFingerprint(
+    /// - Note: Actor-isolated to ensure thread-safe access to CVPixelBuffer per Swift 6 concurrency requirements
+    func generateFingerprint(
         pixelBuffer: CVPixelBuffer,
         boundingBox: CGRect
     ) async -> String?

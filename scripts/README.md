@@ -184,6 +184,22 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 The project uses Python 3.11+ (specified in `.python-version`).
 
+### XcodeGen
+
+Required for Xcode project regeneration:
+
+```bash
+brew install xcodegen
+```
+
+Verify installation:
+
+```bash
+xcodegen --version
+```
+
+Expected output: Version number (e.g., "2.44.1")
+
 ### Running Scripts
 
 Use `uv run` to execute scripts with automatic dependency management:

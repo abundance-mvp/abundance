@@ -340,9 +340,9 @@ Sprint 1 E2E testing is complete when:
 
 - Sprint Plan: `docs/roadmap/SPRINT-PLAN-001.md`
 - Implementation Plan: `docs/plans/2025-11-14-sprint-1-project-setup-auth.md`
-- ADR-005: Authentication Strategy
-- CODE-EXAMPLE-003: Firebase iOS Integration
-- DESIGN-007: Firebase SDK Integration
+- [ADR-005-authentication-strategy](adr/ADR-005-authentication-strategy.md): Authentication Strategy
+- [CODE-EXAMPLE-003-firebase-ios-integration](design/CODE-EXAMPLE-003-firebase-ios-integration.md): Firebase iOS Integration
+- [DESIGN-007-firebase-sdk-integration](design/DESIGN-007-firebase-sdk-integration.md): Firebase SDK Integration
 
 ---
 

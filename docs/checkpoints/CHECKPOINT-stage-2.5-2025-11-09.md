@@ -132,24 +132,24 @@ Comparing `docs/abundance-analysis-pipeline-design.md` (Stage 2.5 section, lines
 **Expected Outputs (from master design, lines 1141-1150)**:
 ```
 - DESIGN-005: Security & Privacy Architecture
-- [THREAT-MODEL-001-stride-analysis](docs/design/THREAT-MODEL-001-stride-analysis.md): STRIDE Analysis
-- [ADR-015-ai-reasoning-layer-architecture](docs/adr/ADR-015-ai-reasoning-layer-architecture.md): Authentication Strategy
-- [ADR-016-image-hosting-strategy](docs/adr/ADR-016-image-hosting-strategy.md): Data Encryption Approach
-- [ADR-017-llm-parsing-architecture](docs/adr/ADR-017-llm-parsing-architecture.md): Photo Privacy Protection
+- [THREAT-MODEL-001-stride-analysis](../design/THREAT-MODEL-001-stride-analysis.md): STRIDE Analysis
+- [ADR-015-ai-reasoning-layer-architecture](../adr/ADR-015-ai-reasoning-layer-architecture.md): Authentication Strategy
+- [ADR-016-image-hosting-strategy](../adr/ADR-016-image-hosting-strategy.md): Data Encryption Approach
+- [ADR-017-llm-parsing-architecture](../adr/ADR-017-llm-parsing-architecture.md): Photo Privacy Protection
 - PRIVACY-IMPACT-ASSESSMENT-001
-- [TEST-002-ios-unit-test-strategy](docs/test/TEST-002-ios-unit-test-strategy.md): Security Test Plan
+- [TEST-002-ios-unit-test-strategy](../test/TEST-002-ios-unit-test-strategy.md): Security Test Plan
 - SECURITY-HARDENING-CHECKLIST-001
 ```
 
 **Actual Outputs Created**:
 ```
-- [DESIGN-025-security-privacy-architecture](docs/design/DESIGN-025-security-privacy-architecture.md): Security & Privacy Architecture (not DESIGN-005)
-- [THREAT-MODEL-001-stride-analysis](docs/design/THREAT-MODEL-001-stride-analysis.md): STRIDE Analysis ✅ (exact match)
-- [ADR-021-data-encryption-approach](docs/adr/ADR-021-data-encryption-approach.md): Data Encryption Approach (not ADR-016)
-- [ADR-022-photo-privacy-protection](docs/adr/ADR-022-photo-privacy-protection.md): Photo Privacy Protection (not ADR-017)
-- [ADR-023-authentication-authorization-strategy](docs/adr/ADR-023-authentication-authorization-strategy.md): Authentication & Authorization Strategy (not ADR-015)
+- [DESIGN-025-security-privacy-architecture](../design/DESIGN-025-security-privacy-architecture.md): Security & Privacy Architecture (not DESIGN-005)
+- [THREAT-MODEL-001-stride-analysis](../design/THREAT-MODEL-001-stride-analysis.md): STRIDE Analysis ✅ (exact match)
+- [ADR-021-data-encryption-approach](../adr/ADR-021-data-encryption-approach.md): Data Encryption Approach (not ADR-016)
+- [ADR-022-photo-privacy-protection](../adr/ADR-022-photo-privacy-protection.md): Photo Privacy Protection (not ADR-017)
+- [ADR-023-authentication-authorization-strategy](../adr/ADR-023-authentication-authorization-strategy.md): Authentication & Authorization Strategy (not ADR-015)
 - PRIVACY-IMPACT-ASSESSMENT-001 ✅ (exact match)
-- [TEST-003-e2e-user-flows](docs/test/TEST-003-e2e-user-flows.md): Security Test Plan (not TEST-002)
+- [TEST-003-security-test-plan](../test/TEST-003-security-test-plan.md): Security Test Plan (not TEST-002)
 - SECURITY-HARDENING-CHECKLIST-001 ✅ (exact match)
 ```
 

@@ -133,8 +133,8 @@ The Stage 3.3 definition in the master pipeline design differs from the actual e
 5. Prompt engineering (optimal prompts)
 
 **Outputs**:
-- [RESEARCH-003-layer-1-household-item-detection](docs/research/RESEARCH-003-layer-1-household-item-detection.md): AI Provider Comparison
-- [COST-MODEL-001-ai-cataloging-cost-per-item](docs/tech-stack/COST-MODEL-001-ai-cataloging-cost-per-item.md): AI Cataloging Cost per Item
+- [RESEARCH-003-layer-1-household-item-detection](../research/RESEARCH-003-layer-1-household-item-detection.md): AI Provider Comparison
+- [COST-MODEL-001-ai-cataloging-cost-per-item](../tech-stack/COST-MODEL-001-ai-cataloging-cost-per-item.md): AI Cataloging Cost per Item
 - PROOF-OF-CONCEPT-001: AI Provider Benchmark Results
 - PROMPT-TEMPLATES-001: AI Prompt Engineering
 ```

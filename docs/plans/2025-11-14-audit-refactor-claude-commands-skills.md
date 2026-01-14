@@ -66,7 +66,7 @@ Comprehensive documentation...
 1. `ios-sprint-executor/SKILL.md` - ⚠️ Exists, needs review for best practices
 2. `verified-stage-development/SKILL.md` - ⚠️ Exists, needs review
 3. `apple-docs-fetcher/SKILL.md` - ⚠️ Exists, needs review
-4. `apple-docs-fetcher-lite/SKILL.md` - ⚠️ Exists, needs review
+4. `apple-docs-fetcher/SKILL.md` - ⚠️ Exists, needs review
 
 **abundance-scaffold/.claude/commands/**:
 1. `validate-docs.md` - ❌ Says "invokes agent" but doesn't (should be command that calls Claude Code)

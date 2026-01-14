@@ -40,7 +40,7 @@
 - Create: AbundanceUITests/SearchFlowTests.swift
 
 **References:**
-- [TEST-STRATEGY-001-mvp-testing-approach](docs/test/TEST-STRATEGY-001-mvp-testing-approach.md): MVP Testing Approach
+- [TEST-STRATEGY-001-mvp-testing-approach](../test/TEST-STRATEGY-001-mvp-testing-approach.md): MVP Testing Approach
 
 ---
 
@@ -65,7 +65,7 @@
 - Update: tests/golden-dataset/validation-report.md
 
 **References:**
-- [TEST-EXAMPLE-004-ml-cv-testing-patterns](docs/test/TEST-EXAMPLE-004-ml-cv-testing-patterns.md): ML/CV Testing Patterns
+- [TEST-EXAMPLE-004-ml-cv-testing-patterns](../test/TEST-EXAMPLE-004-ml-cv-testing-patterns.md): ML/CV Testing Patterns
 
 ---
 
@@ -108,7 +108,7 @@
 - Create: docs/known-issues.md
 
 **References:**
-- [ADR-009-ios-deployment-cicd](docs/adr/ADR-009-ios-deployment-cicd.md): iOS Deployment & CI/CD
+- [ADR-009-ios-deployment-cicd](../adr/ADR-009-ios-deployment-cicd.md): iOS Deployment & CI/CD
 
 ---
 

@@ -99,9 +99,9 @@
 - Manual: Run app in simulator, tap "Sign in with Apple"
 
 **References:**
-- [ADR-005-authentication-strategy](docs/adr/ADR-005-authentication-strategy.md): Authentication Strategy
-- [CODE-EXAMPLE-003-firebase-ios-integration](docs/design/CODE-EXAMPLE-003-firebase-ios-integration.md): Firebase iOS Integration
-- [DESIGN-007-firebase-sdk-integration](docs/design/DESIGN-007-firebase-sdk-integration.md): Firebase SDK Integration
+- [ADR-005-authentication-strategy](../adr/ADR-005-authentication-strategy.md): Authentication Strategy
+- [CODE-EXAMPLE-003-firebase-ios-integration](../design/CODE-EXAMPLE-003-firebase-ios-integration.md): Firebase iOS Integration
+- [DESIGN-007-firebase-sdk-integration](../design/DESIGN-007-firebase-sdk-integration.md): Firebase SDK Integration
 
 ---
 
@@ -132,8 +132,8 @@
 - Integration: `curl http://localhost:5001/.../api/v1/users/test-uid -H "Authorization: Bearer <token>"`
 
 **References:**
-- [API-CONTRACTS-001-rest-endpoints](docs/design/API-CONTRACTS-001-rest-endpoints.md): REST Endpoints
-- [CODE-EXAMPLE-005-cloud-functions-patterns](docs/design/CODE-EXAMPLE-005-cloud-functions-patterns.md): Cloud Functions Patterns
+- [API-CONTRACTS-001-rest-endpoints](../design/API-CONTRACTS-001-rest-endpoints.md): REST Endpoints
+- [CODE-EXAMPLE-005-cloud-functions-patterns](../design/CODE-EXAMPLE-005-cloud-functions-patterns.md): Cloud Functions Patterns
 
 ---
 

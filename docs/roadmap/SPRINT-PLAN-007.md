@@ -38,7 +38,7 @@
 - Create: Packages/Features/CatalogFeature/Tests/ItemDetailViewTests.swift
 
 **References:**
-- [DESIGN-029-item-detail-view-specification](docs/design/DESIGN-029-item-detail-view-specification.md): Item Detail View Specification
+- [DESIGN-029-item-detail-view-specification](../design/DESIGN-029-item-detail-view-specification.md): Item Detail View Specification
 
 ---
 
@@ -63,8 +63,8 @@
 - Modify: Packages/Features/CatalogFeature/Sources/ItemDetailView.swift
 
 **References:**
-- [DESIGN-029-item-detail-view-specification](docs/design/DESIGN-029-item-detail-view-specification.md): Item Detail View Specification
-- [API-CONTRACTS-001-rest-endpoints](docs/design/API-CONTRACTS-001-rest-endpoints.md): REST Endpoints
+- [DESIGN-029-item-detail-view-specification](../design/DESIGN-029-item-detail-view-specification.md): Item Detail View Specification
+- [API-CONTRACTS-001-rest-endpoints](../design/API-CONTRACTS-001-rest-endpoints.md): REST Endpoints
 
 ---
 
@@ -91,7 +91,7 @@
 - Create: Packages/Features/OnboardingFeature/Tests/OnboardingViewTests.swift
 
 **References:**
-- [DESIGN-026-onboarding-flow-ui-specification](docs/design/DESIGN-026-onboarding-flow-ui-specification.md): Onboarding Flow UI Specification
+- [DESIGN-026-onboarding-flow-ui-specification](../design/DESIGN-026-onboarding-flow-ui-specification.md): Onboarding Flow UI Specification
 
 ---
 
@@ -117,7 +117,7 @@
 - Create: Packages/Features/ProfileFeature/Tests/ProfileViewTests.swift
 
 **References:**
-- [DESIGN-030-profile-export-view-specification](docs/design/DESIGN-030-profile-export-view-specification.md): Profile Export View Specification
+- [DESIGN-030-profile-export-view-specification](../design/DESIGN-030-profile-export-view-specification.md): Profile Export View Specification
 
 ---
 

@@ -8,6 +8,9 @@ public protocol CameraServiceProtocol: Sendable {
     /// Publisher for current camera session state
     var sessionState: AnyPublisher<CameraSessionState, Never> { get }
 
+    /// Publisher emitting camera frames as CVPixelBuffer for real-time processing
+    var framePublisher: AnyPublisher<CVPixelBuffer, Never> { get }
+
     /// Configure and start the camera session
     /// - Throws: CameraError if session cannot be started
     func startSession() async throws

@@ -1,7 +1,5 @@
 import SwiftUI
 import InventoryFeature
-import CameraFeature
-import OnboardingFeature
 
 public struct MainTabView: View {
     @State private var selectedTab: Tab = .catalog
@@ -16,7 +14,9 @@ public struct MainTabView: View {
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            InventoryView()
+            InventoryView(onOpenCamera: {
+                selectedTab = .camera
+            })
                 .tabItem {
                     Label("Catalog", systemImage: "square.grid.2x2.fill")
                 }

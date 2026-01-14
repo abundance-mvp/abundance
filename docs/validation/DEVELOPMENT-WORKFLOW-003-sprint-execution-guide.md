@@ -27,7 +27,7 @@ The ios-sprint-executor skill orchestrates this 7-phase lifecycle automatically 
    - Result: `ios_work_detected = true/false`
 
 3. **Fetch Apple documentation** (if iOS work detected)
-   - Uses: `apple-docs-fetcher-lite` skill (NOT full fetcher)
+   - Uses: `apple-docs-fetcher` skill (NOT full fetcher)
    - Strategy: Extract 3-5 focused APIs from sprint plan
    - Token budget: 8K per API max, 25K total max
    - Output: `docs/apple/sprint-X-api-verification.md` (concise summaries)
@@ -426,10 +426,10 @@ Run Stage 5.1 first to generate sprint plans:
 ```
 ERROR: Apple documentation fetch failed.
 
-iOS work detected but apple-docs-fetcher-lite failed.
+iOS work detected but apple-docs-fetcher failed.
 
 Options:
-1. Type 'retry' to re-run apple-docs-fetcher-lite
+1. Type 'retry' to re-run apple-docs-fetcher
 2. Type 'skip' to continue without Apple docs (NOT RECOMMENDED)
 3. Type 'abort' to stop
 ```
@@ -447,7 +447,7 @@ Possible causes:
 - Too many documents loaded from sprint plan
 - Apple docs fetch exceeded 25K limit
 
-Recommendation: Reduce apple-docs-fetcher-lite scope (fewer APIs)
+Recommendation: Reduce apple-docs-fetcher scope (fewer APIs)
 ```
 
 **Fix**: Reduce number of Apple APIs fetched (focus on 3-5 most critical)

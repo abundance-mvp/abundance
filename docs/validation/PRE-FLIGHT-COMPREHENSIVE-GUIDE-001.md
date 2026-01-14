@@ -222,7 +222,7 @@ cd /Users/w/code/abundance-mvp
 1. **Phase 1: Setup**
    - Load sprint plan from `docs/roadmap/SPRINT-PLAN-00X.md`
    - Detect iOS work (keywords: Vision, SwiftUI, AVFoundation, etc.)
-   - Fetch Apple docs if needed (using `apple-docs-fetcher-lite`)
+   - Fetch Apple docs if needed (using `apple-docs-fetcher`)
    - Create feature branch: `feature/sprint-X-description`
    - Optional: Create git worktree for isolation
 
@@ -653,7 +653,7 @@ graph TB
     Phase1 --> LoadPlan[Load SPRINT-PLAN-00X.md]
     LoadPlan --> DetectIOS{iOS work<br/>detected?}
 
-    DetectIOS -->|Yes| FetchDocs[Fetch Apple Docs<br/>apple-docs-fetcher-lite]
+    DetectIOS -->|Yes| FetchDocs[Fetch Apple Docs<br/>apple-docs-fetcher]
     DetectIOS -->|No| CreateBranch
     FetchDocs --> CreateBranch[Create feature branch]
 
@@ -945,7 +945,7 @@ cd /Users/w/code/abundance-mvp
 
 1. ✅ Load sprint plan from `docs/roadmap/SPRINT-PLAN-00X.md`
 2. ✅ Detect iOS work (keywords: Vision, SwiftUI, AVFoundation, etc.)
-3. ✅ Fetch Apple docs if iOS work detected (using `apple-docs-fetcher-lite`)
+3. ✅ Fetch Apple docs if iOS work detected (using `apple-docs-fetcher`)
 4. ✅ Create feature branch (`feature/sprint-X-description`)
 5. ✅ Load all context (ADRs, DESIGNs, CODE-EXAMPLEs, Apple docs)
 6. ✅ Generate implementation plan with `/superpowers:write-plan`

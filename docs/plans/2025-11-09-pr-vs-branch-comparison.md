@@ -239,10 +239,10 @@ git commit -m "docs: add content quality assessment"
 **Step 1: Extract architectural decisions from PR #1**
 
 Key decisions from:
-- [ADR-021-data-encryption-approach](docs/adr/ADR-021-data-encryption-approach.md): Authentication approach
-- [ADR-022-photo-privacy-protection](docs/adr/ADR-022-photo-privacy-protection.md): Encryption strategy
-- [ADR-023-authentication-authorization-strategy](docs/adr/ADR-023-authentication-authorization-strategy.md): Photo privacy model
-- [DESIGN-025-security-privacy-architecture](docs/design/DESIGN-025-security-privacy-architecture.md): Overall architecture
+- [ADR-021-data-encryption-approach](../adr/ADR-021-data-encryption-approach.md): Authentication approach
+- [ADR-022-photo-privacy-protection](../adr/ADR-022-photo-privacy-protection.md): Encryption strategy
+- [ADR-023-authentication-authorization-strategy](../adr/ADR-023-authentication-authorization-strategy.md): Photo privacy model
+- [DESIGN-025-security-privacy-architecture](../design/DESIGN-025-security-privacy-architecture.md): Overall architecture
 
 **Step 2: Extract architectural decisions from current branch**
 

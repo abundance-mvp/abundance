@@ -1,11 +1,17 @@
 import SwiftUI
+import Core
 import Persistence
 
 public struct InventoryView: View {
     @StateObject var viewModel: InventoryViewModel
+    var onOpenCamera: (() -> Void)?
 
-    public init(viewModel: InventoryViewModel = InventoryViewModel()) {
+    public init(
+        viewModel: InventoryViewModel = InventoryViewModel(),
+        onOpenCamera: (() -> Void)? = nil
+    ) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.onOpenCamera = onOpenCamera
     }
 
     public var body: some View {
@@ -18,7 +24,7 @@ public struct InventoryView: View {
                         Task { await viewModel.loadItems() }
                     })
                 } else if viewModel.items.isEmpty {
-                    EmptyInventoryView()
+                    EmptyInventoryView(onOpenCamera: onOpenCamera)
                 } else {
                     ItemGridView(items: viewModel.items)
                 }
@@ -54,13 +60,17 @@ private struct ItemGridView: View {
 }
 
 private struct EmptyInventoryView: View {
+    var onOpenCamera: (() -> Void)?
+
     var body: some View {
         EmptyStateCard(
             iconName: "tray",
             headline: "No Items Yet",
             description: "Capture items with the camera to get started",
             buttonTitle: "Open Camera",
-            action: { /* TODO: Switch to camera tab */ }
+            action: {
+                onOpenCamera?()
+            }
         )
         .padding()
     }

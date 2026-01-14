@@ -13,9 +13,9 @@ actor MockObjectDeduplicator: ObjectDeduplicatorProtocol {
     var didCallIsSimilarToRecent: Bool = false
     var cachedFingerprints: [String] = []
 
-    nonisolated func generateFingerprint(pixelBuffer: CVPixelBuffer, boundingBox: CGRect) async -> String? {
-        await markGenerateFingerprintCalled()
-        return await stubbedFingerprint
+    func generateFingerprint(pixelBuffer: CVPixelBuffer, boundingBox: CGRect) async -> String? {
+        didCallGenerateFingerprint = true
+        return stubbedFingerprint
     }
 
     func isDuplicate(_ fingerprint: String) async -> Bool {
@@ -28,21 +28,13 @@ actor MockObjectDeduplicator: ObjectDeduplicatorProtocol {
         cachedFingerprints.append(fingerprint)
     }
 
-    nonisolated func isSimilarToRecent(pixelBuffer: CVPixelBuffer, boundingBox: CGRect) async -> Bool {
-        await markIsSimilarCalled()
-        return await stubbedIsSimilar
+    func isSimilarToRecent(pixelBuffer: CVPixelBuffer, boundingBox: CGRect) async -> Bool {
+        didCallIsSimilarToRecent = true
+        return stubbedIsSimilar
     }
 
     func cacheFingerprint(_ fingerprint: VNFeaturePrintObservation) async {
         // Not used in tests
-    }
-
-    private func markGenerateFingerprintCalled() {
-        didCallGenerateFingerprint = true
-    }
-
-    private func markIsSimilarCalled() {
-        didCallIsSimilarToRecent = true
     }
 
     func reset() {

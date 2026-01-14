@@ -1,7 +1,7 @@
 # MCP Token Limit Solution
 
 **Problem Identified**: 2025-11-08
-**Solution Implemented**: apple-docs-fetcher-lite skill
+**Solution Implemented**: apple-docs-fetcher skill
 **Status**: ✅ Ready for use
 
 ---
@@ -17,7 +17,7 @@ The `apple-docs-fetcher` skill causes token limit failures when fetching large A
 
 ## Solution
 
-Created **apple-docs-fetcher-lite** skill with intelligent token management:
+Created **apple-docs-fetcher** skill with intelligent token management:
 
 ### Key Changes
 
@@ -42,7 +42,7 @@ Created **apple-docs-fetcher-lite** skill with intelligent token management:
 
 ### Implementation
 
-**File**: `.claude/skills/apple-docs-fetcher-lite/SKILL.md`
+**File**: `.claude/skills/apple-docs-fetcher/SKILL.md`
 
 **Usage pattern**:
 
@@ -85,7 +85,7 @@ Updated `.claude/skills/verified-stage-development/SKILL.md`:
 ```
 1. Identify 3-5 specific APIs to verify
 2. Pass to research agent with token budget
-3. Research agent uses apple-docs-fetcher-lite pattern
+3. Research agent uses apple-docs-fetcher pattern
 4. Returns concise summary (not full docs)
 ```
 
@@ -100,7 +100,7 @@ When creating research agents for iOS stages:
 ```markdown
 ## Apple Documentation Verification
 
-Use apple-docs-fetcher-lite pattern:
+Use apple-docs-fetcher pattern:
 
 1. APIs to verify: VNCoreMLRequest, VNDetectBarcodesRequest, Vision Framework
 2. Token budget: 25,000 total (8,000 per API)
@@ -261,7 +261,7 @@ Less reliable than MCP but works when MCP fails.
    - Vision Framework integration
 
 3. **Document any adjustments needed**
-   - Update apple-docs-fetcher-lite if patterns emerge
+   - Update apple-docs-fetcher if patterns emerge
    - Refine token budgets based on actual usage
    - Add more fallback strategies if needed
 
@@ -269,10 +269,10 @@ Less reliable than MCP but works when MCP fails.
 
 ## Related Files
 
-- **Lite skill**: `.claude/skills/apple-docs-fetcher-lite/SKILL.md`
+- **Lite skill**: `.claude/skills/apple-docs-fetcher/SKILL.md`
 - **Updated workflow**: `.claude/skills/verified-stage-development/SKILL.md`
 - **This document**: `docs/tech-stack/MCP-TOKEN-LIMIT-SOLUTION.md`
 
 ---
 
-**Status**: Ready for Stage 2.1 re-execution with apple-docs-fetcher-lite pattern
+**Status**: Ready for Stage 2.1 re-execution with apple-docs-fetcher pattern

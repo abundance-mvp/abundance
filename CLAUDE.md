@@ -16,11 +16,31 @@
 
 ---
 
+## iOS Superpowers (REQUIRED)
+
+**CRITICAL:** For ALL iOS/Swift work, use `ios-superpowers` instead of raw superpowers skills.
+
+This ensures Apple documentation is fetched before any workflow:
+
+```bash
+/ios-superpowers brainstorm <topic>     # Instead of superpowers:brainstorming
+/ios-superpowers plan <feature>         # Instead of superpowers:writing-plans
+/ios-superpowers execute <plan-path>    # Instead of superpowers:executing-plans
+/ios-superpowers review                 # Instead of superpowers:requesting-code-review
+/ios-superpowers debug <issue>          # Instead of superpowers:systematic-debugging
+/ios-superpowers tdd <feature>          # Instead of superpowers:test-driven-development
+/ios-superpowers parallel <tasks>       # Instead of superpowers:dispatching-parallel-agents
+```
+
+**Why:** Ensures Swift 6 concurrency patterns, SwiftUI APIs, and iOS frameworks are verified against current Apple documentation before implementation.
+
+---
+
 ## Repository Structure
 
 ```
 ├── .claude/           # Claude automation (agents, commands, hooks, docs)
-├── .github/           # CI/CD workflows (8 workflows)
+├── .github/           # CI/CD workflows (10 workflows)
 ├── Sources/           # Swift source (MVVM modules)
 ├── Tests/             # XCTest suites
 ├── functions/         # Firebase Cloud Functions (TypeScript)
@@ -32,7 +52,9 @@
 
 ## Critical Constraints
 
-- **ADR-010:** SwiftUI-only - `import UIKit` is **P0 violation** (blocks PR)
+- **iOS Superpowers:** Use `/ios-superpowers` for ALL iOS work - **P0 requirement** (ensures Apple docs grounding)
+- **ADR-010:** SwiftUI-only - `import UIKit` in Views/ViewModels is **P0 violation** (infrastructure OK)
+- **Apple Docs:** iOS code changes require `apple-docs-fetcher` verification (auto-invoked by ios-superpowers)
 - **Branch naming:** `feature/`, `fix/`, `docs/`, `chore/`, `test/`, `refactor/` only
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
 - **TDD:** Write tests first, 80%+ coverage target
@@ -59,12 +81,24 @@ Git shows docs/ as "D" (deleted) - this is **expected** (symlink vs actual files
 git checkout main && git pull
 git checkout -b feature/your-feature
 ./scripts/validate-environment.sh
+
+# Regenerate Xcode project if needed
+./scripts/regenerate-xcode-project.sh
 ```
 
 ### During Development
+- **Use `/ios-superpowers`** for all planning, debugging, code review, and TDD workflows
 - Follow MVVM pattern (ViewModels in `Sources/`)
 - TDD: Write failing test → implement → verify → commit
-- SwiftUI only, no UIKit for UI
+- SwiftUI only, no UIKit for UI (infrastructure exceptions per ADR-010)
+- Deploy: `./scripts/sim.sh --device w-16e`
+
+### If Build Fails
+```bash
+# Regenerate clean Xcode project
+./scripts/regenerate-xcode-project.sh --yes
+./scripts/sim.sh --device w-16e
+```
 
 ### Before Committing
 ```bash
@@ -96,4 +130,7 @@ firebase deploy --only firestore:rules
 
 ---
 
-**Updated:** 2025-11-15
+**Updated:** 2026-01-11
+- Added ios-superpowers orchestrator for Apple docs integration
+- Updated ADR-010 constraint (infrastructure UIKit OK)
+- use trash instead of rm -rf

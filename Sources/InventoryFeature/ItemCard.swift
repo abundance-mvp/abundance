@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 import Persistence
 
 /// Display cataloged household items in grid layout
@@ -118,7 +119,8 @@ struct ItemCard: View {
     private func handleTap() {
         isPressed = true
         onTap?()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        Task {
+            try? await Task.sleep(for: .seconds(0.15))
             isPressed = false
         }
     }

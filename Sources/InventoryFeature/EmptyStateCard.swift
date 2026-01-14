@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 
 /// Display empty state with call-to-action
 /// **Design Spec:** DESIGN-031-swiftui-component-library.md (EmptyStateCard)

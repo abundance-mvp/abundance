@@ -1,16 +1,23 @@
-# Xcode
-*.xcodeproj/*
-!*.xcodeproj/project.pbxproj
-*.xcworkspace/*
-!*.xcworkspace/contents.xcworkspacedata
-*.swiftpm
+# Xcode - generated project (regenerate with: xcodegen generate)
+Abundance.xcodeproj/
+
+# Xcode user data (always ignored)
+*.xcworkspace/
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+.swiftpm/
+DerivedData/
+
+# macOS
 .DS_Store
 
 # Build
 .build/
-DerivedData/
 Generated/
 .worktrees/
+*.backup
 
 # Firebase
 GoogleService-Info.plist
@@ -28,3 +35,9 @@ Carthage/Build
 /src/
 uv.lock
 .venv/
+scripts/__pycache__/
+# Debug directory - all contents are git-ignored
+.debug/*
+!.debug/.gitkeep
+!.debug/README.md
+

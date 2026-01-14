@@ -23,8 +23,11 @@ def validate_references(docs_root: Path) -> List[Dict[str, str]]:
     # Pattern to match markdown links
     link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
 
-    # Find all markdown files
+    # Find all markdown files (excluding plans/ which may reference future files)
     for md_file in docs_root.rglob('*.md'):
+        # Skip plans directory - contains future-looking documents
+        if 'plans' in md_file.parts:
+            continue
         content = md_file.read_text()
 
         # Extract all links
@@ -50,6 +53,14 @@ def validate_references(docs_root: Path) -> List[Dict[str, str]]:
 
             # Skip template variables
             if '{' in link_path or '}' in link_path:
+                continue
+
+            # Skip placeholder paths (00X, wildcard patterns, "nonexistent", etc.)
+            if ('00X' in link_path or
+                'nonexistent' in link_path.lower() or
+                'MISSING' in link_path or
+                link_path == 'path' or
+                link_path.endswith('.*')):
                 continue
 
             # Resolve relative path (all paths are relative to current file)

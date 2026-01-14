@@ -78,7 +78,7 @@
     "outputs_created": [
       "docs/validation/RESEARCH-VALIDATION-stage-2.0.md",
       "docs/design/DESIGN-004-computer-vision-pipeline.md",
-      "docs/adr/ADR-013-vision-framework-strategy.md",
+      "docs/adr/ADR-025-vision-framework-strategy.md",
       "docs/adr/ADR-014-cloud-ai-provider-selection.md",
       "docs/adr/ADR-015-ai-reasoning-layer-architecture.md",
       "docs/adr/ADR-016-image-hosting-strategy.md",
@@ -267,7 +267,7 @@
       "docs/design/DESIGN-004-computer-vision-pipeline.md",
       "docs/design/DESIGN-005-layer-2b-product-search-architecture.md",
       "docs/design/SERPAPI-INTEGRATION-001-swift-rest-api-patterns.md",
-      "docs/adr/ADR-013-vision-framework-strategy.md",
+      "docs/adr/ADR-025-vision-framework-strategy.md",
       "docs/adr/ADR-014-cloud-ai-provider-selection.md",
       "docs/adr/ADR-015-ai-reasoning-layer-architecture.md",
       "docs/adr/ADR-016-image-hosting-strategy.md",

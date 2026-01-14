@@ -41,8 +41,8 @@
 
 **References:**
 
-- [CODE-EXAMPLE-010-vertex-ai-attribute-extraction](docs/design/CODE-EXAMPLE-010-vertex-ai-attribute-extraction.md): Vertex AI Attribute Extraction
-- [DESIGN-041-layer-2a-json-schema](docs/design/DESIGN-041-layer-2a-json-schema.md): Layer 2a JSON Schema
+- [CODE-EXAMPLE-010-vertex-ai-attribute-extraction](../design/CODE-EXAMPLE-010-vertex-ai-attribute-extraction.md): Vertex AI Attribute Extraction
+- [DESIGN-041-layer-2a-json-schema](../design/DESIGN-041-layer-2a-json-schema.md): Layer 2a JSON Schema
 
 ---
 
@@ -74,8 +74,8 @@
 
 **References:**
 
-- [CODE-EXAMPLE-011-layer-2a-cloud-function](docs/design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function
-- [DESIGN-042-layer-2a-error-handling](docs/design/DESIGN-042-layer-2a-error-handling.md): Layer 2a Error Handling
+- [CODE-EXAMPLE-011-layer-2a-cloud-function](../design/CODE-EXAMPLE-011-layer-2a-cloud-function.md): Layer 2a Cloud Function
+- [DESIGN-042-layer-2a-error-handling](../design/DESIGN-042-layer-2a-error-handling.md): Layer 2a Error Handling
 
 ---
 
@@ -104,7 +104,7 @@
 
 **References:**
 
-- [COST-MODEL-001-ai-cataloging-cost-per-item](docs/tech-stack/COST-MODEL-001-ai-cataloging-cost-per-item.md): AI Cataloging Cost Per Item
+- [COST-MODEL-001-ai-cataloging-cost-per-item](../tech-stack/COST-MODEL-001-ai-cataloging-cost-per-item.md): AI Cataloging Cost Per Item
 
 ---
 

@@ -183,7 +183,7 @@ All required inputs were loaded and used:
 ### Phase 2: Research Verification
 **Status**: ✅ Complete
 **Duration**: 2 hours
-- Used apple-docs-fetcher-lite skill (per human correction)
+- Used apple-docs-fetcher skill (per human correction)
 - Executed parallel MCP searches:
   - VNCoreMLRequest iOS 26
   - VNDetectBarcodesRequest symbologies
@@ -355,8 +355,8 @@ All required inputs were loaded and used:
 ## Human Interaction Summary
 
 ### Correction Applied (Phase 2)
-**User feedback**: "Why are you not using the skill `/apple-docs-fetcher-lite`? For phase 2 and phase 3?"
-**Action taken**: Corrected approach to use apple-docs-fetcher-lite skill with MCP searches instead of general-purpose sub-agent
+**User feedback**: "Why are you not using the skill `/apple-docs-fetcher`? For phase 2 and phase 3?"
+**Action taken**: Corrected approach to use apple-docs-fetcher skill with MCP searches instead of general-purpose sub-agent
 
 ### Gate 1 Approvals (Phase 3 → Phase 4)
 **Questions posed**: 4 decision points (Firebase SDK update, research scope, timeline, deliverables)
@@ -403,18 +403,18 @@ All required inputs were loaded and used:
 ## Lessons Learned
 
 ### Positive Patterns
-1. **apple-docs-fetcher-lite effectiveness**: MCP searches stayed within token budget (11K of 25K)
+1. **apple-docs-fetcher effectiveness**: MCP searches stayed within token budget (11K of 25K)
 2. **Granular artifacts**: 6 focused code examples better than 1 large document
 3. **Batch execution**: 3 batches with human checkpoints caught issues early
 4. **Research validation first**: Phase 2 caught Firebase SDK version issue before implementation
 
 ### Areas for Improvement
-1. **Initial skill selection**: Should have used apple-docs-fetcher-lite from start (human correction required)
+1. **Initial skill selection**: Should have used apple-docs-fetcher from start (human correction required)
 2. **Context map precision**: Expected outputs were less granular than actual artifacts created
 3. **Tech stack updates**: Could have been identified earlier in Phase 1 (context collection)
 
 ### Recommendations for Stage 3.2
-1. **Use apple-docs-fetcher-lite** for any iOS documentation needs
+1. **Use apple-docs-fetcher** for any iOS documentation needs
 2. **Update context-map.json** with actual artifacts created from Stage 3.1
 3. **Verify Firebase iOS SDK 11.11.0+** in Package.swift before starting implementation
 4. **Use CODE-EXAMPLE-002** as blueprint for Catalog feature implementation
