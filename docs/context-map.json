@@ -2,9 +2,9 @@
   "_meta": {
     "description": "Context map for Abundance Analysis Pipeline - maps each stage to required input documents",
     "usage": "CRITICAL: All agents and sub-agents MUST read this file at the start of any stage execution to determine which documents to load. This ensures deterministic, complete context for each stage.",
-    "last_updated": "2025-11-14 (Stage 6.3 infrastructure complete)",
-    "current_stage": "6.3",
-    "project_status": "Stage 6.3: 100% complete (infrastructure ready, manual execution required)",
+    "last_updated": "2026-01-14 (Stage 7.0 added for Gemini 3 Pro implementation)",
+    "current_stage": "7.0",
+    "project_status": "Stage 7.0: pending (Gemini 3 Pro Layer 2 implementation)",
     "pipeline_design": "docs/abundance-analysis-pipeline-design.md",
     "mandatory_read": "verified-stage-development skill, research sub-agents, planning agents, execution agents"
   },
@@ -1205,6 +1205,52 @@
       "docs/checkpoints/CHECKPOINT-stage-6.4.md"
     ],
     "notes": "Test implementation uses Jupyter notebooks with real Claude Sonnet Batch API calls. Validates end-to-end AI pipeline (Layer 1 → 2a+2b → 3)."
+  },
+  "stage-7.0": {
+    "name": "Layer 2 Gemini 3 Pro Implementation",
+    "expert_agent": "Cloud Backend Architect + AI Pipeline Engineer",
+    "status": "pending",
+    "purpose": "Implement the Gemini 3 Pro AI pipeline with native tool calling (google_lens, barcode_lookup, web_search)",
+    "supersedes": ["stage-3.4", "stage-3.5", "stage-3.6", "stage-6.2", "stage-6.3", "stage-6.4"],
+    "required_inputs": {
+      "common": [
+        "docs/abundance-analysis-pipeline-design.md"
+      ],
+      "design_documents": [
+        "docs/plans/2026-01-13-gemini-3-pipeline-design.md",
+        "docs/design/AI-INTEGRATION-LAYER-002-gemini-3-pro-orchestration.md",
+        "docs/tech-stack/COST-MODEL-001-ai-cataloging-cost-per-item.md"
+      ],
+      "backend_foundation": [
+        "docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md",
+        "docs/design/CLOUD-FUNCTIONS-001-function-structure.md",
+        "docs/tech-stack/functions-package.json",
+        "docs/tech-stack/firebase.json"
+      ],
+      "checkpoint": [
+        "docs/checkpoints/CHECKPOINT-gemini-3-pipeline-spec-refactor.md"
+      ]
+    },
+    "expected_outputs": [
+      "functions/src/ai-pipeline/index.ts",
+      "functions/src/ai-pipeline/orchestrator.ts",
+      "functions/src/ai-pipeline/orchestrator.test.ts",
+      "functions/src/ai-pipeline/gemini/gemini-service.ts",
+      "functions/src/ai-pipeline/gemini/gemini-service.test.ts",
+      "functions/src/ai-pipeline/gemini/prompts.ts",
+      "functions/src/ai-pipeline/gemini/schemas/catalog-item.ts",
+      "functions/src/ai-pipeline/tools/tool-executor.ts",
+      "functions/src/ai-pipeline/tools/tool-executor.test.ts",
+      "functions/src/ai-pipeline/tools/google-lens.ts",
+      "functions/src/ai-pipeline/tools/google-lens.test.ts",
+      "functions/src/ai-pipeline/tools/barcode-lookup.ts",
+      "functions/src/ai-pipeline/tools/barcode-lookup.test.ts",
+      "functions/src/ai-pipeline/tools/web-search.ts",
+      "functions/src/ai-pipeline/tools/web-search.test.ts",
+      "docs/plans/PLAN-SUMMARY-stage-7.0.md",
+      "docs/checkpoints/CHECKPOINT-stage-7.0.md"
+    ],
+    "notes": "New architecture using single Gemini 3 Pro model with native tool calling. Supersedes old 4-model pipeline (Gemini Flash-Lite + Claude Haiku + Claude Sonnet + SerpAPI parsing). Cost: ~$0.03-0.04/item. See 2026-01-13-gemini-3-pipeline-design.md for full architecture."
   },
   "loading_patterns": {
     "description": "Standard patterns for loading context by stage",
