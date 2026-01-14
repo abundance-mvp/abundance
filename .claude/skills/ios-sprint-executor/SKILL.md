@@ -232,7 +232,8 @@ This skill guarantees deterministic agentic development by:
    ```
    Tool: Skill
    Parameters:
-     skill: superpowers:brainstorm
+     skill: ios-superpowers
+     args: brainstorm [UI/UX gaps identified]
    ```
 
    Use Socratic method to refine UI/UX:
@@ -358,19 +359,21 @@ This skill guarantees deterministic agentic development by:
    - Acceptance Criteria (traceable to sprint plan)
    - Dependencies & Risks
 
-   Plan will be executed via /superpowers:execute-plan in batches.
+   Plan will be executed via ios-superpowers execute in batches.
    ```
 
-3. **Invoke superpowers:write-plan**
+3. **Invoke ios-superpowers plan**
 
    ```
-   Tool: SlashCommand
-   Command: /superpowers:write-plan
+   Tool: Skill
+   Parameters:
+     skill: ios-superpowers
+     args: plan [sprint description]
+   ```
 
    Pass context:
    - All loaded documents from step 1
    - Enhanced instructions from step 2
-   ```
 
 4. **Wait for write-plan completion**
 
@@ -506,21 +509,23 @@ This skill guarantees deterministic agentic development by:
 
    After each batch completes:
 
-   - Run `superpowers:requesting-code-review`
+   - Run `ios-superpowers review`
    - Address feedback before next batch
    ```
 
-2. **Invoke superpowers:execute-plan**
+2. **Invoke ios-superpowers execute**
 
    ```
-   Tool: SlashCommand
-   Command: /superpowers:execute-plan
+   Tool: Skill
+   Parameters:
+     skill: ios-superpowers
+     args: execute [plan from Phase 2]
+   ```
 
    Pass context:
    - Implementation plan from Phase 2
    - All context documents
    - Enhanced instructions from step 1
-   ```
 
 3. **Monitor execution**
 
@@ -548,16 +553,17 @@ This skill guarantees deterministic agentic development by:
 
 ### Phase 4: Code Review
 
-**Purpose**: Request code review using superpowers:requesting-code-review
+**Purpose**: Request code review via ios-superpowers orchestrator
 
 **Steps**:
 
-1. **Invoke code reviewer**
+1. **Invoke code reviewer via ios-superpowers**
 
    ```
    Tool: Skill
    Parameters:
-     skill: superpowers:requesting-code-review
+     skill: ios-superpowers
+     args: review
    ```
 
    Code reviewer validates:
