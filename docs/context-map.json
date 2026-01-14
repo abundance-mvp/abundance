@@ -2,9 +2,9 @@
   "_meta": {
     "description": "Context map for Abundance Analysis Pipeline - maps each stage to required input documents",
     "usage": "CRITICAL: All agents and sub-agents MUST read this file at the start of any stage execution to determine which documents to load. This ensures deterministic, complete context for each stage.",
-    "last_updated": "2026-01-14 (Stage 7.1 completed)",
-    "current_stage": "7.2",
-    "project_status": "Stage 7.1: completed (Gemini 3 Pro integration testing and deployment ready for staging)",
+    "last_updated": "2026-01-14 (Architecture cleanup completed)",
+    "current_stage": "architecture-cleanup-complete",
+    "project_status": "Architecture cleanup: Archived Stage 6 and iOS pre-superpowers content. iOS stages 2.2, 2.6, 3.1, 3.3 require re-run with ios-superpowers for Apple docs grounding.",
     "pipeline_design": "docs/abundance-analysis-pipeline-design.md",
     "mandatory_read": "verified-stage-development skill, research sub-agents, planning agents, execution agents"
   },
@@ -168,7 +168,9 @@
   "stage-2.2": {
     "name": "iOS Client Architecture",
     "expert_agent": "iOS Architecture Expert",
-    "status": "completed",
+    "status": "requires_rerun",
+    "rerun_reason": "Original outputs created without ios-superpowers grounding (Apple docs + Axiom skills)",
+    "outputs_archived": "docs/archive/ios-pre-superpowers/",
     "required_inputs": {
       "common": [
         "docs/abundance-analysis-pipeline-design.md"
@@ -322,7 +324,9 @@
   "stage-2.6": {
     "name": "iOS UI/UX Design & Liquid Glass Integration",
     "expert_agent": "iOS UI/UX Designer & SwiftUI Specialist",
-    "status": "completed",
+    "status": "requires_rerun",
+    "rerun_reason": "Original outputs created without ios-superpowers grounding (Apple docs + Axiom skills)",
+    "outputs_archived": "docs/archive/ios-pre-superpowers/",
     "required_inputs": {
       "common": [
         "docs/abundance-analysis-pipeline-design.md"
@@ -382,7 +386,9 @@
   "stage-3.1": {
     "name": "iOS Implementation Research",
     "expert_agent": "iOS Architecture Expert",
-    "status": "completed",
+    "status": "requires_rerun",
+    "rerun_reason": "Original outputs created without ios-superpowers grounding (Apple docs + Axiom skills)",
+    "outputs_archived": "docs/archive/ios-pre-superpowers/",
     "required_inputs": {
       "common": [
         "docs/abundance-analysis-pipeline-design.md"
@@ -462,7 +468,9 @@
   "stage-3.3": {
     "name": "Layer 1 On-Device ML Implementation Research",
     "expert_agent": "iOS Architecture Expert + Computer Vision & ML Engineer",
-    "status": "completed",
+    "status": "requires_rerun",
+    "rerun_reason": "Original outputs created without ios-superpowers grounding (Apple docs + Axiom skills)",
+    "outputs_archived": "docs/archive/ios-pre-superpowers/",
     "completed_date": "2025-11-11",
     "required_inputs": {
       "common": [
@@ -742,7 +750,8 @@
   "stage-5.1": {
     "name": "Phased Implementation Roadmap",
     "expert_agent": "Software Architecture Expert + Product Strategy & UX",
-    "status": "pending",
+    "status": "requires_rerun",
+    "rerun_reason": "Sprint plans reference obsolete Stage 6 validation stages and 4-model pipeline architecture",
     "purpose": "Create concrete sprint-by-sprint breakdown with dependencies and estimates",
     "required_inputs": {
       "common": [
@@ -1008,7 +1017,10 @@
   "stage-6.0": {
     "name": "Master Validation Document",
     "expert_agent": "Software Architecture Expert",
-    "status": "completed",
+    "status": "archived",
+    "archive_date": "2026-01-14",
+    "archive_reason": "Superseded by Stage 7.0 Gemini 3 Pro unified pipeline",
+    "archive_location": "docs/archive/stage-6-pre-gemini3/",
     "completed_date": "2025-11-12",
     "purpose": "Create high-level validation strategy and tracking document for all layer validations",
     "required_inputs": {
@@ -1034,7 +1046,10 @@
   "stage-6.1": {
     "name": "Layer 1 Validation (iOS On-Device)",
     "expert_agent": "iOS Architecture Expert + Computer Vision & ML Engineer",
-    "status": "documentation_complete_execution_pending",
+    "status": "archived",
+    "archive_date": "2026-01-14",
+    "archive_reason": "Superseded by Stage 7.0 Gemini 3 Pro unified pipeline",
+    "archive_location": "docs/archive/stage-6-pre-gemini3/layer1/",
     "completed_date": "2025-11-12",
     "purpose": "Validate Layer 1 (on-device Vision + YOLO + barcode) capabilities before Sprint 2 implementation",
     "required_inputs": {
@@ -1078,7 +1093,10 @@
   "stage-6.2": {
     "name": "Layer 2a Validation (Attribute Extraction)",
     "expert_agent": "Computer Vision & ML Engineer",
-    "status": "infrastructure-complete",
+    "status": "archived",
+    "archive_date": "2026-01-14",
+    "archive_reason": "Superseded by Stage 7.0 Gemini 3 Pro unified pipeline",
+    "archive_location": "docs/archive/stage-6-pre-gemini3/",
     "completion": "70% (infrastructure ready, manual execution required)",
     "purpose": "Validate Layer 2a (Gemini 2.5 Flash-Lite attribute extraction) before Sprint 4 implementation",
     "required_inputs": {
@@ -1128,7 +1146,10 @@
   "stage-6.3": {
     "name": "Layer 2b Validation (Product Search)",
     "expert_agent": "Cloud Backend Architect + Computer Vision & ML Engineer",
-    "status": "completed",
+    "status": "archived",
+    "archive_date": "2026-01-14",
+    "archive_reason": "Superseded by Stage 7.0 Gemini 3 Pro unified pipeline",
+    "archive_location": "docs/archive/stage-6-pre-gemini3/",
     "purpose": "Validate Layer 2b (SerpAPI + UPCitemdb + Claude Haiku parsing) before Sprint 3 implementation",
     "required_inputs": {
       "common": [
@@ -1177,7 +1198,10 @@
   "stage-6.4": {
     "name": "Layer 3 Validation (AI Synthesis)",
     "expert_agent": "Computer Vision & ML Engineer",
-    "status": "pending",
+    "status": "archived",
+    "archive_date": "2026-01-14",
+    "archive_reason": "Superseded by Stage 7.0 Gemini 3 Pro unified pipeline",
+    "archive_location": "docs/archive/stage-6-pre-gemini3/",
     "purpose": "Validate Layer 3 (Claude Sonnet 4.5 synthesis + conflict resolution) before Sprint 3 implementation",
     "required_inputs": {
       "common": [

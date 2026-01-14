@@ -20,21 +20,28 @@ Orchestrates stage development with research verification and quality gates.
 
 When dispatching sub-agents during execution, route to specialized skills based on task domain:
 
-| Task Type | Skill | MCP Servers |
-|-----------|-------|-------------|
-| iOS UI/Logic | ios-superpowers | sosumi |
-| Swift/SwiftUI | ios-superpowers | sosumi |
-| Firestore operations | firebase-superpowers | firebase |
-| Cloud Functions | firebase-superpowers | firebase |
-| Firebase Auth | firebase-superpowers | firebase |
-| Firebase Storage | firebase-superpowers | firebase |
-| Security Rules | firebase-superpowers | firebase |
-| Non-Firebase GCP | gcp-superpowers | gcloud, observability, storage |
-| AI/Gemini pipeline | gemini-integration | gcloud |
-| Documentation/ADRs | general-purpose | - |
+| Task Type | Skill | MCP Servers | Axiom Skills |
+|-----------|-------|-------------|--------------|
+| iOS UI/Logic | ios-superpowers | sosumi | axiom-swiftui-26-ref, axiom-liquid-glass |
+| Swift/SwiftUI | ios-superpowers | sosumi | axiom-swiftui-26-ref |
+| iOS Concurrency | ios-superpowers | sosumi | axiom-swift-concurrency |
+| iOS Debugging | ios-superpowers | sosumi | axiom-xcode-debugging, axiom-memory-debugging |
+| iOS Testing | ios-superpowers | sosumi | axiom-ui-testing |
+| iOS Data/Persistence | ios-superpowers | sosumi | axiom-swiftdata |
+| Firestore operations | firebase-superpowers | firebase | - |
+| Cloud Functions | firebase-superpowers | firebase | - |
+| Firebase Auth | firebase-superpowers | firebase | - |
+| Firebase Storage | firebase-superpowers | firebase | - |
+| Security Rules | firebase-superpowers | firebase | - |
+| Non-Firebase GCP | gcp-superpowers | gcloud, observability, storage | - |
+| AI/Gemini pipeline | gemini-integration | gcloud | - |
+| Documentation/ADRs | general-purpose | - | - |
 
 **Key principles:**
-- iOS stages (2.2, 3.1, 4.1) → Always use `ios-superpowers` for code tasks
+- iOS stages (2.2, 2.6, 3.1, 3.3, 4.1) → Always use `ios-superpowers` for code tasks
+- ios-superpowers automatically routes to appropriate Axiom sub-skill based on task type
+- Axiom skills provide iOS-specific patterns, debugging workflows, and best practices
+- sosumi.ai MCP provides Apple Developer documentation grounding
 - Backend stages → Use `firebase-superpowers` for Firebase, `gcp-superpowers` for other GCP
 - AI pipeline stages → Use `gemini-integration` for Gemini tool calling patterns
 - Research/docs → Use general-purpose agent
