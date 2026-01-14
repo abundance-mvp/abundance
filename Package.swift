@@ -118,6 +118,10 @@ let package: Package = Package(
                 .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
+        .testTarget(
+            name: "CoreTests",
+            dependencies: ["Core"]
+        ),
 
         // App
         .executableTarget(
