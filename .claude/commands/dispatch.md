@@ -12,7 +12,7 @@ User wants to work on multiple issues simultaneously. Each agent should:
 - Work in an isolated git worktree
 - Have access to the issue spec document
 - Have access to relevant logs
-- Follow the appropriate skill (superpowers:test-driven-development, superpowers:systematic-debugging, etc.)
+- Follow the appropriate skill (ios-superpowers for iOS work, raw superpowers for non-iOS work)
 - Create a PR when done
 
 ## Process
@@ -42,11 +42,13 @@ User wants to work on multiple issues simultaneously. Each agent should:
    - List of affected files
    - Instructions to:
      1. Read the spec document
-     2. Use `superpowers:systematic-debugging` if it's a bug
-     3. Use `superpowers:test-driven-development` when implementing the fix
-     4. Run tests to verify the fix
-     5. Commit changes
-     6. Create a PR (or just report ready for PR)
+     2. **For iOS bugs**: Use `ios-superpowers debug` (ensures Apple docs grounding)
+     3. **For non-iOS bugs**: Use `superpowers:systematic-debugging`
+     4. **For iOS features**: Use `ios-superpowers tdd` when implementing the fix
+     5. **For non-iOS features**: Use `superpowers:test-driven-development`
+     6. Run tests to verify the fix
+     7. Commit changes
+     8. Create a PR (or just report ready for PR)
 
 4. **Monitor and report**:
    - Track which agents have completed
@@ -85,7 +87,8 @@ Instructions:
 7. Commit changes
 8. Report: "✅ BUG-001 fixed, tests passing, ready for PR"
 
-Use superpowers:systematic-debugging and superpowers:test-driven-development skills.
+For iOS work: Use ios-superpowers debug and ios-superpowers tdd skills.
+For non-iOS work: Use superpowers:systematic-debugging and superpowers:test-driven-development skills.
 ```
 
 **Issue 002** (ux-issue):
