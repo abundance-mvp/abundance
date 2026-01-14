@@ -12,7 +12,7 @@ User wants to work on multiple issues simultaneously. Each agent should:
 - Work in an isolated git worktree
 - Have access to the issue spec document
 - Have access to relevant logs
-- Follow the appropriate skill (ios-superpowers for iOS work, raw superpowers for non-iOS work)
+- Follow ios-superpowers (auto-detects iOS context, fetches Apple docs if needed)
 - Create a PR when done
 
 ## Process
@@ -42,13 +42,11 @@ User wants to work on multiple issues simultaneously. Each agent should:
    - List of affected files
    - Instructions to:
      1. Read the spec document
-     2. **For iOS bugs**: Use `ios-superpowers debug` (ensures Apple docs grounding)
-     3. **For non-iOS bugs**: Use `superpowers:systematic-debugging`
-     4. **For iOS features**: Use `ios-superpowers tdd` when implementing the fix
-     5. **For non-iOS features**: Use `superpowers:test-driven-development`
-     6. Run tests to verify the fix
-     7. Commit changes
-     8. Create a PR (or just report ready for PR)
+     2. Use `ios-superpowers debug` to understand root cause (auto-detects iOS context)
+     3. Use `ios-superpowers tdd` when implementing the fix
+     4. Run tests to verify the fix
+     5. Commit changes
+     6. Create a PR (or just report ready for PR)
 
 4. **Monitor and report**:
    - Track which agents have completed
@@ -80,15 +78,13 @@ Context:
 Instructions:
 1. cd ../abundance-worktrees/fix-catalog-button-auth
 2. Read docs/bugs/BUG-001-catalog-button-unresponsive.md
-3. Use superpowers:systematic-debugging to understand root cause
-4. Use superpowers:test-driven-development to write failing test
-5. Implement fix in affected files
-6. Run swift test to verify
-7. Commit changes
-8. Report: "✅ BUG-001 fixed, tests passing, ready for PR"
+3. Use ios-superpowers debug to understand root cause
+4. Use ios-superpowers tdd to write failing test and implement fix
+5. Run swift test to verify
+6. Commit changes
+7. Report: "✅ BUG-001 fixed, tests passing, ready for PR"
 
-For iOS work: Use ios-superpowers debug and ios-superpowers tdd skills.
-For non-iOS work: Use superpowers:systematic-debugging and superpowers:test-driven-development skills.
+Note: ios-superpowers auto-detects iOS context and fetches Apple docs if needed.
 ```
 
 **Issue 002** (ux-issue):
