@@ -8,6 +8,7 @@ import { listItems } from './items/listItems';
 import { onItemCreated } from './triggers/onItemCreated';
 import { onLayer2aComplete } from './triggers/onLayer2aComplete';
 import { onLayer2bComplete } from './triggers/onLayer2bComplete';
+import { onItemCreatedGemini3 } from './triggers/onItemCreatedGemini3';
 
 // Import scheduled jobs
 import { cleanupDeletedItemsScheduled } from './scheduled/cleanupDeletedItems';
@@ -175,7 +176,7 @@ export const listItemsHTTP = functions.https.onRequest(async (req, res) => {
 });
 
 // Export Firestore triggers
-export { onItemCreated, onLayer2aComplete, onLayer2bComplete };
+export { onItemCreated, onLayer2aComplete, onLayer2bComplete, onItemCreatedGemini3 };
 
 // Export scheduled jobs
 export { cleanupDeletedItemsScheduled, checkSubscriptionExpiryScheduled };
