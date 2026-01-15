@@ -92,7 +92,10 @@ public final class StorageService: StorageServiceProtocol {
             "uploadedAt": ISO8601DateFormatter().string(from: Date()),
             "itemId": itemId,
             "userId": userId,
-            "version": "1.0"
+            "version": "1.0",
+            // GCP processing metadata - enables Cloud Function triggers
+            "processingStatus": "pending",
+            "uploadSource": "camera-detection"
         ]
 
         // Upload with timeout
@@ -123,7 +126,10 @@ public final class StorageService: StorageServiceProtocol {
             "uploadedAt": ISO8601DateFormatter().string(from: Date()),
             "itemId": itemId,
             "userId": userId,
-            "type": "live-photo-motion"
+            "type": "live-photo-motion",
+            // GCP processing metadata - enables Cloud Function triggers
+            "processingStatus": "pending",
+            "uploadSource": "live-photo-capture"
         ]
 
         return try await withTimeout(uploadTimeout, ref: ref, imageData: motionData, metadata: metadata)
