@@ -47,11 +47,6 @@ public final class CameraDetectionViewModel: ObservableObject {
     /// Photo metadata extractor for fraud prevention
     private let metadataExtractor: PhotoMetadataExtractorProtocol
 
-    // Confidence and quality thresholds
-    private let automaticConfidenceThreshold: Double = 0.70
-    private let manualConfidenceThreshold: Double = 0.40
-    private let automaticQualityThreshold: Double = 0.65
-
     // MARK: - Frame Processing Subscription
 
     /// Subscription for camera frame processing (managed by ViewModel to fix Swift 6 compliance)
@@ -163,17 +158,8 @@ public final class CameraDetectionViewModel: ObservableObject {
             boundingBox: boundingBox
         )
 
-        // Step 3: Determine catalog mode
-        let catalogMode = determineCatalogMode(
-            confidence: yoloResult.confidence,
-            quality: qualityScore
-        )
-
-        // Filter out ignored objects
-        guard catalogMode != .ignore else {
-            logger.debug("Object '\(yoloResult.label)' ignored (confidence: \(yoloResult.confidence))")
-            return nil
-        }
+        // Step 3: Determine catalog mode (all detections show grey border)
+        let catalogMode = determineCatalogMode(quality: qualityScore)
 
         // Step 4: Generate subject mask for organic borders
         let mask = await maskGenerator.generateMask(
@@ -286,23 +272,14 @@ public final class CameraDetectionViewModel: ObservableObject {
 
     // MARK: - Catalog Mode Logic
 
-    /// Determines catalog mode based on confidence and quality scores
-    /// - Parameters:
-    ///   - confidence: YOLO confidence score (0.0-1.0)
-    ///   - quality: Composite quality score (0.0-1.0)
-    /// - Returns: CatalogMode (automatic/manual/ignore)
-    nonisolated private func determineCatalogMode(confidence: Double, quality: Double) -> CatalogMode {
-        // Ignore: confidence too low
-        if confidence < manualConfidenceThreshold {
-            return .ignore
-        }
-
-        // Automatic: high confidence AND high quality
-        if confidence >= automaticConfidenceThreshold && quality >= automaticQualityThreshold {
-            return .automatic
-        }
-
-        // Manual: medium confidence OR low quality
+    /// Determines catalog mode for detected objects
+    /// - Parameter quality: Composite quality score (0.0-1.0) - retained for future use
+    /// - Returns: CatalogMode (.manual for all detections, .automatic only via user double-tap)
+    /// - Note: Any detected object shows a grey border (manual mode).
+    ///         Green border (automatic) is only triggered when user double-taps.
+    nonisolated private func determineCatalogMode(quality: Double) -> CatalogMode {
+        // Any detected object shows grey border (manual mode)
+        // Automatic (green) is only triggered by user double-tap
         return .manual
     }
 
