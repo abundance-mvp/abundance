@@ -61,6 +61,7 @@ let package: Package = Package(
             name: "InventoryFeature",
             dependencies: [
                 "Core",
+                "CameraFeature",
                 "Persistence",
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
