@@ -332,10 +332,7 @@ struct EditItemViewModelTests {
         viewModel.state = .comparing(newItem: rescanItem)
 
         // When: Accept rescan result
-        viewModel.acceptRescanResult()
-
-        // Wait for async operation
-        try await Task.sleep(for: .milliseconds(100))
+        await viewModel.acceptRescanResult()
 
         // Then: Repository should be called
         #expect(mockRepository.updateItemCalled)

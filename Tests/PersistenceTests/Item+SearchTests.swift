@@ -46,11 +46,11 @@ struct ItemSearchTests {
         #expect(item.matchesSearchQuery("") == true)
     }
 
-    @Test("Whitespace-only query does not match items without whitespace")
+    @Test("Whitespace-only query matches all items (treated as empty)")
     func testWhitespaceQueryBehavior() {
         let item = makeTestItem(category: "Electronics")
-        // Whitespace-only query is treated as non-empty, so it searches for whitespace
-        #expect(item.matchesSearchQuery("   ") == false)
+        // Whitespace-only query is trimmed and treated as empty, matching all items
+        #expect(item.matchesSearchQuery("   ") == true)
     }
 
     // MARK: - Field-Specific Search Tests
@@ -261,9 +261,10 @@ struct ItemSearchTests {
 
     @Test("Search with unicode characters")
     func testSearchUnicode() {
-        let item = makeTestItem(color: "Cafe au lait")
+        let item = makeTestItem(color: "Café au lait")
         // localizedCaseInsensitiveContains handles accented characters
-        #expect(item.matchesSearchQuery("cafe") == true)
+        #expect(item.matchesSearchQuery("café") == true)
+        #expect(item.matchesSearchQuery("cafe") == true)  // Also matches without accent
         #expect(item.matchesSearchQuery("lait") == true)
     }
 

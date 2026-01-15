@@ -94,6 +94,7 @@ public final class EditItemViewModel {
     /// Cancel and return to idle
     public func cancelFlow() {
         state = .idle
+        editableItem = originalItem
         rescanResult = nil
         fieldTracker = EditedFieldTracker()
         validationErrors = [:]
@@ -130,18 +131,15 @@ public final class EditItemViewModel {
     }
 
     /// User accepts the rescan result
-    public func acceptRescanResult() {
+    public func acceptRescanResult() async {
         guard let rescanResult = rescanResult else { return }
 
-        // Update the item with rescan result
-        Task {
-            state = .saving
-            do {
-                try await saveRescanResult(rescanResult)
-                state = .idle
-            } catch {
-                state = .error(error.localizedDescription)
-            }
+        state = .saving
+        do {
+            try await saveRescanResult(rescanResult)
+            state = .idle
+        } catch {
+            state = .error(error.localizedDescription)
         }
     }
 

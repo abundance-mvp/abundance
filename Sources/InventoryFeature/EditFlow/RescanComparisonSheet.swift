@@ -66,8 +66,10 @@ public struct RescanComparisonSheet: View {
                 // Action buttons
                 VStack(spacing: 12) {
                     Button {
-                        viewModel.acceptRescanResult()
-                        dismiss()
+                        Task {
+                            await viewModel.acceptRescanResult()
+                            dismiss()
+                        }
                     } label: {
                         Text("Looks Good")
                             .font(.system(size: 17, weight: .semibold, design: .rounded))

@@ -76,6 +76,7 @@ export async function handleItemCreated(
       quantity: catalogItem.quantity ?? 1,
       estimatedValue: catalogItem.estimatedValue ?? null,
       confidence: catalogItem.confidence,  // Already string enum
+      processingNotes: catalogItem.processingNotes ?? null,
       // Keep original catalog for backward compatibility during migration
       catalog: result,
       completedAt: admin.firestore.FieldValue.serverTimestamp(),

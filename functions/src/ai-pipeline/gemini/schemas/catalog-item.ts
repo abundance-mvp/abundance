@@ -23,6 +23,7 @@ export interface CatalogItem {
   quantity: number;
   estimatedValue: number | null;
   confidence: Confidence;
+  processingNotes: string | null;
 }
 
 export interface ValidationResult {
@@ -77,7 +78,8 @@ export const CATALOG_ITEM_SCHEMA = {
     dimensions: { type: ['string', 'null'], description: 'Size/dimensions info' },
     quantity: { type: 'integer', minimum: 1, description: 'Number of items' },
     estimatedValue: { type: ['number', 'null'], description: 'Estimated market value in USD' },
-    confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'Confidence level' }
+    confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'Confidence level' },
+    processingNotes: { type: ['string', 'null'], description: 'Notes about AI processing quality or issues' }
   },
   required: ['name', 'category', 'subCategory', 'color', 'condition', 'quantity', 'confidence']
 };

@@ -48,7 +48,8 @@ describe('Orchestrator', () => {
       dimensions: null,
       quantity: 1,
       estimatedValue: 50.00,
-      confidence: 'high'
+      confidence: 'high',
+      processingNotes: null
     });
 
     const mockUpdate = jest.fn().mockResolvedValue({});
@@ -159,7 +160,8 @@ describe('Orchestrator', () => {
         dimensions: null,
         quantity: 1,
         estimatedValue: 25.00,
-        confidence: 'medium'
+        confidence: 'medium',
+        processingNotes: null
       },
       {
         name: 'Product 2',
@@ -172,7 +174,8 @@ describe('Orchestrator', () => {
         dimensions: null,
         quantity: 1,
         estimatedValue: 10.00,
-        confidence: 'medium'
+        confidence: 'medium',
+        processingNotes: null
       }
     ]);
 

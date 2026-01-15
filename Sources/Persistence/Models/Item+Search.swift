@@ -7,9 +7,11 @@ extension Item {
     /// Searches across all available text fields: name, category, subCategory, brand, model, color, material, condition
     ///
     /// - Parameter query: The search text to match against
-    /// - Returns: True if any searchable field contains the query (case-insensitive, locale-aware)
+    /// - Returns: True if any searchable field contains the query
+    ///   (case-insensitive, diacritic-insensitive, locale-aware)
     public func matchesSearchQuery(_ query: String) -> Bool {
-        guard !query.isEmpty else { return true }
+        let trimmedQuery = query.trimmingCharacters(in: .whitespaces)
+        guard !trimmedQuery.isEmpty else { return true }
 
         // Collect all searchable text fields (including Stage 3.1 fields)
         let searchableFields: [String?] = [
@@ -23,9 +25,11 @@ extension Item {
             condition?.displayName  // Convert enum to display string
         ]
 
-        // Return true if any field contains the query (case-insensitive, locale-aware)
+        // Return true if any field contains the query
+        // Uses localizedStandardContains for case-insensitive AND diacritic-insensitive matching
+        // e.g., "cafe" matches "Café", "naïve" matches "naive"
         return searchableFields.contains { field in
-            field?.localizedCaseInsensitiveContains(query) == true
+            field?.localizedStandardContains(trimmedQuery) == true
         }
     }
 

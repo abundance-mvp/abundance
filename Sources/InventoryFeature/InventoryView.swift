@@ -8,9 +8,10 @@ public struct InventoryView: View {
     @State private var searchText = ""
     @State private var isSelectionMode = false
     @State private var selectedItemIds: Set<String> = []
-    @State private var itemToDelete: Item? = nil
+    @State private var itemToDelete: Item?
     @State private var showDeleteConfirmation = false
     @State private var showBulkDeleteConfirmation = false
+    @State private var showDeleteErrorAlert = false
     var onOpenCamera: (() -> Void)?
 
     public init(
@@ -61,7 +62,7 @@ public struct InventoryView: View {
                             items: filteredItems,
                             isSelectionMode: isSelectionMode,
                             selectedItemIds: $selectedItemIds,
-                            onEdit: { item in
+                            onEdit: { _ in
                                 // TODO: Stage 3.3 - wire to rescan edit flow
                             },
                             onDelete: { item in
@@ -111,7 +112,8 @@ public struct InventoryView: View {
                     itemToDelete = nil
                 }
             } message: { item in
-                Text("Are you sure you want to delete \"\(item.category ?? "this item")\"? This action cannot be undone.")
+                let name = item.category ?? "this item"
+                Text("Are you sure you want to delete \"\(name)\"? This action cannot be undone.")
             }
             // Bulk delete confirmation
             .confirmationDialog(
@@ -131,6 +133,17 @@ public struct InventoryView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Are you sure you want to delete \(selectedItemIds.count) items? This action cannot be undone.")
+            }
+            // Delete error alert
+            .alert("Delete Failed", isPresented: $showDeleteErrorAlert) {
+                Button("OK") {
+                    viewModel.deleteError = nil
+                }
+            } message: {
+                Text(viewModel.deleteError ?? "An error occurred")
+            }
+            .onChange(of: viewModel.deleteError) { _, newValue in
+                showDeleteErrorAlert = newValue != nil
             }
         }
     }

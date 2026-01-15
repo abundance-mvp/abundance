@@ -18,7 +18,8 @@ describe('CatalogItem Schema', () => {
         dimensions: 'size 10 mens',
         quantity: 1,
         estimatedValue: 85.00,
-        confidence: 'high'
+        confidence: 'high',
+        processingNotes: null
       };
 
       const result = validateCatalogItem(item);
@@ -38,7 +39,8 @@ describe('CatalogItem Schema', () => {
         dimensions: null,
         quantity: 1,
         estimatedValue: null,
-        confidence: 'low'
+        confidence: 'low',
+        processingNotes: null
       };
 
       const result = validateCatalogItem(item);
@@ -77,7 +79,8 @@ describe('CatalogItem Schema', () => {
         dimensions: null,
         quantity: -1,
         estimatedValue: null,
-        confidence: 'medium'
+        confidence: 'medium',
+        processingNotes: null
       };
 
       const result = validateCatalogItem(item);

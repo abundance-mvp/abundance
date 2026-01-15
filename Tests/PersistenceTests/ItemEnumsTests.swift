@@ -170,19 +170,24 @@ final class ItemEnumsTests: XCTestCase {
     }
 
     func testItem_equatable() {
+        let fixedDate = Date(timeIntervalSince1970: 1_700_000_000)
         let item1 = Item(
             id: "test-id",
             userId: "user-123",
             imageUrl: "https://example.com/image.jpg",
             status: .pending,
-            name: "Test Item"
+            name: "Test Item",
+            createdAt: fixedDate,
+            updatedAt: fixedDate
         )
         let item2 = Item(
             id: "test-id",
             userId: "user-123",
             imageUrl: "https://example.com/image.jpg",
             status: .pending,
-            name: "Test Item"
+            name: "Test Item",
+            createdAt: fixedDate,
+            updatedAt: fixedDate
         )
 
         XCTAssertEqual(item1, item2)
