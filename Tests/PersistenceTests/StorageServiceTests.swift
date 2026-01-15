@@ -34,8 +34,17 @@ final class StorageServiceTests: XCTestCase {
 
     func testUploadImage_ValidImage_ReturnsDownloadURL() async throws {
         // This test requires Firebase Storage Emulator to be running
-        // Skip if emulator is not available
-        guard isEmulatorRunning() else {
+        // In CI, fail loudly to prevent silent coverage gaps
+        let isCI = ProcessInfo.processInfo.environment["CI"] == "true"
+        let emulatorRunning = isEmulatorRunning()
+
+        if isCI && !emulatorRunning {
+            XCTFail("CI environment requires Firebase Storage Emulator for integration tests")
+            return
+        }
+
+        // Locally, skip if emulator is not available
+        guard emulatorRunning else {
             throw XCTSkip("Firebase Storage Emulator is not running. Start with: firebase emulators:start")
         }
 
@@ -53,7 +62,8 @@ final class StorageServiceTests: XCTestCase {
 
         // Then
         XCTAssertNotNil(downloadURL)
-        XCTAssertTrue(downloadURL.absoluteString.contains("localhost:9199") || downloadURL.absoluteString.contains("firebasestorage.googleapis.com"))
+        let urlString = downloadURL.absoluteString
+        XCTAssertTrue(urlString.contains("localhost:9199") || urlString.contains("firebasestorage.googleapis.com"))
     }
 
     // Helper: Check if emulator is running

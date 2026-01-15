@@ -100,12 +100,23 @@ final class ItemServiceIntegrationTests: XCTestCase {
         ProcessInfo.processInfo.environment["FIREBASE_EMULATOR_HOST"] != nil
     }
 
+    /// Check if running in CI environment
+    private static var isCI: Bool {
+        ProcessInfo.processInfo.environment["CI"] == "true"
+    }
+
     var sut: ItemService!
 
     override func setUp() async throws {
         try await super.setUp()
 
-        // Skip setup if emulator not available
+        // In CI, fail loudly if emulator not configured (prevents silent coverage gaps)
+        if Self.isCI && !Self.emulatorAvailable {
+            XCTFail("CI environment requires FIREBASE_EMULATOR_HOST to be set for integration tests")
+            return
+        }
+
+        // Locally, skip if emulator not available
         try XCTSkipUnless(
             Self.emulatorAvailable,
             "Firebase emulator not available. Set FIREBASE_EMULATOR_HOST=localhost:8080"
@@ -195,10 +206,10 @@ final class ItemServiceIntegrationTests: XCTestCase {
         // Given: Create multiple items
         let userId = "test-user-\(UUID().uuidString)"
 
-        for i in 1...3 {
+        for index in 1...3 {
             let metadata = Layer1Metadata(
-                detectedClass: "item-\(i)",
-                confidence: Double(i) * 0.25,
+                detectedClass: "item-\(index)",
+                confidence: Double(index) * 0.25,
                 boundingBox: CGRect(x: 0, y: 0, width: 0.1, height: 0.1),
                 qualityScore: 0.8
             )
@@ -206,7 +217,7 @@ final class ItemServiceIntegrationTests: XCTestCase {
             try await sut.createItemWithLayer1Metadata(
                 itemId: UUID().uuidString,
                 userId: userId,
-                imageUrl: "gs://test-bucket/image-\(i).jpg",
+                imageUrl: "gs://test-bucket/image-\(index).jpg",
                 layer1Metadata: metadata
             )
         }

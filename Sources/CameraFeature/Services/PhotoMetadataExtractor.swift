@@ -150,10 +150,15 @@ public final class PhotoMetadataExtractor: PhotoMetadataExtractorProtocol, @unch
         return exif
     }
 
-    private func parseEXIFDate(_ dateString: String) -> Date? {
-        let formatter: DateFormatter = DateFormatter()
+    /// Static EXIF date formatter - expensive to create, so reused across calls
+    private static let exifDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
         formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
-        return formatter.date(from: dateString)
+        return formatter
+    }()
+
+    private func parseEXIFDate(_ dateString: String) -> Date? {
+        Self.exifDateFormatter.date(from: dateString)
     }
 
     // MARK: - Image Dimensions

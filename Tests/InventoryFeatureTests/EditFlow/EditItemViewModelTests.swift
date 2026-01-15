@@ -407,7 +407,8 @@ final class MockEditItemRepository: ItemRepository, @unchecked Sendable {
     }
 
     func observeItem(id: String, onChange: @escaping (Item?) -> Void) -> FirebaseFirestore.ListenerRegistration {
-        fatalError("Not implemented")
+        Issue.record("observeItem should not be called in this test - add mock implementation if needed")
+        return MockEditListenerRegistration()
     }
 
     func observeItems(userId: String) -> AnyPublisher<[Item], Never> {
@@ -455,3 +456,10 @@ final class MockEditStorageService: StorageServiceProtocol, @unchecked Sendable 
 // Need to import Combine for AnyPublisher
 import Combine
 import FirebaseFirestore
+
+/// Mock listener registration for tests - does nothing on remove()
+final class MockEditListenerRegistration: NSObject, ListenerRegistration {
+    func remove() {
+        // No-op for mock
+    }
+}

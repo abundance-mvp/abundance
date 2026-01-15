@@ -122,12 +122,14 @@ public struct InventoryView: View {
                 titleVisibility: .visible
             ) {
                 Button("Delete All", role: .destructive) {
+                    let idsToDelete = selectedItemIds
+                    // Clear selection state immediately with animation (before async work)
+                    withAnimation(.brandSnappy) {
+                        isSelectionMode = false
+                        selectedItemIds.removeAll()
+                    }
                     Task {
-                        await viewModel.deleteItems(ids: selectedItemIds)
-                        withAnimation(.brandSnappy) {
-                            isSelectionMode = false
-                            selectedItemIds.removeAll()
-                        }
+                        await viewModel.deleteItems(ids: idsToDelete)
                     }
                 }
                 Button("Cancel", role: .cancel) { }

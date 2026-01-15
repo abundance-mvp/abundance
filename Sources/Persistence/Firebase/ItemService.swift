@@ -236,7 +236,12 @@ public final class ItemService: ItemRepository {
     ///
     /// **Pattern:** DESIGN-037 Pattern 2 (Firestore Real-Time Listener Integration)
     public func observeItem(id: String, onChange: @escaping (Item?) -> Void) -> ListenerRegistration {
-        db.collection("items").document(id).addSnapshotListener { snapshot, error in
+        db.collection("items").document(id).addSnapshotListener { [weak self] snapshot, error in
+            guard let self else {
+                onChange(nil)
+                return
+            }
+
             if let error = error {
                 os_log(
                     .error, log: .default,
@@ -274,7 +279,12 @@ public final class ItemService: ItemRepository {
         let listener = db.collection("items")
             .whereField("userId", isEqualTo: userId)
             .order(by: "createdAt", descending: true)
-            .addSnapshotListener { snapshot, error in
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self else {
+                    subject.send([])
+                    return
+                }
+
                 if let error = error {
                     os_log(
                         .error, log: .default,

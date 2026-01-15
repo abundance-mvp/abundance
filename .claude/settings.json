@@ -1,4 +1,8 @@
 {
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "axiom@axiom-marketplace": true
+  },
   "extraKnownMarketplaces": {
     "superpowers-marketplace": {
       "source": {
@@ -6,8 +10,5 @@
         "repo": "obra/superpowers-marketplace"
       }
     }
-  },
-  "enabledPlugins": {
-    "superpowers@superpowers-marketplace": true
   }
 }

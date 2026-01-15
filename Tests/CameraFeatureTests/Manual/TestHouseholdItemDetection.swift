@@ -5,17 +5,31 @@ import CoreML
 @testable import VisionCore
 @testable import CameraFeature
 
-/// Manual test to run detection on example image and print confidence/quality scores
-/// Usage: swift test --filter testDetectHouseholdItemsInExampleImage
+// Manual test to run detection on example image and print confidence/quality scores
+// Usage: swift test --filter testDetectHouseholdItemsInExampleImage
+//
+// Note: These are diagnostic tests with intentionally verbose output
+// swiftlint:disable function_body_length cyclomatic_complexity large_tuple line_length
 final class TestHouseholdItemDetection: XCTestCase {
+
+    /// Helper to get project root path from test file location
+    private var projectRootPath: String {
+        let testFilePath = #filePath
+        let testFileURL = URL(fileURLWithPath: testFilePath)
+        return testFileURL
+            .deletingLastPathComponent() // Manual/
+            .deletingLastPathComponent() // CameraFeatureTests/
+            .deletingLastPathComponent() // Tests/
+            .path
+    }
 
     func testDetectHouseholdItemsInExampleImage() async throws {
         print("\n========================================")
         print("Testing Household Item Detection")
         print("========================================\n")
 
-        // Load test image
-        let imagePath = "/Users/w/code/abundance-mvp/docs/design/examples/real-time-detection-ux/test-household-item.jpg"
+        // Load test image using relative path from project root
+        let imagePath = "\(projectRootPath)/docs/design/examples/real-time-detection-ux/test-household-item.jpg"
 
         #if os(iOS)
         guard let image = UIImage(contentsOfFile: imagePath) else {
@@ -130,8 +144,8 @@ final class TestHouseholdItemDetection: XCTestCase {
         print("ALL Raw YOLO Detections (No Filtering)")
         print("========================================\n")
 
-        // Load test image
-        let imagePath = "/Users/w/code/abundance-mvp/docs/design/examples/real-time-detection-ux/test-household-item.jpg"
+        // Load test image using relative path from project root
+        let imagePath = "\(projectRootPath)/docs/design/examples/real-time-detection-ux/test-household-item.jpg"
 
         #if os(iOS)
         guard let image = UIImage(contentsOfFile: imagePath) else {
@@ -309,3 +323,4 @@ final class TestHouseholdItemDetection: XCTestCase {
         return buffer
     }
 }
+// swiftlint:enable function_body_length cyclomatic_complexity large_tuple line_length

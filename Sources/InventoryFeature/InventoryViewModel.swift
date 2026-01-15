@@ -1,5 +1,5 @@
 import Foundation
-import SwiftUI
+import Observation
 import FirebaseAuth
 import Combine
 import Persistence
@@ -84,22 +84,18 @@ public final class InventoryViewModel {
         // Store item for potential rollback
         let itemIndex: Int? = items.firstIndex(where: { $0.id == item.id })
 
-        // Optimistic removal
-        withAnimation(.brandSnappy) {
-            items.removeAll { $0.id == item.id }
-        }
+        // Optimistic removal (View handles animation)
+        items.removeAll { $0.id == item.id }
         deleteError = nil
 
         do {
             try await itemRepository.deleteItem(id: item.id)
         } catch {
             // Rollback: re-insert item at original position
-            withAnimation(.brandSnappy) {
-                if let index = itemIndex, index < items.count {
-                    items.insert(item, at: index)
-                } else {
-                    items.append(item)
-                }
+            if let index = itemIndex, index < items.count {
+                items.insert(item, at: index)
+            } else {
+                items.append(item)
             }
             deleteError = "Failed to delete item: \(error.localizedDescription)"
         }
@@ -114,19 +110,15 @@ public final class InventoryViewModel {
         // Store items for potential rollback
         let originalItems: [Item] = items
 
-        // Optimistic removal
-        withAnimation(.brandSnappy) {
-            items.removeAll { ids.contains($0.id) }
-        }
+        // Optimistic removal (View handles animation)
+        items.removeAll { ids.contains($0.id) }
         deleteError = nil
 
         do {
             try await itemRepository.deleteItems(ids: ids)
         } catch {
             // Rollback: restore original items array
-            withAnimation(.brandSnappy) {
-                items = originalItems
-            }
+            items = originalItems
             deleteError = "Failed to delete \(ids.count) items: \(error.localizedDescription)"
         }
     }

@@ -1,7 +1,15 @@
 import Foundation
+import XCTest
 import FirebaseFirestore
 import Combine
 @testable import Persistence
+
+/// Mock listener registration for tests - does nothing on remove()
+final class MockListenerRegistration: NSObject, ListenerRegistration {
+    func remove() {
+        // No-op for mock
+    }
+}
 
 final class MockItemService: ItemRepository, @unchecked Sendable {
     var createItemCalled: Bool = false
@@ -72,7 +80,9 @@ final class MockItemService: ItemRepository, @unchecked Sendable {
     }
 
     func observeItem(id: String, onChange: @escaping (Item?) -> Void) -> ListenerRegistration {
-        fatalError("Not implemented in mock")
+        XCTFail("observeItem should not be called in this test - add mock implementation if needed")
+        // Return empty closure-based mock that does nothing
+        return MockListenerRegistration()
     }
 
     func observeItems(userId: String) -> AnyPublisher<[Item], Never> {

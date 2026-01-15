@@ -50,7 +50,7 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertNil(sut.errorMessage)
     }
 
-    func testCheckCameraPermission_whenDenied_showsError() async {
+    func testCheckCameraPermission_whenDenied_showsError() async throws {
         // Given
         mockCameraService.stubbedAuthStatus = .denied
 
@@ -61,8 +61,8 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertTrue(mockCameraService.didCallCheckAuthorization)
         XCTAssertFalse(mockCameraService.didCallStartSession)
         XCTAssertEqual(sut.authorizationStatus, .denied)
-        XCTAssertNotNil(sut.errorMessage)
-        XCTAssertTrue(sut.errorMessage!.contains("denied"))
+        let errorMessage = try XCTUnwrap(sut.errorMessage, "Expected error message to be set")
+        XCTAssertTrue(errorMessage.contains("denied"))
     }
 
     func testStartCamera_whenSucceeds_clearsErrorMessage() async {
@@ -78,7 +78,7 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertNil(sut.errorMessage)
     }
 
-    func testStartCamera_whenFails_setsErrorMessage() async {
+    func testStartCamera_whenFails_setsErrorMessage() async throws {
         // Given
         mockCameraService.shouldFailStartSession = true
 
@@ -87,8 +87,8 @@ final class CameraViewModelTests: XCTestCase {
 
         // Then
         XCTAssertTrue(mockCameraService.didCallStartSession)
-        XCTAssertNotNil(sut.errorMessage)
-        XCTAssertTrue(sut.errorMessage!.contains("Failed to start camera"))
+        let errorMessage = try XCTUnwrap(sut.errorMessage, "Expected error message to be set")
+        XCTAssertTrue(errorMessage.contains("Failed to start camera"))
     }
 
     func testStopCamera_callsStopSession() {
