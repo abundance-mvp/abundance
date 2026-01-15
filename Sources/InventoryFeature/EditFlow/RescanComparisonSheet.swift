@@ -95,7 +95,7 @@ public struct RescanComparisonSheet: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
-                .background(.ultraThinMaterial)
+                .adaptiveGlass(cornerRadius: 16)
             }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
