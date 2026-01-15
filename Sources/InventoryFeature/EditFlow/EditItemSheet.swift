@@ -210,6 +210,8 @@ public struct EditItemSheet: View {
                             }
                         }
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.successColor)
                     .disabled(!viewModel.validationErrors.isEmpty || viewModel.state == .saving)
                 }
             }

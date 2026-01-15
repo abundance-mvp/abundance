@@ -90,6 +90,8 @@ public struct InventoryView: View {
                                 }
                             }
                         }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color.accentPrimary)
                     }
                 }
             }
