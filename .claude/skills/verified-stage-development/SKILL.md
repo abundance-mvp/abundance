@@ -383,7 +383,7 @@ When stage requires iOS/Swift implementation:
 **iOS Stage Detection:**
 
 First, check if this is an iOS stage:
-- iOS stages: 2.2, 3.1, 4.1 (any stage with `apple_docs: true` in context-map.json)
+- iOS stages: 2.2, 2.6, 3.1, 3.3, 4.1 (any stage with `apple_docs: true` in context-map.json)
 - Check: `required_inputs` includes Swift/iOS files or `apple_docs` flag is set
 
 **If iOS stage detected:**
@@ -476,7 +476,7 @@ First, check if this is an iOS stage:
 
 2. **Invoke planning skill**
 
-   **For iOS stages (2.2, 3.1, 4.1):**
+   **For iOS stages (2.2, 2.6, 3.1, 3.3, 4.1):**
 
    ```
    Tool: Skill
@@ -484,6 +484,12 @@ First, check if this is an iOS stage:
      skill: ios-superpowers
      args: plan [stage description from context]
    ```
+
+   ios-superpowers will:
+   - Detect iOS APIs in the stage context
+   - Fetch Apple documentation via apple-docs-fetcher
+   - Select appropriate Axiom skills based on task type
+   - Invoke superpowers:writing-plans with enriched context
 
    **For non-iOS stages:**
 
@@ -667,7 +673,7 @@ First, check if this is an iOS stage:
 
 2. **Invoke execution skill**
 
-   **For iOS stages (2.2, 3.1, 4.1):**
+   **For iOS stages (2.2, 2.6, 3.1, 3.3, 4.1):**
 
    ```
    Tool: Skill
@@ -675,6 +681,12 @@ First, check if this is an iOS stage:
      skill: ios-superpowers
      args: execute [plan path from Phase 3]
    ```
+
+   ios-superpowers will:
+   - Re-fetch Apple docs for APIs being implemented
+   - Apply Axiom patterns based on task type
+   - Invoke superpowers:executing-plans with enriched context
+   - Verify implementation against docs post-execution
 
    **For non-iOS stages:**
 

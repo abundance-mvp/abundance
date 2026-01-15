@@ -1,13 +1,24 @@
 ---
 name: apple-docs-fetcher
-description: Fetch Apple Developer documentation using MCP server with context map guidance
+description: Fetch Apple Developer documentation using MCP server with sosumi.ai API fallback.
 ---
 
 ## When to Use
 
-- During iOS stage development research (automatic via verified-stage-development)
+- **Automatically via ios-superpowers** for all iOS/Swift development work
+- During iOS stage development research (via verified-stage-development)
 - When implementing iOS features and need API documentation
 - When verifying Apple API capabilities
+- Manual lookups when exploring iOS frameworks
+
+## Integration with ios-superpowers
+
+This skill is called automatically by `ios-superpowers` orchestrator. You typically don't need to invoke it directly unless:
+- Manual documentation lookup outside a workflow
+- Refreshing stale documentation
+- Exploring APIs before starting work
+
+See: `.claude/skills/ios-superpowers/SKILL.md`
 
 ## Usage
 
@@ -15,6 +26,10 @@ Call with feature path, API name, or concept:
 - `apple-docs-fetcher swift_language.basics`
 - `apple-docs-fetcher AVCaptureSession`
 - `apple-docs-fetcher "Face ID authentication"`
+
+## Common Lookups Reference
+
+See `references/common-lookups.md` for pre-defined paths to frequently used documentation.
 
 ## Lookup Strategy
 
@@ -101,3 +116,38 @@ Input: "swift concurrency"
 → WebFetch("https://sosumi.ai/api/docs/documentation/swift/concurrency", ...)
 → Return docs
 ```
+
+---
+
+## Token Budget Management
+
+When fetching multiple APIs, enforce token limits:
+
+- **Per API:** 8,000 tokens max
+- **Total per session:** 25,000 tokens max
+- **Strategy:** Search first, fetch selectively, extract key info and discard full docs
+
+**Lite mode (recommended for bulk lookups):**
+1. Search for API
+2. Extract key information from search results
+3. Only fetch full docs if search insufficient
+4. Immediately summarize and discard full content
+
+---
+
+## Integration Points
+
+### ios-superpowers
+- Called automatically during all workflows
+- Fetches docs for detected iOS APIs
+- Combines with Axiom skill context
+
+### verified-stage-development
+- Called during iOS stage research verification
+- Validates technical claims against official docs
+- Creates verification summary
+
+### ios-sprint-executor
+- Called in Phase 1 (pre-sprint setup)
+- Called in Phase 4.5 (Apple docs verification)
+- Verifies API usage in code review

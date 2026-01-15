@@ -1,3 +1,12 @@
 node_modules/
 lib/
 *.log
+
+# Integration test credentials
+.env.integration
+.env.integration.local
+.secret.local
+
+# Service account keys
+*-service-account*.json
+serviceAccount*.json
