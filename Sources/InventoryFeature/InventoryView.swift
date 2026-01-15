@@ -171,7 +171,7 @@ public struct InventoryView: View {
             .disabled(selectedItemIds.isEmpty)
         }
         .padding()
-        .background(.ultraThinMaterial)
+        .adaptiveGlass(cornerRadius: 16)
     }
 }
 
