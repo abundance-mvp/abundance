@@ -110,4 +110,12 @@ final class TestItemRepository: ItemRepository, @unchecked Sendable {
     func deleteItems(ids: Set<String>) async throws {
         // Mock implementation
     }
+
+    func updateItem(_ item: Item, userEditedFields: [String]?) async throws {
+        // Mock implementation
+    }
+
+    func rescanItem(_ item: Item) async throws {
+        // Mock implementation
+    }
 }

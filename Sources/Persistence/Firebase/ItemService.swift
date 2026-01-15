@@ -78,6 +78,18 @@ public protocol ItemRepository: Sendable {
     /// - Parameter ids: Set of item document IDs to delete
     /// - Throws: Error if batch deletion fails
     func deleteItems(ids: Set<String>) async throws
+
+    /// Updates an existing item with optional user-edited field tracking
+    /// - Parameters:
+    ///   - item: Updated item data
+    ///   - userEditedFields: Array of field names that were manually edited (for training data)
+    /// - Throws: Error if Firestore write fails
+    func updateItem(_ item: Item, userEditedFields: [String]?) async throws
+
+    /// Triggers a rescan by updating image URL and status to pending
+    /// - Parameter item: Item with new imageUrl and updated fields
+    /// - Throws: Error if Firestore write fails
+    func rescanItem(_ item: Item) async throws
 }
 
 /// Service for managing Item documents in Firestore
@@ -330,6 +342,62 @@ public final class ItemService: ItemRepository {
         }
 
         os_log(.info, log: .default, "Batch deleted %{public}d items", ids.count)
+    }
+
+    // MARK: - Update Operations
+
+    /// Update an existing item with optimistic update pattern
+    /// - Parameters:
+    ///   - item: Updated item data
+    ///   - userEditedFields: Array of field names that were manually edited (for tracking)
+    /// - Throws: Error if Firestore write fails
+    public func updateItem(_ item: Item, userEditedFields: [String]? = nil) async throws {
+        let itemRef = db.collection("items").document(item.id)
+
+        var data: [String: Any] = [
+            "name": item.name as Any,
+            "category": item.category as Any,
+            "subCategory": item.subCategory as Any,
+            "brand": item.brand as Any,
+            "model": item.model as Any,
+            "color": item.color as Any,
+            "material": item.material as Any,
+            "condition": item.condition?.rawValue as Any,
+            "dimensions": item.dimensions as Any,
+            "quantity": item.quantity as Any,
+            "estimatedValue": item.estimatedValue as Any,
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+
+        // Track user edits if provided
+        if let editedFields = userEditedFields {
+            // Merge with existing edited fields
+            data["userEditedFields"] = FieldValue.arrayUnion(editedFields)
+        }
+
+        if let lastRescanAt = item.lastRescanAt {
+            data["lastRescanAt"] = Timestamp(date: lastRescanAt)
+        }
+
+        try await itemRef.updateData(data)
+        os_log(.info, log: .default, "Updated item id=%{public}@", item.id)
+    }
+
+    /// Trigger a rescan by updating the image URL and resetting status
+    /// - Parameter item: Item with new imageUrl and updated fields
+    /// - Throws: Error if Firestore write fails
+    public func rescanItem(_ item: Item) async throws {
+        let itemRef = db.collection("items").document(item.id)
+
+        let data: [String: Any] = [
+            "imageUrl": item.imageUrl,
+            "status": ItemStatus.pending.rawValue, // Triggers Cloud Function
+            "lastRescanAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+
+        try await itemRef.updateData(data)
+        os_log(.info, log: .default, "Triggered rescan for item id=%{public}@", item.id)
     }
 
     // MARK: - Private Helpers

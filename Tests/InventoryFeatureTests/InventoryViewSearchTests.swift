@@ -277,6 +277,14 @@ final class MockSearchTestItemRepository: ItemRepository, @unchecked Sendable {
     func observeItems(userId: String) -> AnyPublisher<[Item], Never> {
         Just(mockItems).eraseToAnyPublisher()
     }
+
+    func updateItem(_ item: Item, userEditedFields: [String]?) async throws {
+        // Mock implementation
+    }
+
+    func rescanItem(_ item: Item) async throws {
+        // Mock implementation
+    }
 }
 
 // swiftlint:enable explicit_type_interface
