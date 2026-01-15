@@ -8,7 +8,6 @@ struct ItemCard: View {
     let item: Item
     var onTap: (() -> Void)? = nil
 
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isPressed: Bool = false
 
@@ -58,20 +57,7 @@ struct ItemCard: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
             }
-            .background {
-                if #available(iOS 26.0, macOS 26.0, *) {
-                    if !reduceTransparency {
-                        Color.clear
-                            .glassEffect(in: outerShape)
-                    } else {
-                        Color.backgroundDefault
-                            .clipShape(outerShape)
-                    }
-                } else {
-                    Color.clear
-                        .background(.thickMaterial, in: outerShape)
-                }
-            }
+            .adaptiveGlass(in: outerShape)
             .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
             .scaleEffect(isPressed ? 0.98 : 1.0)
         }
@@ -126,11 +112,17 @@ struct ItemCard: View {
     }
 
     private func handleTap() {
-        isPressed = true
+        withAnimation(.brandSnappy) {
+            isPressed = true
+        }
         onTap?()
-        Task {
-            try? await Task.sleep(for: .seconds(0.15))
-            isPressed = false
+
+        // Use DispatchQueue for delayed reset (avoids Task capture issues
+        // if view is removed mid-animation)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.brandSnappy) {
+                isPressed = false
+            }
         }
     }
 }

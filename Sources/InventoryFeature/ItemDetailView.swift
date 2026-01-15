@@ -5,7 +5,6 @@ import Persistence
 public struct ItemDetailView: View {
     public let item: Item
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var scrollOffset: CGFloat = 0
     @State private var showEditSheet = false
 
@@ -130,20 +129,7 @@ public struct ItemDetailView: View {
                     }
                 }
                 .padding(24)
-                .background {
-                    if #available(iOS 26.0, macOS 26.0, *) {
-                        if !reduceTransparency {
-                            Color.clear
-                                .glassEffect(in: metadataCardShape)
-                        } else {
-                            Color.backgroundDefault
-                                .clipShape(metadataCardShape)
-                        }
-                    } else {
-                        Color.clear
-                            .background(.ultraThickMaterial, in: metadataCardShape)
-                    }
-                }
+                .adaptiveGlass(in: metadataCardShape)
                 .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: -8)
                 .padding(.horizontal, 16)
                 .offset(y: -60) // Overlap hero

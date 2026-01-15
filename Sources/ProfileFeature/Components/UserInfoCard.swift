@@ -16,10 +16,6 @@ public struct UserInfoCard: View {
     let email: String
     let itemCount: Int
 
-    // MARK: - Environment
-
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
     // MARK: - Initializer
 
     public init(displayName: String, email: String, itemCount: Int) {
@@ -52,7 +48,7 @@ public struct UserInfoCard: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity)
-        .modifier(GlassBackgroundModifier(reduceTransparency: reduceTransparency))
+        .adaptiveGlass(cornerRadius: 20, tint: Color.accentPrimary.opacity(0.1))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("User profile: \(displayName), \(email), \(itemCount) items")
     }
@@ -95,33 +91,6 @@ public struct UserInfoCard: View {
         let components = displayName.split(separator: " ")
         let initials = components.prefix(2).compactMap { $0.first }.map(String.init)
         return initials.joined().uppercased()
-    }
-}
-
-// MARK: - Glass Background Modifier
-
-/// Modifier that applies Liquid Glass on iOS 26+ with material fallback
-private struct GlassBackgroundModifier: ViewModifier {
-    let reduceTransparency: Bool
-
-    func body(content: Content) -> some View {
-        if reduceTransparency {
-            content
-                .background(Color.backgroundDefault, in: RoundedRectangle(cornerRadius: 20))
-        } else {
-            glassContent(content)
-        }
-    }
-
-    @ViewBuilder
-    private func glassContent(_ content: Content) -> some View {
-        if #available(iOS 26.0, macOS 26.0, *) {
-            content
-                .brandGlass(cornerRadius: 20, tint: Color.accentPrimary.opacity(0.1))
-        } else {
-            content
-                .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 20))
-        }
     }
 }
 

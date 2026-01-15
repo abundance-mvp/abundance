@@ -3,7 +3,8 @@ import Core
 import Persistence
 
 public struct InventoryView: View {
-    @StateObject var viewModel: InventoryViewModel
+    // Plain var for @Observable type - SwiftUI tracks changes automatically
+    var viewModel: InventoryViewModel
     @State private var searchText = ""
     var onOpenCamera: (() -> Void)?
 
@@ -11,7 +12,7 @@ public struct InventoryView: View {
         viewModel: InventoryViewModel = InventoryViewModel(),
         onOpenCamera: (() -> Void)? = nil
     ) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        self.viewModel = viewModel
         self.onOpenCamera = onOpenCamera
     }
 

@@ -10,8 +10,6 @@ struct EmptyStateCard: View {
     let buttonTitle: String
     let action: () -> Void
 
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: iconName)
@@ -37,24 +35,7 @@ struct EmptyStateCard: View {
         }
         .padding(32)
         .frame(maxWidth: .infinity)
-        .background {
-            if #available(iOS 26.0, macOS 26.0, *) {
-                if !reduceTransparency {
-                    Color.clear
-                        .glassEffect(in: outerShape)
-                } else {
-                    Color.backgroundDefault
-                        .clipShape(outerShape)
-                }
-            } else {
-                Color.clear
-                    .background(.thickMaterial, in: outerShape)
-            }
-        }
+        .adaptiveGlass(cornerRadius: 24)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-    }
-
-    private var outerShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: 24)
     }
 }

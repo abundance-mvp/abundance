@@ -89,3 +89,83 @@ public extension View {
         self.background(.thickMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
     }
 }
+
+// MARK: - Adaptive Glass Modifier (Unified)
+
+/// Unified glass modifier that handles iOS version detection and accessibility
+/// Replaces duplicated implementations across UI components
+@available(iOS 17.0, macOS 14.0, *)
+public struct AdaptiveGlassModifier: ViewModifier {
+    let cornerRadius: CGFloat
+    let shape: AnyShape?
+    let tint: Color?
+
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    public init(cornerRadius: CGFloat = 16, shape: AnyShape? = nil, tint: Color? = nil) {
+        self.cornerRadius = cornerRadius
+        self.shape = shape
+        self.tint = tint
+    }
+
+    public func body(content: Content) -> some View {
+        if reduceTransparency {
+            content
+                .background(Color.backgroundDefault, in: resolvedShape)
+        } else {
+            glassContent(content)
+        }
+    }
+
+    private var resolvedShape: AnyShape {
+        if let shape = shape {
+            return shape
+        }
+        return AnyShape(RoundedRectangle(cornerRadius: cornerRadius))
+    }
+
+    @ViewBuilder
+    private func glassContent(_ content: Content) -> some View {
+        if #available(iOS 26.0, macOS 26.0, *) {
+            if let shape = shape {
+                if let tint = tint {
+                    content.glassEffect(.regular.tint(tint), in: shape)
+                } else {
+                    content.glassEffect(in: shape)
+                }
+            } else {
+                if let tint = tint {
+                    content.brandGlass(cornerRadius: cornerRadius, tint: tint)
+                } else {
+                    content.brandGlass(cornerRadius: cornerRadius)
+                }
+            }
+        } else {
+            content
+                .background(.thickMaterial, in: resolvedShape)
+        }
+    }
+}
+
+// MARK: - View Extension for AdaptiveGlass
+
+@available(iOS 17.0, macOS 14.0, *)
+public extension View {
+    /// Apply adaptive glass background with automatic iOS version detection
+    /// - Parameters:
+    ///   - cornerRadius: Corner radius for the glass shape (default: 16)
+    ///   - tint: Optional color tint for iOS 26+ glass effect
+    /// - Returns: View with glass effect (iOS 26+) or material fallback (iOS 17-25)
+    func adaptiveGlass(cornerRadius: CGFloat = 16, tint: Color? = nil) -> some View {
+        modifier(AdaptiveGlassModifier(cornerRadius: cornerRadius, tint: tint))
+    }
+
+    /// Apply adaptive glass background with custom shape
+    /// - Parameters:
+    ///   - shape: Custom shape for the glass effect
+    ///   - tint: Optional color tint for iOS 26+ glass effect
+    /// - Returns: View with glass effect in custom shape
+    func adaptiveGlass<S: Shape>(in shape: S, tint: Color? = nil) -> some View {
+        modifier(AdaptiveGlassModifier(shape: AnyShape(shape), tint: tint))
+    }
+}

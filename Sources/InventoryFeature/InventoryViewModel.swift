@@ -6,10 +6,12 @@ import Persistence
 /// ViewModel for Inventory list view
 /// **Patterns:** DESIGN-037 Pattern 1 (Constructor Injection), Pattern 2 (Real-time Listener)
 @MainActor
-public final class InventoryViewModel: ObservableObject {
-    @Published public var items: [Item] = []
-    @Published public var isLoading = false
-    @Published public var error: String?
+@Observable
+public final class InventoryViewModel {
+    // @Observable tracks changes automatically - no @Published needed
+    public var items: [Item] = []
+    public var isLoading = false
+    public var error: String?
 
     private let itemRepository: ItemRepository
     private let userId: String?
@@ -21,11 +23,12 @@ public final class InventoryViewModel: ObservableObject {
     ///   - itemRepository: Repository for item persistence (injectable for testing)
     ///   - requiresAuthentication: If true, sets error when no userId available. Default true.
     ///                             Pass false for SwiftUI Previews/testing without auth.
+    ///   - authProvider: Closure to provide auth user ID (injectable, @Sendable for Swift 6)
     public init(
         userId: String? = nil,
         itemRepository: ItemRepository = ItemService(),
         requiresAuthentication: Bool = true,
-        authProvider: (() -> String?)? = nil
+        authProvider: (@Sendable () -> String?)? = nil
     ) {
         // Resolve userId: explicit > authProvider > Firebase Auth (only if auth required)
         let resolvedUserId: String?

@@ -15,10 +15,6 @@ public struct ProfileView: View {
     @Bindable var viewModel: ProfileViewModel
     var onSignOut: (() -> Void)?
 
-    // MARK: - Environment
-
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
     // MARK: - State
 
     @State private var showingSignOutConfirmation = false
@@ -112,7 +108,7 @@ public struct ProfileView: View {
                     action: { /* Navigate to help */ }
                 )
             }
-            .modifier(GlassSectionModifier(reduceTransparency: reduceTransparency))
+            .adaptiveGlass(cornerRadius: 16)
         }
     }
 
@@ -126,12 +122,12 @@ public struct ProfileView: View {
                 ForEach(ExportFormat.allCases, id: \.self) { format in
                     ExportButton(
                         format: format,
-                        reduceTransparency: reduceTransparency
-                    ) {
-                        Task {
-                            await viewModel.exportData(format: format)
+                        action: {
+                            Task {
+                                await viewModel.exportData(format: format)
+                            }
                         }
-                    }
+                    )
                 }
             }
         }
@@ -151,7 +147,7 @@ public struct ProfileView: View {
             .foregroundStyle(Color.errorColor)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .modifier(GlassSectionModifier(reduceTransparency: reduceTransparency))
+            .adaptiveGlass(cornerRadius: 16)
         }
         .accessibilityLabel("Sign out")
         .accessibilityHint("Double tap to sign out of your account")
@@ -220,7 +216,6 @@ private struct SettingsRow: View {
 
 private struct ExportButton: View {
     let format: ExportFormat
-    let reduceTransparency: Bool
     let action: () -> Void
 
     var body: some View {
@@ -237,7 +232,7 @@ private struct ExportButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .modifier(GlassSectionModifier(reduceTransparency: reduceTransparency))
+            .adaptiveGlass(cornerRadius: 16)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Export as \(format.rawValue)")
@@ -251,32 +246,6 @@ private struct ExportButton: View {
             return "doc.text"
         case .pdf:
             return "doc.richtext"
-        }
-    }
-}
-
-// MARK: - Glass Section Modifier
-
-private struct GlassSectionModifier: ViewModifier {
-    let reduceTransparency: Bool
-
-    func body(content: Content) -> some View {
-        if reduceTransparency {
-            content
-                .background(Color.backgroundDefault, in: RoundedRectangle(cornerRadius: 16))
-        } else {
-            glassContent(content)
-        }
-    }
-
-    @ViewBuilder
-    private func glassContent(_ content: Content) -> some View {
-        if #available(iOS 26.0, macOS 26.0, *) {
-            content
-                .brandGlass(cornerRadius: 16)
-        } else {
-            content
-                .background(.thickMaterial, in: RoundedRectangle(cornerRadius: 16))
         }
     }
 }
