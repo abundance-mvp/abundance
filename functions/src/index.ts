@@ -14,6 +14,9 @@ import { onItemCreatedGemini3 } from './triggers/onItemCreatedGemini3';
 import { cleanupDeletedItemsScheduled } from './scheduled/cleanupDeletedItems';
 import { checkSubscriptionExpiryScheduled } from './scheduled/checkSubscriptionExpiry';
 
+// Import migrations
+import { backfillFlattenedSchema } from './migrations/backfillFlattenedSchema';
+
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 
@@ -180,3 +183,6 @@ export { onItemCreated, onLayer2aComplete, onLayer2bComplete, onItemCreatedGemin
 
 // Export scheduled jobs
 export { cleanupDeletedItemsScheduled, checkSubscriptionExpiryScheduled };
+
+// Export migrations
+export { backfillFlattenedSchema };

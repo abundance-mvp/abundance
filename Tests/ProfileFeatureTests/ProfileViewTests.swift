@@ -320,6 +320,16 @@ extension MockItemRepository: ItemRepository {
         // Mock implementation
     }
 
+    func createItemWithPhotoMetadata(
+        itemId: String,
+        userId: String,
+        imageUrl: String,
+        layer1Metadata: Layer1Metadata,
+        photoMetadata: PhotoMetadata
+    ) async throws {
+        // Mock implementation
+    }
+
     func getItem(id: String) async throws -> Item? {
         return nil
     }
@@ -341,7 +351,7 @@ extension MockItemRepository: ItemRepository {
                 color: nil,
                 material: nil,
                 condition: nil,
-                confidence: 0.95,
+                confidence: .high,
                 createdAt: Date(),
                 updatedAt: Date()
             )

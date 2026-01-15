@@ -57,82 +57,106 @@ public struct ItemDetailView: View {
                         }
                     )
 
-                // Metadata Card with Liquid Glass
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Text(item.category ?? "Uncategorized")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(.primary)
-
-                        Spacer()
-
-                        Button {
-                            showEditSheet = true
-                        } label: {
-                            Image(systemName: "pencil")
-                                .font(.system(size: 20))
+                    // Expanded Metadata Card with Liquid Glass
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Header: Name + Edit
+                        HStack {
+                            Text(item.name ?? "Unnamed Item")
+                                .font(.system(size: 28, weight: .bold, design: .rounded))
                                 .foregroundStyle(.primary)
-                        }
-                        .accessibilityLabel("Edit item")
-                    }
 
-                    // Category Badge
-                    if let category = item.category {
-                        Text(category)
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(.primary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background {
-                                Capsule()
-                                    .fill(Color.orange.opacity(0.2))
+                            Spacer()
+
+                            Button {
+                                showEditSheet = true
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 20))
+                                    .foregroundStyle(.primary)
                             }
-                    }
-
-                    Divider()
-
-                    // Estimated Value
-                    if let value = item.estimatedValue {
-                        HStack {
-                            Text("Est. Value:")
-                                .font(.system(size: 15, design: .rounded))
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text("$\(value, specifier: "%.2f")")
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
-                                .foregroundStyle(.green)
+                            .accessibilityLabel("Edit item")
                         }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("Estimated value: $\(value, specifier: "%.2f")")
-                    }
 
-                    // Metadata Rows
-                    MetadataRow(label: "Color", value: item.color)
-                    MetadataRow(label: "Material", value: item.material)
-                    MetadataRow(label: "Condition", value: item.condition)
-
-                    // Confidence Score with Icon and Label
-                    if let confidence = item.confidence {
-                        HStack {
-                            Image(systemName: confidenceIcon(confidence))
-                                .foregroundStyle(confidenceColor(confidence))
-                            Text("AI Confidence")
-                                .font(.system(size: 15, design: .rounded))
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text("\(confidenceLevel(confidence)) (\(Int(confidence * 100))%)")
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                .foregroundStyle(confidenceColor(confidence))
+                        // Brand + Model Row
+                        if item.brand != nil || item.model != nil {
+                            HStack(spacing: 8) {
+                                if let brand = item.brand {
+                                    Text(brand)
+                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .foregroundStyle(.secondary)
+                                }
+                                if let model = item.model {
+                                    Text(model)
+                                        .font(.system(size: 14, design: .rounded))
+                                        .foregroundStyle(.tertiary)
+                                }
+                            }
                         }
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("AI Confidence: \(confidenceLevel(confidence)), \(Int(confidence * 100)) percent")
+
+                        // Category Badges
+                        HStack(spacing: 8) {
+                            if let category = item.category {
+                                CategoryBadge(text: category, color: .orange)
+                            }
+                            if let subCategory = item.subCategory {
+                                CategoryBadge(text: subCategory, color: .blue)
+                            }
+                        }
+
+                        Divider()
+
+                        // Estimated Value
+                        if let value = item.estimatedValue {
+                            HStack {
+                                Text("Est. Value:")
+                                    .font(.system(size: 15, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Text("$\(value, specifier: "%.2f")")
+                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.green)
+                            }
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Estimated value: $\(value, specifier: "%.2f")")
+                        }
+
+                        // Metadata Grid
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 12) {
+                            MetadataCell(label: "Color", value: item.color)
+                            MetadataCell(label: "Material", value: item.material)
+                            MetadataCell(label: "Condition", value: item.condition?.displayName)
+                            MetadataCell(label: "Dimensions", value: item.dimensions)
+                            MetadataCell(label: "Quantity", value: item.quantity.map { "\($0)" })
+                        }
+
+                        Divider()
+
+                        // AI Confidence Section
+                        if let confidence = item.confidence {
+                            ConfidenceRow(confidence: confidence)
+                        }
+
+                        // Processing Notes (if any)
+                        if let notes = item.processingNotes, !notes.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("AI Notes")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.tertiary)
+                                Text(notes)
+                                    .font(.system(size: 14, design: .rounded))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.top, 8)
+                        }
                     }
-                }
-                .padding(24)
-                .adaptiveGlass(in: metadataCardShape)
-                .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: -8)
-                .padding(.horizontal, 16)
-                .offset(y: -60) // Overlap hero
+                    .padding(24)
+                    .adaptiveGlass(in: metadataCardShape)
+                    .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: -8)
+                    .padding(.horizontal, 16)
+                    .offset(y: -60) // Overlap hero
                 }
             }
             .coordinateSpace(name: "scrollView")
@@ -154,30 +178,6 @@ public struct ItemDetailView: View {
     private var metadataCardShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: 24)
     }
-
-    // MARK: - Confidence Helper Functions
-
-    private func confidenceColor(_ confidence: Double) -> Color {
-        if confidence >= 0.80 {
-            return .green
-        } else if confidence >= 0.60 {
-            return .orange
-        } else {
-            return .red
-        }
-    }
-
-    private func confidenceLevel(_ confidence: Double) -> String {
-        if confidence >= 0.80 { return "High" }
-        else if confidence >= 0.60 { return "Medium" }
-        else { return "Low" }
-    }
-
-    private func confidenceIcon(_ confidence: Double) -> String {
-        if confidence >= 0.80 { return "checkmark.circle.fill" }
-        else if confidence >= 0.60 { return "exclamationmark.triangle.fill" }
-        else { return "questionmark.circle.fill" }
-    }
 }
 
 // MARK: - Scroll Offset Tracking
@@ -192,21 +192,74 @@ private struct ScrollOffsetPreferenceKey: PreferenceKey {
 
 // MARK: - Supporting Views
 
-private struct MetadataRow: View {
+private struct CategoryBadge: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 12, weight: .medium, design: .rounded))
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background {
+                Capsule()
+                    .fill(color.opacity(0.2))
+            }
+    }
+}
+
+private struct MetadataCell: View {
     let label: String
     let value: String?
 
     var body: some View {
         if let value = value {
-            HStack {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                    .font(.system(size: 15, design: .rounded))
-                    .foregroundStyle(.secondary)
-                Spacer()
+                    .font(.system(size: 11, design: .rounded))
+                    .foregroundStyle(.tertiary)
                 Text(value)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(.primary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct ConfidenceRow: View {
+    let confidence: ItemConfidence
+
+    var body: some View {
+        HStack {
+            Image(systemName: confidenceIcon)
+                .foregroundStyle(confidenceColor)
+            Text("AI Confidence")
+                .font(.system(size: 15, design: .rounded))
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(confidence.rawValue.capitalized)
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .foregroundStyle(confidenceColor)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("AI Confidence: \(confidence.rawValue)")
+    }
+
+    private var confidenceIcon: String {
+        switch confidence {
+        case .high: return "checkmark.circle.fill"
+        case .medium: return "exclamationmark.triangle.fill"
+        case .low: return "questionmark.circle.fill"
+        }
+    }
+
+    private var confidenceColor: Color {
+        switch confidence {
+        case .high: return .green
+        case .medium: return .orange
+        case .low: return .red
         }
     }
 }

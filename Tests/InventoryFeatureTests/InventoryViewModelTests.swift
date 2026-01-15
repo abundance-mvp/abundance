@@ -79,7 +79,7 @@ struct InventoryViewModelTests {
                 color: nil,
                 material: nil,
                 condition: nil,
-                confidence: 0.95,
+                confidence: .high,
                 createdAt: Date(),
                 updatedAt: Date()
             )
@@ -135,6 +135,16 @@ final class MockItemRepository: ItemRepository, @unchecked Sendable {
         userId: String,
         imageUrl: String,
         layer1Metadata: Layer1Metadata
+    ) async throws {
+        // Mock implementation
+    }
+
+    func createItemWithPhotoMetadata(
+        itemId: String,
+        userId: String,
+        imageUrl: String,
+        layer1Metadata: Layer1Metadata,
+        photoMetadata: PhotoMetadata
     ) async throws {
         // Mock implementation
     }

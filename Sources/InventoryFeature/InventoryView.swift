@@ -122,4 +122,3 @@ private struct ErrorView: View {
         .padding()
     }
 }
-
