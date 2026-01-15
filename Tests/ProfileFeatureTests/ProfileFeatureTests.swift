@@ -77,6 +77,16 @@ final class TestItemRepository: ItemRepository, @unchecked Sendable {
         // Mock implementation
     }
 
+    func createItemWithPhotoMetadata(
+        itemId: String,
+        userId: String,
+        imageUrl: String,
+        layer1Metadata: Layer1Metadata,
+        photoMetadata: PhotoMetadata
+    ) async throws {
+        // Mock implementation
+    }
+
     func getItem(id: String) async throws -> Item? {
         return nil
     }

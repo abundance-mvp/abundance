@@ -5,12 +5,13 @@ disabled_rules:
 opt_in_rules:
   - empty_count
   - explicit_init
-  - explicit_type_interface
 
 excluded:
   - .build
   - Generated
   - Pods
+  - functions
+  - docs
 
 line_length:
   warning: 120

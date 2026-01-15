@@ -6,7 +6,7 @@ import Persistence
 /// **Design Spec:** DESIGN-031-swiftui-component-library.md (ItemCard)
 struct ItemCard: View {
     let item: Item
-    var onTap: (() -> Void)? = nil
+    var onTap: (() -> Void)?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isPressed: Bool = false
@@ -37,12 +37,28 @@ struct ItemCard: View {
 
                 // Metadata section
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(item.category ?? "Unknown Item")
+                    // Primary: Item name (fallback to category)
+                    Text(item.name ?? item.category ?? "Unknown Item")
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(2)
 
-                    if let color = item.color {
+                    // Secondary: Brand + Color
+                    if let brand = item.brand {
+                        HStack(spacing: 4) {
+                            Text(brand)
+                                .font(.system(.footnote, design: .rounded, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            if let color = item.color {
+                                Text("-")
+                                    .foregroundStyle(.tertiary)
+                                Text(color)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .font(.system(.footnote, design: .rounded))
+                        .lineLimit(1)
+                    } else if let color = item.color {
                         Text(color)
                             .font(.system(.footnote, design: .rounded))
                             .foregroundStyle(.secondary)
@@ -50,6 +66,10 @@ struct ItemCard: View {
                     }
 
                     HStack {
+                        // Condition badge (if available)
+                        if let condition = item.condition {
+                            ConditionBadge(condition: condition)
+                        }
                         Spacer()
                         StatusBadge(status: item.status)
                     }
@@ -93,9 +113,15 @@ struct ItemCard: View {
     }
 
     private var accessibilityDescription: String {
-        var desc = "\(item.category ?? "Unknown item")"
+        var desc = "\(item.name ?? item.category ?? "Unknown item")"
+        if let brand = item.brand {
+            desc += ", \(brand)"
+        }
         if let color = item.color {
             desc += ", \(color)"
+        }
+        if let condition = item.condition {
+            desc += ", \(condition.displayName)"
         }
         desc += ", \(statusText(for: item.status))"
         return desc
@@ -123,6 +149,31 @@ struct ItemCard: View {
             withAnimation(.brandSnappy) {
                 isPressed = false
             }
+        }
+    }
+}
+
+// MARK: - Condition Badge
+
+private struct ConditionBadge: View {
+    let condition: ItemCondition
+
+    var body: some View {
+        Text(condition.displayName)
+            .font(.caption2)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(conditionColor.opacity(0.2))
+            .foregroundStyle(conditionColor)
+            .clipShape(Capsule())
+    }
+
+    private var conditionColor: Color {
+        switch condition {
+        case .new, .likeNew: return .green
+        case .good: return .blue
+        case .fair: return .orange
+        case .poor: return .red
         }
     }
 }

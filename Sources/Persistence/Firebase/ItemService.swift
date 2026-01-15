@@ -33,6 +33,16 @@ public protocol ItemRepository: Sendable {
         layer1Metadata: Layer1Metadata
     ) async throws
 
+    /// Creates a new item document with Layer 1 metadata AND photo metadata
+    /// Triggers Layer 2a extraction via onItemCreated cloud function
+    func createItemWithPhotoMetadata(
+        itemId: String,
+        userId: String,
+        imageUrl: String,
+        layer1Metadata: Layer1Metadata,
+        photoMetadata: PhotoMetadata
+    ) async throws
+
     /// Fetches a single item by ID
     func getItem(id: String) async throws -> Item?
 
@@ -123,6 +133,49 @@ public final class ItemService: ItemRepository {
         try await itemRef.setData(data)
     }
 
+    /// Creates a new item document with Layer 1 metadata AND photo metadata
+    /// Triggers Layer 2a extraction via onItemCreated cloud function
+    ///
+    /// - Parameters:
+    ///   - itemId: Unique item ID (from YOLO detection)
+    ///   - userId: Owner's user ID
+    ///   - imageUrl: Public URL of uploaded image in Firebase Storage
+    ///   - layer1Metadata: On-device detection results
+    ///   - photoMetadata: Photo capture metadata for fraud prevention
+    public func createItemWithPhotoMetadata(
+        itemId: String,
+        userId: String,
+        imageUrl: String,
+        layer1Metadata: Layer1Metadata,
+        photoMetadata: PhotoMetadata
+    ) async throws {
+        let itemRef = db.collection("items").document(itemId)
+
+        let data: [String: Any] = [
+            "userId": userId,
+            "imageUrl": imageUrl,
+            "aiAnalysis": [
+                "layer1": [
+                    "detectedClass": layer1Metadata.detectedClass,
+                    "confidence": layer1Metadata.confidence,
+                    "boundingBox": [
+                        "x": layer1Metadata.boundingBox.origin.x,
+                        "y": layer1Metadata.boundingBox.origin.y,
+                        "width": layer1Metadata.boundingBox.size.width,
+                        "height": layer1Metadata.boundingBox.size.height
+                    ],
+                    "qualityScore": layer1Metadata.qualityScore
+                ]
+            ],
+            "photoMetadata": photoMetadata.toFirestoreData(),
+            "status": ItemStatus.pending.rawValue,
+            "createdAt": FieldValue.serverTimestamp(),
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+
+        try await itemRef.setData(data)
+    }
+
     /// Fetches a single item by ID
     public func getItem(id: String) async throws -> Item? {
         let doc = try await db.collection("items").document(id).getDocument()
@@ -149,7 +202,11 @@ public final class ItemService: ItemRepository {
     public func observeItem(id: String, onChange: @escaping (Item?) -> Void) -> ListenerRegistration {
         db.collection("items").document(id).addSnapshotListener { snapshot, error in
             if let error = error {
-                os_log(.error, log: .default, "observeItem error for id=%{public}@: %{public}@", id, error.localizedDescription)
+                os_log(
+                    .error, log: .default,
+                    "observeItem error for id=%{public}@: %{public}@",
+                    id, error.localizedDescription
+                )
                 onChange(nil)
                 return
             }
@@ -163,7 +220,11 @@ public final class ItemService: ItemRepository {
                 let item = try self.decodeItem(from: data, id: id)
                 onChange(item)
             } catch {
-                os_log(.error, log: .default, "Failed to decode item id=%{public}@: %{public}@", id, error.localizedDescription)
+                os_log(
+                    .error, log: .default,
+                    "Failed to decode item id=%{public}@: %{public}@",
+                    id, error.localizedDescription
+                )
                 onChange(nil)
             }
         }
@@ -179,7 +240,11 @@ public final class ItemService: ItemRepository {
             .order(by: "createdAt", descending: true)
             .addSnapshotListener { snapshot, error in
                 if let error = error {
-                    os_log(.error, log: .default, "observeItems error for userId=%{public}@: %{public}@", userId, error.localizedDescription)
+                    os_log(
+                        .error, log: .default,
+                        "observeItems error for userId=%{public}@: %{public}@",
+                        userId, error.localizedDescription
+                    )
                     subject.send([])
                     return
                 }
@@ -193,7 +258,11 @@ public final class ItemService: ItemRepository {
                     do {
                         return try self.decodeItem(from: doc.data(), id: doc.documentID)
                     } catch {
-                        os_log(.error, log: .default, "Failed to decode item id=%{public}@: %{public}@", doc.documentID, error.localizedDescription)
+                        os_log(
+                            .error, log: .default,
+                            "Failed to decode item id=%{public}@: %{public}@",
+                            doc.documentID, error.localizedDescription
+                        )
                         return nil
                     }
                 }
@@ -210,21 +279,72 @@ public final class ItemService: ItemRepository {
 
     // MARK: - Private Helpers
 
+    // swiftlint:disable:next function_body_length
     private func decodeItem(from data: [String: Any], id: String) throws -> Item {
         // Firestore timestamps need special handling
         let createdAt = (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
         let updatedAt = (data["updatedAt"] as? Timestamp)?.dateValue() ?? Date()
+        let lastRescanAt = (data["lastRescanAt"] as? Timestamp)?.dateValue()
+
+        // Parse condition enum (with legacy string fallback)
+        let condition: ItemCondition?
+        if let conditionStr = data["condition"] as? String {
+            condition = ItemCondition(rawValue: conditionStr)
+        } else {
+            condition = nil
+        }
+
+        // Parse confidence enum (with legacy Double fallback)
+        let confidence: ItemConfidence?
+        if let confidenceStr = data["confidence"] as? String {
+            confidence = ItemConfidence(rawValue: confidenceStr)
+        } else if let legacyConfidence = data["confidence"] as? Double {
+            // Legacy: convert numeric confidence to enum
+            if legacyConfidence >= 0.8 {
+                confidence = .high
+            } else if legacyConfidence >= 0.5 {
+                confidence = .medium
+            } else {
+                confidence = .low
+            }
+        } else {
+            confidence = nil
+        }
+
+        // Parse photo metadata if present
+        let photoMetadata: PhotoMetadata?
+        if let metadataDict = data["photoMetadata"] as? [String: Any] {
+            var metadata = PhotoMetadata(fromFirestoreData: metadataDict)
+            // Handle Firestore Timestamp for captureTimestamp
+            if let captureTs = metadataDict["captureTimestamp"] as? Timestamp {
+                metadata.captureTimestamp = captureTs.dateValue()
+            }
+            photoMetadata = metadata
+        } else {
+            photoMetadata = nil
+        }
 
         return Item(
             id: id,
             userId: data["userId"] as? String ?? "",
             imageUrl: data["imageUrl"] as? String ?? "",
             status: ItemStatus(rawValue: data["status"] as? String ?? "pending") ?? .pending,
+            name: data["name"] as? String,
             category: data["category"] as? String,
+            subCategory: data["subCategory"] as? String,
+            brand: data["brand"] as? String,
+            model: data["model"] as? String,
             color: data["color"] as? String,
             material: data["material"] as? String,
-            condition: data["condition"] as? String,
-            confidence: data["confidence"] as? Double,
+            condition: condition,
+            dimensions: data["dimensions"] as? String,
+            quantity: data["quantity"] as? Int,
+            estimatedValue: data["estimatedValue"] as? Double,
+            confidence: confidence,
+            processingNotes: data["processingNotes"] as? String,
+            userEditedFields: data["userEditedFields"] as? [String],
+            lastRescanAt: lastRescanAt,
+            photoMetadata: photoMetadata,
             createdAt: createdAt,
             updatedAt: updatedAt
         )

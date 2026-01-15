@@ -59,19 +59,37 @@ export async function handleItemCreated(
       }
     }
 
-    // Update Firestore with results
-    await snapshot.ref.update({
+    // Flatten catalog data to top-level fields (Stage 3.1 schema alignment)
+    const catalogItem = Array.isArray(result) ? result[0] : result;
+
+    const flattenedUpdate: Record<string, unknown> = {
       status: 'complete',
+      // Flatten catalog fields to top level
+      name: catalogItem.name,
+      category: catalogItem.category,
+      subCategory: catalogItem.subCategory,
+      brand: catalogItem.brand ?? null,
+      model: catalogItem.model ?? null,
+      color: catalogItem.color,
+      condition: catalogItem.condition,  // Already string enum
+      dimensions: catalogItem.dimensions ?? null,
+      quantity: catalogItem.quantity ?? 1,
+      estimatedValue: catalogItem.estimatedValue ?? null,
+      confidence: catalogItem.confidence,  // Already string enum
+      // Keep original catalog for backward compatibility during migration
       catalog: result,
       completedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    };
+
+    await snapshot.ref.update(flattenedUpdate);
 
     console.log({
       severity: 'INFO',
-      message: 'Gemini 3 Pro pipeline completed',
+      message: 'Gemini 3 Pro pipeline completed (flattened schema)',
       itemId,
-      itemCount: Array.isArray(result) ? result.length : 1
+      name: catalogItem.name,
+      category: catalogItem.category
     });
 
   } catch (error: unknown) {

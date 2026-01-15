@@ -6,6 +6,7 @@ import os.log
 @preconcurrency import FirebaseAuth
 import VisionCore
 import Persistence
+import CryptoKit
 
 /// MainActor-bound ViewModel managing real-time object detection state
 /// Orchestrates the detection pipeline: YOLO → quality assessment → deduplication → masking
@@ -43,6 +44,9 @@ public final class CameraDetectionViewModel: ObservableObject {
     private let storageService: StorageServiceProtocol?
     private let itemService: ItemRepository?
 
+    /// Photo metadata extractor for fraud prevention
+    private let metadataExtractor: PhotoMetadataExtractorProtocol
+
     // Confidence and quality thresholds
     private let automaticConfidenceThreshold: Double = 0.70
     private let manualConfidenceThreshold: Double = 0.40
@@ -61,7 +65,8 @@ public final class CameraDetectionViewModel: ObservableObject {
         deduplicator: ObjectDeduplicatorProtocol,
         maskGenerator: SubjectMaskGeneratorProtocol,
         storageService: StorageServiceProtocol? = StorageService(),
-        itemService: ItemRepository? = ItemService()
+        itemService: ItemRepository? = ItemService(),
+        metadataExtractor: PhotoMetadataExtractorProtocol = PhotoMetadataExtractor()
     ) {
         self.yoloDetector = yoloDetector
         self.qualityAssessor = qualityAssessor
@@ -69,6 +74,7 @@ public final class CameraDetectionViewModel: ObservableObject {
         self.maskGenerator = maskGenerator
         self.storageService = storageService
         self.itemService = itemService
+        self.metadataExtractor = metadataExtractor
     }
 
     // MARK: - Frame Processing Pipeline
@@ -135,7 +141,9 @@ public final class CameraDetectionViewModel: ObservableObject {
     ///   - yoloResult: Raw YOLO detection result
     ///   - pixelBuffer: Original frame for quality/mask generation (read-only, thread-safe)
     /// - Returns: Complete DetectedObject or nil if filtered out
-    nonisolated private func processObject(_ yoloResult: YOLOResult, in pixelBuffer: CVPixelBuffer) async -> DetectedObject? {
+    nonisolated private func processObject(
+        _ yoloResult: YOLOResult, in pixelBuffer: CVPixelBuffer
+    ) async -> DetectedObject? {
         let boundingBox = yoloResult.boundingBox
 
         // Step 1: Check for duplicates
@@ -197,15 +205,19 @@ public final class CameraDetectionViewModel: ObservableObject {
             alternativeLabels: yoloResult.alternativeLabels
         )
 
-        logger.debug("Processed '\(yoloResult.label)': confidence=\(yoloResult.confidence), quality=\(qualityScore), mode=\(String(describing: catalogMode))")
+        let logLabel = yoloResult.label
+        let logConfidence = yoloResult.confidence
+        let logMode = String(describing: catalogMode)
+        logger.debug("Processed '\(logLabel)': conf=\(logConfidence), qual=\(qualityScore), mode=\(logMode)")
 
         return detectedObject
     }
 
-    /// Upload detected object to trigger Layer 1→2 catalog pipeline
-    /// - Parameters:
-    ///   - object: DetectedObject to upload
-    ///   - pixelBuffer: Source pixel buffer for cropping (passed directly to avoid data race)
+    // Upload detected object to trigger Layer 1→2 catalog pipeline
+    // Parameters:
+    //   - object: DetectedObject to upload
+    //   - pixelBuffer: Source pixel buffer for cropping (passed directly to avoid data race)
+    // swiftlint:disable:next function_body_length
     private func uploadObject(_ object: DetectedObject, pixelBuffer: CVPixelBuffer) async {
         guard let storageService = storageService,
               let itemService = itemService,
@@ -221,6 +233,27 @@ public final class CameraDetectionViewModel: ObservableObject {
                 boundingBox: object.boundingBox
             )
 
+            // Convert to JPEG data for metadata extraction (platform-specific)
+            #if os(iOS)
+            guard let imageData = croppedImage.jpegData(compressionQuality: 0.8) else {
+                throw StorageError.compressionFailed
+            }
+            #elseif os(macOS)
+            guard let cgImage = croppedImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                throw StorageError.compressionFailed
+            }
+            let imageRep = NSBitmapImageRep(cgImage: cgImage)
+            guard let imageData = imageRep.representation(using: .jpeg, properties: [.compressionFactor: 0.8]) else {
+                throw StorageError.compressionFailed
+            }
+            #endif
+
+            // Extract photo metadata for fraud prevention
+            let photoMetadata = await metadataExtractor.extractMetadata(
+                from: imageData,
+                asset: nil // No PHAsset for live capture
+            )
+
             // Upload to GCS
             let imageUrl = try await storageService.uploadCroppedObject(
                 croppedImage,
@@ -228,8 +261,8 @@ public final class CameraDetectionViewModel: ObservableObject {
                 userId: userId
             )
 
-            // Create Firestore document (triggers Layer 2a/2b/3)
-            try await itemService.createItemWithLayer1Metadata(
+            // Create Firestore document with photo metadata (triggers Layer 2a/2b/3)
+            try await itemService.createItemWithPhotoMetadata(
                 itemId: object.id.uuidString,
                 userId: userId,
                 imageUrl: imageUrl.absoluteString,
@@ -238,10 +271,11 @@ public final class CameraDetectionViewModel: ObservableObject {
                     confidence: object.confidence,
                     boundingBox: object.boundingBox,
                     qualityScore: object.qualityScore
-                )
+                ),
+                photoMetadata: photoMetadata
             )
 
-            logger.info("Uploaded \(object.label) → Layer 2 pipeline: \(imageUrl.absoluteString)")
+            logger.info("Uploaded \(object.label) with metadata → Layer 2 pipeline")
         } catch {
             logger.error("Upload failed: \(error.localizedDescription)")
             await MainActor.run {

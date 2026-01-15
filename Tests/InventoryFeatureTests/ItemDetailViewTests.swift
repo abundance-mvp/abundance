@@ -16,9 +16,9 @@ struct ItemDetailViewTests {
         category: String? = "Electronics",
         color: String? = "Silver",
         material: String? = "Aluminum",
-        condition: String? = "Good",
-        confidence: Double? = nil,
-        estimatedValue: Double? = 150.00
+        condition: ItemCondition? = .good,
+        estimatedValue: Double? = 150.00,
+        confidence: ItemConfidence? = nil
     ) -> Item {
         Item(
             id: id,
@@ -29,8 +29,8 @@ struct ItemDetailViewTests {
             color: color,
             material: material,
             condition: condition,
-            confidence: confidence,
-            estimatedValue: estimatedValue
+            estimatedValue: estimatedValue,
+            confidence: confidence
         )
     }
 
@@ -252,14 +252,22 @@ struct ItemDetailViewTests {
     }
 
     private func confidenceLevel(_ confidence: Double) -> String {
-        if confidence >= 0.80 { return "High" }
-        else if confidence >= 0.60 { return "Medium" }
-        else { return "Low" }
+        if confidence >= 0.80 {
+            return "High"
+        } else if confidence >= 0.60 {
+            return "Medium"
+        } else {
+            return "Low"
+        }
     }
 
     private func confidenceIcon(_ confidence: Double) -> String {
-        if confidence >= 0.80 { return "checkmark.circle.fill" }
-        else if confidence >= 0.60 { return "exclamationmark.triangle.fill" }
-        else { return "questionmark.circle.fill" }
+        if confidence >= 0.80 {
+            return "checkmark.circle.fill"
+        } else if confidence >= 0.60 {
+            return "exclamationmark.triangle.fill"
+        } else {
+            return "questionmark.circle.fill"
+        }
     }
 }

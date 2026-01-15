@@ -24,6 +24,19 @@ public protocol StorageServiceProtocol: Sendable {
         itemId: String,
         userId: String
     ) async throws -> URL
+
+    /// Upload Live Photo motion clip to Cloud Storage
+    /// - Parameters:
+    ///   - motionData: MOV file data from Live Photo
+    ///   - itemId: Unique item identifier
+    ///   - userId: Current user ID (Firebase Auth UID)
+    /// - Returns: Public download URL for uploaded motion clip
+    /// - Throws: StorageError if upload fails
+    func uploadLivePhotoMotion(
+        _ motionData: Data,
+        itemId: String,
+        userId: String
+    ) async throws -> URL
 }
 
 /// Concrete implementation of Firebase Storage operations
@@ -84,6 +97,36 @@ public final class StorageService: StorageServiceProtocol {
 
         // Upload with timeout
         return try await withTimeout(uploadTimeout, ref: ref, imageData: imageData, metadata: metadata)
+    }
+
+    /// Upload Live Photo motion clip to Cloud Storage
+    /// - Parameters:
+    ///   - motionData: MOV file data from Live Photo
+    ///   - itemId: Unique item identifier
+    ///   - userId: Current user ID (Firebase Auth UID)
+    /// - Returns: Public download URL for uploaded motion clip
+    /// - Throws: StorageError if upload fails
+    public func uploadLivePhotoMotion(
+        _ motionData: Data,
+        itemId: String,
+        userId: String
+    ) async throws -> URL {
+        // Create storage reference: users/{userId}/items/{itemId}/motion.mov
+        let ref: StorageReference = storage.reference()
+            .child("users/\(userId)/items/\(itemId)/motion.mov")
+
+        // Set metadata
+        let metadata: StorageMetadata = StorageMetadata()
+        metadata.contentType = "video/quicktime"
+        metadata.cacheControl = "public, max-age=86400" // 24 hour cache
+        metadata.customMetadata = [
+            "uploadedAt": ISO8601DateFormatter().string(from: Date()),
+            "itemId": itemId,
+            "userId": userId,
+            "type": "live-photo-motion"
+        ]
+
+        return try await withTimeout(uploadTimeout, ref: ref, imageData: motionData, metadata: metadata)
     }
 
     // MARK: - Helper Methods
