@@ -13,24 +13,28 @@ struct ItemSearchTests {
 
     /// Create a test item with all searchable fields populated
     private func makeTestItem(
+        name: String? = nil,
         category: String? = nil,
+        subCategory: String? = nil,
+        brand: String? = nil,
+        model: String? = nil,
         color: String? = nil,
         material: String? = nil,
-        condition: String? = nil
+        condition: ItemCondition? = nil
     ) -> Item {
         Item(
             id: "test-\(UUID().uuidString)",
             userId: "test-user",
             imageUrl: "https://example.com/image.jpg",
             status: .complete,
+            name: name,
             category: category,
+            subCategory: subCategory,
+            brand: brand,
+            model: model,
             color: color,
             material: material,
-            condition: condition,
-            confidence: nil,
-            estimatedValue: nil,
-            createdAt: Date(),
-            updatedAt: Date()
+            condition: condition
         )
     }
 
@@ -51,12 +55,41 @@ struct ItemSearchTests {
 
     // MARK: - Field-Specific Search Tests
 
+    @Test("Search finds match in name field")
+    func testSearchMatchesName() {
+        let item = makeTestItem(name: "Coleman Sundome Tent")
+        #expect(item.matchesSearchQuery("coleman") == true)
+        #expect(item.matchesSearchQuery("SUNDOME") == true)
+        #expect(item.matchesSearchQuery("tent") == true)
+    }
+
     @Test("Search finds match in category field")
     func testSearchMatchesCategory() {
         let item = makeTestItem(category: "Electronics")
         #expect(item.matchesSearchQuery("electronics") == true)
         #expect(item.matchesSearchQuery("ELECTRONICS") == true)
         #expect(item.matchesSearchQuery("elec") == true) // Partial match
+    }
+
+    @Test("Search finds match in subCategory field")
+    func testSearchMatchesSubCategory() {
+        let item = makeTestItem(subCategory: "Portable Speakers")
+        #expect(item.matchesSearchQuery("portable") == true)
+        #expect(item.matchesSearchQuery("speakers") == true)
+    }
+
+    @Test("Search finds match in brand field")
+    func testSearchMatchesBrand() {
+        let item = makeTestItem(brand: "Apple")
+        #expect(item.matchesSearchQuery("apple") == true)
+        #expect(item.matchesSearchQuery("APPLE") == true)
+    }
+
+    @Test("Search finds match in model field")
+    func testSearchMatchesModel() {
+        let item = makeTestItem(model: "iPhone 15 Pro")
+        #expect(item.matchesSearchQuery("iphone") == true)
+        #expect(item.matchesSearchQuery("15 pro") == true)
     }
 
     @Test("Search finds match in color field")
@@ -77,7 +110,7 @@ struct ItemSearchTests {
 
     @Test("Search finds match in condition field")
     func testSearchMatchesCondition() {
-        let item = makeTestItem(condition: "Like New")
+        let item = makeTestItem(condition: .likeNew)
         #expect(item.matchesSearchQuery("like") == true)
         #expect(item.matchesSearchQuery("new") == true)
         #expect(item.matchesSearchQuery("LIKE NEW") == true)
@@ -106,6 +139,10 @@ struct ItemSearchTests {
 
     @Test("Search matches across any single field")
     func testSearchMatchesAnyField() {
+        // Item with only name populated
+        let nameOnlyItem = makeTestItem(name: "Sony Camera")
+        #expect(nameOnlyItem.matchesSearchQuery("sony") == true)
+
         // Item with only category populated
         let categoryOnlyItem = makeTestItem(category: "Furniture")
         #expect(categoryOnlyItem.matchesSearchQuery("furniture") == true)
@@ -119,8 +156,8 @@ struct ItemSearchTests {
         #expect(materialOnlyItem.matchesSearchQuery("wood") == true)
 
         // Item with only condition populated
-        let conditionOnlyItem = makeTestItem(condition: "Excellent")
-        #expect(conditionOnlyItem.matchesSearchQuery("excellent") == true)
+        let conditionOnlyItem = makeTestItem(condition: .good)
+        #expect(conditionOnlyItem.matchesSearchQuery("good") == true)
     }
 
     // MARK: - Case Sensitivity Tests
@@ -168,14 +205,18 @@ struct ItemSearchTests {
     @Test("Search returns true if query matches any of multiple fields")
     func testMultipleFieldsPopulated() {
         let item = makeTestItem(
+            name: "MacBook Pro",
             category: "Electronics",
+            brand: "Apple",
             color: "Silver",
             material: "Aluminum",
-            condition: "Good"
+            condition: .good
         )
 
         // Each field should match independently
+        #expect(item.matchesSearchQuery("macbook") == true)
         #expect(item.matchesSearchQuery("electronics") == true)
+        #expect(item.matchesSearchQuery("apple") == true)
         #expect(item.matchesSearchQuery("silver") == true)
         #expect(item.matchesSearchQuery("aluminum") == true)
         #expect(item.matchesSearchQuery("good") == true)
@@ -187,11 +228,15 @@ struct ItemSearchTests {
     func testSearchableFieldNames() {
         let fieldNames: [String] = Item.searchableFieldNames
 
+        #expect(fieldNames.contains("name"))
         #expect(fieldNames.contains("category"))
+        #expect(fieldNames.contains("subCategory"))
+        #expect(fieldNames.contains("brand"))
+        #expect(fieldNames.contains("model"))
         #expect(fieldNames.contains("color"))
         #expect(fieldNames.contains("material"))
         #expect(fieldNames.contains("condition"))
-        #expect(fieldNames.count == 4)
+        #expect(fieldNames.count == 8)
     }
 
     // MARK: - Edge Cases

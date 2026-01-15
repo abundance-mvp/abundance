@@ -191,24 +191,28 @@ struct InventoryViewSearchTests {
 
     private func createTestItem(
         id: String,
+        name: String? = nil,
         category: String? = nil,
+        subCategory: String? = nil,
+        brand: String? = nil,
+        model: String? = nil,
         color: String? = nil,
         material: String? = nil,
-        condition: String? = nil
+        condition: ItemCondition? = nil
     ) -> Item {
         Item(
             id: id,
             userId: "test-user",
             imageUrl: "https://example.com/\(id).jpg",
             status: .complete,
+            name: name,
             category: category,
+            subCategory: subCategory,
+            brand: brand,
+            model: model,
             color: color,
             material: material,
-            condition: condition,
-            confidence: nil,
-            estimatedValue: nil,
-            createdAt: Date(),
-            updatedAt: Date()
+            condition: condition
         )
     }
 }
@@ -235,6 +239,16 @@ final class MockSearchTestItemRepository: ItemRepository, @unchecked Sendable {
         // Mock implementation
     }
 
+    func createItemWithPhotoMetadata(
+        itemId: String,
+        userId: String,
+        imageUrl: String,
+        layer1Metadata: Layer1Metadata,
+        photoMetadata: PhotoMetadata
+    ) async throws {
+        // Mock implementation
+    }
+
     func getItem(id: String) async throws -> Item? {
         return mockItems.first { $0.id == id }
     }
@@ -246,6 +260,14 @@ final class MockSearchTestItemRepository: ItemRepository, @unchecked Sendable {
             throw error
         }
         return mockItems
+    }
+
+    func deleteItem(id: String) async throws {
+        mockItems.removeAll { $0.id == id }
+    }
+
+    func deleteItems(ids: Set<String>) async throws {
+        mockItems.removeAll { ids.contains($0.id) }
     }
 
     func observeItem(id: String, onChange: @escaping (Item?) -> Void) -> ListenerRegistration {
