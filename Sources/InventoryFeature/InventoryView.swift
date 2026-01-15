@@ -5,7 +5,7 @@ import Persistence
 public struct InventoryView: View {
     // Plain var for @Observable type - SwiftUI tracks changes automatically
     var viewModel: InventoryViewModel
-    @State private var searchText = ""
+    @State private var searchText: String = ""
     var onOpenCamera: (() -> Void)?
 
     public init(
@@ -16,14 +16,16 @@ public struct InventoryView: View {
         self.onOpenCamera = onOpenCamera
     }
 
-    /// Filters items based on search text matching category or color
+    /// Filters items based on search text matching any searchable text field.
+    /// Searches: category, color, material, condition (and name, subCategory, brand, model after Stage 3.1)
+    /// Uses case-insensitive, locale-aware matching per Apple best practices.
     private var filteredItems: [Item] {
-        if searchText.isEmpty {
+        guard !searchText.isEmpty else {
             return viewModel.items
         }
+
         return viewModel.items.filter { item in
-            item.category?.localizedCaseInsensitiveContains(searchText) == true ||
-            item.color?.localizedCaseInsensitiveContains(searchText) == true
+            item.matchesSearchQuery(searchText)
         }
     }
 
@@ -122,4 +124,3 @@ private struct ErrorView: View {
         .padding()
     }
 }
-
