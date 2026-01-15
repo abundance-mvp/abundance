@@ -365,6 +365,14 @@ extension MockItemRepository: ItemRepository {
     func observeItems(userId: String) -> AnyPublisher<[Item], Never> {
         Just([]).eraseToAnyPublisher()
     }
+
+    func deleteItem(id: String) async throws {
+        // Mock implementation
+    }
+
+    func deleteItems(ids: Set<String>) async throws {
+        // Mock implementation
+    }
 }
 
 /// Mock AuthService for testing

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import FirebaseAuth
 import Combine
 import Persistence
@@ -10,12 +11,13 @@ import Persistence
 public final class InventoryViewModel {
     // @Observable tracks changes automatically - no @Published needed
     public var items: [Item] = []
-    public var isLoading = false
+    public var isLoading: Bool = false
     public var error: String?
+    public var deleteError: String?
 
     private let itemRepository: ItemRepository
     private let userId: String?
-    private var cancellables = Set<AnyCancellable>()
+    private var cancellables: Set<AnyCancellable> = Set<AnyCancellable>()
 
     /// Initialize InventoryViewModel
     /// - Parameters:
@@ -72,6 +74,60 @@ public final class InventoryViewModel {
         } catch {
             self.error = error.localizedDescription
             isLoading = false
+        }
+    }
+
+    /// Deletes a single item with optimistic update
+    /// - Parameter item: The item to delete
+    /// - Note: Optimistically removes item from local array, rolls back on failure
+    public func deleteItem(_ item: Item) async {
+        // Store item for potential rollback
+        let itemIndex: Int? = items.firstIndex(where: { $0.id == item.id })
+
+        // Optimistic removal
+        withAnimation(.brandSnappy) {
+            items.removeAll { $0.id == item.id }
+        }
+        deleteError = nil
+
+        do {
+            try await itemRepository.deleteItem(id: item.id)
+        } catch {
+            // Rollback: re-insert item at original position
+            withAnimation(.brandSnappy) {
+                if let index = itemIndex, index < items.count {
+                    items.insert(item, at: index)
+                } else {
+                    items.append(item)
+                }
+            }
+            deleteError = "Failed to delete item: \(error.localizedDescription)"
+        }
+    }
+
+    /// Deletes multiple items with optimistic update
+    /// - Parameter ids: Set of item IDs to delete
+    /// - Note: Optimistically removes items, rolls back all on any failure
+    public func deleteItems(ids: Set<String>) async {
+        guard !ids.isEmpty else { return }
+
+        // Store items for potential rollback
+        let originalItems: [Item] = items
+
+        // Optimistic removal
+        withAnimation(.brandSnappy) {
+            items.removeAll { ids.contains($0.id) }
+        }
+        deleteError = nil
+
+        do {
+            try await itemRepository.deleteItems(ids: ids)
+        } catch {
+            // Rollback: restore original items array
+            withAnimation(.brandSnappy) {
+                items = originalItems
+            }
+            deleteError = "Failed to delete \(ids.count) items: \(error.localizedDescription)"
         }
     }
 
