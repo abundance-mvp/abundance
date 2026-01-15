@@ -7,11 +7,15 @@ import UIKit
 /// UIViewRepresentable wrapper for AVCaptureVideoPreviewLayer (iOS)
 /// - Note: AVCaptureVideoPreviewLayer has no SwiftUI equivalent as of iOS 18
 /// - ADR-010 Compliance: UIViewRepresentable is SwiftUI's official bridging mechanism
-struct CameraPreviewView: UIViewRepresentable {
+public struct CameraPreviewView: UIViewRepresentable {
 
-    let captureSession: AVCaptureSession
+    public let captureSession: AVCaptureSession
 
-    func makeUIView(context: Context) -> UIView {
+    public init(captureSession: AVCaptureSession) {
+        self.captureSession = captureSession
+    }
+
+    public func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: .zero)
         view.backgroundColor = .black
 
@@ -26,7 +30,7 @@ struct CameraPreviewView: UIViewRepresentable {
         return view
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
+    public func updateUIView(_ uiView: UIView, context: Context) {
         // Update layer frame when view size changes
         if let previewLayer = context.coordinator.previewLayer {
             DispatchQueue.main.async {
@@ -35,12 +39,12 @@ struct CameraPreviewView: UIViewRepresentable {
         }
     }
 
-    func makeCoordinator() -> Coordinator {
+    public func makeCoordinator() -> Coordinator {
         Coordinator()
     }
 
-    class Coordinator {
-        var previewLayer: AVCaptureVideoPreviewLayer?
+    public class Coordinator {
+        public var previewLayer: AVCaptureVideoPreviewLayer?
     }
 }
 
@@ -50,11 +54,15 @@ import AppKit
 /// NSViewRepresentable wrapper for AVCaptureVideoPreviewLayer (macOS)
 /// - Note: AVCaptureVideoPreviewLayer has no SwiftUI equivalent
 /// - ADR-010 Compliance: NSViewRepresentable is SwiftUI's official bridging mechanism
-struct CameraPreviewView: NSViewRepresentable {
+public struct CameraPreviewView: NSViewRepresentable {
 
-    let captureSession: AVCaptureSession
+    public let captureSession: AVCaptureSession
 
-    func makeNSView(context: Context) -> NSView {
+    public init(captureSession: AVCaptureSession) {
+        self.captureSession = captureSession
+    }
+
+    public func makeNSView(context: Context) -> NSView {
         let view = NSView(frame: .zero)
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.black.cgColor
@@ -70,7 +78,7 @@ struct CameraPreviewView: NSViewRepresentable {
         return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {
+    public func updateNSView(_ nsView: NSView, context: Context) {
         // Update layer frame when view size changes
         if let previewLayer = context.coordinator.previewLayer {
             DispatchQueue.main.async {
@@ -79,12 +87,12 @@ struct CameraPreviewView: NSViewRepresentable {
         }
     }
 
-    func makeCoordinator() -> Coordinator {
+    public func makeCoordinator() -> Coordinator {
         Coordinator()
     }
 
-    class Coordinator {
-        var previewLayer: AVCaptureVideoPreviewLayer?
+    public class Coordinator {
+        public var previewLayer: AVCaptureVideoPreviewLayer?
     }
 }
 #endif

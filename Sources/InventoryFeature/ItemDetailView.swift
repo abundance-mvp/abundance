@@ -6,6 +6,10 @@ public struct ItemDetailView: View {
     public let item: Item
     @Environment(\.dismiss) private var dismiss
     @State private var scrollOffset: CGFloat = 0
+    @State private var editViewModel: EditItemViewModel?
+    @State private var showRescanPrompt = false
+    @State private var showRescanCamera = false
+    @State private var showRescanComparison = false
     @State private var showEditSheet = false
 
     public init(item: Item) {
@@ -68,7 +72,7 @@ public struct ItemDetailView: View {
                             Spacer()
 
                             Button {
-                                showEditSheet = true
+                                startEditFlow()
                             } label: {
                                 Image(systemName: "pencil")
                                     .font(.system(size: 20))
@@ -166,10 +170,98 @@ public struct ItemDetailView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .sheet(isPresented: $showEditSheet) {
-                Text("Edit sheet placeholder")
-                    .presentationDetents([.large])
+            // Edit flow sheets - chained based on state machine
+            .sheet(isPresented: $showRescanPrompt) {
+                if let vm = editViewModel {
+                    RescanPromptSheet(viewModel: vm)
+                        .onChange(of: vm.state) { _, newState in
+                            handleStateChange(newState)
+                        }
+                }
             }
+            #if os(iOS)
+            .fullScreenCover(isPresented: $showRescanCamera) {
+                if let vm = editViewModel {
+                    RescanCameraView(viewModel: vm)
+                        .onChange(of: vm.state) { _, newState in
+                            handleStateChange(newState)
+                        }
+                }
+            }
+            #else
+            .sheet(isPresented: $showRescanCamera) {
+                if let vm = editViewModel {
+                    RescanCameraView(viewModel: vm)
+                        .onChange(of: vm.state) { _, newState in
+                            handleStateChange(newState)
+                        }
+                }
+            }
+            #endif
+            .sheet(isPresented: $showRescanComparison) {
+                if let vm = editViewModel {
+                    RescanComparisonSheet(viewModel: vm)
+                        .onChange(of: vm.state) { _, newState in
+                            handleStateChange(newState)
+                        }
+                }
+            }
+            .sheet(isPresented: $showEditSheet) {
+                if let vm = editViewModel {
+                    EditItemSheet(viewModel: vm)
+                        .onChange(of: vm.state) { _, newState in
+                            handleStateChange(newState)
+                        }
+                }
+            }
+        }
+    }
+
+    // MARK: - Edit Flow Control
+
+    private func startEditFlow() {
+        let vm = EditItemViewModel(item: item)
+        editViewModel = vm
+        vm.startEditFlow()
+        showRescanPrompt = true
+    }
+
+    private func handleStateChange(_ state: EditFlowState) {
+        switch state {
+        case .promptingRescan:
+            showRescanPrompt = true
+            showRescanCamera = false
+            showRescanComparison = false
+            showEditSheet = false
+
+        case .capturing:
+            showRescanPrompt = false
+            showRescanCamera = true
+            showRescanComparison = false
+            showEditSheet = false
+
+        case .comparing:
+            showRescanPrompt = false
+            showRescanCamera = false
+            showRescanComparison = true
+            showEditSheet = false
+
+        case .editing:
+            showRescanPrompt = false
+            showRescanCamera = false
+            showRescanComparison = false
+            showEditSheet = true
+
+        case .idle:
+            // Reset all sheets
+            showRescanPrompt = false
+            showRescanCamera = false
+            showRescanComparison = false
+            showEditSheet = false
+            editViewModel = nil
+
+        default:
+            break // processing, saving, error handled within sheets
         }
     }
 

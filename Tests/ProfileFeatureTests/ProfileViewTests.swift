@@ -373,6 +373,14 @@ extension MockItemRepository: ItemRepository {
     func deleteItems(ids: Set<String>) async throws {
         // Mock implementation
     }
+
+    func updateItem(_ item: Item, userEditedFields: [String]?) async throws {
+        // Mock implementation
+    }
+
+    func rescanItem(_ item: Item) async throws {
+        // Mock implementation
+    }
 }
 
 /// Mock AuthService for testing
