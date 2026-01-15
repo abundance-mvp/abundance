@@ -6,14 +6,23 @@ import Persistence
 /// **Design Spec:** DESIGN-031-swiftui-component-library.md (ItemCard)
 struct ItemCard: View {
     let item: Item
-    var onTap: (() -> Void)? = nil
+    var onTap: (() -> Void)?
+    var onEdit: (() -> Void)?
+    var onDelete: (() -> Void)?
 
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// Whether the card is in multi-select mode
+    var isSelectionMode: Bool = false
+
+    /// Whether this card is currently selected (for multi-select)
+    var isSelected: Bool = false
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
     @State private var isPressed: Bool = false
 
     var body: some View {
         Button(action: handleTap) {
-            VStack(alignment: .leading, spacing: 12) {
+            ZStack(alignment: .topTrailing) {
+                VStack(alignment: .leading, spacing: 12) {
                 // Cropped object image
                 AsyncImage(url: URL(string: item.imageUrl)) { phase in
                     switch phase {
@@ -57,15 +66,63 @@ struct ItemCard: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
             }
+
+                // Selection checkmark overlay (multi-select mode)
+                if isSelectionMode {
+                    selectionIndicator
+                }
+            }
             .adaptiveGlass(in: outerShape)
             .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
             .scaleEffect(isPressed ? 0.98 : 1.0)
+            .overlay {
+                if isSelected {
+                    outerShape
+                        .stroke(Color.accentColor, lineWidth: 3)
+                }
+            }
         }
         .buttonStyle(.plain)
         .animation(.brandSnappy, value: isPressed)
+        .animation(.brandSnappy, value: isSelected)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
         .accessibilityAddTraits(.isButton)
+        .contextMenu {
+            // Only show context menu when not in selection mode
+            if !isSelectionMode {
+                Button {
+                    onEdit?()
+                } label: {
+                    Label("Edit", systemImage: "pencil")
+                }
+
+                Button(role: .destructive) {
+                    onDelete?()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+        }
+    }
+
+    // MARK: - Selection Indicator
+
+    @ViewBuilder
+    private var selectionIndicator: some View {
+        ZStack {
+            Circle()
+                .fill(isSelected ? Color.accentColor : Color.white.opacity(0.8))
+                .frame(width: 28, height: 28)
+                .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+        }
+        .padding(8)
     }
 
     // MARK: - Computed Properties
@@ -93,11 +150,14 @@ struct ItemCard: View {
     }
 
     private var accessibilityDescription: String {
-        var desc = "\(item.category ?? "Unknown item")"
-        if let color = item.color {
+        var desc: String = "\(item.category ?? "Unknown item")"
+        if let color: String = item.color {
             desc += ", \(color)"
         }
         desc += ", \(statusText(for: item.status))"
+        if isSelectionMode {
+            desc += isSelected ? ", selected" : ", not selected"
+        }
         return desc
     }
 

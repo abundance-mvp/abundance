@@ -3,6 +3,20 @@ import FirebaseFirestore
 import Combine
 import os
 
+// MARK: - Set Chunking Extension
+
+extension Set {
+    /// Splits a set into chunks of a specified size
+    /// - Parameter size: Maximum size of each chunk
+    /// - Returns: Array of arrays, each containing up to `size` elements
+    func chunked(into size: Int) -> [[Element]] {
+        let array = Array(self)
+        return stride(from: 0, to: array.count, by: size).map {
+            Array(array[$0..<Swift.min($0 + size, array.count)])
+        }
+    }
+}
+
 /// Metadata from Layer 1 (on-device YOLO detection)
 /// Captures detection results before Layer 2 cloud processing
 public struct Layer1Metadata: Sendable {
@@ -44,6 +58,16 @@ public protocol ItemRepository: Sendable {
 
     /// Real-time listener for all user items
     func observeItems(userId: String) -> AnyPublisher<[Item], Never>
+
+    /// Deletes a single item by ID
+    /// - Parameter id: The item document ID
+    /// - Throws: Error if deletion fails
+    func deleteItem(id: String) async throws
+
+    /// Deletes multiple items in a batch
+    /// - Parameter ids: Set of item document IDs to delete
+    /// - Throws: Error if batch deletion fails
+    func deleteItems(ids: Set<String>) async throws
 }
 
 /// Service for managing Item documents in Firestore
@@ -206,6 +230,37 @@ public final class ItemService: ItemRepository {
                 listener.remove() // Clean up listener on cancel
             })
             .eraseToAnyPublisher()
+    }
+
+    // MARK: - Delete Operations
+
+    /// Deletes a single item document from Firestore
+    /// - Parameter id: The item document ID to delete
+    /// - Note: Cloud Function onItemDeleted handles Cloud Storage cleanup
+    public func deleteItem(id: String) async throws {
+        try await db.collection("items").document(id).delete()
+        os_log(.info, log: .default, "Deleted item id=%{public}@", id)
+    }
+
+    /// Deletes multiple items in a Firestore batch
+    /// - Parameter ids: Set of item document IDs to delete
+    /// - Note: Firestore batch limit is 500 writes; larger sets are chunked
+    public func deleteItems(ids: Set<String>) async throws {
+        guard !ids.isEmpty else { return }
+
+        // Firestore batch limit is 500 operations
+        let chunks = ids.chunked(into: 500)
+
+        for chunk in chunks {
+            let batch = db.batch()
+            for id in chunk {
+                let ref = db.collection("items").document(id)
+                batch.deleteDocument(ref)
+            }
+            try await batch.commit()
+        }
+
+        os_log(.info, log: .default, "Batch deleted %{public}d items", ids.count)
     }
 
     // MARK: - Private Helpers

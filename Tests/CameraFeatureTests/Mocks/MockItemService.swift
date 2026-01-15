@@ -58,6 +58,18 @@ final class MockItemService: ItemRepository, @unchecked Sendable {
         return Just([]).eraseToAnyPublisher()
     }
 
+    func deleteItem(id: String) async throws {
+        if shouldFail {
+            throw NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        }
+    }
+
+    func deleteItems(ids: Set<String>) async throws {
+        if shouldFail {
+            throw NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        }
+    }
+
     func reset() {
         createItemCalled = false
         createItemWithLayer1MetadataCalled = false
