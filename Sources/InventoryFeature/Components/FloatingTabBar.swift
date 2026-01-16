@@ -7,7 +7,6 @@ public struct FloatingTabBar: View {
     @Binding var selection: Int
     let items: [TabItem]
 
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Namespace private var tabNamespace
 
     public struct TabItem: Identifiable {
@@ -29,13 +28,8 @@ public struct FloatingTabBar: View {
     public var body: some View {
         tabContent
             .background {
-                if reduceTransparency {
-                    Capsule()
-                        .fill(Color.backgroundDefault)
-                } else {
-                    Capsule()
-                        .fill(.ultraThickMaterial)
-                }
+                Color.clear
+                    .adaptiveGlass(in: Capsule())
             }
             .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
@@ -72,8 +66,8 @@ public struct FloatingTabBar: View {
         .buttonStyle(.plain)
         .background {
             if isSelected {
-                Capsule()
-                    .fill(.thickMaterial)
+                Color.clear
+                    .adaptiveGlass(in: Capsule())
                     .matchedGeometryEffect(id: "selectedTab", in: tabNamespace)
             }
         }

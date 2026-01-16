@@ -90,6 +90,8 @@ public struct InventoryView: View {
                                 }
                             }
                         }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color.accentPrimary)
                     }
                 }
             }
@@ -171,7 +173,7 @@ public struct InventoryView: View {
             .disabled(selectedItemIds.isEmpty)
         }
         .padding()
-        .background(.ultraThinMaterial)
+        .adaptiveGlass(cornerRadius: 16)
     }
 }
 

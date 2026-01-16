@@ -7,9 +7,6 @@ public struct PrimaryButton: View {
     var isEnabled: Bool = true
     var isLoading: Bool = false
 
-    // MARK: - Environment
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
     // MARK: - State
     @State private var isPressed: Bool = false
 
@@ -39,7 +36,7 @@ public struct PrimaryButton: View {
             .padding(.horizontal, 32)
             .padding(.vertical, 16)
             .frame(minHeight: 44) // Accessibility tap target
-            .background(backgroundMaterial, in: Capsule())
+            .adaptiveGlass(in: Capsule())
             .shadow(
                 color: Color.brandBrightBlue.opacity(isEnabled ? 0.5 : 0.2),
                 radius: isPressed ? 8 : 12,
@@ -60,12 +57,6 @@ public struct PrimaryButton: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityRemoveTraits(isEnabled ? [] : .isButton)
         .accessibilityAddTraits(isEnabled ? [] : .isStaticText)
-    }
-
-    // MARK: - Computed Properties
-
-    private var backgroundMaterial: AnyShapeStyle {
-        reduceTransparency ? AnyShapeStyle(Color.backgroundDefault) : AnyShapeStyle(.thinMaterial)
     }
 
     // MARK: - Actions

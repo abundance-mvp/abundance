@@ -210,6 +210,8 @@ public struct EditItemSheet: View {
                             }
                         }
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.successColor)
                     .disabled(!viewModel.validationErrors.isEmpty || viewModel.state == .saving)
                 }
             }
@@ -335,7 +337,7 @@ private struct SavingOverlay: View {
                     .font(.system(size: 15, weight: .medium, design: .rounded))
             }
             .padding(24)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .adaptiveGlass(cornerRadius: 16)
         }
     }
 }

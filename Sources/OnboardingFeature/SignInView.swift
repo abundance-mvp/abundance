@@ -134,15 +134,7 @@ public struct SignInView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background {
-            if reduceTransparency {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.backgroundDefault)
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.ultraThinMaterial)
-            }
-        }
+        .adaptiveGlass(cornerRadius: 8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(error.localizedDescription)")
     }

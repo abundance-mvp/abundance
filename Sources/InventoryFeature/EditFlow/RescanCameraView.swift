@@ -50,8 +50,8 @@ public struct RescanCameraView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
                     .background {
-                        Capsule()
-                            .fill(.ultraThinMaterial)
+                        Color.clear
+                            .adaptiveGlass(in: Capsule())
                     }
 
                 // Capture button
@@ -148,10 +148,7 @@ private struct ProcessingOverlay: View {
                     .foregroundStyle(.white)
             }
             .padding(32)
-            .background {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
-            }
+            .adaptiveGlass(cornerRadius: 20)
         }
     }
 }
