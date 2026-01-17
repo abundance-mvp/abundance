@@ -1,241 +1,364 @@
-# Abundance Iteration System - Quick Reference Card
+# Abundance Development System - Quick Reference
 
-**Save this for quick access during development!**
+## Architecture Overview
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                       iOS Development                               │
+│  ┌─────────────────────┐     ┌─────────────────────┐               │
+│  │   ios-superpowers   │     │    device-tester    │               │
+│  │   (Axiom router)    │     │  (devicectl + logs) │               │
+│  │                     │     │                     │               │
+│  │ Actions:            │     │ Workflows:          │               │
+│  │ - debug             │     │ - Build & deploy    │               │
+│  │ - tdd               │     │ - Crash analysis    │               │
+│  │ - review            │     │ - Performance       │               │
+│  │ - plan              │     │ - Screenshot debug  │               │
+│  │ - execute           │     │ - Backend logs      │               │
+│  │ - brainstorm        │     │                     │               │
+│  │ - parallel          │     │                     │               │
+│  └─────────────────────┘     └─────────────────────┘               │
+└────────────────────────────────────────────────────────────────────┘
+                              ↕ (backend verification)
+┌────────────────────────────────────────────────────────────────────┐
+│                      Backend Operations                             │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │                   backend-superpowers                         │  │
+│  │          Unified Firebase + GCP MCP Integration               │  │
+│  ├──────────────────────────────────────────────────────────────┤  │
+│  │ Firebase MCP   │ Observability │ Storage MCP  │ GCloud CLI   │  │
+│  │ (29 tools)     │ (13 tools)    │ (17 tools)   │ (1 tool)     │  │
+│  │                │               │              │              │  │
+│  │ - Firestore    │ - Logging     │ - Buckets    │ - Any gcloud │  │
+│  │ - Functions    │ - Metrics     │ - Objects    │   command    │  │
+│  │ - Auth         │ - Tracing     │ - IAM        │              │  │
+│  │ - FCM          │ - Alerts      │ - Insights   │              │  │
+│  │ - RemoteConfig │ - Errors      │              │              │  │
+│  │ - RTDB         │               │              │              │  │
+│  │ - Rules        │               │              │              │  │
+│  │ - Projects     │               │              │              │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🚀 Fast Iteration Loop (30 seconds)
+## Quick Commands
+
+### iOS Development
+
+| Command | Purpose |
+|---------|---------|
+| `/project:ios-superpowers debug <issue>` | Debug with Axiom agents |
+| `/project:ios-superpowers tdd <feature>` | Test-driven development |
+| `/project:ios-superpowers review` | Code review with audits |
+| `/project:ios-superpowers plan <feature>` | Plan implementation |
+| `/project:ios-superpowers execute <plan>` | Execute a plan |
+| `/project:ios-superpowers brainstorm <topic>` | Design exploration |
+| `/project:ios-debug <issue>` | Quick debug shortcut |
+| `/project:device-tester` | Physical device testing |
+| `/axiom:fix-build` | Fix build failures |
+| `/axiom:screenshot` | Capture simulator screenshot |
+
+### Backend Operations
+
+| Command | Purpose |
+|---------|---------|
+| `/project:backend-superpowers` | Load unified backend skill |
+| `/project:gcp-deploy <function>` | Deploy Cloud Function |
+| `/project:gcp-deploy <fn> --verify` | Deploy with verification |
+| `/project:gcp-deploy <fn> --notify` | Deploy with FCM notification |
+
+---
+
+## Skill Reference
+
+### ios-superpowers
+
+**Purpose:** Deterministic iOS orchestrator that routes to Axiom agents and skills.
+
+**When to Use:** ALL iOS/Swift development work.
+
+**Actions:**
+
+| Action | What It Does |
+|--------|--------------|
+| `debug` | Routes to appropriate Axiom agent based on error patterns |
+| `tdd` | Test-driven development with `axiom-ui-testing` |
+| `review` | Parallel Axiom auditors + code review |
+| `plan` | Apple docs research + implementation planning |
+| `execute` | Run tests + execute implementation |
+| `brainstorm` | HIG + architecture exploration |
+| `parallel` | Multi-agent dispatch for independent tasks |
+
+**Domain Detection:**
+
+| Domain | Trigger Patterns | Axiom Agent |
+|--------|------------------|-------------|
+| build | BUILD FAILED, module not found | `axiom:build-fixer` |
+| concurrency | @MainActor, Sendable, actor | `axiom:concurrency-auditor` |
+| memory | leak, retain cycle | `axiom:memory-auditor` |
+| ui-arch | @State, MVVM, view model | `axiom:swiftui-architecture-auditor` |
+| ui-nav | NavigationStack, deep link | `axiom:swiftui-nav-auditor` |
+| ui-perf | janky, frame drop | `axiom:swiftui-performance-analyzer` |
+| ui-access | VoiceOver, accessibility | `axiom:accessibility-auditor` |
+| test | XCUITest, flaky | `axiom:test-failure-analyzer` |
+
+---
+
+### device-tester
+
+**Purpose:** Iterative testing on physical iOS device.
+
+**Device:** w-16e (iPhone)
+**Bundle ID:** com.abundance.mvp
+
+**Workflows:**
+
+| Trigger | Action |
+|---------|--------|
+| App crashed | Launch `axiom:crash-analyzer` |
+| Tests failing | Launch `axiom:test-debugger` |
+| Performance issues | Launch `axiom:performance-profiler` |
+| Build failed | Launch `axiom:build-fixer` |
+| Backend errors | Check Cloud Functions logs via MCP |
+| UI bug | Read screenshot from `./screenshots/` |
+
+**Key Commands:**
 
 ```bash
-# Edit code → test on simulator
-./scripts/sim.sh
-```
+# Build and install
+xcodebuild -scheme Abundance -destination "platform=iOS,name=w-16e" build
+xcrun devicectl device install app --device w-16e /path/to/App.app
 
-**What happens**:
-1. Regenerates Xcode project if needed (cached, instant)
-2. Builds app
-3. Launches simulator
-4. Captures logs to `.debug/logs/`
+# Launch with console
+xcrun devicectl device process launch --device w-16e --console com.abundance.mvp
 
----
+# Check crash logs
+ls -lt ~/Library/Logs/CrashReporter/MobileDevice/w-16e/*.ips | head -5
 
-## 🐛 Found a Bug? Capture It!
-
-Tell Claude:
-- "capture this issue"
-- "file a bug"
-- "log this problem"
-
-Claude uses the `capture-issue` skill which:
-1. Asks for details (expected, actual, screen, type)
-2. Creates raw issue: `.debug/issues/raw/issue-NNN.md`
-3. Auto-enriches: `.debug/issues/enriched/enriched-NNN.json`
-
-**Issue types**:
-- `bug` - Something is broken
-- `ux-issue` - Works but feels wrong
-- `spec-drift` - Doesn't match spec
-- `silent-failure` - No error but doesn't work
-- `performance` - Too slow
-- `blocker` - **URGENT** showstopper (use for blocking issues!)
-
-**See**: `docs/dev-workflow/BUG-FILING-WORKFLOW.md` for full workflow details
-
----
-
-## 🔍 Triage Issues (AI Agent)
-
-```bash
-claude triage-issues
-```
-
-**What it does**:
-- Reads all raw issues
-- Analyzes logs
-- **iOS issues:** Invokes `apple-docs-fetcher` for API verification (MANDATORY)
-- Classifies and creates spec documents
-- Moves to `.debug/issues/triaged/`
-
----
-
-## 🤖 Dispatch Agents (Parallel)
-
-```bash
-claude dispatch --parallel
-```
-
-**What it does**:
-- Creates git worktrees
-- Dispatches agents to fix issues
-- Each agent works independently
-- Reports back with PRs
-
----
-
-## 🏥 Health Check
-
-```bash
-./scripts/check-health.sh
-```
-
-**Checks**:
-- Network, Firebase, GCP status
-- Simulator status
-- Recent logs
-- Open issues
-
----
-
-## 🔨 Regenerate Xcode Project
-
-```bash
-# Force clean regeneration
-./scripts/regenerate-xcode-project.sh
-
-# Or with sim.sh
-./scripts/sim.sh --regenerate
-```
-
-**When to use**:
-- Xcode project corruption
-- After editing project.yml
-- Build errors that don't make sense
-
----
-
-## 📝 Spec Assertions
-
-```bash
-# After updating spec docs, regenerate tests
-python3 scripts/extract-spec-assertions.py
-```
-
-**Output**:
-- `Tests/Generated/SpecAssertionTests.swift`
-- `.debug/manual-testing-checklist.md`
-
----
-
-## 🆘 Troubleshooting
-
-```bash
-claude troubleshoot
-```
-
-**Uses**:
-- `superpowers:systematic-debugging`
-- **iOS issues:** `apple-docs-fetcher` before and after fix (MANDATORY)
-- Detects iOS frameworks → fetches Apple docs → debugs → verifies fix
-
----
-
-## 📝 Code Review
-
-```bash
-/super-code-review          # Review current branch
-/super-code-review #123     # Review specific PR
-```
-
-**What it does**:
-- **iOS code:** Invokes `apple-docs-fetcher` for API verification (MANDATORY)
-- Uses `superpowers:requesting-code-review`
-- Validates against CLAUDE.md and ADRs
-
----
-
-## 📊 Daily Workflow
-
-**Morning**:
-```bash
-./scripts/check-health.sh
-git checkout main && git pull
-```
-
-**Development Loop** (repeat every few minutes):
-```bash
-# Edit code
-./scripts/sim.sh
-# Test
-# If bug found, tell Claude: "capture this issue"
-```
-
-**End of Day**:
-```bash
-claude triage-issues
-claude dispatch --parallel
-# Review PRs
+# Check screenshots (synced via iCloud)
+ls -lt screenshots/ | head -5
 ```
 
 ---
 
-## 📁 Key Directories
+### backend-superpowers
 
-- `Sources/Core/Logging/` - AppLogger framework
-- `.debug/logs/` - Simulator session logs
-- `.debug/issues/raw/` - Captured issues
-- `.debug/issues/enriched/` - Enriched issue JSON
-- `.debug/issues/triaged/` - Ready for agents
-- `.debug/completed/issues/` - Resolved issues
-- `docs/bugs/` - Bug specifications
-- `~/code/abundance-worktrees/` - Agent workspaces
+**Purpose:** Unified Firebase and GCP operations with Gemini/AI pipeline routing.
+
+**Replaces:** `firebase-superpowers` (deprecated), `gcp-superpowers` (deprecated)
+
+**Domain Detection (First Match Wins):**
+
+| Priority | Domain | Patterns | Action |
+|----------|--------|----------|--------|
+| 1 | gemini | Gemini, tool calling, thought signature, AI pipeline | Route to `gemini-integration` skill |
+| 2-17 | firebase/gcp | Firestore, Functions, Logging, etc. | Use MCP tools directly |
+
+**MCP Tool Inventory (59 tools):**
+
+#### Firebase MCP (29 tools)
+
+| Category | Tools | Key Operations |
+|----------|-------|----------------|
+| Firestore | 4 | `firestore_query_collection`, `firestore_get_documents` |
+| Functions | 2 | `functions_list_functions`, `functions_get_logs` |
+| Auth | 3 | `auth_get_users`, `auth_update_user` |
+| FCM | 1 | `messaging_send_message` |
+| Remote Config | 2 | `remoteconfig_get_template`, `remoteconfig_update_template` |
+| RTDB | 2 | `realtimedatabase_get_data`, `realtimedatabase_set_data` |
+| Security | 2 | `firebase_validate_security_rules`, `firebase_get_security_rules` |
+| Project | 12 | `firebase_init`, `firebase_create_app`, `firebase_get_environment` |
+
+#### Observability MCP (13 tools)
+
+| Category | Tools | Key Operations |
+|----------|-------|----------------|
+| Logging | 6 | `list_log_entries`, `list_log_names`, `list_sinks` |
+| Metrics | 2 | `list_metric_descriptors`, `list_time_series` |
+| Alerts | 2 | `list_alert_policies`, `list_alerts` |
+| Tracing | 2 | `list_traces`, `get_trace` |
+| Errors | 1 | `list_group_stats` |
+
+#### Storage MCP (17 tools)
+
+| Category | Tools | Key Operations |
+|----------|-------|----------------|
+| Buckets | 6 | `list_buckets`, `create_bucket`, `view_iam_policy` |
+| Objects | 8 | `list_objects`, `read_object_content`, `upload_object_safe` |
+| Insights | 3 | `execute_insights_query`, `get_metadata_table_schema` |
 
 ---
 
-## 🎯 AppLogger Usage
+## Common Workflows
 
-```swift
-// UI interaction
-AppLogger.log(.buttonTapped(button: "Catalog", screen: "Home"))
+### Debug iOS Issue
 
-// Firestore operation
-AppLogger.log(.firestoreQueryStarted(collection: "items", filter: "userId"))
+```
+1. /project:ios-superpowers debug "<error message>"
+2. Skill detects domain (build, concurrency, memory, etc.)
+3. Routes to appropriate Axiom agent
+4. Agent provides fix with Apple docs verification
+```
 
-// Spec violation
-AppLogger.log(.specViolation(
-    spec: "mvp-vision-features",
-    section: "Processing Time",
-    expected: "< 6s",
-    actual: "\(duration)s",
-    severity: .high
-))
+### Deploy Cloud Function
 
-// Silent failure
-AppLogger.log(.silentFailure(
-    feature: "Navigation",
-    expectedBehavior: "Navigate to detail",
-    actualBehavior: "Tap has no effect",
-    reproSteps: ["Open app", "Tap item", "Nothing happens"]
-))
+```
+1. /project:gcp-deploy ai-pipeline-orchestrator --staging
+2. Runs local tests
+3. Deploys to staging
+4. Verifies deployment via MCP tools
+5. Checks logs for errors
+6. (Optional) --production --verify --notify for prod
+```
+
+### Device Testing Loop
+
+```
+1. /project:device-tester
+2. Build and deploy to w-16e
+3. Launch with console output
+4. Test the feature
+5. If crash → axiom:crash-analyzer
+6. If slow → axiom:performance-profiler
+7. If UI bug → check ./screenshots/
+8. If backend error → check Cloud Functions logs
+9. Fix and repeat
+```
+
+### Code Review
+
+```
+1. /project:ios-superpowers review
+2. Launches parallel Axiom auditors:
+   - concurrency-auditor
+   - accessibility-auditor
+   - swiftui-architecture-auditor
+   - memory-auditor
+   - security-privacy-scanner
+3. Combines results with code review
 ```
 
 ---
 
-## 🔧 Common Issues
+## MCP Tool Quick Reference
 
-**Simulator not found**:
-```bash
-xcrun simctl list devices | grep iPhone
-./scripts/sim.sh "iPhone 16 Pro"  # Use exact name
+### Check Cloud Functions Status
+
+```
+mcp__plugin_firebase_firebase__functions_list_functions
 ```
 
-**Build failed**:
-```bash
-# Check logs
-cat .debug/logs/session-latest.log | grep "error:"
+### Get Function Logs
+
+```
+mcp__plugin_firebase_firebase__functions_get_logs
+  function_names: ["ai-pipeline-orchestrator"]
+  min_severity: "WARNING"
+  order: "desc"
 ```
 
-**Health check failed**:
-```bash
-# Check specific issue
-cat .debug/health/health-latest.json | jq .
+### Query Firestore
+
+```
+mcp__plugin_firebase_firebase__firestore_query_collection
+  collection_path: "users"
+  filters: [{"field": "status", "op": "EQUAL", "compare_value": {"string_value": "active"}}]
+```
+
+### Send FCM Notification
+
+```
+mcp__plugin_firebase_firebase__messaging_send_message
+  title: "Deployment Complete"
+  body: "Function deployed successfully"
+  topic: "dev-notifications"
+```
+
+### Check Error Reporting
+
+```
+mcp__observability__list_group_stats
+  projectName: "projects/abundance-mvp"
+  timeRangePeriod: "PERIOD_1_HOUR"
+```
+
+### Query Cloud Logging
+
+```
+mcp__observability__list_log_entries
+  resourceNames: ["projects/abundance-mvp"]
+  filter: "severity>=ERROR"
+  orderBy: "timestamp desc"
 ```
 
 ---
 
-## 📖 Full Documentation
+## File Locations
 
-See: `docs/dev-workflow/DEV-ITERATION-SYSTEM-001.md`
+| Purpose | Location |
+|---------|----------|
+| Skills | `.claude/skills/` |
+| Commands | `.claude/commands/` |
+| Hooks | `.claude/hooks/` |
+| Device screenshots | `./screenshots/` (iCloud symlink) |
+| Plans | `docs/plans/` |
+| Specs | `docs/specs/` |
+| Issues | `docs/issues/` |
 
 ---
 
-**Questions? Run:** `claude troubleshoot`
+### gemini-integration
+
+**Purpose:** Gemini 3 Pro tool calling patterns for AI pipeline.
+
+**Routed From:** `backend-superpowers` (auto-detected via Gemini patterns)
+
+**Key Concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| Thought Signatures | **MANDATORY** for Gemini 3 - encrypted reasoning state |
+| Function Declarations | Tool definitions with parameters schema |
+| Tool Calling Loop | Send prompt → get function call → execute → return result |
+
+**Thought Signature Handling:**
+
+| Scenario | Signature Location | Requirement |
+|----------|-------------------|-------------|
+| Single function call | On `functionCall` part | Must return |
+| Parallel calls | Only on **first** part | Must preserve order |
+| Sequential calls | Each call has own | Must return all |
+
+**Common Error:**
+```
+400 Bad Request: Function call is missing a thought_signature
+```
+**Fix:** Preserve complete model response parts in conversation history.
+
+**Reference Implementation:** `functions/src/ai-pipeline/gemini/`
+
+**Documentation:**
+- Function Calling: https://ai.google.dev/gemini-api/docs/function-calling
+- Thought Signatures: https://ai.google.dev/gemini-api/docs/thought-signatures
+
+---
+
+## Deprecated Skills
+
+| Skill | Replacement | Removal Date |
+|-------|-------------|--------------|
+| `firebase-superpowers` | `backend-superpowers` | 2026-02-17 |
+| `gcp-superpowers` | `backend-superpowers` | 2026-02-17 |
+| `verified-stage-development` | (removed) | 2026-01-17 |
+
+---
+
+## Related Documentation
+
+- **Full MCP Plan:** `docs/plans/2026-01-17-mcp-skill-consolidation-plan.md`
+- **iOS Superpowers Details:** `.claude/skills/ios-superpowers/SKILL.md`
+- **Backend Superpowers Details:** `.claude/skills/backend-superpowers/SKILL.md`
+- **Device Tester Details:** `.claude/skills/device-tester.md`
+- **GCP Deploy Command:** `.claude/commands/gcp-deploy.md`

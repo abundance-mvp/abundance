@@ -5,16 +5,26 @@
 
 ---
 
+## System Commands
+
+Never use `rm -rf` - Use `trash`
+Never use `find` - Use `fd`
+Never use `grep` - Use `rg`
+
+---
+
 ## Quick Commands
 
 ```bash
-/ios-sprint <spec>      # Start iOS sprint from spec document
-/ios-debug <issue>      # Debug iOS issue with Axiom skills
-/device-tester          # Iterative testing on physical device w-16e
-/gcp-deploy <fn>        # Deploy Cloud Function with verification
-/validate-docs          # Check docs for broken links, staleness
-/check-drift            # Verify ADR compliance (P0/P1/P2)
-/show-sprint-status     # Display sprint progress
+# iOS Development
+/project:ios-superpowers <action> <context>  # Axiom-powered iOS workflows
+/project:ios-debug <issue>                   # Debug iOS issue with Axiom skills
+/project:device-tester                       # Iterative testing on physical device w-16e
+/axiom:apple-docs-research                   # Fetch Apple Developer documentation
+
+# Backend Operations
+/project:backend-superpowers                 # Firebase + GCP unified skill (59 MCP tools)
+/project:gcp-deploy <fn>                     # Deploy Cloud Function with verification
 ```
 
 ---
@@ -23,19 +33,58 @@
 
 **CRITICAL:** For ALL iOS/Swift work, use `ios-superpowers` instead of raw superpowers skills.
 
-This ensures Apple documentation is fetched before any workflow:
+This ensures Apple documentation is fetched via `/axiom:apple-docs-research` before any workflow:
 
 ```bash
-/ios-superpowers brainstorm <topic>     # Instead of superpowers:brainstorming
-/ios-superpowers plan <feature>         # Instead of superpowers:writing-plans
-/ios-superpowers execute <plan-path>    # Instead of superpowers:executing-plans
-/ios-superpowers review                 # Instead of superpowers:requesting-code-review
-/ios-superpowers debug <issue>          # Instead of superpowers:systematic-debugging
-/ios-superpowers tdd <feature>          # Instead of superpowers:test-driven-development
-/ios-superpowers parallel <tasks>       # Instead of superpowers:dispatching-parallel-agents
+/project:ios-superpowers brainstorm <topic>     # Instead of superpowers:brainstorming
+/project:ios-superpowers plan <feature>         # Instead of superpowers:writing-plans
+/project:ios-superpowers execute <plan-path>    # Instead of superpowers:executing-plans
+/project:ios-superpowers review                 # Instead of superpowers:requesting-code-review
+/project:ios-superpowers debug <issue>          # Instead of superpowers:systematic-debugging
+/project:ios-superpowers tdd <feature>          # Instead of superpowers:test-driven-development
+/project:ios-superpowers parallel <tasks>       # Instead of superpowers:dispatching-parallel-agents
 ```
 
 **Why:** Ensures Swift 6 concurrency patterns, SwiftUI APIs, and iOS frameworks are verified against current Apple documentation before implementation.
+
+---
+
+## Backend Superpowers (Firebase + GCP + Gemini)
+
+**Skill:** `backend-superpowers` - Unified Firebase, GCP, and Gemini operations
+
+Use for ALL backend work:
+
+```bash
+# Invoke the skill for Firebase/GCP/Gemini context
+Skill(skill="backend-superpowers")
+```
+
+**Domain Routing:**
+- Gemini patterns (tool calling, thought signatures) → Routes to `gemini-integration` skill
+- Firebase/GCP patterns → Uses MCP tools directly
+
+**Capabilities (59 MCP tools + Gemini routing):**
+
+| Domain | Tools | Examples |
+|--------|-------|----------|
+| **Gemini** | routing | Tool calling, thought signatures, AI pipeline code |
+| Firestore | 4 | Query, get, delete documents |
+| Cloud Functions | 2 | List functions, get logs |
+| Auth | 3 | Get/update users, SMS policy |
+| FCM | 1 | Send push notifications |
+| Remote Config | 2 | Get/update feature flags |
+| RTDB | 2 | Get/set realtime data |
+| Security Rules | 2 | Validate, get rules |
+| Project Mgmt | 12 | Create projects, apps, init |
+| Cloud Logging | 6 | Query logs, sinks, views |
+| Monitoring | 4 | Metrics, time series, alerts |
+| Tracing | 2 | List/get distributed traces |
+| Error Reporting | 1 | Stack trace analysis |
+| Cloud Storage | 17 | Buckets, objects, IAM |
+| GCloud CLI | 1 | General gcloud commands |
+
+**Note:** `firebase-superpowers` and `gcp-superpowers` are deprecated. Use `backend-superpowers` instead.
 
 ---
 
@@ -55,38 +104,36 @@ This ensures Apple documentation is fetched before any workflow:
 
 ## Critical Constraints
 
-- **iOS Superpowers:** Use `/ios-superpowers` for ALL iOS work - **P0 requirement** (ensures Apple docs grounding)
+- **iOS Superpowers:** Use `/project:ios-superpowers` for ALL iOS work - **P0 requirement** (ensures Apple docs grounding)
 - **ADR-010:** SwiftUI-only - `import UIKit` in Views/ViewModels is **P0 violation** (infrastructure OK)
-- **Apple Docs:** iOS code changes require `apple-docs-fetcher` verification (auto-invoked by ios-superpowers)
+- **Apple Docs:** iOS code changes require `axiom:` verification (auto-invoked by ios-superpowers)
 - **Branch naming:** `feature/`, `fix/`, `docs/`, `chore/`, `test/`, `refactor/` only
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
 - **TDD:** Write tests first, 80%+ coverage target
-- **Budget:** $554/month (monitored by cost-watchdog)
 
 ---
 
 ## ⚠️ CRITICAL: docs/ Symlink
 
-**Local:** `docs/` → symlink to `~/code/spec-kit/docs/`
 **Remote:** `docs/` → actual files (not symlink)
 
 **❌ NEVER delete files from docs/ or commit docs/ deletions**
-**✅ To sync docs:** `./.claude/scripts/sync-docs.sh`
-
-Git shows docs/ as "D" (deleted) - this is **expected** (symlink vs actual files)
 
 ---
 
 ## 📱 Device Screenshots (Iterative Development)
 
+**Command:** `/project:device-tester` - Iterative testing on physical device w-16e
 **Location:** `./screenshots/` → symlink to iCloud
 
 **ALWAYS check for new screenshots** when debugging UI issues or iterating on device:
+
 ```bash
 ls -lt screenshots/ | head -5    # Most recent first
 ```
 
 **Workflow:**
+
 1. User takes screenshot on device (w-16e)
 2. Screenshot syncs via iCloud to `./screenshots/`
 3. **Claude reads the screenshot** (multimodal) to analyze UI state
@@ -99,34 +146,35 @@ ls -lt screenshots/ | head -5    # Most recent first
 ## Workflow
 
 ### Before Starting
+
 ```bash
 git checkout main && git pull
 git checkout -b feature/your-feature
 ./scripts/validate-environment.sh
 
-# Regenerate Xcode project if needed
-./scripts/regenerate-xcode-project.sh
 ```
 
 ### During Development
-- **Use `/ios-superpowers`** for all planning, debugging, code review, and TDD workflows
+
+- **Use `/project:ios-superpowers`** for all planning, debugging, code review, and TDD workflows
 - Follow MVVM pattern (ViewModels in `Sources/`)
 - TDD: Write failing test → implement → verify → commit
 - SwiftUI only, no UIKit for UI (infrastructure exceptions per ADR-010)
-- Deploy: `./scripts/sim.sh --device w-16e`
+- \*\*
 
 ### If Build Fails
+
 ```bash
-# Regenerate clean Xcode project
-./scripts/regenerate-xcode-project.sh --yes
-./scripts/sim.sh --device w-16e
+/project:ios-debug <issue>
+/axiom:axiom-xcode-debugging
+/axiom:axiom-build-debugging
 ```
 
 ### Before Committing
+
 ```bash
 swift test              # All tests must pass
 swiftlint              # Zero warnings required
-/check-drift           # P0 violations block merge
 ```
 
 ---
@@ -139,7 +187,7 @@ swiftlint              # Zero warnings required
 ## Common Tasks
 
 ```bash
-swift test && /check-drift           # Test + compliance
+swift test                           # Run all tests
 firebase deploy --only firestore:rules
 ```
 
@@ -147,14 +195,5 @@ firebase deploy --only firestore:rules
 
 ## Documentation
 
-**Setup:** `.claude/docs/REPOSITORY-SETUP-CHECKLIST-001.md`
-**ADRs:** `docs/adr/` | **Plans:** `docs/plans/` | **Automation:** `.claude/docs/`
+**Specs:** `docs/specs/` | **Plans:** `docs/plans/` | **Issues**: `docs/issues/`
 
----
-
-**Updated:** 2026-01-16
-- Added /device-tester for iterative physical device testing
-- Added screenshots/ symlink to iCloud for device screenshot workflow
-- Added /ios-sprint, /ios-debug, /gcp-deploy commands
-- Added firebase-superpowers, gcp-superpowers, gemini-integration skills
-- Updated verified-stage-development with agent routing matrix

@@ -1,137 +1,87 @@
 # Claude Code Commands
 
-Custom slash commands for the Abundance MVP project.
+Custom slash commands for the Abundance MVP project. All project-level commands use the `project:` namespace.
 
 ## Available Commands
 
 ### iOS Development (REQUIRED: ios-superpowers)
 
-**CRITICAL:** For ALL iOS/Swift work, use `/ios-superpowers` instead of raw superpowers skills.
+**CRITICAL:** For ALL iOS/Swift work, use `/project:ios-superpowers` instead of raw superpowers skills.
 
-#### `/ios-superpowers <action> <context>`
+#### `/project:ios-superpowers <action> <context>`
 
-iOS-aware orchestrator that ensures Apple documentation is fetched before any superpowers workflow.
+iOS-aware orchestrator that ensures Apple documentation is fetched via `/axiom:apple-docs-research` before any superpowers workflow.
 
 **Actions:**
 | Action | Example | Replaces |
 |--------|---------|----------|
-| `brainstorm <topic>` | `/ios-superpowers brainstorm biometric auth` | `superpowers:brainstorming` |
-| `plan <feature>` | `/ios-superpowers plan camera capture` | `superpowers:writing-plans` |
-| `execute <plan-path>` | `/ios-superpowers execute docs/plans/xxx.md` | `superpowers:executing-plans` |
-| `review` | `/ios-superpowers review` | `superpowers:requesting-code-review` |
-| `debug <issue>` | `/ios-superpowers debug CI failure` | `superpowers:systematic-debugging` |
-| `tdd <feature>` | `/ios-superpowers tdd HouseholdItemDetector` | `superpowers:test-driven-development` |
-| `parallel <tasks>` | `/ios-superpowers parallel "task1, task2"` | `superpowers:dispatching-parallel-agents` |
+| `brainstorm <topic>` | `/project:ios-superpowers brainstorm biometric auth` | `superpowers:brainstorming` |
+| `plan <feature>` | `/project:ios-superpowers plan camera capture` | `superpowers:writing-plans` |
+| `execute <plan-path>` | `/project:ios-superpowers execute docs/plans/xxx.md` | `superpowers:executing-plans` |
+| `review` | `/project:ios-superpowers review` | `superpowers:requesting-code-review` |
+| `debug <issue>` | `/project:ios-superpowers debug CI failure` | `superpowers:systematic-debugging` |
+| `tdd <feature>` | `/project:ios-superpowers tdd HouseholdItemDetector` | `superpowers:test-driven-development` |
+| `parallel <tasks>` | `/project:ios-superpowers parallel "task1, task2"` | `superpowers:dispatching-parallel-agents` |
 
 **See**: `.claude/commands/ios-superpowers.md`
 
 ---
 
-#### `/ios-sprint-executor {sprint-number}`
+#### `/project:ios-debug <issue>`
 
-Orchestrate iOS sprint development with ios-superpowers integration.
+Debug iOS issues using Axiom skills and Apple documentation.
 
-**Example**: `/ios-sprint-executor sprint-1`
+**Example**: `/project:ios-debug "camera preview freezing"`
 
-**Note**: Uses ios-superpowers orchestrator internally for all superpowers interactions.
-
-**See**: `.claude/skills/ios-sprint-executor/SKILL.md`
+**See**: `.claude/commands/ios-debug.md`
 
 ---
 
-#### `/verified-stage-development stage-X.Y`
+#### `/project:device-tester`
 
-Orchestrate stage development with research verification and approval gates.
+Iterative testing on physical device with crash analysis and screenshot debugging.
 
-**Example**: `/verified-stage-development stage-6.2`
+**Example**: `/project:device-tester`
 
-**Note**: iOS stages (2.2, 3.1, 4.1) use ios-superpowers; non-iOS stages use raw superpowers.
-
-**See**: `.claude/skills/verified-stage-development/SKILL.md`
+**See**: `.claude/commands/device-tester.md`
 
 ---
 
-#### `/apple-docs-fetcher {query}`
+### Infrastructure Commands
 
-Fetch Apple Developer documentation via MCP.
+#### `/project:gcp-deploy <function>`
 
-**Example**: `/apple-docs-fetcher SwiftUI.View`
+Deploy Cloud Functions with verification.
 
-**See**: `.claude/skills/apple-docs-fetcher/SKILL.md`
+**Example**: `/project:gcp-deploy catalogItem`
 
----
-
-### Project Management Commands
-
-#### `/validate-docs`
-
-Run documentation validator to check for broken links and stale content.
-
-**Example**: `/validate-docs`
-
-**Uses**: `.claude/agents/doc-reviewer.md` agent specification
+**See**: `.claude/commands/gcp-deploy.md`
 
 ---
 
-#### `/check-drift`
+### Agent Commands
 
-Check for architecture drift from ADRs with severity-based reporting (P0/P1/P2).
+#### `/project:dispatch`
 
-**Example**: `/check-drift`
+Dispatch parallel agents for independent tasks.
 
-**Uses**: `.claude/agents/drift-detector.md` agent specification
-
----
-
-#### `/show-sprint-status`
-
-Display current sprint progress from git branch and sprint plan.
-
-**Example**: `/show-sprint-status`
-
----
-
-### Issue Management Commands
-
-#### `/capture-issue`
-
-Capture bugs, UX issues, or spec drift during testing.
-
-**Example**: `/capture-issue "Camera preview shows black screen on iOS 17"`
-
-**See**: `.claude/skills/capture-issue/SKILL.md`
-
----
-
-#### `/enrich-issue {issue-file}`
-
-Post-capture issue enrichment with log analysis and Apple docs.
-
-**Example**: `/enrich-issue .claude/.debug/issues/raw/2026-01-13-camera-black-screen.json`
-
-**See**: `.claude/commands/enrich-issue.md`
-
----
-
-#### `/triage-issues`
-
-Triage and prioritize captured issues.
-
-**Example**: `/triage-issues`
-
-**See**: `.claude/commands/triage-issues.md`
-
----
-
-#### `/dispatch`
-
-Dispatch parallel agents for independent tasks (triaged issues).
-
-**Example**: `/dispatch`
+**Example**: `/project:dispatch`
 
 **Note**: Agents use ios-superpowers which auto-detects iOS context.
 
 **See**: `.claude/commands/dispatch.md`
+
+---
+
+### Apple Documentation
+
+For Apple Developer documentation, use the Axiom skill directly:
+
+```bash
+/axiom:apple-docs-research SwiftUI.View
+```
+
+This is automatically invoked by `/project:ios-superpowers` workflows.
 
 ---
 
@@ -152,15 +102,6 @@ Commands that use agent specifications:
 - Commands invoke Claude Code's conversational interface directly
 - Agent specifications (`.claude/agents/*.md`) guide Claude's behavior
 - No external skill dependencies (portable to any repo)
-
-## Integration with CI/CD
-
-Some commands are also invoked by GitHub Actions:
-
-- `/validate-docs` → Runs in `docs-auto-update.yml` workflow
-- `/check-drift` → Runs in `security-pr-review.yml` workflow
-
-See `.github/workflows/` for automation configurations.
 
 ## References
 

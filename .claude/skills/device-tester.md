@@ -81,6 +81,33 @@ ls -lt ~/Library/Logs/CrashReporter/MobileDevice/w-16e/*.ips | head -5
 
 ---
 
+### Backend Issues → Check Cloud Functions Logs
+
+**Triggers:**
+- API calls failing
+- Network errors in app
+- Backend-related crashes
+- "Unable to connect" errors
+
+**Check Cloud Functions Logs:**
+```
+Use mcp__plugin_firebase_firebase__functions_get_logs with:
+- function_names: ["ai-pipeline-orchestrator", "gemini-service"]
+- min_severity: "WARNING"
+- order: "desc"
+- page_size: 20
+```
+
+**Check Error Reporting:**
+```
+Use mcp__observability__list_group_stats with:
+- projectName: "projects/abundance-mvp"
+- timeRangePeriod: "PERIOD_1_HOUR"
+- order: "COUNT_DESC"
+```
+
+---
+
 ### General Device Testing → Use commands below
 
 **Triggers:**

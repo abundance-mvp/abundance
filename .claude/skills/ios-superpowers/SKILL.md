@@ -239,6 +239,25 @@ After every execution, verify:
 - [ ] Swift 6 concurrency satisfied (actor isolation, Sendable)
 - [ ] API signatures match Apple documentation
 - [ ] Tests pass (if applicable): `swift test`
+- [ ] If backend changes deployed: verify via `backend-superpowers`
+
+### Backend Verification (when applicable)
+
+If iOS changes involve backend communication:
+
+```
+1. Check Cloud Functions status:
+   mcp__plugin_firebase_firebase__functions_list_functions
+
+2. Check for errors after deploy:
+   mcp__plugin_firebase_firebase__functions_get_logs
+   - function_names: ["ai-pipeline-orchestrator"]
+   - min_severity: "WARNING"
+   - order: "desc"
+
+3. Verify Firestore operations work:
+   mcp__plugin_firebase_firebase__firestore_list_collections
+```
 
 ---
 
