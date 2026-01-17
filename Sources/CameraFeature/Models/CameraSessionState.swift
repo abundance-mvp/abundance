@@ -11,6 +11,10 @@ public enum CameraSessionState: Equatable, Sendable {
     /// Session is actively running
     case running
 
+    /// Session was interrupted (phone call, other app, etc.)
+    /// The associated Int is the raw value of AVCaptureSession.InterruptionReason (iOS only)
+    case interrupted(reasonRawValue: Int)
+
     /// Session has been stopped
     case stopped
 
@@ -26,6 +30,8 @@ public enum CameraSessionState: Equatable, Sendable {
              (.running, .running),
              (.stopped, .stopped):
             return true
+        case (.interrupted(let lhsReason), .interrupted(let rhsReason)):
+            return lhsReason == rhsReason
         case (.failed(let lhsError), .failed(let rhsError)):
             return (lhsError as NSError).domain == (rhsError as NSError).domain &&
                    (lhsError as NSError).code == (rhsError as NSError).code

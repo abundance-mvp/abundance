@@ -24,8 +24,8 @@ public struct CaptureView: View {
     public var body: some View {
         GeometryReader { geometry in
             captureContent(geometry: geometry)
-                .gesture(doubleTapGesture)
-                .gesture(longPressGesture)
+                .gesture(gesturesEnabled ? doubleTapGesture : nil)
+                .gesture(gesturesEnabled ? longPressGesture : nil)
                 .onAppear {
                     setupCamera()
                 }
@@ -36,6 +36,14 @@ public struct CaptureView: View {
         #if os(iOS)
         .navigationBarHidden(true)
         #endif
+    }
+
+    /// Only enable gestures in idle state to prevent blocking UI elements
+    private var gesturesEnabled: Bool {
+        if case .idle = viewModel.uiState {
+            return true
+        }
+        return false
     }
 
     // MARK: - Main Content Layout
@@ -166,7 +174,11 @@ public struct CaptureView: View {
 
         case .error(let error):
             ErrorOverlay(error: error) {
+                // Clear frozen frame first to unblock preview
+                frozenFrame = nil
                 viewModel.dismissError()
+                // Restart camera session to resume live feed
+                setupCamera()
             }
         }
     }

@@ -31,6 +31,49 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
 
     nonisolated public override init() {
         super.init()
+        setupInterruptionObservers()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    // MARK: - Interruption Handling
+
+    nonisolated private func setupInterruptionObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sessionWasInterrupted),
+            name: AVCaptureSession.wasInterruptedNotification,
+            object: captureSession
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sessionInterruptionEnded),
+            name: AVCaptureSession.interruptionEndedNotification,
+            object: captureSession
+        )
+    }
+
+    @objc nonisolated private func sessionWasInterrupted(_ notification: Notification) {
+        #if os(iOS)
+        guard let userInfo = notification.userInfo,
+              let rawValue = userInfo[AVCaptureSessionInterruptionReasonKey] as? Int else {
+            return
+        }
+        sessionStateSubject.send(.interrupted(reasonRawValue: rawValue))
+        #endif
+    }
+
+    @objc nonisolated private func sessionInterruptionEnded(_ notification: Notification) {
+        // Restart session when interruption ends
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            if !self.captureSession.isRunning {
+                self.captureSession.startRunning()
+            }
+            self.sessionStateSubject.send(.running)
+        }
     }
 
     // MARK: - Public Methods
