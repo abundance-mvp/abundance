@@ -192,9 +192,11 @@ public final class CameraDetectionViewModel: ObservableObject {
         )
 
         let logLabel = yoloResult.label
-        let logConfidence = yoloResult.confidence
+        let logConf = yoloResult.confidence
         let logMode = String(describing: catalogMode)
-        logger.debug("Processed '\(logLabel)': conf=\(logConfidence), qual=\(qualityScore), mode=\(logMode)")
+        let hasMask = mask != nil
+        logger.info("✅ '\(logLabel)': conf=\(logConf), qual=\(qualityScore), mode=\(logMode), mask=\(hasMask)")
+        print("✅ [ABUNDANCE] '\(logLabel)': conf=\(logConf), qual=\(qualityScore), mask=\(hasMask)")
 
         return detectedObject
     }
@@ -278,6 +280,9 @@ public final class CameraDetectionViewModel: ObservableObject {
     /// - Note: Any detected object shows a grey border (manual mode).
     ///         Green border (automatic) is only triggered when user double-taps.
     nonisolated private func determineCatalogMode(quality: Double) -> CatalogMode {
+        // DEBUG: Log that we're showing border for ANY detection (quality scoring removed)
+        logger.info("🟡 determineCatalogMode: quality=\(quality) → returning .manual (all objects get grey border)")
+        print("🟡 [ABUNDANCE] determineCatalogMode: quality=\(quality) → .manual (all objects get border)")
         // Any detected object shows grey border (manual mode)
         // Automatic (green) is only triggered by user double-tap
         return .manual

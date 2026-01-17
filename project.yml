@@ -41,12 +41,6 @@ targets:
         type: group
         excludes:
           - "Info.plist"
-      - path: Sources
-        name: Sources
-        type: group
-        excludes:
-          - "**/.build"
-          - "**/Tests"
 
     resources:
       - App/Assets.xcassets
@@ -57,16 +51,21 @@ targets:
       path: Abundance.entitlements
 
     dependencies:
-      - package: firebase-ios-sdk
-        product: FirebaseAnalytics
-      - package: firebase-ios-sdk
-        product: FirebaseAuth
-      - package: firebase-ios-sdk
-        product: FirebaseFirestore
-      - package: firebase-ios-sdk
-        product: FirebaseStorage
+      - package: Abundance
+        product: Core
+      - package: Abundance
+        product: VisionCore
+      - package: Abundance
+        product: Persistence
+      - package: Abundance
+        product: OnboardingFeature
+      - package: Abundance
+        product: CameraFeature
+      - package: Abundance
+        product: InventoryFeature
+      - package: Abundance
+        product: ProfileFeature
 
 packages:
-  firebase-ios-sdk:
-    url: https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks.git
-    from: 11.11.0
+  Abundance:
+    path: .

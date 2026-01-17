@@ -1,5 +1,6 @@
 import Foundation
 @preconcurrency import FirebaseStorage
+import os.log
 #if os(iOS)
 import UIKit
 /// Platform-agnostic image type (UIImage on iOS)
@@ -47,6 +48,7 @@ public final class StorageService: StorageServiceProtocol {
     private let storage: Storage
     private let compressionQuality: CGFloat = 0.8 // 80% JPEG quality
     private let uploadTimeout: TimeInterval = 60.0 // 60 seconds
+    private let logger = Logger(subsystem: "com.abundance.persistence", category: "StorageService")
 
     // MARK: - Initialization
 
@@ -98,8 +100,13 @@ public final class StorageService: StorageServiceProtocol {
             "uploadSource": "camera-detection"
         ]
 
+        logger.info("📤 Uploading cropped object: itemId=\(itemId), size=\(imageData.count) bytes")
+        logger.debug("📋 Metadata: processingStatus=pending, uploadSource=camera-detection")
+
         // Upload with timeout
-        return try await withTimeout(uploadTimeout, ref: ref, imageData: imageData, metadata: metadata)
+        let url = try await withTimeout(uploadTimeout, ref: ref, imageData: imageData, metadata: metadata)
+        logger.info("✅ Upload complete: \(url.absoluteString)")
+        return url
     }
 
     /// Upload Live Photo motion clip to Cloud Storage
