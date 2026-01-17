@@ -10,6 +10,7 @@
 ```bash
 /ios-sprint <spec>      # Start iOS sprint from spec document
 /ios-debug <issue>      # Debug iOS issue with Axiom skills
+/device-tester          # Iterative testing on physical device w-16e
 /gcp-deploy <fn>        # Deploy Cloud Function with verification
 /validate-docs          # Check docs for broken links, staleness
 /check-drift            # Verify ADR compliance (P0/P1/P2)
@@ -76,6 +77,25 @@ Git shows docs/ as "D" (deleted) - this is **expected** (symlink vs actual files
 
 ---
 
+## 📱 Device Screenshots (Iterative Development)
+
+**Location:** `./screenshots/` → symlink to iCloud
+
+**ALWAYS check for new screenshots** when debugging UI issues or iterating on device:
+```bash
+ls -lt screenshots/ | head -5    # Most recent first
+```
+
+**Workflow:**
+1. User takes screenshot on device (w-16e)
+2. Screenshot syncs via iCloud to `./screenshots/`
+3. **Claude reads the screenshot** (multimodal) to analyze UI state
+4. Fix issues → redeploy → repeat
+
+**When user mentions a screenshot or UI issue:** Always `ls screenshots/` first to find the latest file, then read it.
+
+---
+
 ## Workflow
 
 ### Before Starting
@@ -132,7 +152,9 @@ firebase deploy --only firestore:rules
 
 ---
 
-**Updated:** 2026-01-14
+**Updated:** 2026-01-16
+- Added /device-tester for iterative physical device testing
+- Added screenshots/ symlink to iCloud for device screenshot workflow
 - Added /ios-sprint, /ios-debug, /gcp-deploy commands
 - Added firebase-superpowers, gcp-superpowers, gemini-integration skills
 - Updated verified-stage-development with agent routing matrix
