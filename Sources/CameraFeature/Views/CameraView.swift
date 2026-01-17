@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 /// SwiftUI view for camera preview only (capture functionality removed).
 /// - Important: Use CameraDetectionView for real-time detection with capture.
@@ -7,6 +8,7 @@ public struct LegacyCameraView: View {
 
     @StateObject private var viewModel: CameraViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var captureSession: AVCaptureSession?
 
     public init(cameraService: CameraServiceProtocol) {
         _viewModel = StateObject(wrappedValue: CameraViewModel(cameraService: cameraService))
@@ -20,7 +22,7 @@ public struct LegacyCameraView: View {
 
             // Camera preview (only when running)
             if viewModel.sessionState == .running,
-               let captureSession = viewModel.getCaptureSession() {
+               let captureSession = captureSession {
                 CameraPreviewView(captureSession: captureSession)
                     .ignoresSafeArea()
             }
@@ -46,9 +48,12 @@ public struct LegacyCameraView: View {
         }
         .task {
             await viewModel.checkCameraPermission()
+            captureSession = await viewModel.getCaptureSession()
         }
         .onDisappear {
-            viewModel.stopCamera()
+            Task {
+                await viewModel.stopCamera()
+            }
         }
     }
 

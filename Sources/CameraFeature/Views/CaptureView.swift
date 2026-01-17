@@ -12,6 +12,7 @@ public struct CaptureView: View {
 
     @State private var frozenFrame: Data?
     @State private var longPressActive = false
+    @State private var captureSession: AVCaptureSession?
 
     public init(
         viewModel: CaptureSessionViewModel = CaptureSessionViewModel(),
@@ -122,7 +123,7 @@ public struct CaptureView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            if let captureSession = cameraService.getCaptureSession() {
+            if let captureSession = captureSession {
                 CameraPreviewView(captureSession: captureSession)
                     .ignoresSafeArea()
                     .opacity(shouldShowPreview ? 1 : 0)
@@ -326,6 +327,7 @@ public struct CaptureView: View {
         Task {
             do {
                 try await cameraService.startSession()
+                captureSession = await cameraService.getCaptureSession()
             } catch {
                 print("Failed to start camera: \(error)")
             }
@@ -333,7 +335,9 @@ public struct CaptureView: View {
     }
 
     private func teardownCamera() {
-        cameraService.stopSession()
+        Task {
+            await cameraService.stopSession()
+        }
     }
 
     // MARK: - Capture Actions

@@ -48,7 +48,7 @@ final class MockCameraService: CameraServiceProtocol, @unchecked Sendable {
         sessionStateSubject.send(.running)
     }
 
-    func stopSession() {
+    func stopSession() async {
         didCallStopSession = true
         sessionStateSubject.send(.stopped)
     }
@@ -72,7 +72,7 @@ final class MockCameraService: CameraServiceProtocol, @unchecked Sendable {
         return stubbedAuthStatus
     }
 
-    func getCaptureSession() -> AVCaptureSession? {
+    func getCaptureSession() async -> AVCaptureSession? {
         return nil // Mock doesn't need real session
     }
 

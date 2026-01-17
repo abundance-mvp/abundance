@@ -16,7 +16,7 @@ public protocol CameraServiceProtocol: Sendable {
     func startSession() async throws
 
     /// Stop the camera session and release resources
-    func stopSession()
+    func stopSession() async
 
     /// Capture a photo from the camera
     /// - Returns: Photo data (JPEG format)
@@ -30,5 +30,5 @@ public protocol CameraServiceProtocol: Sendable {
     /// Get the underlying AVCaptureSession for preview layer
     /// - Note: Only needed for UIViewRepresentable bridge to AVCaptureVideoPreviewLayer
     /// - Returns: AVCaptureSession instance, or nil if not supported
-    func getCaptureSession() -> AVCaptureSession?
+    func getCaptureSession() async -> AVCaptureSession?
 }

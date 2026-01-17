@@ -1,7 +1,7 @@
 import Foundation
 
 /// Errors that can occur during camera operations
-public enum CameraError: Error, LocalizedError, Equatable, Sendable {
+public enum CameraError: Error, LocalizedError, Sendable {
     /// Camera device is not available on this device
     case deviceNotAvailable
 
@@ -23,6 +23,9 @@ public enum CameraError: Error, LocalizedError, Equatable, Sendable {
     /// Photo capture already in progress
     case captureInProgress
 
+    /// Configuration of camera session failed
+    case configurationFailed(Error)
+
     // MARK: - LocalizedError
 
     public var errorDescription: String? {
@@ -41,6 +44,8 @@ public enum CameraError: Error, LocalizedError, Equatable, Sendable {
             return "Invalid image data"
         case .captureInProgress:
             return "Photo capture already in progress"
+        case .configurationFailed(let error):
+            return "Configuration failed: \(error.localizedDescription)"
         }
     }
 }

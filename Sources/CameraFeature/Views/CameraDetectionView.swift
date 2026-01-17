@@ -28,6 +28,7 @@ public struct CameraDetectionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var sparkleCenter: CGPoint?
+    @State private var captureSession: AVCaptureSession?
 
     /// Initialize with detection view model and optional camera service
     public init(
@@ -46,7 +47,7 @@ public struct CameraDetectionView: View {
                     .ignoresSafeArea()
 
                 // Camera preview layer
-                if let captureSession = cameraService.getCaptureSession() {
+                if let captureSession = captureSession {
                     CameraPreviewView(captureSession: captureSession)
                         .ignoresSafeArea()
                 }
@@ -150,10 +151,11 @@ public struct CameraDetectionView: View {
 
     /// Setup camera and wire frame processing loop
     private func setupCamera() {
-        // Start camera session
+        // Start camera session and get capture session reference
         Task {
             do {
                 try await cameraService.startSession()
+                captureSession = await cameraService.getCaptureSession()
             } catch {
                 print("Failed to start camera session: \(error)")
             }
@@ -165,7 +167,9 @@ public struct CameraDetectionView: View {
 
     /// Cleanup camera resources
     private func teardownCamera() {
-        cameraService.stopSession()
+        Task {
+            await cameraService.stopSession()
+        }
         viewModel.stopFrameProcessing()
     }
 

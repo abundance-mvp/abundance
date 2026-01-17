@@ -50,11 +50,11 @@ public final class CameraViewModel: ObservableObject {
         }
     }
 
-    public func stopCamera() {
-        cameraService.stopSession()
+    public func stopCamera() async {
+        await cameraService.stopSession()
     }
 
-    public func getCaptureSession() -> AVCaptureSession? {
-        return cameraService.getCaptureSession()
+    public func getCaptureSession() async -> AVCaptureSession? {
+        return await cameraService.getCaptureSession()
     }
 }

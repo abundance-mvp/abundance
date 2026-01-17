@@ -1,37 +1,58 @@
 @preconcurrency import AVFoundation // Required for AVFoundation camera capture
 import Combine
 
+/// Actor to manage photo capture continuation state safely
+private actor CaptureManager {
+    private var photoContinuation: CheckedContinuation<Data, Error>?
+    
+    func setContinuation(_ continuation: CheckedContinuation<Data, Error>) throws {
+        guard photoContinuation == nil else {
+            throw CameraError.captureInProgress
+        }
+        photoContinuation = continuation
+    }
+    
+    func getContinuation() -> CheckedContinuation<Data, Error>? {
+        let continuation = photoContinuation
+        photoContinuation = nil
+        return continuation
+    }
+    
+    func clearContinuation() {
+        photoContinuation = nil
+    }
+}
+
 /// Concrete implementation of CameraServiceProtocol using AVFoundation
 /// @MainActor ensures thread-safe access to camera resources
 @MainActor
-public final class CameraService: NSObject, @preconcurrency CameraServiceProtocol, @unchecked Sendable {
+public final class CameraService: NSObject, @preconcurrency CameraServiceProtocol, Sendable {
 
     // MARK: - Properties
 
-    nonisolated(unsafe) private let captureSession = AVCaptureSession()
-    nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
-    nonisolated(unsafe) private let videoOutput = AVCaptureVideoDataOutput()
+    private let sessionActor = CameraSessionActor()
     private let sessionQueue = DispatchQueue(label: "com.abundance.camera.session")
     private let videoQueue = DispatchQueue(label: "com.abundance.camera.video", qos: .userInitiated)
 
-    nonisolated(unsafe) private let sessionStateSubject = CurrentValueSubject<CameraSessionState, Never>(.notStarted)
+    private let sessionStateSubject = CurrentValueSubject<CameraSessionState, Never>(.notStarted)
     public var sessionState: AnyPublisher<CameraSessionState, Never> {
         sessionStateSubject.eraseToAnyPublisher()
     }
 
-    nonisolated(unsafe) private let frameSubject = PassthroughSubject<CVPixelBuffer, Never>()
+    private let frameSubject = PassthroughSubject<CVPixelBuffer, Never>()
     public var framePublisher: AnyPublisher<CVPixelBuffer, Never> {
         frameSubject.eraseToAnyPublisher()
     }
 
-    nonisolated(unsafe) private var photoContinuation: CheckedContinuation<Data, Error>?
-    private let continuationLock = NSLock()
+    private let captureManager = CaptureManager()
 
     // MARK: - Initialization
 
-    nonisolated public override init() {
+    public override init() {
         super.init()
-        setupInterruptionObservers()
+        Task { @MainActor in
+            await setupInterruptionObservers()
+        }
     }
 
     deinit {
@@ -40,7 +61,9 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
 
     // MARK: - Interruption Handling
 
-    nonisolated private func setupInterruptionObservers() {
+    private func setupInterruptionObservers() async {
+        let captureSession = await sessionActor.captureSession
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(sessionWasInterrupted),
@@ -55,24 +78,26 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
         )
     }
 
-    @objc nonisolated private func sessionWasInterrupted(_ notification: Notification) {
-        #if os(iOS)
-        guard let userInfo = notification.userInfo,
-              let rawValue = userInfo[AVCaptureSessionInterruptionReasonKey] as? Int else {
-            return
+    @objc private func sessionWasInterrupted(_ notification: Notification) {
+        Task { @MainActor in
+            #if os(iOS)
+            guard let userInfo = notification.userInfo,
+                  let rawValue = userInfo[AVCaptureSessionInterruptionReasonKey] as? Int else {
+                return
+            }
+            sessionStateSubject.send(.interrupted(reasonRawValue: rawValue))
+            #endif
         }
-        sessionStateSubject.send(.interrupted(reasonRawValue: rawValue))
-        #endif
     }
 
-    @objc nonisolated private func sessionInterruptionEnded(_ notification: Notification) {
-        // Restart session when interruption ends
-        sessionQueue.async { [weak self] in
-            guard let self = self else { return }
-            if !self.captureSession.isRunning {
-                self.captureSession.startRunning()
+    @objc private func sessionInterruptionEnded(_ notification: Notification) {
+        Task { @MainActor in
+            // Restart session when interruption ends
+            let isRunning = await sessionActor.isRunning()
+            if !isRunning {
+                await sessionActor.startRunning()
             }
-            self.sessionStateSubject.send(.running)
+            sessionStateSubject.send(.running)
         }
     }
 
@@ -94,34 +119,21 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
 
     public func startSession() async throws {
         sessionStateSubject.send(.configuring)
-
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            sessionQueue.async { [weak self] in
-                guard let self = self else {
-                    continuation.resume(throwing: CameraError.deviceNotAvailable)
-                    return
-                }
-
-                do {
-                    try self.configureSession()
-                    continuation.resume()
-                } catch {
-                    self.sessionStateSubject.send(.failed(error))
-                    continuation.resume(throwing: error)
-                    return
-                }
-
-                self.captureSession.startRunning()
-                self.sessionStateSubject.send(.running)
-            }
+        
+        do {
+            try await sessionActor.configure()
+            await sessionActor.setSampleBufferDelegate(self, queue: videoQueue)
+            await sessionActor.startRunning()
+            sessionStateSubject.send(.running)
+        } catch {
+            sessionStateSubject.send(.failed(error))
+            throw error
         }
     }
 
-    nonisolated public func stopSession() {
-        sessionQueue.async { [weak self] in
-            self?.captureSession.stopRunning()
-            self?.sessionStateSubject.send(.stopped)
-        }
+    public func stopSession() async {
+        await sessionActor.stopRunning()
+        sessionStateSubject.send(.stopped)
     }
 
     public func capturePhoto() async throws -> Data {
@@ -131,138 +143,72 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
                 return
             }
 
-            sessionQueue.async { [weak self] in
-                guard let self = self else {
-                    continuation.resume(throwing: CameraError.captureFailure)
-                    return
+            Task {
+                do {
+                    // Check if capture already in progress
+                    try await self.captureManager.setContinuation(continuation)
+                    
+                    // Check if session is running before attempting to capture
+                    let isRunning = await self.sessionActor.isRunning()
+                    guard isRunning else {
+                        await self.captureManager.clearContinuation()
+                        continuation.resume(throwing: CameraError.captureFailure)
+                        return
+                    }
+
+                    let settings = await self.sessionActor.createPhotoSettings()
+                    let photoOutput = await self.sessionActor.photoOutput
+                    photoOutput.capturePhoto(with: settings, delegate: self)
+                } catch {
+                    continuation.resume(throwing: error)
                 }
-
-                // Lock before accessing photoContinuation
-                self.continuationLock.lock()
-
-                // Check if capture already in progress
-                if self.photoContinuation != nil {
-                    self.continuationLock.unlock()
-                    continuation.resume(throwing: CameraError.captureInProgress)
-                    return
-                }
-
-                // Check if session is running before attempting to capture
-                guard self.captureSession.isRunning else {
-                    self.continuationLock.unlock()
-                    continuation.resume(throwing: CameraError.captureFailure)
-                    return
-                }
-
-                self.photoContinuation = continuation
-                self.continuationLock.unlock()
-
-                let settings = AVCapturePhotoSettings()
-                settings.photoQualityPrioritization = .quality
-                self.photoOutput.capturePhoto(with: settings, delegate: self)
             }
         }
     }
 
-    public func getCaptureSession() -> AVCaptureSession? {
-        return captureSession
+    public func getCaptureSession() async -> AVCaptureSession? {
+        return await sessionActor.captureSession
     }
 
-    // MARK: - Private Methods
-
-    nonisolated private func configureSession() throws {
-        captureSession.beginConfiguration()
-        defer { captureSession.commitConfiguration() }
-
-        // Set session preset for high-quality photos
-        captureSession.sessionPreset = .photo
-
-        // Add video input (camera)
-        guard let camera = AVCaptureDevice.default(
-            .builtInWideAngleCamera,
-            for: .video,
-            position: .back
-        ) else {
-            throw CameraError.deviceNotAvailable
-        }
-
-        let videoInput = try AVCaptureDeviceInput(device: camera)
-        guard captureSession.canAddInput(videoInput) else {
-            throw CameraError.cannotAddInput
-        }
-        captureSession.addInput(videoInput)
-
-        // Add photo output
-        guard captureSession.canAddOutput(photoOutput) else {
-            throw CameraError.cannotAddOutput
-        }
-        captureSession.addOutput(photoOutput)
-
-        // Configure photo output settings
-        // Use maxPhotoDimensions for high-resolution capture (iOS 16.0+)
-        // Per Apple docs: "The dimensions you set must match one returned by supportedMaxPhotoDimensions"
-        // https://developer.apple.com/documentation/avfoundation/avcapturephotooutput/maxphotodimensions
-        let supportedDimensions = camera.activeFormat.supportedMaxPhotoDimensions
-        if let maxDimension = supportedDimensions.max(by: { $0.width * $0.height < $1.width * $1.height }) {
-            photoOutput.maxPhotoDimensions = maxDimension
-        } else {
-            // Fallback: use first supported dimension or default
-            photoOutput.maxPhotoDimensions = supportedDimensions.first ?? CMVideoDimensions(width: 0, height: 0)
-        }
-        photoOutput.maxPhotoQualityPrioritization = .quality
-
-        // Add video data output for frame-by-frame processing
-        guard captureSession.canAddOutput(videoOutput) else {
-            throw CameraError.cannotAddOutput
-        }
-        captureSession.addOutput(videoOutput)
-
-        // Configure video output for real-time processing
-        videoOutput.videoSettings = [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ]
-        videoOutput.alwaysDiscardsLateVideoFrames = true
-        videoOutput.setSampleBufferDelegate(self, queue: videoQueue)
+    // MARK: - Public Methods for Focus
+    
+    public func setFocusPoint(_ point: CGPoint) async throws {
+        try await sessionActor.setFocusPoint(point)
     }
 }
 
 // MARK: - AVCapturePhotoCaptureDelegate
 
-@MainActor
-extension CameraService: AVCapturePhotoCaptureDelegate {
+extension CameraService: @preconcurrency AVCapturePhotoCaptureDelegate {
 
     nonisolated public func photoOutput(
         _ output: AVCapturePhotoOutput,
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
-        // Lock before accessing photoContinuation
-        continuationLock.lock()
-        let continuation = photoContinuation
-        photoContinuation = nil
-        continuationLock.unlock()
+        Task {
+            let continuation = await captureManager.getContinuation()
+            
+            if let error = error {
+                continuation?.resume(throwing: error)
+                return
+            }
 
-        // Now safely use continuation outside lock
-        if let error = error {
-            continuation?.resume(throwing: error)
-            return
+            // AVCapturePhoto.fileDataRepresentation() returns Data directly
+            // No UIKit or UIImage conversion needed - ADR-010 compliant
+            guard let imageData = photo.fileDataRepresentation() else {
+                continuation?.resume(throwing: CameraError.invalidImageData)
+                return
+            }
+
+            continuation?.resume(returning: imageData)
         }
-
-        // AVCapturePhoto.fileDataRepresentation() returns Data directly
-        // No UIKit or UIImage conversion needed - ADR-010 compliant
-        guard let imageData = photo.fileDataRepresentation() else {
-            continuation?.resume(throwing: CameraError.invalidImageData)
-            return
-        }
-
-        continuation?.resume(returning: imageData)
     }
 }
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
-@MainActor
-extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
+extension CameraService: @preconcurrency AVCaptureVideoDataOutputSampleBufferDelegate {
 
     nonisolated public func captureOutput(
         _ output: AVCaptureOutput,
@@ -287,7 +233,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     ///
     /// - Parameter source: The source pixel buffer to copy
     /// - Returns: A new pixel buffer with copied data, or nil if copy fails
-    nonisolated private func copyPixelBuffer(_ source: CVPixelBuffer) -> CVPixelBuffer? {
+    private func copyPixelBuffer(_ source: CVPixelBuffer) -> CVPixelBuffer? {
         let width = CVPixelBufferGetWidth(source)
         let height = CVPixelBufferGetHeight(source)
         let pixelFormat = CVPixelBufferGetPixelFormatType(source)
