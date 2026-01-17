@@ -242,22 +242,23 @@ firebase deploy --only firestore:rules --dry-run
 | `drift-detector.md` | ADR compliance enforcement           | P0/P1/P2                |
 | `cost-watchdog.md`  | Budget monitoring ($554/month)       | Warn/Critical/Emergency |
 
-**Invoke**: `/validate-docs`, `/check-drift`, or `@doc-reviewer`
+**Invoke**: `@doc-reviewer`, `@drift-detector`, or `@cost-watchdog`
 
 #### Commands (`.claude/commands/`)
 
-| Command               | Purpose                                    | References                         |
-| --------------------- | ------------------------------------------ | ---------------------------------- |
-| `/validate-docs`      | Check docs for broken links, stale content | `.claude/agents/doc-reviewer.md`   |
-| `/check-drift`        | ADR compliance with P0/P1/P2 severity      | `.claude/agents/drift-detector.md` |
-| `/show-sprint-status` | Display sprint progress                    | `docs/roadmap/SPRINT-PLAN-*.md`    |
+| Command                      | Purpose                                    | References                         |
+| ---------------------------- | ------------------------------------------ | ---------------------------------- |
+| `/project:ios-superpowers`   | iOS development with Apple docs grounding  | `.claude/commands/ios-superpowers.md` |
+| `/project:ios-debug`         | Debug iOS issues with Axiom skills         | `.claude/commands/ios-debug.md`    |
+| `/project:device-tester`     | Iterative testing on physical device       | `.claude/commands/device-tester.md`|
+| `/project:gcp-deploy`        | Deploy Cloud Functions with verification   | `.claude/commands/gcp-deploy.md`   |
 
 **Usage**:
 
 ```
-/validate-docs
-/check-drift
-/show-sprint-status
+/project:ios-superpowers brainstorm <topic>
+/project:ios-debug <issue>
+/axiom:apple-docs-research <query>
 ```
 
 **See**: `.claude/commands/README.md` for full documentation
