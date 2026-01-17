@@ -129,7 +129,10 @@ export async function detectObjectsInImages(
  * Fetch image from GCS and return as base64
  */
 async function fetchImageFromGCS(gcsUrl: string, storage: Storage): Promise<string> {
-  // Parse GCS URL: gs://bucket/path or https://storage.googleapis.com/bucket/path
+  // Parse GCS URL formats:
+  // - gs://bucket/path
+  // - https://storage.googleapis.com/bucket/path
+  // - https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media&token=...
   let bucket: string;
   let path: string;
 
@@ -138,6 +141,13 @@ async function fetchImageFromGCS(gcsUrl: string, storage: Storage): Promise<stri
     if (!match) throw new Error(`Invalid GCS URL: ${gcsUrl}`);
     bucket = match[1];
     path = match[2];
+  } else if (gcsUrl.includes('firebasestorage.googleapis.com')) {
+    // Firebase Storage download URL format: /v0/b/{bucket}/o/{urlEncodedPath}
+    const url = new URL(gcsUrl);
+    const bucketMatch = url.pathname.match(/\/v0\/b\/([^/]+)\/o\/(.+)/);
+    if (!bucketMatch) throw new Error(`Invalid Firebase Storage URL: ${gcsUrl}`);
+    bucket = bucketMatch[1];
+    path = decodeURIComponent(bucketMatch[2]);
   } else if (gcsUrl.includes('storage.googleapis.com')) {
     const url = new URL(gcsUrl);
     const pathParts = url.pathname.split('/').filter(Boolean);
