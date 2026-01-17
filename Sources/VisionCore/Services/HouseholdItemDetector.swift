@@ -8,8 +8,21 @@ import UIKit
 import AppKit
 #endif
 
-/// Production-ready household item detector using Vision Framework + YOLOv3-Tiny
-/// - Note: YOLOv3-Tiny.mlmodel download deferred to Sprint 3
+/// DEPRECATED: On-device YOLO detection has been replaced by server-side Gemini 3 Flash detection.
+///
+/// This class remains for backward compatibility with legacy CameraDetectionView.
+/// New capture flows should use CaptureView with CaptureSessionViewModel,
+/// which sends images to the server for Gemini-based detection.
+///
+/// See: ADR-XXX-layer1-server-side-detection
+///
+/// Migration Guide:
+/// - Replace CameraDetectionView with CaptureView
+/// - Use CaptureSessionViewModel for detection flow
+/// - Detection results come from Firestore session documents
+///
+/// @deprecated Use CaptureSessionViewModel with server-side Gemini 3 Flash detection
+@available(*, deprecated, message: "Use CaptureSessionViewModel with server-side Gemini 3 Flash detection")
 public actor HouseholdItemDetector: HouseholdItemDetectorProtocol {
 
     // MARK: - Properties
@@ -36,7 +49,8 @@ public actor HouseholdItemDetector: HouseholdItemDetectorProtocol {
     public init() {
         // Pre-load stream model for real-time detection
         // This avoids lazy initialization issues with Swift 6 concurrency
-        if let modelURL = Bundle.main.url(forResource: "yolo11n", withExtension: "mlmodelc"),
+        // Use Bundle.module for SPM package resources (not Bundle.main)
+        if let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc"),
            let mlModel = try? MLModel(contentsOf: modelURL) {
             self.streamModel = try? VNCoreMLModel(for: mlModel)
         } else {
@@ -61,7 +75,8 @@ public actor HouseholdItemDetector: HouseholdItemDetectorProtocol {
         // Load YOLOv11n CoreML model (5.2 MB, trained on COCO 80 classes)
         // YOLOv11n includes built-in NMS and outputs VNRecognizedObjectObservation
         // which Vision Framework can use directly without custom post-processing.
-        guard let modelURL = Bundle.main.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
+        // Use Bundle.module for SPM package resources (not Bundle.main)
+        guard let modelURL = Bundle.module.url(forResource: "yolo11n", withExtension: "mlmodelc") else {
             throw VisionError.modelNotFound
         }
 

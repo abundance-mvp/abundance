@@ -2,8 +2,25 @@ import SwiftUI
 import AVFoundation
 import VisionCore
 
-/// Main camera view with real-time object detection and organic border overlays
-/// Replaces deprecated CameraView with continuous 2 FPS detection experience
+/// DEPRECATED: Real-time YOLO detection has been replaced by server-side Gemini detection.
+///
+/// Use CaptureView instead, which provides:
+/// - Double-tap for single photo capture
+/// - Long-press for burst capture (2-8 photos)
+/// - Server-side Gemini 3 Flash object detection
+/// - Server-side cropping with sharp
+///
+/// Migration:
+/// ```swift
+/// // Old:
+/// CameraDetectionView(viewModel: CameraDetectionViewModel(...))
+///
+/// // New:
+/// CaptureView(viewModel: CaptureSessionViewModel())
+/// ```
+///
+/// @deprecated Use CaptureView with CaptureSessionViewModel
+@available(*, deprecated, message: "Use CaptureView with CaptureSessionViewModel instead")
 public struct CameraDetectionView: View {
 
     @StateObject private var viewModel: CameraDetectionViewModel
@@ -36,6 +53,19 @@ public struct CameraDetectionView: View {
 
                 // Detected object borders
                 ForEach(viewModel.detectedObjects) { object in
+                    // DEBUG: Simple red rectangle to verify positioning
+                    // Note: Removed #if DEBUG wrapper to ensure visibility
+                    Rectangle()
+                        .stroke(Color.red, lineWidth: 2)
+                        .frame(
+                            width: geometry.size.width * object.boundingBox.width,
+                            height: geometry.size.height * object.boundingBox.height
+                        )
+                        .position(
+                            x: geometry.size.width * object.boundingBox.midX,
+                            y: geometry.size.height * (1 - object.boundingBox.midY)
+                        )
+
                     OrganicBorderOverlay(object: object)
                         .frame(
                             width: geometry.size.width * object.boundingBox.width,
@@ -59,6 +89,29 @@ public struct CameraDetectionView: View {
                             sparkleCenter = nil
                         }
                 }
+
+                // DEBUG: Visible overlay showing detection count and bounding boxes
+                // Note: Removed #if DEBUG wrapper to ensure visibility for troubleshooting
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Objects: \(viewModel.detectedObjects.count)")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(.yellow)
+
+                    ForEach(viewModel.detectedObjects) { obj in
+                        let posX = String(format: "%.2f", obj.boundingBox.origin.x)
+                        let posY = String(format: "%.2f", obj.boundingBox.origin.y)
+                        let conf = String(format: "%.0f%%", obj.confidence * 100)
+                        Text("\(obj.label): (\(posX), \(posY)) \(conf)")
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundColor(obj.catalogMode == .automatic ? .green : .gray)
+                    }
+                }
+                .padding(8)
+                .background(Color.black.opacity(0.7))
+                .cornerRadius(8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                .padding(.leading, 16)
+                .padding(.bottom, 100)
 
                 // Top bar
                 VStack {
@@ -248,7 +301,10 @@ actor PreviewMockObjectDeduplicator: ObjectDeduplicatorProtocol {
 }
 
 actor PreviewMockSubjectMaskGenerator: SubjectMaskGeneratorProtocol {
-    nonisolated func generateMask(pixelBuffer: CVPixelBuffer, boundingBox: CGRect) async -> VNInstanceMaskObservation? { nil }
+    nonisolated func generateMask(
+        pixelBuffer: CVPixelBuffer,
+        boundingBox: CGRect
+    ) async -> VNInstanceMaskObservation? { nil }
 }
 
 #endif

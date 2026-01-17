@@ -4,9 +4,17 @@ import CoreVideo
 import CoreImage
 import os.log
 
-/// Actor responsible for assessing image quality of detected objects
-/// Calculates a composite quality score from aesthetic, blur, lighting, and completeness metrics
-/// Used to determine whether an object should be automatically cataloged or require manual confirmation
+/// DEPRECATED: Client-side quality assessment is no longer needed.
+///
+/// With server-side Gemini 3 Flash detection, the server handles:
+/// - Object detection quality filtering
+/// - Confidence-based rejection of low-quality detections
+/// - Server-side cropping with sharp library
+///
+/// This class remains for backward compatibility with legacy detection flow.
+///
+/// @deprecated Server-side detection handles quality filtering
+@available(*, deprecated, message: "Server-side detection handles quality filtering")
 public actor ImageQualityAssessor: ImageQualityAssessorProtocol {
 
     // MARK: - Properties
@@ -232,18 +240,20 @@ public actor ImageQualityAssessor: ImageQualityAssessorProtocol {
         var totalBrightness: Double = 0.0
         var pixelCount: Int = 0
 
+        // swiftlint:disable:next identifier_name
         for y in startY..<endY {
+            // swiftlint:disable:next identifier_name
             for x in startX..<endX {
                 let offset = y * (bytesPerRow / 4) + x
                 let pixel = buffer32[offset]
 
                 // Extract RGB components
-                let r = Double((pixel >> 16) & 0xFF)
-                let g = Double((pixel >> 8) & 0xFF)
-                let b = Double(pixel & 0xFF)
+                let red = Double((pixel >> 16) & 0xFF)
+                let green = Double((pixel >> 8) & 0xFF)
+                let blue = Double(pixel & 0xFF)
 
                 // Calculate perceived brightness (weighted RGB)
-                let brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+                let brightness = (0.299 * red + 0.587 * green + 0.114 * blue) / 255.0
                 totalBrightness += brightness
                 pixelCount += 1
             }
