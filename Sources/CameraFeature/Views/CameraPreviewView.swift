@@ -32,8 +32,10 @@ public struct CameraPreviewView: UIViewRepresentable {
 
     public func updateUIView(_ uiView: UIView, context: Context) {
         // Update layer frame when view size changes
+        // Use weak captures to prevent retain cycles if view is deallocated before async block executes
         if let previewLayer = context.coordinator.previewLayer {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak previewLayer, weak uiView] in
+                guard let previewLayer, let uiView else { return }
                 previewLayer.frame = uiView.bounds
             }
         }
@@ -80,8 +82,10 @@ public struct CameraPreviewView: NSViewRepresentable {
 
     public func updateNSView(_ nsView: NSView, context: Context) {
         // Update layer frame when view size changes
+        // Use weak captures to prevent retain cycles if view is deallocated before async block executes
         if let previewLayer = context.coordinator.previewLayer {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak previewLayer, weak nsView] in
+                guard let previewLayer, let nsView else { return }
                 previewLayer.frame = nsView.bounds
             }
         }

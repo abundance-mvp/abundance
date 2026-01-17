@@ -149,40 +149,19 @@ public final class SessionService: SessionServiceProtocol {
 
     // MARK: - Private Helpers
 
+    /// Decode detected objects using Codable for type safety and better error reporting
     private func decodeDetectedObjects(from data: [[String: Any]]) -> [ServerDetectedObject] {
         data.compactMap { objData in
-            guard let groupId = objData["groupId"] as? String,
-                  let label = objData["label"] as? String,
-                  let category = objData["category"] as? String else {
+            do {
+                // Convert dictionary to JSON data for Codable decoding
+                let jsonData = try JSONSerialization.data(withJSONObject: objData)
+                let decoder = JSONDecoder()
+                return try decoder.decode(ServerDetectedObject.self, from: jsonData)
+            } catch {
+                // Log the actual decoding error for debugging schema mismatches
+                logger.error("Failed to decode ServerDetectedObject: \(error.localizedDescription)")
                 return nil
             }
-
-            let attributes = objData["attributes"] as? [String: String] ?? [:]
-            let confidence = objData["confidence"] as? String ?? "medium"
-            let croppedImageUrls = objData["croppedImageUrls"] as? [String] ?? []
-            let boundingBoxes = decodeBoundingBoxes(from: objData["boundingBoxes"])
-
-            return ServerDetectedObject(
-                groupId: groupId,
-                label: label,
-                category: category,
-                attributes: attributes,
-                confidence: confidence,
-                croppedImageUrls: croppedImageUrls,
-                boundingBoxes: boundingBoxes
-            )
-        }
-    }
-
-    private func decodeBoundingBoxes(from data: Any?) -> [BoundingBoxInfo] {
-        guard let boxesArray = data as? [[String: Any]] else { return [] }
-        return boxesArray.compactMap { boxData in
-            guard let imageIndex = boxData["imageIndex"] as? Int,
-                  let box2d = boxData["box_2d"] as? [Int],
-                  box2d.count == 4 else {
-                return nil
-            }
-            return BoundingBoxInfo(imageIndex: imageIndex, box2d: box2d)
         }
     }
 

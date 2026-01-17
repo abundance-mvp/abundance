@@ -55,7 +55,7 @@ public final class PhotoMetadataExtractor: PhotoMetadataExtractorProtocol, @unch
 
         // 2. Extract device info
         metadata.deviceModel = deviceModel()
-        metadata.osVersion = osVersion()
+        metadata.osVersion = await osVersion()
         metadata.timezone = TimeZone.current.identifier
 
         // 3. Extract EXIF data
@@ -111,9 +111,9 @@ public final class PhotoMetadataExtractor: PhotoMetadataExtractorProtocol, @unch
         return identifier
     }
 
-    private func osVersion() -> String {
+    private func osVersion() async -> String {
         #if os(iOS)
-        return UIDevice.current.systemVersion
+        return await MainActor.run { UIDevice.current.systemVersion }
         #else
         return ProcessInfo.processInfo.operatingSystemVersionString
         #endif
@@ -151,9 +151,13 @@ public final class PhotoMetadataExtractor: PhotoMetadataExtractorProtocol, @unch
     }
 
     /// Static EXIF date formatter - expensive to create, so reused across calls
+    /// EXIF DateTimeOriginal follows a strict format, so we use POSIX locale and UTC timezone
+    /// to prevent locale-dependent parsing failures
     private static let exifDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
         return formatter
     }()
 
