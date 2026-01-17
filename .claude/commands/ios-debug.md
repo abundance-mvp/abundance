@@ -1,11 +1,11 @@
 ---
 name: ios-debug
-description: Debug iOS issues using Axiom agents and Apple documentation via sosumi.ai MCP
+description: Debug iOS issues using Axiom agents and skills
 ---
 
 # iOS Debug Command
 
-Systematic iOS debugging using Axiom agents and sosumi.ai documentation.
+Systematic iOS debugging using Axiom agents and skills.
 
 ## Usage
 
@@ -34,7 +34,12 @@ Systematic iOS debugging using Axiom agents and sosumi.ai documentation.
 
 2. **Classify Issue Type → Select Axiom Agent**
 
-3. **Launch Axiom Agent via Task Tool**
+3. **Load Axiom Skill for Context**
+   ```
+   Skill(skill="axiom-{domain-skill}")
+   ```
+
+4. **Launch Axiom Agent via Task Tool**
    ```
    Task(
        description: "[issue summary]",
@@ -43,13 +48,12 @@ Systematic iOS debugging using Axiom agents and sosumi.ai documentation.
    )
    ```
 
-4. **Fetch Apple Documentation** (if needed)
+5. **Fetch Apple Documentation** (if needed)
    ```
-   mcp__sosumi__searchAppleDocumentation(query: "[API]")
-   mcp__sosumi__fetchAppleDocumentation(path: "[doc path]")
+   Skill(skill="axiom-apple-docs-research", args="[API name]")
    ```
 
-5. **Apply Fix and Verify**
+6. **Apply Fix and Verify**
 
 ---
 
@@ -57,74 +61,74 @@ Systematic iOS debugging using Axiom agents and sosumi.ai documentation.
 
 ### Build & Environment
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| BUILD FAILED, module not found, compile error | Build Fixer | `axiom:build-fixer` |
-| slow build, build time, incremental | Build Optimizer | `axiom:build-optimizer` |
-| SPM, package resolution, dependency conflict | SPM Resolver | `axiom:spm-conflict-resolver` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| BUILD FAILED, module not found, compile error | `axiom:build-fixer` | `axiom-xcode-debugging` |
+| slow build, build time, incremental | `axiom:build-optimizer` | `axiom-build-performance` |
+| SPM, package resolution, dependency conflict | `axiom:spm-conflict-resolver` | `axiom-build-debugging` |
 
 ### Performance
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| memory leak, retain cycle, EXC_BAD_ACCESS | Memory Auditor | `axiom:memory-auditor` |
-| battery drain, energy, power | Energy Auditor | `axiom:energy-auditor` |
-| SwiftUI slow, janky scroll, frame drop | SwiftUI Performance | `axiom:swiftui-performance-analyzer` |
-| slow, lag, allocations | Swift Performance | `axiom:swift-performance-analyzer` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| memory leak, retain cycle, EXC_BAD_ACCESS | `axiom:memory-auditor` | `axiom-memory-debugging` |
+| battery drain, energy, power | `axiom:energy-auditor` | `axiom-energy-diag` |
+| SwiftUI slow, janky scroll, frame drop | `axiom:swiftui-performance-analyzer` | `axiom-swiftui-performance` |
+| slow, lag, allocations | `axiom:swift-performance-analyzer` | `axiom-performance-profiling` |
 
 ### Concurrency
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| @MainActor, actor-isolated, Sendable | Concurrency Auditor | `axiom:concurrency-auditor` |
-| data race, Swift 6, isolation | Concurrency Auditor | `axiom:concurrency-auditor` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| @MainActor, actor-isolated, Sendable | `axiom:concurrency-auditor` | `axiom-swift-concurrency` |
+| data race, Swift 6, isolation | `axiom:concurrency-auditor` | `axiom-swift-concurrency` |
 
 ### UI/UX
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| accessibility, VoiceOver, Dynamic Type | Accessibility Auditor | `axiom:accessibility-auditor` |
-| SwiftUI architecture, state management | SwiftUI Architecture | `axiom:swiftui-architecture-auditor` |
-| navigation, deep link, NavigationStack | SwiftUI Nav Auditor | `axiom:swiftui-nav-auditor` |
-| Liquid Glass, blur, material, iOS 26 | Liquid Glass Auditor | `axiom:liquid-glass-auditor` |
-| TextKit, UITextView, Writing Tools | TextKit Auditor | `axiom:textkit-auditor` |
-| deprecated, iOS 17/18, modernize | Modernization Helper | `axiom:modernization-helper` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| accessibility, VoiceOver, Dynamic Type | `axiom:accessibility-auditor` | `axiom-accessibility-diag` |
+| SwiftUI architecture, state management | `axiom:swiftui-architecture-auditor` | `axiom-swiftui-architecture` |
+| navigation, deep link, NavigationStack | `axiom:swiftui-nav-auditor` | `axiom-swiftui-nav-diag` |
+| Liquid Glass, blur, material, iOS 26 | `axiom:liquid-glass-auditor` | `axiom-liquid-glass` |
+| TextKit, UITextView, Writing Tools | `axiom:textkit-auditor` | `axiom-textkit-ref` |
+| deprecated, iOS 17/18, modernize | `axiom:modernization-helper` | - |
 
 ### Data & Storage
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| Core Data, migration, schema | Core Data Auditor | `axiom:core-data-auditor` |
-| iCloud, CloudKit, sync | iCloud Auditor | `axiom:icloud-auditor` |
-| file storage, documents, backup | Storage Auditor | `axiom:storage-auditor` |
-| Codable, JSON, encoding/decoding | Codable Auditor | `axiom:codable-auditor` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| Core Data, migration, schema | `axiom:core-data-auditor` | `axiom-core-data-diag` |
+| iCloud, CloudKit, sync | `axiom:icloud-auditor` | `axiom-cloud-sync-diag` |
+| file storage, documents, backup | `axiom:storage-auditor` | `axiom-storage-diag` |
+| Codable, JSON, encoding/decoding | `axiom:codable-auditor` | `axiom-codable` |
 
 ### Camera & Media
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| camera, AVCapture, video, photo | Camera Auditor | `axiom:camera-auditor` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| camera, AVCapture, video, photo | `axiom:camera-auditor` | `axiom-avfoundation-ref` |
 
 ### Networking & Security
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| networking, URLSession, API, connection | Networking Auditor | `axiom:networking-auditor` |
-| security, credentials, keychain, privacy | Security Scanner | `axiom:security-privacy-scanner` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| networking, URLSession, API, connection | `axiom:networking-auditor` | `axiom-networking-diag` |
+| security, credentials, keychain, privacy | `axiom:security-privacy-scanner` | `axiom-privacy-ux` |
 
 ### Testing
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| flaky test, CI fail, test passes locally | Test Failure Analyzer | `axiom:test-failure-analyzer` |
-| debug test, fix test | Test Debugger | `axiom:test-debugger` |
-| test quality, test audit | Testing Auditor | `axiom:testing-auditor` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| flaky test, CI fail, test passes locally | `axiom:test-failure-analyzer` | `axiom-ui-testing` |
+| debug test, fix test | `axiom:test-debugger` | `axiom-ui-testing` |
+| test quality, test audit | `axiom:testing-auditor` | `axiom-ui-testing` |
 
 ### In-App Purchase
 
-| Symptoms | Axiom Agent | Task subagent_type |
-|----------|-------------|-------------------|
-| IAP, StoreKit, purchase, subscription | IAP Auditor | `axiom:iap-auditor` |
+| Symptoms | Axiom Agent | Axiom Skill |
+|----------|-------------|-------------|
+| IAP, StoreKit, purchase, subscription | `axiom:iap-auditor` | `axiom-storekit-ref` |
 
 ---
 
@@ -133,8 +137,8 @@ Systematic iOS debugging using Axiom agents and sosumi.ai documentation.
 ```
 1. Parse error/issue description
 2. Run /axiom:status for project health
-3. Route to Axiom agent via Task tool
-4. Agent uses sosumi.ai MCP for Apple docs
+3. Load Axiom skill for domain context
+4. Route to Axiom agent via Task tool
 5. Agent applies fix pattern
 6. Write test to verify fix
 7. Run swift test
@@ -147,8 +151,8 @@ Systematic iOS debugging using Axiom agents and sosumi.ai documentation.
 
 This command wraps superpowers:systematic-debugging with iOS-specific enhancements:
 - Automatic Axiom agent selection via Task tool
-- Apple docs grounding via sosumi.ai MCP (agents have automatic access)
-- iOS-specific diagnostic patterns from Axiom
+- Apple docs grounding via `axiom-apple-docs-research` skill
+- iOS-specific diagnostic patterns from Axiom skills
 
 ---
 
@@ -169,9 +173,10 @@ For common issues, use direct Axiom commands:
 
 ---
 
-## Output
+## Error Handling
 
-- Root cause identified
-- Fix applied with test
-- Documentation reference (sosumi.ai)
-- Commit with explanation
+**No fallbacks.** If an Axiom agent or skill is unavailable, STOP and explain:
+
+- Which agent/skill was needed
+- What domain was detected
+- How to resolve the issue

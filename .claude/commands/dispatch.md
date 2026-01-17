@@ -125,7 +125,7 @@ Actions:
 
 **Why:** ios-superpowers automatically:
 1. Detects iOS APIs in the task (SwiftUI, AVFoundation, Vision, etc.)
-2. Fetches current Apple documentation via sosumi.ai MCP
+2. Fetches Apple documentation via `axiom-apple-docs-research`
 3. Selects appropriate Axiom skill for patterns
 4. Verifies implementation against docs
 

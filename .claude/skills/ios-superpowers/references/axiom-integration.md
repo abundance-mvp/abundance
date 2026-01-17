@@ -1,286 +1,311 @@
 # Axiom iOS Plugin Integration
 
-This document describes how ios-superpowers integrates with Axiom iOS development agents.
-
-## Overview
-
-Axiom provides **25+ specialized agents** for iOS development, launched via the Task tool with a `subagent_type` parameter. These agents automatically have access to the sosumi.ai MCP for Apple documentation.
+Complete reference for Axiom agents, skills, commands, and hooks.
 
 ---
 
-## Complete Axiom Agent Reference
+## Agents (via Task tool)
+
+Launch agents using `Task(subagent_type="axiom:{agent-name}")`.
 
 ### Build & Environment
 
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Build Fixer | `axiom:build-fixer` | BUILD FAILED, module not found, compile error, linker error | Fix Xcode build failures |
-| Build Optimizer | `axiom:build-optimizer` | slow build, build time, incremental | Speed up build times |
-| SPM Resolver | `axiom:spm-conflict-resolver` | SPM, package resolution, dependency conflict | Resolve dependency conflicts |
+| Agent | subagent_type | Trigger Patterns |
+|-------|---------------|------------------|
+| Build Fixer | `axiom:build-fixer` | BUILD FAILED, module not found, compile error, linker error |
+| Build Optimizer | `axiom:build-optimizer` | slow build, build time, incremental |
+| SPM Conflict Resolver | `axiom:spm-conflict-resolver` | SPM, package resolution, dependency conflict |
 
-### Performance
+### Code Quality
 
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Memory Auditor | `axiom:memory-auditor` | memory leak, retain cycle, memory warning, EXC_BAD_ACCESS | Find memory issues |
-| Energy Auditor | `axiom:energy-auditor` | battery, energy, power consumption | Optimize battery usage |
-| Swift Performance | `axiom:swift-performance-analyzer` | slow, performance, allocation, lag | Optimize Swift code |
-| SwiftUI Performance | `axiom:swiftui-performance-analyzer` | janky scroll, frame drop, view updates | Optimize SwiftUI views |
+| Agent | subagent_type | Trigger Patterns |
+|-------|---------------|------------------|
+| Concurrency Auditor | `axiom:concurrency-auditor` | @MainActor, actor, Sendable, data race, Swift 6 |
+| Memory Auditor | `axiom:memory-auditor` | memory leak, retain cycle, EXC_BAD_ACCESS |
+| Energy Auditor | `axiom:energy-auditor` | battery, energy, power consumption |
+| Swift Performance Analyzer | `axiom:swift-performance-analyzer` | slow, allocation, performance |
+| Codable Auditor | `axiom:codable-auditor` | Codable, JSON, encoding, decoding |
 
-### Concurrency
+### UI & Design
 
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Concurrency Auditor | `axiom:concurrency-auditor` | @MainActor, actor, Sendable, data race, Swift 6, isolation | Fix Swift 6 concurrency |
-
-### UI/UX
-
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Accessibility Auditor | `axiom:accessibility-auditor` | VoiceOver, accessibility, Dynamic Type, WCAG | Audit accessibility |
-| SwiftUI Architecture | `axiom:swiftui-architecture-auditor` | @State, @Binding, architecture, state management | Improve SwiftUI patterns |
-| SwiftUI Nav | `axiom:swiftui-nav-auditor` | navigation, deep link, NavigationStack | Fix navigation issues |
-| Liquid Glass | `axiom:liquid-glass-auditor` | glass effect, blur, material, iOS 26 | iOS 26+ styling |
-| TextKit Auditor | `axiom:textkit-auditor` | UITextView, Writing Tools, TextKit | Fix text handling |
-| Modernization | `axiom:modernization-helper` | deprecated, iOS 17/18, modernize | Update legacy code |
-
-### Data & Storage
-
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Core Data Auditor | `axiom:core-data-auditor` | Core Data, migration, NSManagedObject, schema | Audit data layer |
-| Storage Auditor | `axiom:storage-auditor` | file storage, documents, backup | Fix storage issues |
-| iCloud Auditor | `axiom:icloud-auditor` | iCloud, CloudKit, sync | Fix cloud sync |
-| Codable Auditor | `axiom:codable-auditor` | Codable, JSON, encoding, decoding | Fix encoding/decoding |
+| Agent | subagent_type | Trigger Patterns |
+|-------|---------------|------------------|
+| Accessibility Auditor | `axiom:accessibility-auditor` | VoiceOver, accessibility, Dynamic Type, WCAG |
+| SwiftUI Architecture Auditor | `axiom:swiftui-architecture-auditor` | @State, MVVM, architecture, state management |
+| SwiftUI Nav Auditor | `axiom:swiftui-nav-auditor` | NavigationStack, deep link, navigation |
+| SwiftUI Performance Analyzer | `axiom:swiftui-performance-analyzer` | janky scroll, frame drop, view updates |
+| Liquid Glass Auditor | `axiom:liquid-glass-auditor` | Liquid Glass, glass effect, blur, iOS 26 |
+| TextKit Auditor | `axiom:textkit-auditor` | TextKit, UITextView, Writing Tools |
 
 ### Camera & Media
 
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Camera Auditor | `axiom:camera-auditor` | camera, AVCapture, video, photo | Fix camera code |
+| Agent | subagent_type | Trigger Patterns |
+|-------|---------------|------------------|
+| Camera Auditor | `axiom:camera-auditor` | camera, AVCapture, video, photo |
+
+### Persistence & Storage
+
+| Agent | subagent_type | Trigger Patterns |
+|-------|---------------|------------------|
+| Core Data Auditor | `axiom:core-data-auditor` | Core Data, migration, NSManagedObject, schema |
+| iCloud Auditor | `axiom:icloud-auditor` | iCloud, CloudKit, sync |
+| Storage Auditor | `axiom:storage-auditor` | file storage, documents, backup |
 
 ### Networking & Security
 
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Networking Auditor | `axiom:networking-auditor` | URLSession, API, connection, networking | Fix networking issues |
-| Security Scanner | `axiom:security-privacy-scanner` | security, credentials, keychain, privacy | Security audit |
+| Agent | subagent_type | Trigger Patterns |
+|-------|---------------|------------------|
+| Networking Auditor | `axiom:networking-auditor` | URLSession, API, connection, networking |
+| Security Privacy Scanner | `axiom:security-privacy-scanner` | security, credentials, keychain, privacy |
 
 ### Testing
 
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Test Failure Analyzer | `axiom:test-failure-analyzer` | flaky test, CI fail, test passes locally | Diagnose test failures |
-| Test Runner | `axiom:test-runner` | run tests, XCUITest | Execute tests |
-| Test Debugger | `axiom:test-debugger` | debug test, fix test | Fix failing tests |
-| Testing Auditor | `axiom:testing-auditor` | test quality, test audit | Audit test suite |
+| Agent | subagent_type | Trigger Patterns |
+|-------|---------------|------------------|
+| Test Failure Analyzer | `axiom:test-failure-analyzer` | flaky test, CI fail, test passes locally |
+| Test Runner | `axiom:test-runner` | run tests, XCUITest |
+| Test Debugger | `axiom:test-debugger` | debug test, fix test |
+| Testing Auditor | `axiom:testing-auditor` | test quality, test audit |
+| Simulator Tester | `axiom:simulator-tester` | visual verification, screenshots, simulator |
 
 ### In-App Purchase
 
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| IAP Auditor | `axiom:iap-auditor` | StoreKit, purchase, subscription, IAP | Audit in-app purchases |
-| IAP Implementation | `axiom:iap-implementation` | add subscription, implement IAP | Implement IAP |
-
-### Utility
-
-| Agent | subagent_type | Trigger Patterns | Primary Use Case |
-|-------|---------------|------------------|------------------|
-| Simulator Tester | `axiom:simulator-tester` | visual verification, screenshots, simulator | Screenshot + test |
+| Agent | subagent_type | Trigger Patterns |
+|-------|---------------|------------------|
+| IAP Auditor | `axiom:iap-auditor` | StoreKit, purchase, subscription, IAP |
+| IAP Implementation | `axiom:iap-implementation` | add subscription, implement IAP |
 
 ---
 
-## Routing Decision Tree
+## Skills (via Skill tool)
+
+Invoke skills using `Skill(skill="axiom-{skill-name}")`.
+
+### UI & Design
+
+| Skill | Purpose |
+|-------|---------|
+| `axiom-hig` | Quick design decisions and HIG compliance |
+| `axiom-hig-ref` | Comprehensive HIG reference with code examples |
+| `axiom-liquid-glass` | Implementing Liquid Glass effects |
+| `axiom-liquid-glass-ref` | Complete Liquid Glass adoption guide |
+| `axiom-swiftui-architecture` | Separating logic from views |
+| `axiom-swiftui-layout` | Adaptive layouts for iPad, iOS 26 |
+| `axiom-swiftui-layout-ref` | ViewThatFits, AnyLayout, Layout protocol |
+| `axiom-swiftui-nav` | NavigationStack vs NavigationSplitView |
+| `axiom-swiftui-nav-diag` | Navigation failures and deep links |
+| `axiom-swiftui-performance` | Sluggish apps and animation stutters |
+| `axiom-swiftui-debugging` | View updates, preview crashes, layout |
+| `axiom-swiftui-debugging-diag` | Complex state dependencies |
+| `axiom-swiftui-gestures` | Tap, drag, long press, rotation |
+| `axiom-swiftui-26-ref` | iOS 26 SwiftUI features |
+| `axiom-swiftui-animation-ref` | Complete animation reference |
+| `axiom-swiftui-containers-ref` | SwiftUI containers reference |
+| `axiom-textkit-ref` | TextKit 2 and Writing Tools |
+| `axiom-typography-ref` | San Francisco fonts, Dynamic Type |
+| `axiom-uikit-animation-debugging` | CAAnimation issues |
+
+### Computer Vision & ML
+
+| Skill | Purpose |
+|-------|---------|
+| `axiom-vision` | Subject segmentation, pose detection, OCR |
+| `axiom-coreml` | Deploy custom ML models, LLM inference |
+| `axiom-speech` | Speech-to-text (iOS 26+) |
+| `axiom-foundation-models` | On-device AI with Apple framework |
+| `axiom-foundation-models-ref` | Complete Foundation Models API |
+| `axiom-foundation-models-diag` | Context limits, guardrails, slow generation |
+
+### Debugging
+
+| Skill | Purpose |
+|-------|---------|
+| `axiom-xcode-debugging` | BUILD FAILED, simulator hangs |
+| `axiom-memory-debugging` | Memory leaks, retain cycles |
+| `axiom-build-debugging` | Dependency conflicts, SPM failures |
+| `axiom-build-performance` | Slow builds, type checking |
+| `axiom-performance-profiling` | Instruments profiling |
+| `axiom-auto-layout-debugging` | Constraint conflicts |
+| `axiom-deep-link-debugging` | Debug-only deep links |
+| `axiom-objc-block-retain-cycles` | Block memory leaks |
+
+### Concurrency
+
+| Skill | Purpose |
+|-------|---------|
+| `axiom-swift-concurrency` | Swift 6 actor isolation, Sendable |
+
+### Persistence & Storage
+
+| Skill | Purpose |
+|-------|---------|
+| `axiom-codable` | JSON encoding/decoding |
+| `axiom-core-data` | Stack setup, concurrency |
+| `axiom-core-data-diag` | Schema migrations, thread-confinement |
+| `axiom-swiftdata` | @Model, @Query, CloudKit |
+| `axiom-swiftdata-migration` | Custom schema migrations |
+| `axiom-swiftdata-migration-diag` | Migration crashes |
+| `axiom-database-migration` | Schema changes |
+| `axiom-cloud-sync` | CloudKit vs iCloud Drive |
+| `axiom-cloud-sync-diag` | Sync failures, CloudKit errors |
+| `axiom-cloudkit-ref` | CloudKit API reference |
+| `axiom-icloud-drive-ref` | File-based iCloud sync |
+| `axiom-storage` | Storage location decisions |
+| `axiom-storage-diag` | Missing files, data recovery |
+| `axiom-storage-management-ref` | Cache management |
+| `axiom-file-protection-ref` | File encryption |
+| `axiom-grdb` | Raw SQL queries |
+| `axiom-sqlitedata` | SQLiteData patterns |
+| `axiom-sqlitedata-migration` | SwiftData to SQLiteData |
+| `axiom-realm-migration-ref` | Realm to SwiftData |
+
+### Integration
+
+| Skill | Purpose |
+|-------|---------|
+| `axiom-apple-docs-research` | Fetch Apple Developer documentation |
+| `axiom-app-intents` | Siri, Apple Intelligence, Shortcuts |
+| `axiom-app-intents-ref` | App Intents API reference |
+| `axiom-app-shortcuts-ref` | App Shortcuts implementation |
+| `axiom-app-discoverability` | Complete discoverability strategy |
+| `axiom-core-spotlight-ref` | Core Spotlight indexing |
+| `axiom-extensions-widgets` | Widgets, Live Activities |
+| `axiom-extensions-widgets-ref` | Complete WidgetKit API |
+| `axiom-in-app-purchases` | StoreKit 2 implementation |
+| `axiom-storekit-ref` | Complete StoreKit 2 API |
+| `axiom-networking` | UDP/TCP connections |
+| `axiom-networking-diag` | Connection timeouts, TLS |
+| `axiom-network-framework-ref` | Network.framework API |
+| `axiom-now-playing` | Lock Screen/Control Center |
+| `axiom-avfoundation-ref` | AVFoundation audio APIs |
+| `axiom-core-location` | Location services |
+| `axiom-core-location-ref` | Modern Core Location APIs |
+| `axiom-core-location-diag` | Location update issues |
+| `axiom-haptics` | Core Haptics patterns |
+| `axiom-localization` | App localization |
+| `axiom-privacy-ux` | Privacy manifests, permissions |
+| `axiom-energy-ref` | Energy optimization APIs |
+| `axiom-energy-diag` | Battery drain diagnosis |
+
+### Testing
+
+| Skill | Purpose |
+|-------|---------|
+| `axiom-ui-testing` | Recording UI tests, flaky tests |
+
+### Accessibility
+
+| Skill | Purpose |
+|-------|---------|
+| `axiom-accessibility-diag` | VoiceOver issues, WCAG compliance |
+
+---
+
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/axiom:ask` | Route question to appropriate skill |
+| `/axiom:audit <area>` | Run specific audit |
+| `/axiom:status` | Project health dashboard |
+| `/axiom:fix-build` | Launch build-fixer agent |
+| `/axiom:optimize-build` | Launch build-optimizer agent |
+| `/axiom:screenshot` | Capture simulator screenshot |
+| `/axiom:test-simulator` | Launch simulator testing |
+
+### Audit Areas
 
 ```
-START
-  │
-  ├── [Build/Compile Issue?]
-  │   ├── BUILD FAILED, module not found → axiom:build-fixer
-  │   ├── slow build, build time → axiom:build-optimizer
-  │   └── SPM, package conflict → axiom:spm-conflict-resolver
-  │
-  ├── [Performance Issue?]
-  │   ├── memory leak, retain cycle → axiom:memory-auditor
-  │   ├── battery, energy → axiom:energy-auditor
-  │   ├── SwiftUI slow, janky → axiom:swiftui-performance-analyzer
-  │   └── general slow/lag → axiom:swift-performance-analyzer
-  │
-  ├── [Concurrency Issue?]
-  │   └── @MainActor, actor, Sendable → axiom:concurrency-auditor
-  │
-  ├── [UI/UX Issue?]
-  │   ├── accessibility, VoiceOver → axiom:accessibility-auditor
-  │   ├── navigation, deep link → axiom:swiftui-nav-auditor
-  │   ├── Liquid Glass, blur → axiom:liquid-glass-auditor
-  │   ├── TextKit, UITextView → axiom:textkit-auditor
-  │   ├── deprecated, modernize → axiom:modernization-helper
-  │   └── SwiftUI architecture → axiom:swiftui-architecture-auditor
-  │
-  ├── [Data/Storage Issue?]
-  │   ├── Core Data, schema → axiom:core-data-auditor
-  │   ├── iCloud, CloudKit → axiom:icloud-auditor
-  │   ├── file storage, backup → axiom:storage-auditor
-  │   └── Codable, JSON → axiom:codable-auditor
-  │
-  ├── [Camera/Media Issue?]
-  │   └── camera, AVCapture → axiom:camera-auditor
-  │
-  ├── [Networking/Security Issue?]
-  │   ├── networking, URLSession → axiom:networking-auditor
-  │   └── security, credentials → axiom:security-privacy-scanner
-  │
-  ├── [Testing Issue?]
-  │   ├── flaky test, CI fail → axiom:test-failure-analyzer
-  │   ├── run tests → axiom:test-runner
-  │   ├── debug test → axiom:test-debugger
-  │   └── test quality → axiom:testing-auditor
-  │
-  ├── [IAP Issue?]
-  │   ├── audit purchases → axiom:iap-auditor
-  │   └── implement IAP → axiom:iap-implementation
-  │
-  └── [No Match]
-      └── Use sosumi MCP docs + superpowers only
+/axiom:audit accessibility
+/axiom:audit codable
+/axiom:audit concurrency
+/axiom:audit core-data
+/axiom:audit energy
+/axiom:audit icloud
+/axiom:audit iap
+/axiom:audit liquid-glass
+/axiom:audit memory
+/axiom:audit modernization
+/axiom:audit networking
+/axiom:audit security
+/axiom:audit storage
+/axiom:audit swift-performance
+/axiom:audit swiftui-architecture
+/axiom:audit swiftui-nav
+/axiom:audit swiftui-performance
+/axiom:audit test-failures
+/axiom:audit testing
+/axiom:audit textkit
 ```
 
 ---
 
-## How to Launch Axiom Agents
+## Hooks (Automatic)
 
-Use the Task tool with the appropriate `subagent_type`:
+| Hook | Event | Action |
+|------|-------|--------|
+| Build Failure Auto-Trigger | xcodebuild/swift build fails | Suggests `/axiom:fix-build` |
+| Session Environment Check | SessionStart | Checks zombie processes (>5), Derived Data (>10GB) |
+| Core Data Model Protection | Edit .xcdatamodeld | Warns about migrations, suggests audit |
+| Swift Auto-Format | Edit .swift files | Runs `swiftformat` |
 
-### Basic Invocation
+---
+
+## Agent Invocation Examples
+
+### Basic
 
 ```
 Task(
-    description: "Fix memory leak in ViewModel",
-    prompt: "Analyze InventoryViewModel.swift for retain cycles and memory leaks. The app shows increasing memory usage after loading catalog.",
-    subagent_type: "axiom:memory-auditor"
+    description="Fix memory leak",
+    prompt="Analyze ViewModel for retain cycles",
+    subagent_type="axiom:memory-auditor"
 )
 ```
 
-### With Specific Files
+### With Files
 
 ```
 Task(
-    description: "Audit concurrency in camera service",
-    prompt: """
-    Audit the following files for Swift 6 concurrency violations:
+    description="Audit concurrency",
+    prompt="""
+    Audit these files for Swift 6 violations:
     - Sources/CameraFeature/CameraService.swift
     - Sources/CameraFeature/PhotoProcessor.swift
-
-    Check for:
-    - Missing @MainActor annotations
-    - Sendable conformance issues
-    - Actor isolation problems
     """,
-    subagent_type: "axiom:concurrency-auditor"
+    subagent_type="axiom:concurrency-auditor"
 )
 ```
 
-### Parallel Execution
+### Parallel
 
 ```
-# Launch multiple agents in one message for parallel execution
-
+# Launch multiple agents in one message
 Task(
-    description: "Audit accessibility in ItemCard",
-    prompt: "Check ItemCard.swift for accessibility issues...",
-    subagent_type: "axiom:accessibility-auditor"
+    description="Audit accessibility in ItemCard",
+    prompt="Check ItemCard.swift for accessibility issues",
+    subagent_type="axiom:accessibility-auditor"
 )
 
 Task(
-    description: "Audit memory in InventoryViewModel",
-    prompt: "Check InventoryViewModel.swift for retain cycles...",
-    subagent_type: "axiom:memory-auditor"
+    description="Audit memory in InventoryViewModel",
+    prompt="Check InventoryViewModel.swift for retain cycles",
+    subagent_type="axiom:memory-auditor"
 )
 ```
 
 ---
 
-## Combining with Apple Documentation
+## Skill Invocation Examples
 
-Axiom agents automatically have access to sosumi.ai MCP. However, you can also pre-fetch documentation:
-
-```
-# 1. Fetch relevant Apple docs first
-mcp__sosumi__searchAppleDocumentation(query: "Swift MainActor")
-mcp__sosumi__fetchAppleDocumentation(path: "/documentation/swift/mainactor")
-
-# 2. Include doc context in agent prompt
-Task(
-    description: "Fix actor isolation in ViewModel",
-    prompt: """
-    Context from Apple docs:
-    [Insert fetched documentation summary]
-
-    Analyze HomeViewModel.swift for @MainActor issues...
-    """,
-    subagent_type: "axiom:concurrency-auditor"
-)
-```
-
----
-
-## Axiom Commands Reference
-
-These commands invoke Axiom agents directly:
-
-| Command | Agent Launched | When to Use |
-|---------|----------------|-------------|
-| `/axiom:status` | None (info only) | See project health dashboard |
-| `/axiom:fix-build` | `axiom:build-fixer` | BUILD FAILED errors |
-| `/axiom:optimize-build` | `axiom:build-optimizer` | Slow incremental builds |
-| `/axiom:run-tests` | `axiom:test-runner` | Run and parse test results |
-| `/axiom:screenshot` | `axiom:simulator-tester` | Capture simulator screenshot |
-| `/axiom:test-simulator` | `axiom:simulator-tester` | Visual verification |
-| `/axiom:ask <question>` | Varies | Route iOS question to appropriate agent |
-
-### Audit Commands
-
-| Command | Agent Launched |
-|---------|----------------|
-| `/axiom:audit accessibility` | `axiom:accessibility-auditor` |
-| `/axiom:audit concurrency` | `axiom:concurrency-auditor` |
-| `/axiom:audit memory` | `axiom:memory-auditor` |
-| `/axiom:audit swiftui-performance` | `axiom:swiftui-performance-analyzer` |
-| `/axiom:audit swift-performance` | `axiom:swift-performance-analyzer` |
-| `/axiom:audit security` | `axiom:security-privacy-scanner` |
-| `/axiom:audit liquid-glass` | `axiom:liquid-glass-auditor` |
-| `/axiom:audit core-data` | `axiom:core-data-auditor` |
-| `/axiom:audit camera` | `axiom:camera-auditor` |
-| `/axiom:audit networking` | `axiom:networking-auditor` |
-| `/axiom:audit storage` | `axiom:storage-auditor` |
-| `/axiom:audit icloud` | `axiom:icloud-auditor` |
-| `/axiom:audit codable` | `axiom:codable-auditor` |
-| `/axiom:audit energy` | `axiom:energy-auditor` |
-| `/axiom:audit swiftui-nav` | `axiom:swiftui-nav-auditor` |
-| `/axiom:audit swiftui-architecture` | `axiom:swiftui-architecture-auditor` |
-| `/axiom:audit textkit` | `axiom:textkit-auditor` |
-| `/axiom:audit modernization` | `axiom:modernization-helper` |
-| `/axiom:audit testing` | `axiom:testing-auditor` |
-| `/axiom:audit test-failures` | `axiom:test-failure-analyzer` |
-| `/axiom:audit iap` | `axiom:iap-auditor` |
-
----
-
-## Error Recovery
-
-If an Axiom agent is unavailable:
+### Load Context
 
 ```
-WARNING: Axiom agent 'axiom:concurrency-auditor' not available.
-
-Falling back to:
-1. Direct sosumi MCP documentation fetch
-2. superpowers workflow without Axiom patterns
-
-Continuing with Apple documentation only.
+Skill(skill="axiom-swift-concurrency")
 ```
 
-**Recovery steps:**
-1. Fetch relevant Apple docs via sosumi MCP
-2. Proceed with superpowers skill (e.g., systematic-debugging)
-3. Note which Axiom patterns would have been helpful
-4. Report degraded functionality to user
+### With Args
+
+```
+Skill(skill="axiom-apple-docs-research", args="AVCaptureSession configuration")
+```

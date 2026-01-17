@@ -1,924 +1,458 @@
 ---
 name: ios-superpowers
-description: iOS-aware orchestrator that routes to specialized Axiom agents and ensures Apple documentation grounding via sosumi.ai MCP. Use this instead of raw superpowers skills for all iOS/Swift development work.
+description: Deterministic iOS orchestrator that routes to Axiom agents and skills based on domain classification. Use instead of raw superpowers for ALL iOS/Swift work.
 ---
 
-# iOS Superpowers Orchestrator
+# ios-superpowers v2
 
-**CRITICAL:** This skill MUST be used instead of raw superpowers skills for ALL iOS/Swift work in this repository.
+**CRITICAL:** Use this instead of raw superpowers skills for ALL iOS/Swift work.
 
-## Purpose
-
-Orchestrates iOS development workflows by:
-1. Classifying issues to route to the most appropriate Axiom agent (25+ specialized agents)
-2. Fetching Apple documentation via sosumi.ai MCP for API verification
-3. Delegating to superpowers workflows with enriched iOS context
-4. Verifying implementation against Apple docs and iOS best practices
-
-## How It Works
+## Arguments
 
 ```
-+---------------------------------------------------------------------+
-|                    ios-superpowers                                   |
-|                                                                      |
-|  1. Parse request and detect iOS context (Swift files, APIs, errors)|
-|  2. Classify issue type to select Axiom agent (see routing matrix)  |
-|  3. Fetch Apple docs via sosumi MCP (mcp__sosumi__*)                 |
-|  4. Launch Axiom agent via Task tool if specialized handling needed |
-|  5. Delegate to superpowers skill with docs + Axiom context         |
-|  6. Verify implementation against fetched docs                      |
-+---------------------------------------------------------------------+
-```
+<action> <context>
 
-**Key Integration Points:**
-- **Axiom Agents:** 25+ specialized agents accessed via Task tool (subagent_type)
-- **Apple Docs:** Direct MCP calls to sosumi.ai (mcp__sosumi__searchAppleDocumentation, mcp__sosumi__fetchAppleDocumentation)
-- **Superpowers:** Underlying workflows for brainstorming, planning, debugging, etc.
-
----
-
-## Usage
-
-Instead of invoking superpowers directly, use this orchestrator:
-
-| Instead of... | Use... |
-|---------------|--------|
-| `superpowers:brainstorming` | `ios-superpowers brainstorm <topic>` |
-| `superpowers:writing-plans` | `ios-superpowers plan <feature>` |
-| `superpowers:executing-plans` | `ios-superpowers execute <plan-path>` |
-| `superpowers:requesting-code-review` | `ios-superpowers review` |
-| `superpowers:systematic-debugging` | `ios-superpowers debug <issue>` |
-| `superpowers:test-driven-development` | `ios-superpowers tdd <feature>` |
-| `superpowers:dispatching-parallel-agents` | `ios-superpowers parallel <tasks>` |
-
----
-
-## Workflow
-
-### Step 1: Parse Request
-
-Extract from arguments:
-- **Action**: brainstorm, plan, execute, review, debug, tdd, parallel
-- **Context**: Feature name, file paths, or issue description
-
-### Step 2: Detect iOS APIs
-
-Scan the context for iOS-related terms:
-
-**Frameworks to detect:**
-- SwiftUI, UIKit, AppKit
-- AVFoundation, Vision, CoreML
-- Firebase, CloudKit, CoreData, SwiftData
-- Combine, async/await, Sendable
-- LAContext, LocalAuthentication
-- PhotosUI, CameraController
-
-**Patterns to detect:**
-- `@MainActor`, `actor`, `nonisolated`
-- `@Published`, `@StateObject`, `@Observable`
-- `async`, `await`, `Task`, `Continuation`
-- `CVPixelBuffer`, `CMSampleBuffer`
-
-### Step 3: Fetch Apple Documentation
-
-Use sosumi.ai MCP directly for Apple documentation:
-
-```
-# Search for API documentation
-mcp__sosumi__searchAppleDocumentation(query: "<API name>")
-
-# Fetch specific documentation page
-mcp__sosumi__fetchAppleDocumentation(path: "<doc path>")
-```
-
-**Priority order:**
-1. Specific APIs mentioned in task (e.g., "AVCaptureSession")
-2. Concurrency patterns if async code involved
-3. Framework-level docs for context
-
-**Token budget:** 8K per API, 25K max total
-
-**Note:** Axiom agents launched via Task tool automatically have access to sosumi.ai MCP. You only need to fetch docs manually when not using an Axiom agent.
-
-### Step 4: Select Axiom Agent
-
-Based on task type, route to appropriate Axiom agent using the Task tool:
-
-#### Build & Environment
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| BUILD FAILED, module not found, compile error | Build Fixer | `axiom:build-fixer` |
-| slow build, build time, incremental | Build Optimizer | `axiom:build-optimizer` |
-| SPM, package resolution, dependency conflict | SPM Resolver | `axiom:spm-conflict-resolver` |
-
-#### Performance
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| memory leak, retain cycle, memory warning | Memory Auditor | `axiom:memory-auditor` |
-| battery, energy, power consumption | Energy Auditor | `axiom:energy-auditor` |
-| slow, performance, lag (Swift code) | Swift Performance | `axiom:swift-performance-analyzer` |
-| SwiftUI slow, janky scroll, frame drop | SwiftUI Performance | `axiom:swiftui-performance-analyzer` |
-
-#### Concurrency
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| @MainActor, actor, Sendable, data race | Concurrency Auditor | `axiom:concurrency-auditor` |
-| Swift 6, strict concurrency, isolation | Concurrency Auditor | `axiom:concurrency-auditor` |
-
-#### UI/UX
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| accessibility, VoiceOver, Dynamic Type | Accessibility Auditor | `axiom:accessibility-auditor` |
-| SwiftUI architecture, state management | SwiftUI Architecture | `axiom:swiftui-architecture-auditor` |
-| navigation, deep link, NavigationStack | SwiftUI Nav Auditor | `axiom:swiftui-nav-auditor` |
-| Liquid Glass, glass effect, blur, iOS 26 | Liquid Glass Auditor | `axiom:liquid-glass-auditor` |
-| TextKit, UITextView, Writing Tools | TextKit Auditor | `axiom:textkit-auditor` |
-| deprecated, modernize, iOS 17/18 | Modernization Helper | `axiom:modernization-helper` |
-
-#### Data & Storage
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| Core Data, migration, schema | Core Data Auditor | `axiom:core-data-auditor` |
-| file storage, documents, backup | Storage Auditor | `axiom:storage-auditor` |
-| iCloud, CloudKit, sync | iCloud Auditor | `axiom:icloud-auditor` |
-| Codable, JSON, encoding/decoding | Codable Auditor | `axiom:codable-auditor` |
-
-#### Camera & Media
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| camera, AVCapture, video, photo | Camera Auditor | `axiom:camera-auditor` |
-
-#### Networking & Security
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| networking, URLSession, API, connection | Networking Auditor | `axiom:networking-auditor` |
-| security, privacy, credentials, keychain | Security Scanner | `axiom:security-privacy-scanner` |
-
-#### Testing
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| flaky test, CI fail, test passes locally | Test Failure Analyzer | `axiom:test-failure-analyzer` |
-| run tests, XCUITest, test results | Test Runner | `axiom:test-runner` |
-| debug test, fix test | Test Debugger | `axiom:test-debugger` |
-| test quality, test audit | Testing Auditor | `axiom:testing-auditor` |
-
-#### In-App Purchase
-
-| Issue Contains | Axiom Agent | Task subagent_type |
-|----------------|-------------|-------------------|
-| IAP, StoreKit, purchase, subscription | IAP Auditor | `axiom:iap-auditor` |
-| add subscription, implement IAP | IAP Implementation | `axiom:iap-implementation` |
-
-#### Utility
-
-| Need | Axiom Agent | Task subagent_type |
-|------|-------------|-------------------|
-| Visual verification, screenshots | Simulator Tester | `axiom:simulator-tester` |
-
-### Step 5: Invoke Superpowers with Context
-
-Delegate to the appropriate superpowers skill with prefixed context:
-
-```markdown
-## Apple Documentation Context
-
-[Fetched docs summary - key APIs, signatures, availability]
-
-## Axiom Skill Active
-
-Using: [axiom-skill-name]
-Patterns: [relevant patterns from Axiom skill]
-
----
-
-Now proceeding with [superpowers skill]...
-```
-
-### Step 6: Verify Against Docs
-
-After superpowers completes, verify:
-- [ ] No deprecated APIs introduced
-- [ ] Concurrency patterns match Swift 6 requirements
-- [ ] API usage matches documented signatures
-- [ ] Thread safety requirements satisfied
-
----
-
-## API Detection Patterns
-
-```swift
-// These patterns trigger sosumi MCP documentation fetch:
-
-// Concurrency
-@MainActor           -> fetch "Swift MainActor"
-actor MyActor        -> fetch "Swift actor"
-nonisolated          -> fetch "Swift nonisolated"
-async/await          -> fetch "Swift concurrency"
-Task { }             -> fetch "Swift Task"
-withCheckedContinuation -> fetch "Swift continuation"
-
-// SwiftUI
-@Published           -> fetch "SwiftUI Published"
-@StateObject         -> fetch "SwiftUI StateObject"
-@Observable          -> fetch "Swift Observable"
-NavigationStack      -> fetch "SwiftUI NavigationStack"
-.containerRelativeFrame -> fetch "SwiftUI containerRelativeFrame"
-
-// Vision/Camera
-AVCaptureSession     -> fetch "AVFoundation AVCaptureSession"
-VNCoreMLModel        -> fetch "Vision VNCoreMLModel"
-CVPixelBuffer        -> fetch "Core Video CVPixelBuffer"
-VNRecognizeTextRequest -> fetch "Vision VNRecognizeTextRequest"
-
-// Auth
-LAContext            -> fetch "LocalAuthentication LAContext"
-
-// Data
-SwiftData            -> fetch "SwiftData"
-@Model               -> fetch "SwiftData Model"
-ModelContext         -> fetch "SwiftData ModelContext"
+Actions: debug | tdd | review | plan | execute | brainstorm | parallel
 ```
 
 ---
 
-## Axiom Integration
+## 1. Domain Detection
 
-### When to Use Axiom Agents
+Match context against patterns. First match wins.
 
-Axiom agents provide iOS-specific patterns, debugging workflows, and best practices that go beyond raw Apple documentation. They are launched via the Task tool with a `subagent_type` parameter.
+| Priority | Domain | Patterns |
+|----------|--------|----------|
+| 1 | build | `BUILD FAILED`, `module not found`, `linker error`, `compile error` |
+| 2 | build-slow | `slow build`, `build time`, `incremental build` |
+| 3 | spm | `SPM`, `Package.swift`, `package resolution`, `dependency conflict` |
+| 4 | concurrency | `@MainActor`, `actor`, `Sendable`, `data race`, `Swift 6`, `nonisolated`, `isolation` |
+| 5 | memory | `memory leak`, `retain cycle`, `EXC_BAD_ACCESS`, `deinit not called` |
+| 6 | energy | `battery`, `energy`, `power consumption`, `background drain` |
+| 7 | ui-arch | `@State`, `@Binding`, `MVVM`, `view model`, `state management`, `ObservableObject` |
+| 8 | ui-nav | `NavigationStack`, `NavigationPath`, `deep link`, `navigation` |
+| 9 | ui-perf | `janky`, `frame drop`, `LazyVStack`, `view updates`, `ScrollView slow` |
+| 10 | ui-access | `VoiceOver`, `accessibility`, `Dynamic Type`, `WCAG` |
+| 11 | ui-glass | `Liquid Glass`, `glass effect`, `.blur`, `material`, `iOS 26` |
+| 12 | ui-text | `TextKit`, `UITextView`, `Writing Tools`, `NSTextStorage` |
+| 13 | media-camera | `camera`, `AVCapture`, `photo`, `video capture` |
+| 14 | media-audio | `AVAudioSession`, `audio`, `AVAudioEngine` |
+| 15 | media-vision | `Vision`, `VNRequest`, `object detection`, `OCR` |
+| 16 | data-core | `Core Data`, `NSManagedObject`, `migration`, `@FetchRequest` |
+| 17 | data-swift | `SwiftData`, `@Model`, `@Query`, `ModelContext` |
+| 18 | data-icloud | `iCloud`, `CloudKit`, `sync`, `NSFileCoordinator` |
+| 19 | data-codable | `Codable`, `JSON`, `encoding`, `decoding`, `JSONDecoder` |
+| 20 | data-storage | `file storage`, `documents`, `backup`, `FileManager` |
+| 21 | network | `URLSession`, `API`, `connection`, `Network.framework` |
+| 22 | security | `security`, `credentials`, `keychain`, `Privacy Manifest` |
+| 23 | test | `XCUITest`, `XCTest`, `flaky`, `test fail`, `swift test` |
+| 24 | iap | `StoreKit`, `subscription`, `purchase`, `IAP`, `transaction` |
+| 25 | location | `CLLocation`, `GPS`, `geofence`, `location services` |
+| 26 | intents | `App Intents`, `Siri`, `Shortcuts`, `Spotlight` |
+| 27 | widgets | `Widget`, `Live Activity`, `WidgetKit` |
+| 28 | foundation-models | `Foundation Models`, `Apple Intelligence`, `on-device AI` |
+| 99 | general | (no match) |
 
-**Always launch an Axiom agent when:**
-1. Debugging iOS-specific issues (build, memory, concurrency, networking)
-2. Auditing code for patterns (accessibility, security, performance)
-3. Working with iOS 26+ features (Liquid Glass)
-4. Writing or debugging tests (XCUITest, Swift Testing)
-5. Working with data persistence (Core Data, SwiftData, iCloud)
-6. Camera/media work (AVFoundation, Vision)
+---
 
-### How to Launch Axiom Agents
+## 2. Routing Matrix
 
-Use the Task tool with the appropriate `subagent_type`:
+Deterministic mapping: `(action, domain) → (axiom_agent, axiom_skill, superpowers_skill)`
+
+### debug Action
+
+| Domain | Axiom Agent | Axiom Skill | Superpowers |
+|--------|-------------|-------------|-------------|
+| build | `axiom:build-fixer` | `axiom-xcode-debugging` | - |
+| build-slow | `axiom:build-optimizer` | `axiom-build-performance` | - |
+| spm | `axiom:spm-conflict-resolver` | `axiom-build-debugging` | - |
+| concurrency | `axiom:concurrency-auditor` | `axiom-swift-concurrency` | `systematic-debugging` |
+| memory | `axiom:memory-auditor` | `axiom-memory-debugging` | `systematic-debugging` |
+| energy | `axiom:energy-auditor` | `axiom-energy-diag` | `systematic-debugging` |
+| ui-arch | `axiom:swiftui-architecture-auditor` | `axiom-swiftui-architecture` | `systematic-debugging` |
+| ui-nav | `axiom:swiftui-nav-auditor` | `axiom-swiftui-nav-diag` | `systematic-debugging` |
+| ui-perf | `axiom:swiftui-performance-analyzer` | `axiom-swiftui-performance` | `systematic-debugging` |
+| ui-access | `axiom:accessibility-auditor` | `axiom-accessibility-diag` | `systematic-debugging` |
+| ui-glass | `axiom:liquid-glass-auditor` | `axiom-liquid-glass` | `systematic-debugging` |
+| ui-text | `axiom:textkit-auditor` | `axiom-textkit-ref` | `systematic-debugging` |
+| media-camera | `axiom:camera-auditor` | `axiom-avfoundation-ref` | `systematic-debugging` |
+| media-audio | - | `axiom-avfoundation-ref` | `systematic-debugging` |
+| media-vision | - | `axiom-vision` | `systematic-debugging` |
+| data-core | `axiom:core-data-auditor` | `axiom-core-data-diag` | `systematic-debugging` |
+| data-swift | - | `axiom-swiftdata-migration-diag` | `systematic-debugging` |
+| data-icloud | `axiom:icloud-auditor` | `axiom-cloud-sync-diag` | `systematic-debugging` |
+| data-codable | `axiom:codable-auditor` | `axiom-codable` | `systematic-debugging` |
+| data-storage | `axiom:storage-auditor` | `axiom-storage-diag` | `systematic-debugging` |
+| network | `axiom:networking-auditor` | `axiom-networking-diag` | `systematic-debugging` |
+| security | `axiom:security-privacy-scanner` | `axiom-privacy-ux` | `systematic-debugging` |
+| test | `axiom:test-failure-analyzer` | `axiom-ui-testing` | `systematic-debugging` |
+| iap | `axiom:iap-auditor` | `axiom-storekit-ref` | `systematic-debugging` |
+| location | - | `axiom-core-location-diag` | `systematic-debugging` |
+| intents | - | `axiom-app-intents-ref` | `systematic-debugging` |
+| widgets | - | `axiom-extensions-widgets-ref` | `systematic-debugging` |
+| foundation-models | - | `axiom-foundation-models-diag` | `systematic-debugging` |
+| general | - | - | `systematic-debugging` |
+
+### tdd Action
+
+| Domain | Axiom Agent | Axiom Skill | Superpowers |
+|--------|-------------|-------------|-------------|
+| test | `axiom:test-runner` | `axiom-ui-testing` | `test-driven-development` |
+| * | - | `axiom-ui-testing` | `test-driven-development` |
+
+### review Action
+
+| Domain | Axiom Agents (parallel) | Superpowers |
+|--------|------------------------|-------------|
+| * (scan changed files) | `axiom:concurrency-auditor`, `axiom:accessibility-auditor`, `axiom:swiftui-architecture-auditor`, `axiom:security-privacy-scanner`, `axiom:memory-auditor` | `requesting-code-review` |
+
+### plan Action
+
+| Domain | Axiom Agent | Axiom Skill | Superpowers |
+|--------|-------------|-------------|-------------|
+| iap | `axiom:iap-implementation` | `axiom-storekit-ref` | `writing-plans` |
+| ui-glass | `axiom:liquid-glass-auditor` | `axiom-liquid-glass-ref` | `writing-plans` |
+| foundation-models | - | `axiom-foundation-models-ref` | `writing-plans` |
+| * | - | `axiom-apple-docs-research` | `writing-plans` |
+
+### execute Action
+
+| Domain | Axiom Agent | Superpowers |
+|--------|-------------|-------------|
+| test | `axiom:test-runner` | `executing-plans` |
+| * | - | `executing-plans` |
+
+### brainstorm Action
+
+| Domain | Axiom Skill | Superpowers |
+|--------|-------------|-------------|
+| ui-* | `axiom-hig`, `axiom-swiftui-architecture` | `brainstorming` |
+| * | `axiom-apple-docs-research` | `brainstorming` |
+
+### parallel Action
+
+| Domain | Routing |
+|--------|---------|
+| * | Route each subtask through domain detection, launch agents in parallel |
+
+---
+
+## 3. Execution Sequences
+
+### debug Execution
 
 ```
-Task(
-    description: "Debug memory leak in ViewModel",
-    prompt: "Analyze the ViewModel for retain cycles and memory leaks...",
-    subagent_type: "axiom:memory-auditor"
-)
+1. domain = DETECT(context)
+2. route = ROUTING_MATRIX[debug][domain]
+3. IF route.axiom_skill:
+   Skill(skill=route.axiom_skill)
+4. IF route.axiom_agent:
+   Task(
+     description="Debug {domain} issue",
+     prompt=context,
+     subagent_type=route.axiom_agent
+   )
+   WAIT for result
+5. IF route.superpowers:
+   Skill(skill="superpowers:{route.superpowers}")
+6. VERIFY()
 ```
 
-### Axiom Agent Routing Logic
+### tdd Execution
 
 ```
-IF task contains "BUILD FAILED" OR "module not found" OR "compile error" OR "linker error":
-    -> Task(subagent_type="axiom:build-fixer")
+1. domain = DETECT(context)
+2. Skill(skill="axiom-ui-testing")
+3. IF domain == test:
+   Task(subagent_type="axiom:test-runner", prompt=context)
+4. Skill(skill="superpowers:test-driven-development")
+5. VERIFY()
+```
 
-ELSE IF task contains "slow build" OR "build time":
-    -> Task(subagent_type="axiom:build-optimizer")
+### review Execution
 
-ELSE IF task contains "SPM" OR "package resolution" OR "dependency conflict":
-    -> Task(subagent_type="axiom:spm-conflict-resolver")
+```
+1. changed_files = `git diff --name-only`
+2. FOR file IN changed_files (parallel):
+   domain = DETECT(file_content)
+   agent = SELECT_AUDITOR(domain)
+   IF agent:
+     Task(subagent_type=agent)
+3. COMBINE audit_results
+4. Skill(skill="superpowers:requesting-code-review", context=audit_results)
+5. VERIFY()
+```
 
-ELSE IF task contains "leak" OR "retain cycle" OR "memory warning" OR "EXC_BAD_ACCESS":
-    -> Task(subagent_type="axiom:memory-auditor")
+### plan Execution
 
-ELSE IF task contains "battery" OR "energy" OR "power consumption":
-    -> Task(subagent_type="axiom:energy-auditor")
+```
+1. domain = DETECT(context)
+2. route = ROUTING_MATRIX[plan][domain]
+3. IF route.axiom_agent:
+   Task(subagent_type=route.axiom_agent, prompt=context)
+4. Skill(skill=route.axiom_skill OR "axiom-apple-docs-research")
+5. Skill(skill="superpowers:writing-plans")
+6. VERIFY()
+```
 
-ELSE IF task contains "slow" OR "lag" OR "performance":
-    IF context mentions SwiftUI:
-        -> Task(subagent_type="axiom:swiftui-performance-analyzer")
-    ELSE:
-        -> Task(subagent_type="axiom:swift-performance-analyzer")
+### execute Execution
 
-ELSE IF task contains "@MainActor" OR "actor" OR "Sendable" OR "data race" OR "Swift 6":
-    -> Task(subagent_type="axiom:concurrency-auditor")
+```
+1. domain = DETECT(context)
+2. IF domain == test:
+   Task(subagent_type="axiom:test-runner")
+3. Skill(skill="superpowers:executing-plans")
+4. VERIFY()
+```
 
-ELSE IF task contains "accessibility" OR "VoiceOver" OR "Dynamic Type" OR "WCAG":
-    -> Task(subagent_type="axiom:accessibility-auditor")
+### brainstorm Execution
 
-ELSE IF task contains "navigation" OR "deep link" OR "NavigationStack":
-    -> Task(subagent_type="axiom:swiftui-nav-auditor")
+```
+1. domain = DETECT(context)
+2. IF domain starts with "ui-":
+   Skill(skill="axiom-hig")
+   Skill(skill="axiom-swiftui-architecture")
+3. ELSE:
+   Skill(skill="axiom-apple-docs-research", args=context)
+4. Skill(skill="superpowers:brainstorming")
+```
 
-ELSE IF task contains "Liquid Glass" OR "glass effect" OR "blur" OR "material" OR "iOS 26":
-    -> Task(subagent_type="axiom:liquid-glass-auditor")
+### parallel Execution
 
-ELSE IF task contains "TextKit" OR "UITextView" OR "Writing Tools":
-    -> Task(subagent_type="axiom:textkit-auditor")
-
-ELSE IF task contains "deprecated" OR "modernize" OR "iOS 17" OR "iOS 18":
-    -> Task(subagent_type="axiom:modernization-helper")
-
-ELSE IF task contains "SwiftUI" OR "View" OR "@State" OR "@Binding" OR "architecture":
-    -> Task(subagent_type="axiom:swiftui-architecture-auditor")
-
-ELSE IF task contains "Core Data" OR "migration" OR "NSManagedObject" OR "schema":
-    -> Task(subagent_type="axiom:core-data-auditor")
-
-ELSE IF task contains "file storage" OR "documents" OR "backup":
-    -> Task(subagent_type="axiom:storage-auditor")
-
-ELSE IF task contains "iCloud" OR "CloudKit" OR "sync":
-    -> Task(subagent_type="axiom:icloud-auditor")
-
-ELSE IF task contains "Codable" OR "JSON" OR "encoding" OR "decoding":
-    -> Task(subagent_type="axiom:codable-auditor")
-
-ELSE IF task contains "camera" OR "AVCapture" OR "video" OR "photo":
-    -> Task(subagent_type="axiom:camera-auditor")
-
-ELSE IF task contains "networking" OR "URLSession" OR "API" OR "connection":
-    -> Task(subagent_type="axiom:networking-auditor")
-
-ELSE IF task contains "security" OR "privacy" OR "credentials" OR "keychain":
-    -> Task(subagent_type="axiom:security-privacy-scanner")
-
-ELSE IF task contains "flaky test" OR "CI fail" OR "test passes locally":
-    -> Task(subagent_type="axiom:test-failure-analyzer")
-
-ELSE IF task contains "run tests" OR "XCUITest":
-    -> Task(subagent_type="axiom:test-runner")
-
-ELSE IF task contains "debug test" OR "fix test":
-    -> Task(subagent_type="axiom:test-debugger")
-
-ELSE IF task contains "test quality" OR "test audit":
-    -> Task(subagent_type="axiom:testing-auditor")
-
-ELSE IF task contains "IAP" OR "StoreKit" OR "purchase" OR "subscription":
-    -> Task(subagent_type="axiom:iap-auditor")
-
-ELSE:
-    -> No Axiom agent needed (use sosumi docs + superpowers only)
+```
+1. tasks = PARSE(context)
+2. FOR task IN tasks:
+   domain = DETECT(task)
+   route = ROUTING_MATRIX[debug][domain]
+   IF route.axiom_agent:
+     Task(subagent_type=route.axiom_agent, prompt=task)
+3. Skill(skill="superpowers:dispatching-parallel-agents")
 ```
 
 ---
 
-## Domain-Specific Workflows
+## 4. Verification Checklist
 
-### Build & Environment Workflow
+After every execution, verify:
 
-When debugging build issues:
+- [ ] No deprecated APIs introduced (check via `axiom-apple-docs-research`)
+- [ ] Swift 6 concurrency satisfied (actor isolation, Sendable)
+- [ ] API signatures match Apple documentation
+- [ ] Tests pass (if applicable): `swift test`
 
-```
-ios-superpowers debug "BUILD FAILED..." or "module not found"
-    │
-    ├── 1. Run /axiom:status (project health check)
-    │
-    ├── 2. Classify build issue type:
-    │   ├── Module not found, BUILD FAILED → axiom:build-fixer
-    │   ├── SPM conflict, dependency error → axiom:spm-conflict-resolver
-    │   └── Slow build, incremental issues → axiom:build-optimizer
-    │
-    ├── 3. Launch Axiom agent:
-    │   Task(
-    │       description: "Fix build failure",
-    │       prompt: "[error message + affected files]",
-    │       subagent_type: "axiom:build-fixer"
-    │   )
-    │
-    ├── 4. If unresolved, fetch sosumi docs for framework:
-    │   mcp__sosumi__searchAppleDocumentation(query: "AVFoundation")
-    │
-    └── 5. Apply fix and verify:
-        swift build
-```
+---
 
-### Performance Workflow
+## 5. Error Handling (Fail-Fast)
 
-When debugging performance issues:
+**NO FALLBACKS.** If something fails, STOP and explain:
+
+### Agent Unavailable
 
 ```
-ios-superpowers debug "slow/memory/battery..."
-    │
-    ├── 1. Classify performance issue:
-    │   ├── Memory leak, retain cycle → axiom:memory-auditor
-    │   ├── Battery drain, energy → axiom:energy-auditor
-    │   ├── SwiftUI janky, frame drops → axiom:swiftui-performance-analyzer
-    │   └── General slow, allocations → axiom:swift-performance-analyzer
-    │
-    ├── 2. Launch Axiom agent:
-    │   Task(
-    │       description: "Diagnose memory leak",
-    │       prompt: "[symptoms + affected files]",
-    │       subagent_type: "axiom:memory-auditor"
-    │   )
-    │
-    ├── 3. Get Instruments recommendations from agent
-    │
-    ├── 4. Apply optimizations
-    │
-    └── 5. Benchmark before/after
+ERROR: Axiom agent '{subagent_type}' is not available.
+
+Required agent: {agent_name}
+Domain detected: {domain}
+Action attempted: {action}
+
+This agent is required for {domain} issues. Check that:
+1. Axiom plugin is installed and configured
+2. The agent subagent_type is correct: {subagent_type}
+
+Cannot proceed without this agent.
 ```
 
-### Concurrency Workflow
-
-When debugging Swift 6 concurrency issues:
+### Skill Not Found
 
 ```
-ios-superpowers debug "@MainActor/Sendable/actor..."
-    │
-    ├── 1. Launch concurrency auditor:
-    │   Task(
-    │       description: "Audit concurrency",
-    │       prompt: "[error message + file paths]",
-    │       subagent_type: "axiom:concurrency-auditor"
-    │   )
-    │
-    ├── 2. Fetch Swift 6 concurrency docs:
-    │   mcp__sosumi__fetchAppleDocumentation(path: "/documentation/swift/sendable")
-    │   mcp__sosumi__fetchAppleDocumentation(path: "/documentation/swift/mainactor")
-    │
-    ├── 3. Identify isolation boundaries from audit
-    │
-    ├── 4. Apply patterns from Axiom + docs
-    │
-    └── 5. Verify with strict concurrency checking:
-        swift build -Xswiftc -strict-concurrency=complete
+ERROR: Axiom skill '{skill_name}' not found.
+
+Required skill: {skill_name}
+Domain detected: {domain}
+
+This skill is required for {action} on {domain}. Check that:
+1. Axiom plugin is installed
+2. Skill name is correct
+
+Cannot proceed without this skill.
 ```
 
-### UI/UX Workflow
-
-When debugging SwiftUI or UI issues:
+### Domain Detection Failed
 
 ```
-ios-superpowers debug "SwiftUI/navigation/accessibility..."
-    │
-    ├── 1. Classify UI issue:
-    │   ├── Architecture, state management → axiom:swiftui-architecture-auditor
-    │   ├── Navigation, deep links → axiom:swiftui-nav-auditor
-    │   ├── Accessibility, VoiceOver → axiom:accessibility-auditor
-    │   ├── Liquid Glass, blur, iOS 26 → axiom:liquid-glass-auditor
-    │   └── TextKit, text views → axiom:textkit-auditor
-    │
-    ├── 2. Launch appropriate auditor:
-    │   Task(
-    │       description: "Audit accessibility",
-    │       prompt: "[issue + affected views]",
-    │       subagent_type: "axiom:accessibility-auditor"
-    │   )
-    │
-    ├── 3. Capture screenshots if visual issue:
-    │   /axiom:screenshot
-    │   OR Task(subagent_type="axiom:simulator-tester")
-    │
-    ├── 4. Apply fixes from audit
-    │
-    └── 5. Visual verification
+ERROR: Could not detect iOS domain from context.
+
+Context provided: "{context}"
+
+No patterns matched. Provide more specific context including:
+- Error messages
+- API names (e.g., @MainActor, AVCaptureSession)
+- Framework names (e.g., SwiftUI, CoreData)
+
+Cannot proceed without domain classification.
 ```
 
-### Testing Workflow
-
-When debugging or running tests:
+### Verification Failed
 
 ```
-ios-superpowers tdd/debug "test..."
-    │
-    ├── 1. Classify testing issue:
-    │   ├── Flaky test, CI fail → axiom:test-failure-analyzer
-    │   ├── Debug failing test → axiom:test-debugger
-    │   ├── Run tests → axiom:test-runner
-    │   └── Audit test quality → axiom:testing-auditor
-    │
-    ├── 2. Launch appropriate agent:
-    │   Task(
-    │       description: "Analyze flaky test",
-    │       prompt: "[test name + failure pattern]",
-    │       subagent_type: "axiom:test-failure-analyzer"
-    │   )
-    │
-    ├── 3. Parse xcresult bundle (agent handles this)
-    │
-    ├── 4. Apply fixes or write new tests
-    │
-    └── 5. Re-run and verify:
-        swift test
-```
+ERROR: Post-execution verification failed.
 
-### Data & Storage Workflow
+Issues found:
+- [ ] {verification_issue_1}
+- [ ] {verification_issue_2}
 
-When debugging data persistence issues:
-
-```
-ios-superpowers debug "Core Data/SwiftData/iCloud/storage..."
-    │
-    ├── 1. Classify data issue:
-    │   ├── Core Data, migration, schema → axiom:core-data-auditor
-    │   ├── iCloud sync, CloudKit → axiom:icloud-auditor
-    │   ├── File storage, backup → axiom:storage-auditor
-    │   └── Codable, JSON encoding → axiom:codable-auditor
-    │
-    ├── 2. Launch appropriate auditor:
-    │   Task(
-    │       description: "Audit Core Data migration",
-    │       prompt: "[schema changes + model files]",
-    │       subagent_type: "axiom:core-data-auditor"
-    │   )
-    │
-    ├── 3. Check schema migrations if applicable
-    │
-    ├── 4. Apply fixes
-    │
-    └── 5. Verify data integrity
-```
-
-### Camera & Media Workflow
-
-When debugging camera or media issues:
-
-```
-ios-superpowers debug "camera/AVCapture/video..."
-    │
-    ├── 1. Launch camera auditor:
-    │   Task(
-    │       description: "Audit camera code",
-    │       prompt: "[issue + camera service files]",
-    │       subagent_type: "axiom:camera-auditor"
-    │   )
-    │
-    ├── 2. Fetch AVFoundation docs:
-    │   mcp__sosumi__fetchAppleDocumentation(path: "/documentation/avfoundation")
-    │
-    ├── 3. Check for deprecated APIs, threading issues
-    │
-    ├── 4. Apply fixes
-    │
-    └── 5. Test on device (camera requires hardware)
-```
-
-### Networking & Security Workflow
-
-When debugging networking or security issues:
-
-```
-ios-superpowers debug "networking/security/credentials..."
-    │
-    ├── 1. Classify issue:
-    │   ├── Networking, URLSession, API → axiom:networking-auditor
-    │   └── Security, credentials, privacy → axiom:security-privacy-scanner
-    │
-    ├── 2. Launch appropriate agent:
-    │   Task(
-    │       description: "Security audit",
-    │       prompt: "[concerns + affected files]",
-    │       subagent_type: "axiom:security-privacy-scanner"
-    │   )
-    │
-    ├── 3. Review findings (hardcoded credentials, missing privacy manifest, etc.)
-    │
-    ├── 4. Apply fixes
-    │
-    └── 5. Verify no sensitive data exposed
-```
-
-### IAP Workflow
-
-When working with in-app purchases:
-
-```
-ios-superpowers debug/plan "IAP/StoreKit/subscription..."
-    │
-    ├── 1. Classify IAP task:
-    │   ├── Audit existing IAP → axiom:iap-auditor
-    │   └── Implement new IAP → axiom:iap-implementation
-    │
-    ├── 2. Launch appropriate agent:
-    │   Task(
-    │       description: "Audit StoreKit implementation",
-    │       prompt: "[current IAP code + issues]",
-    │       subagent_type: "axiom:iap-auditor"
-    │   )
-    │
-    ├── 3. Review transaction handling, receipt validation
-    │
-    ├── 4. Apply fixes or implement features
-    │
-    └── 5. Test with StoreKit configuration file
+Fix these issues before proceeding.
 ```
 
 ---
 
-## Examples
+## 6. Axiom Inventory Reference
 
-### Example 1: Brainstorming iOS Feature
+### Agents (via Task tool)
+
+| Agent | subagent_type | Domain |
+|-------|---------------|--------|
+| Build Fixer | `axiom:build-fixer` | build |
+| Build Optimizer | `axiom:build-optimizer` | build-slow |
+| SPM Conflict Resolver | `axiom:spm-conflict-resolver` | spm |
+| Concurrency Auditor | `axiom:concurrency-auditor` | concurrency |
+| Memory Auditor | `axiom:memory-auditor` | memory |
+| Energy Auditor | `axiom:energy-auditor` | energy |
+| Accessibility Auditor | `axiom:accessibility-auditor` | ui-access |
+| SwiftUI Architecture Auditor | `axiom:swiftui-architecture-auditor` | ui-arch |
+| SwiftUI Nav Auditor | `axiom:swiftui-nav-auditor` | ui-nav |
+| SwiftUI Performance Analyzer | `axiom:swiftui-performance-analyzer` | ui-perf |
+| Liquid Glass Auditor | `axiom:liquid-glass-auditor` | ui-glass |
+| TextKit Auditor | `axiom:textkit-auditor` | ui-text |
+| Camera Auditor | `axiom:camera-auditor` | media-camera |
+| Core Data Auditor | `axiom:core-data-auditor` | data-core |
+| iCloud Auditor | `axiom:icloud-auditor` | data-icloud |
+| Storage Auditor | `axiom:storage-auditor` | data-storage |
+| Codable Auditor | `axiom:codable-auditor` | data-codable |
+| Networking Auditor | `axiom:networking-auditor` | network |
+| Security Privacy Scanner | `axiom:security-privacy-scanner` | security |
+| Test Failure Analyzer | `axiom:test-failure-analyzer` | test |
+| Test Runner | `axiom:test-runner` | test |
+| Test Debugger | `axiom:test-debugger` | test |
+| Testing Auditor | `axiom:testing-auditor` | test |
+| IAP Auditor | `axiom:iap-auditor` | iap |
+| IAP Implementation | `axiom:iap-implementation` | iap |
+| Simulator Tester | `axiom:simulator-tester` | test |
+| Swift Performance Analyzer | `axiom:swift-performance-analyzer` | performance |
+
+### Skills (via Skill tool)
+
+**UI & Design:**
+`axiom-hig`, `axiom-hig-ref`, `axiom-liquid-glass`, `axiom-liquid-glass-ref`, `axiom-swiftui-architecture`, `axiom-swiftui-layout`, `axiom-swiftui-layout-ref`, `axiom-swiftui-nav`, `axiom-swiftui-nav-diag`, `axiom-swiftui-performance`, `axiom-swiftui-debugging`, `axiom-swiftui-debugging-diag`, `axiom-swiftui-gestures`, `axiom-swiftui-26-ref`, `axiom-swiftui-animation-ref`, `axiom-swiftui-containers-ref`, `axiom-textkit-ref`, `axiom-typography-ref`, `axiom-uikit-animation-debugging`
+
+**Computer Vision & ML:**
+`axiom-vision`, `axiom-coreml`, `axiom-speech`, `axiom-foundation-models`, `axiom-foundation-models-ref`, `axiom-foundation-models-diag`
+
+**Debugging:**
+`axiom-xcode-debugging`, `axiom-memory-debugging`, `axiom-build-debugging`, `axiom-build-performance`, `axiom-performance-profiling`, `axiom-auto-layout-debugging`, `axiom-deep-link-debugging`, `axiom-objc-block-retain-cycles`
+
+**Concurrency:**
+`axiom-swift-concurrency`
+
+**Persistence & Storage:**
+`axiom-codable`, `axiom-core-data`, `axiom-core-data-diag`, `axiom-swiftdata`, `axiom-swiftdata-migration`, `axiom-swiftdata-migration-diag`, `axiom-database-migration`, `axiom-cloud-sync`, `axiom-cloud-sync-diag`, `axiom-cloudkit-ref`, `axiom-icloud-drive-ref`, `axiom-storage`, `axiom-storage-diag`, `axiom-storage-management-ref`, `axiom-file-protection-ref`, `axiom-grdb`, `axiom-sqlitedata`, `axiom-sqlitedata-migration`, `axiom-realm-migration-ref`
+
+**Integration:**
+`axiom-apple-docs-research`, `axiom-app-intents`, `axiom-app-intents-ref`, `axiom-app-shortcuts-ref`, `axiom-app-discoverability`, `axiom-core-spotlight-ref`, `axiom-extensions-widgets`, `axiom-extensions-widgets-ref`, `axiom-in-app-purchases`, `axiom-storekit-ref`, `axiom-networking`, `axiom-networking-diag`, `axiom-network-framework-ref`, `axiom-now-playing`, `axiom-avfoundation-ref`, `axiom-core-location`, `axiom-core-location-ref`, `axiom-core-location-diag`, `axiom-haptics`, `axiom-localization`, `axiom-privacy-ux`, `axiom-energy-ref`, `axiom-energy-diag`
+
+**Testing:**
+`axiom-ui-testing`
+
+**Accessibility:**
+`axiom-accessibility-diag`
+
+### Commands (via /axiom:*)
+
+| Command | Purpose |
+|---------|---------|
+| `/axiom:ask` | Route question to appropriate skill |
+| `/axiom:audit <area>` | Run specific audit |
+| `/axiom:status` | Project health dashboard |
+| `/axiom:fix-build` | Launch build-fixer agent |
+| `/axiom:optimize-build` | Launch build-optimizer agent |
+| `/axiom:screenshot` | Capture simulator screenshot |
+| `/axiom:test-simulator` | Launch simulator testing |
+
+### Hooks (Automatic)
+
+| Hook | Trigger | Action |
+|------|---------|--------|
+| Build Failure | xcodebuild/swift build fails | Suggests `/axiom:fix-build` |
+| Session Start | New Claude Code session | Checks zombie processes, Derived Data |
+| Core Data Protection | Edit .xcdatamodeld | Warns about migrations |
+| Swift Auto-Format | Edit .swift files | Runs swiftformat |
+
+---
+
+## 7. Examples
+
+### Example 1: Debug Concurrency Issue
 
 ```
-/ios-superpowers brainstorm biometric authentication flow
+/ios-superpowers debug "@MainActor warning in CameraViewModel"
 ```
 
-Orchestrator will:
-1. Detect: LAContext, LocalAuthentication, Face ID
-2. Fetch: LAContext docs via `mcp__sosumi__fetchAppleDocumentation`
-3. Axiom: None needed (auth flow design, not debugging)
-4. Invoke: superpowers:brainstorming with docs context
+Execution:
+1. Domain detected: `concurrency` (pattern: @MainActor)
+2. Skill: `axiom-swift-concurrency`
+3. Agent: `Task(subagent_type="axiom:concurrency-auditor")`
+4. Superpowers: `systematic-debugging`
+5. Verify Swift 6 compliance
 
-### Example 2: Planning Camera Feature
-
-```
-/ios-superpowers plan real-time object detection
-```
-
-Orchestrator will:
-1. Detect: AVCaptureSession, Vision, VNCoreMLModel, CVPixelBuffer
-2. Fetch: Camera setup docs, Vision request docs via sosumi MCP
-3. Axiom: Launch `axiom:camera-auditor` for camera patterns
-4. Invoke: superpowers:writing-plans with docs + Axiom context
-
-### Example 3: Debugging Build Failure
+### Example 2: Plan Camera Feature
 
 ```
-/ios-superpowers debug "BUILD FAILED - module 'AVFoundation' not found"
+/ios-superpowers plan real-time object detection with Vision
 ```
 
-Orchestrator will:
-1. Detect: AVFoundation, build failure
-2. Classify: BUILD FAILED → `axiom:build-fixer`
-3. Launch: `Task(subagent_type="axiom:build-fixer", prompt="...")`
-4. Agent uses sosumi MCP for AVFoundation docs automatically
-5. Apply fix and verify with `swift build`
+Execution:
+1. Domain detected: `media-vision` (pattern: Vision, object detection)
+2. Skill: `axiom-apple-docs-research` (fetch Vision API docs)
+3. Skill: `axiom-vision`
+4. Superpowers: `writing-plans`
 
-### Example 4: Debugging Memory Issue
-
-```
-/ios-superpowers debug "memory leak in image processing pipeline"
-```
-
-Orchestrator will:
-1. Detect: memory leak, image processing
-2. Classify: memory leak → `axiom:memory-auditor`
-3. Launch: `Task(subagent_type="axiom:memory-auditor", prompt="...")`
-4. Agent scans for retain cycles, weak reference issues
-5. Report findings and suggested fixes
-
-### Example 5: Executing with Parallel Agents
-
-```
-/ios-superpowers parallel "Fix concurrency issues in CameraService, HouseholdItemDetector"
-```
-
-Orchestrator will:
-1. Detect: actor, Sendable, nonisolated, continuation
-2. Classify: concurrency → `axiom:concurrency-auditor`
-3. Launch parallel agents:
-   ```
-   Task(subagent_type="axiom:concurrency-auditor", prompt="Audit CameraService...")
-   Task(subagent_type="axiom:concurrency-auditor", prompt="Audit HouseholdItemDetector...")
-   ```
-4. Each agent has sosumi MCP access for Swift 6 concurrency docs
-5. Combine results and apply fixes
-
-### Example 6: Code Review
+### Example 3: Code Review
 
 ```
 /ios-superpowers review
 ```
 
-Orchestrator will:
-1. **Scan changed files** for iOS APIs (imports, class names, patterns)
-2. **Fetch Apple docs** via `mcp__sosumi__searchAppleDocumentation`
-3. **Select Axiom agents** based on code patterns and launch auditors:
-   - SwiftUI views → `Task(subagent_type="axiom:swiftui-architecture-auditor")`
-   - Concurrency patterns → `Task(subagent_type="axiom:concurrency-auditor")`
-   - Accessibility → `Task(subagent_type="axiom:accessibility-auditor")`
-   - Security concerns → `Task(subagent_type="axiom:security-privacy-scanner")`
-4. **Build verification context** combining:
-   - Apple documentation (API signatures, availability, deprecations)
-   - Axiom audit results (pattern violations, best practices)
-5. **Invoke superpowers:requesting-code-review** with enriched context
-6. **Post-review verification**:
-   - Check API usage against Apple docs
-   - Verify Swift 6 concurrency requirements
-   - Flag deprecated APIs or patterns
+Execution:
+1. Get changed files: `git diff --name-only`
+2. Launch auditors in parallel:
+   - `axiom:concurrency-auditor`
+   - `axiom:accessibility-auditor`
+   - `axiom:swiftui-architecture-auditor`
+   - `axiom:memory-auditor`
+3. Combine results
+4. Superpowers: `requesting-code-review`
 
-**Code Review Checklist (automatic):**
-- [ ] API signatures match Apple documentation
-- [ ] iOS version requirements satisfied (deployment target)
-- [ ] No deprecated APIs introduced
-- [ ] Swift 6 concurrency rules followed (Sendable, actor isolation)
-- [ ] SwiftUI patterns match current best practices
-- [ ] Memory management appropriate (weak/unowned references)
+### Example 4: Debug Build Failure
+
+```
+/ios-superpowers debug "BUILD FAILED: module 'AVFoundation' not found"
+```
+
+Execution:
+1. Domain detected: `build` (pattern: BUILD FAILED, module not found)
+2. Skill: `axiom-xcode-debugging`
+3. Agent: `Task(subagent_type="axiom:build-fixer")`
+4. No superpowers needed (agent is self-contained)
 
 ---
 
-## Code Review Workflow (Detailed)
+## 8. Token Budget
 
-When `ios-superpowers review` is invoked, the following workflow executes:
-
-### Phase 1: API Detection
-
-```
-1. Get list of changed files (git diff)
-2. For each Swift file:
-   - Parse import statements
-   - Extract framework names (SwiftUI, Vision, AVFoundation, etc.)
-   - Detect API usage patterns (@MainActor, actor, async/await)
-   - Identify class/struct/protocol names
-3. Build API list for documentation lookup
-```
-
-### Phase 2: Apple Documentation Fetch
-
-```
-For each detected API:
-1. Call mcp__sosumi__searchAppleDocumentation(query)
-2. If specific match found:
-   - Call mcp__sosumi__fetchAppleDocumentation(path)
-   - Extract: API signature, parameters, availability, deprecations
-3. If MCP unavailable:
-   - Fallback to sosumi.ai API via WebFetch
-4. Build documentation context (max 25K tokens)
-```
-
-### Phase 3: Axiom Agent Selection
-
-Based on detected patterns, launch relevant Axiom agents via Task tool:
-
-| Pattern Detected | Axiom Agent | Task subagent_type |
-|------------------|-------------|-------------------|
-| `@MainActor`, `actor`, `nonisolated` | Concurrency Auditor | `axiom:concurrency-auditor` |
-| `@State`, `@Binding`, `View`, architecture | SwiftUI Architecture | `axiom:swiftui-architecture-auditor` |
-| `.glass`, `.blur`, `Material`, iOS 26 | Liquid Glass Auditor | `axiom:liquid-glass-auditor` |
-| `@Model`, `ModelContext`, SwiftData | Core Data Auditor | `axiom:core-data-auditor` |
-| `XCUITest`, `XCUIElement` | Testing Auditor | `axiom:testing-auditor` |
-| Build errors in review | Build Fixer | `axiom:build-fixer` |
-| Memory warnings | Memory Auditor | `axiom:memory-auditor` |
-| VoiceOver, accessibility | Accessibility Auditor | `axiom:accessibility-auditor` |
-| credentials, keychain, privacy | Security Scanner | `axiom:security-privacy-scanner` |
-
-### Phase 4: Context Assembly
-
-Combine documentation and Axiom agent results:
-
-```markdown
-## Apple Documentation Context
-
-[API summaries, signatures, availability info from sosumi MCP]
-
-## Axiom Agent Audit Results
-
-[Results from launched Axiom agents - pattern violations, recommendations]
-
-## Code Review Focus Areas
-
-Based on detected patterns:
-- Concurrency: Check @MainActor boundaries, Sendable conformance
-- SwiftUI: Verify view composition, state management
-- Data: Check model relationships, query performance
-- Testing: Verify accessibility identifiers, test coverage
-- Security: Check for hardcoded credentials, privacy manifest
-```
-
-### Phase 5: Invoke Code Review
-
-```
-Tool: Skill
-Parameters:
-  skill: superpowers:requesting-code-review
-
-Context includes:
-- Changed files
-- Apple documentation summaries (from sosumi MCP)
-- Axiom agent audit results
-- iOS-specific review checklist
-```
-
-### Phase 6: Post-Review Verification
-
-After review completes, verify:
-1. All flagged APIs match Apple documentation
-2. Suggested fixes follow Swift 6 patterns
-3. No deprecated APIs remain unaddressed
-4. Concurrency patterns are correct
-5. Axiom agent recommendations addressed
-
----
-
-## MCP Server Integration
-
-### sosumi.ai (Apple Documentation)
-
-Primary source for Apple Developer documentation:
-
-```
-mcp__sosumi__searchAppleDocumentation(query)  # Search for docs
-mcp__sosumi__fetchAppleDocumentation(path)    # Fetch specific doc
-```
-
-**Fallback:** If MCP unavailable, use sosumi.ai API via WebFetch
-
-### Token Management
-
-- Search results: ~500 tokens each
-- Fetched docs: 2K-8K tokens each
-- **Budget per request:** 25K tokens max
-- **Strategy:** Search first, fetch selectively, extract and discard
-
----
-
-## Integration with Other Skills
-
-### ios-sprint-executor
-
-ios-sprint-executor calls ios-superpowers internally for:
-- Phase 2 planning (plan)
-- Phase 3 execution (execute)
-- Phase 4 code review (review)
-
-### verified-stage-development
-
-Routes iOS stages (2.2, 3.1, 4.1) to ios-superpowers automatically:
-- Uses agent routing matrix
-- Includes Axiom agent selection
-
-### sosumi.ai MCP
-
-Apple documentation is fetched directly via sosumi MCP tools:
-- `mcp__sosumi__searchAppleDocumentation`: Search for documentation
-- `mcp__sosumi__fetchAppleDocumentation`: Fetch specific doc page
-
-Axiom agents launched via Task tool automatically have MCP access - no need to fetch docs separately when using an Axiom agent.
-
----
-
-## Fallback Behavior
-
-If no iOS APIs detected:
-1. Log: "No iOS APIs detected, proceeding without Apple docs fetch"
-2. Skip Axiom skill selection
-3. Delegate directly to superpowers skill
-4. Still available for manual docs fetch if needed
-
----
-
-## Error Handling
-
-### MCP Server Unavailable
-
-```
-WARNING: sosumi.ai MCP server unavailable.
-
-Falling back to WebFetch API:
-- WebFetch("https://sosumi.ai/api/search?q=...")
-- WebFetch("https://sosumi.ai/api/docs...")
-
-Continuing with degraded functionality.
-```
-
-### Token Budget Exceeded
-
-```
-WARNING: Token budget exceeded (28K > 25K max).
-
-Reducing scope:
-- Trimming fetched docs to summaries
-- Prioritizing most relevant APIs
-
-Continuing with reduced context.
-```
-
-### Axiom Agent Unavailable
-
-```
-WARNING: Axiom agent [subagent_type] not available.
-
-Falling back to:
-1. Direct sosumi MCP documentation fetch
-2. superpowers skill without Axiom patterns
-
-Continuing with Apple documentation only.
-```
-
----
-
-## Arguments Format
-
-```
-<action> <context>
-
-Actions:
-- brainstorm <topic>      # Design phase exploration
-- plan <feature>          # Implementation planning
-- execute <plan-path>     # Execute implementation plan
-- review                  # Request code review
-- debug <issue>           # Systematic debugging
-- tdd <feature>           # Test-driven development
-- parallel <task-list>    # Parallel agent dispatch
-```
-
----
-
-## Notes
-
-- This skill wraps superpowers, not replaces it
-- Apple docs are fetched fresh for each invocation
-- Axiom skills provide iOS-specific patterns beyond docs
-- Token budget enforced to prevent context overflow
-- Always prefer this skill over raw superpowers for iOS work
+| Component | Budget |
+|-----------|--------|
+| Domain detection | 0 (table lookup) |
+| Axiom agent | Agent-managed |
+| Axiom skill | 5K-15K per skill |
+| Apple docs (via axiom-apple-docs-research) | 8K per API, 25K total |
+| Superpowers context | 5K |
+| **Total max** | **50K** |

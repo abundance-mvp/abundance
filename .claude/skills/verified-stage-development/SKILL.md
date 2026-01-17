@@ -20,28 +20,28 @@ Orchestrates stage development with research verification and quality gates.
 
 When dispatching sub-agents during execution, route to specialized skills based on task domain:
 
-| Task Type | Skill | MCP Servers | Axiom Skills |
-|-----------|-------|-------------|--------------|
-| iOS UI/Logic | ios-superpowers | sosumi | axiom-swiftui-26-ref, axiom-liquid-glass |
-| Swift/SwiftUI | ios-superpowers | sosumi | axiom-swiftui-26-ref |
-| iOS Concurrency | ios-superpowers | sosumi | axiom-swift-concurrency |
-| iOS Debugging | ios-superpowers | sosumi | axiom-xcode-debugging, axiom-memory-debugging |
-| iOS Testing | ios-superpowers | sosumi | axiom-ui-testing |
-| iOS Data/Persistence | ios-superpowers | sosumi | axiom-swiftdata |
-| Firestore operations | firebase-superpowers | firebase | - |
-| Cloud Functions | firebase-superpowers | firebase | - |
-| Firebase Auth | firebase-superpowers | firebase | - |
-| Firebase Storage | firebase-superpowers | firebase | - |
-| Security Rules | firebase-superpowers | firebase | - |
-| Non-Firebase GCP | gcp-superpowers | gcloud, observability, storage | - |
-| AI/Gemini pipeline | gemini-integration | gcloud | - |
-| Documentation/ADRs | general-purpose | - | - |
+| Task Type | Skill | Axiom Skills |
+|-----------|-------|--------------|
+| iOS UI/Logic | ios-superpowers | axiom-swiftui-26-ref, axiom-liquid-glass |
+| Swift/SwiftUI | ios-superpowers | axiom-swiftui-26-ref |
+| iOS Concurrency | ios-superpowers | axiom-swift-concurrency |
+| iOS Debugging | ios-superpowers | axiom-xcode-debugging, axiom-memory-debugging |
+| iOS Testing | ios-superpowers | axiom-ui-testing |
+| iOS Data/Persistence | ios-superpowers | axiom-swiftdata |
+| Firestore operations | firebase-superpowers | - |
+| Cloud Functions | firebase-superpowers | - |
+| Firebase Auth | firebase-superpowers | - |
+| Firebase Storage | firebase-superpowers | - |
+| Security Rules | firebase-superpowers | - |
+| Non-Firebase GCP | gcp-superpowers | - |
+| AI/Gemini pipeline | gemini-integration | - |
+| Documentation/ADRs | general-purpose | - |
 
 **Key principles:**
 - iOS stages (2.2, 2.6, 3.1, 3.3, 4.1) → Always use `ios-superpowers` for code tasks
 - ios-superpowers automatically routes to appropriate Axiom sub-skill based on task type
 - Axiom skills provide iOS-specific patterns, debugging workflows, and best practices
-- sosumi.ai MCP provides Apple Developer documentation grounding
+- Use `axiom-apple-docs-research` for Apple Developer documentation grounding
 - Backend stages → Use `firebase-superpowers` for Firebase, `gcp-superpowers` for other GCP
 - AI pipeline stages → Use `gemini-integration` for Gemini tool calling patterns
 - Research/docs → Use general-purpose agent
@@ -101,7 +101,7 @@ This is Phase 1 implementation:
      iOS stages (2.2, 3.1, 4.1) require Apple developer documentation for accurate verification.
 
      Run this command first:
-     /apple-docs-fetcher
+     /axiom:apple-docs-research
 
      Then retry: /verified-stage-development stage-X.X
      ```
@@ -219,7 +219,7 @@ This is Phase 1 implementation:
    - Use Grep tool to search docs/apple/{technology}/\*.md
    - Example: `Grep pattern:"VNRecognizeObjects" path:"docs/apple/vision/"`
    - Extract accurate information from local markdown
-   - Note: These docs pre-fetched from developer.apple.com via sosumi.ai
+   - Note: Use `axiom-apple-docs-research` to fetch Apple documentation
 
    ### 3. Verify GCP/Firebase/Other Claims
 
@@ -286,7 +286,7 @@ This is Phase 1 implementation:
 
    ### Apple/iOS Sources
 
-   - [Technology]: [sosumi.ai URL] (local: docs/apple/[path])
+   - [Technology]: Use `axiom-apple-docs-research` for Apple docs
    - ...
 
    ### GCP/Firebase Sources
@@ -351,28 +351,21 @@ This is Phase 1 implementation:
 
 ### Apple Documentation Verification (iOS stages only)
 
-**IMPORTANT:** Use apple-docs-fetcher pattern to avoid token limit failures.
+**IMPORTANT:** Use /axiom:apple-docs-research to avoid token limit failures.
 
 When stage requires iOS/Swift implementation:
 
 1. Read TECH-STACK-MAP to identify specific APIs to verify (not broad frameworks)
 2. Identify 3-5 focused APIs for verification (e.g., VNCoreMLRequest, VNDetectBarcodesRequest)
-3. Pass focused API list to research verification agent with token budget
-4. Research agent uses apple-docs-fetcher pattern:
-   - Search first: mcp**sosumi**searchAppleDocumentation
-   - Extract key info from search results
-   - Fetch selectively: Only if search insufficient
-   - Immediately extract and discard full docs
-   - Create concise verification summary
-   - Token budget: 8,000 per API, 25,000 total max
-5. Research agent returns summary (not full docs)
+3. Use `/axiom:apple-docs-research` for each API
+4. Extract key info and create concise verification summary
+5. Token budget: 8,000 per API, 25,000 total max
 6. Proceed with planning using verification summary
 
 **Do NOT:**
 
 - ❌ Fetch broad documentation paths (e.g., "/documentation/vision")
 - ❌ Accumulate multiple fetched docs in context
-- ❌ Use the full apple-docs-fetcher skill (causes token overflow)
 
 ---
 
@@ -487,7 +480,7 @@ First, check if this is an iOS stage:
 
    ios-superpowers will:
    - Detect iOS APIs in the stage context
-   - Fetch Apple documentation via apple-docs-fetcher
+   - Fetch Apple documentation via `axiom-apple-docs-research`
    - Select appropriate Axiom skills based on task type
    - Invoke superpowers:writing-plans with enriched context
 
@@ -1136,7 +1129,7 @@ ERROR: Apple documentation not found.
 
 iOS stages (2.2, 3.1, 4.1) require Apple developer documentation.
 
-Run: /apple-docs-fetcher
+Run: /axiom:apple-docs-research
 
 Then retry: /verified-stage-development stage-X.X
 ```
@@ -1240,7 +1233,7 @@ If any manifest shows fetch_date > 30 days ago:
 ⚠️ Warning: Apple documentation is [X] days old (fetched: YYYY-MM-DD)
 
 Recommendation: Refresh docs after this stage completes
-Command: /apple-docs-fetcher --refresh
+Command: /axiom:apple-docs-research
 
 Continuing with existing documentation...
 ```
