@@ -70,7 +70,8 @@ public final class CaptureSessionViewModel: ObservableObject {
     private var sessionObserver: AnyCancellable?
     private var itemObservers: [String: AnyCancellable] = [:]
 
-    private var burstTimer: Timer?
+    /// Task for burst capture loop (public for testing)
+    public private(set) var burstTask: Task<Void, Never>?
     private var burstStartTime: Date?
     private var capturedPhotos: [Data] = []
 
@@ -118,6 +119,7 @@ public final class CaptureSessionViewModel: ObservableObject {
     // MARK: - Burst Capture (Long-Press)
 
     /// Start burst capture on long-press begin
+    /// Uses Task-based loop with Task.sleep for Swift 6 concurrency compliance
     /// - Parameter capturePhoto: Closure to capture a photo (returns JPEG data)
     public func startBurstCapture(capturePhoto: @escaping @Sendable () async throws -> Data) {
         guard !isCapturing else {
@@ -131,23 +133,42 @@ public final class CaptureSessionViewModel: ObservableObject {
         burstStartTime = Date()
         uiState = .capturing(count: 0)
 
-        // Start capturing photos at interval
-        burstTimer = Timer.scheduledTimer(withTimeInterval: burstInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                await self?.captureBurstPhoto(capturePhoto: capturePhoto)
-            }
-        }
+        // Task-based burst capture loop (replaces Timer for Swift 6 compliance)
+        burstTask = Task { @MainActor [weak self] in
+            guard let self else { return }
 
-        // Capture first photo immediately
-        Task {
-            await captureBurstPhoto(capturePhoto: capturePhoto)
+            // Capture first photo immediately
+            await self.captureBurstPhoto(capturePhoto: capturePhoto)
+
+            // Continue capturing at intervals until cancelled or limit reached
+            while !Task.isCancelled && self.isCapturing && self.capturedPhotos.count < 8 {
+                do {
+                    // Wait for burst interval (500ms)
+                    try await Task.sleep(for: .milliseconds(Int(self.burstInterval * 1000)))
+
+                    // Check cancellation after sleep
+                    if Task.isCancelled || !self.isCapturing {
+                        break
+                    }
+
+                    await self.captureBurstPhoto(capturePhoto: capturePhoto)
+                } catch {
+                    // Task was cancelled during sleep
+                    break
+                }
+            }
+
+            // Auto-end if we hit max photos
+            if self.capturedPhotos.count >= 8 && self.isCapturing {
+                await self.endBurstCapture()
+            }
         }
     }
 
     /// End burst capture on long-press end
     public func endBurstCapture() async {
-        burstTimer?.invalidate()
-        burstTimer = nil
+        burstTask?.cancel()
+        burstTask = nil
 
         guard let startTime = burstStartTime else {
             isCapturing = false
@@ -180,8 +201,8 @@ public final class CaptureSessionViewModel: ObservableObject {
 
     /// Cancel burst capture
     public func cancelBurstCapture() {
-        burstTimer?.invalidate()
-        burstTimer = nil
+        burstTask?.cancel()
+        burstTask = nil
         burstStartTime = nil
         capturedPhotos = []
         burstCount = 0
@@ -347,8 +368,8 @@ public final class CaptureSessionViewModel: ObservableObject {
         capturedPhotos = []
         burstCount = 0
         burstStartTime = nil
-        burstTimer?.invalidate()
-        burstTimer = nil
+        burstTask?.cancel()
+        burstTask = nil
         lastCapturedPhoto = nil
     }
 
