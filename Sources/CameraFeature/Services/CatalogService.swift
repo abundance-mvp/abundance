@@ -27,6 +27,10 @@ public struct ItemCatalogStatus: Sendable {
 
 /// Service for creating catalog items from session detections
 public final class CatalogService: CatalogServiceProtocol {
+    /// Firestore database reference.
+    ///
+    /// SAFETY: Marked `nonisolated(unsafe)` because Firestore is thread-safe.
+    /// See SessionService.swift for detailed rationale.
     nonisolated(unsafe) private let db: Firestore
     private let logger = Logger(subsystem: "com.abundance.camerafeature", category: "CatalogService")
 

@@ -33,6 +33,17 @@ public protocol SessionServiceProtocol: Sendable {
 
 /// Concrete implementation of SessionService for Firestore
 public final class SessionService: SessionServiceProtocol {
+    /// Firestore database reference.
+    ///
+    /// SAFETY: Marked `nonisolated(unsafe)` because:
+    /// 1. Firestore is documented as thread-safe
+    ///    (see Firebase offline persistence docs)
+    /// 2. All Firestore operations are internally synchronized
+    /// 3. We only perform read/write operations, never mutate the reference itself
+    /// 4. This pattern is recommended by Firebase for Swift 6 compatibility
+    ///
+    /// If Firebase SDK changes threading guarantees in future versions,
+    /// this should be wrapped in an actor.
     nonisolated(unsafe) private let db: Firestore
     private let logger = Logger(subsystem: "com.abundance.camerafeature", category: "SessionService")
 
