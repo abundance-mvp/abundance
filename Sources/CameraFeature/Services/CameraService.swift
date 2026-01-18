@@ -4,20 +4,20 @@ import Combine
 /// Actor to manage photo capture continuation state safely
 private actor CaptureManager {
     private var photoContinuation: CheckedContinuation<Data, Error>?
-    
+
     func setContinuation(_ continuation: CheckedContinuation<Data, Error>) throws {
         guard photoContinuation == nil else {
             throw CameraError.captureInProgress
         }
         photoContinuation = continuation
     }
-    
+
     func getContinuation() -> CheckedContinuation<Data, Error>? {
         let continuation = photoContinuation
         photoContinuation = nil
         return continuation
     }
-    
+
     func clearContinuation() {
         photoContinuation = nil
     }
@@ -26,13 +26,16 @@ private actor CaptureManager {
 /// Concrete implementation of CameraServiceProtocol using AVFoundation
 /// @MainActor ensures thread-safe access to camera resources
 @MainActor
-public final class CameraService: NSObject, @preconcurrency CameraServiceProtocol, Sendable {
+public final class CameraService: NSObject, @preconcurrency CameraServiceProtocol {
 
     // MARK: - Properties
 
-    private let sessionActor = CameraSessionActor()
-    private let sessionQueue = DispatchQueue(label: "com.abundance.camera.session")
-    private let videoQueue = DispatchQueue(label: "com.abundance.camera.video", qos: .userInitiated)
+    /// Camera configuration settings
+    public let configuration: CameraConfiguration
+
+    private let sessionActor: CameraSessionActor
+    private let sessionQueue: DispatchQueue
+    private let videoQueue: DispatchQueue
 
     private let sessionStateSubject = CurrentValueSubject<CameraSessionState, Never>(.notStarted)
     public var sessionState: AnyPublisher<CameraSessionState, Never> {
@@ -48,7 +51,18 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
 
     // MARK: - Initialization
 
-    public override init() {
+    /// Creates a camera service with default configuration
+    public override convenience init() {
+        self.init(configuration: .default)
+    }
+
+    /// Creates a camera service with custom configuration
+    /// - Parameter configuration: Camera configuration settings
+    public init(configuration: CameraConfiguration) {
+        self.configuration = configuration
+        self.sessionActor = CameraSessionActor(configuration: configuration)
+        self.sessionQueue = DispatchQueue(label: configuration.sessionQueueLabel)
+        self.videoQueue = DispatchQueue(label: configuration.videoQueueLabel, qos: configuration.videoQueueQoS)
         super.init()
         Task { @MainActor in
             await setupInterruptionObservers()
@@ -63,7 +77,7 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
 
     private func setupInterruptionObservers() async {
         let captureSession = await sessionActor.captureSession
-        
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(sessionWasInterrupted),
@@ -119,7 +133,7 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
 
     public func startSession() async throws {
         sessionStateSubject.send(.configuring)
-        
+
         do {
             try await sessionActor.configure()
             await sessionActor.setSampleBufferDelegate(self, queue: videoQueue)
@@ -147,7 +161,7 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
                 do {
                     // Check if capture already in progress
                     try await self.captureManager.setContinuation(continuation)
-                    
+
                     // Check if session is running before attempting to capture
                     let isRunning = await self.sessionActor.isRunning()
                     guard isRunning else {
@@ -171,7 +185,7 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
     }
 
     // MARK: - Public Methods for Focus
-    
+
     public func setFocusPoint(_ point: CGPoint) async throws {
         try await sessionActor.setFocusPoint(point)
     }
@@ -188,7 +202,7 @@ extension CameraService: @preconcurrency AVCapturePhotoCaptureDelegate {
     ) {
         Task {
             let continuation = await captureManager.getContinuation()
-            
+
             if let error = error {
                 continuation?.resume(throwing: error)
                 return
@@ -221,8 +235,12 @@ extension CameraService: @preconcurrency AVCaptureVideoDataOutputSampleBufferDel
         // Per Apple docs: "If you need to reference the CMSampleBuffer object outside
         // of the scope of this method... consider copying the data into a new buffer"
         // The camera system may recycle buffers before async consumers process them.
-        guard let copiedBuffer = copyPixelBuffer(pixelBuffer) else { return }
-        frameSubject.send(copiedBuffer)
+        guard let copiedBuffer = Self.copyPixelBuffer(pixelBuffer) else { return }
+
+        // Dispatch to MainActor to publish to the subject
+        Task { @MainActor [weak self] in
+            self?.frameSubject.send(copiedBuffer)
+        }
     }
 
     /// Creates a deep copy of a CVPixelBuffer to prevent data races with camera buffer recycling.
@@ -233,7 +251,7 @@ extension CameraService: @preconcurrency AVCaptureVideoDataOutputSampleBufferDel
     ///
     /// - Parameter source: The source pixel buffer to copy
     /// - Returns: A new pixel buffer with copied data, or nil if copy fails
-    private func copyPixelBuffer(_ source: CVPixelBuffer) -> CVPixelBuffer? {
+    nonisolated private static func copyPixelBuffer(_ source: CVPixelBuffer) -> CVPixelBuffer? {
         let width = CVPixelBufferGetWidth(source)
         let height = CVPixelBufferGetHeight(source)
         let pixelFormat = CVPixelBufferGetPixelFormatType(source)

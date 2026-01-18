@@ -3,7 +3,7 @@ import Combine
 import AVFoundation
 
 /// ViewModel for camera capture feature (MVVM pattern)
-/// - Note: For real-time detection, use CameraDetectionViewModel instead.
+/// - Note: For server-side detection, use CaptureSessionViewModel instead.
 @MainActor
 public final class CameraViewModel: ObservableObject {
 

@@ -10,6 +10,7 @@ public struct RescanCameraView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var cameraService = CameraService()
     @State private var isCapturing = false
+    @State private var captureSession: AVCaptureSession?
 
     public init(viewModel: EditItemViewModel) {
         self.viewModel = viewModel
@@ -21,7 +22,7 @@ public struct RescanCameraView: View {
             Color.black
                 .ignoresSafeArea()
 
-            if let captureSession = cameraService.getCaptureSession() {
+            if let captureSession {
                 CameraPreviewView(captureSession: captureSession)
                     .ignoresSafeArea()
             }
@@ -81,10 +82,13 @@ public struct RescanCameraView: View {
         .onAppear {
             Task {
                 try? await cameraService.startSession()
+                captureSession = await cameraService.getCaptureSession()
             }
         }
         .onDisappear {
-            cameraService.stopSession()
+            Task {
+                await cameraService.stopSession()
+            }
         }
         .onChange(of: viewModel.state) { _, newState in
             // Handle state changes

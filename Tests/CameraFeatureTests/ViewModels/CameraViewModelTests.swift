@@ -91,17 +91,17 @@ final class CameraViewModelTests: XCTestCase {
         XCTAssertTrue(errorMessage.contains("Failed to start camera"))
     }
 
-    func testStopCamera_callsStopSession() {
+    func testStopCamera_callsStopSession() async {
         // When
-        sut.stopCamera()
+        await sut.stopCamera()
 
         // Then
         XCTAssertTrue(mockCameraService.didCallStopSession)
     }
 
-    func testGetCaptureSession_returnsCameraServiceSession() {
+    func testGetCaptureSession_returnsCameraServiceSession() async {
         // When
-        let session = sut.getCaptureSession()
+        let session = await sut.getCaptureSession()
 
         // Then
         // MockCameraService returns nil for getCaptureSession
@@ -110,5 +110,5 @@ final class CameraViewModelTests: XCTestCase {
 }
 
 // Note: Tests for photo capture functionality have been removed.
-// Photo capture is now handled by CameraDetectionViewModel.
-// See CameraDetectionViewModelTests for real-time detection tests.
+// Photo capture is now handled by CaptureSessionViewModel.
+// See CaptureSessionViewModelTests for server-side detection tests.

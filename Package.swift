@@ -23,6 +23,8 @@ let package: Package = Package(
         .target(
             name: "OnboardingFeature",
             dependencies: [
+                "CameraFeature",
+                "Core",
                 "Persistence",
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
@@ -114,9 +116,6 @@ let package: Package = Package(
         .target(
             name: "VisionCore",
             dependencies: [],
-            resources: [
-                .copy("Resources/yolo11n.mlmodelc")
-            ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
             ]

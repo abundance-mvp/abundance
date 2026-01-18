@@ -1,11 +1,13 @@
 import SwiftUI
 import AVFoundation
+import Core
 
 /// Main capture view with double-tap and long-press gestures
-/// Replaces CameraDetectionView - no real-time YOLO detection
+/// Uses server-side Gemini detection - no local YOLO detection
 public struct CaptureView: View {
 
     @StateObject private var viewModel: CaptureSessionViewModel
+    @StateObject private var networkMonitor = NetworkMonitor.shared
     private let cameraService: CameraService
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -13,6 +15,11 @@ public struct CaptureView: View {
     @State private var frozenFrame: Data?
     @State private var longPressActive = false
     @State private var captureSession: AVCaptureSession?
+
+    // Error recovery state
+    @State private var cameraError: CameraError?
+    @State private var showingCameraError = false
+    @State private var authorizationStatus: CameraAuthorizationStatus = .notDetermined
 
     public init(
         viewModel: CaptureSessionViewModel = CaptureSessionViewModel(),
@@ -24,15 +31,54 @@ public struct CaptureView: View {
 
     public var body: some View {
         GeometryReader { geometry in
-            captureContent(geometry: geometry)
-                .gesture(gesturesEnabled ? doubleTapGesture : nil)
-                .gesture(gesturesEnabled ? longPressGesture : nil)
-                .onAppear {
-                    setupCamera()
+            ZStack {
+                captureContent(geometry: geometry)
+                    .gesture(gesturesEnabled ? doubleTapGesture : nil)
+                    .gesture(gesturesEnabled ? longPressGesture : nil)
+
+                // Offline mode indicator
+                if !networkMonitor.isConnected {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            OfflineModeIndicator()
+                                .padding(.trailing, 16)
+                                .padding(.top, 60)
+                        }
+                        Spacer()
+                    }
                 }
-                .onDisappear {
-                    teardownCamera()
+
+                // Camera error recovery overlay
+                if let error = cameraError, showingCameraError {
+                    Color.black.opacity(0.6)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+
+                    ErrorRecoveryView(
+                        cameraError: error,
+                        onRetry: {
+                            Task {
+                                await retryCamera()
+                            }
+                        },
+                        onDismiss: {
+                            showingCameraError = false
+                            cameraError = nil
+                            dismiss()
+                        }
+                    )
+                    .transition(.scale.combined(with: .opacity))
                 }
+            }
+            .animation(.easeInOut(duration: 0.3), value: showingCameraError)
+            .animation(.easeInOut(duration: 0.2), value: networkMonitor.isConnected)
+            .task {
+                await checkCameraAuthorization()
+            }
+            .onDisappear {
+                teardownCamera()
+            }
         }
         #if os(iOS)
         .navigationBarHidden(true)
@@ -41,6 +87,7 @@ public struct CaptureView: View {
 
     /// Only enable gestures in idle state to prevent blocking UI elements
     private var gesturesEnabled: Bool {
+        guard !showingCameraError else { return false }
         if case .idle = viewModel.uiState {
             return true
         }
@@ -179,7 +226,9 @@ public struct CaptureView: View {
                 frozenFrame = nil
                 viewModel.dismissError()
                 // Restart camera session to resume live feed
-                setupCamera()
+                Task {
+                    await setupCameraSession()
+                }
             }
         }
     }
@@ -323,15 +372,45 @@ public struct CaptureView: View {
 
     // MARK: - Camera Control
 
-    private func setupCamera() {
-        Task {
-            do {
-                try await cameraService.startSession()
-                captureSession = await cameraService.getCaptureSession()
-            } catch {
-                print("Failed to start camera: \(error)")
-            }
+    /// Check camera authorization and setup if authorized
+    private func checkCameraAuthorization() async {
+        authorizationStatus = await cameraService.checkAuthorization()
+
+        switch authorizationStatus {
+        case .authorized:
+            await setupCameraSession()
+        case .denied:
+            cameraError = .authorizationDenied
+            showingCameraError = true
+        case .notDetermined:
+            // Wait for user to respond to permission dialog
+            break
         }
+    }
+
+    /// Setup camera session with error handling
+    private func setupCameraSession() async {
+        do {
+            try await cameraService.startSession()
+            captureSession = await cameraService.getCaptureSession()
+            cameraError = nil
+            showingCameraError = false
+        } catch let error as CameraError {
+            cameraError = error
+            showingCameraError = true
+        } catch {
+            cameraError = .configurationFailed(error)
+            showingCameraError = true
+        }
+    }
+
+    /// Retry camera setup after error
+    private func retryCamera() async {
+        showingCameraError = false
+        cameraError = nil
+
+        // Re-check authorization in case user changed settings
+        await checkCameraAuthorization()
     }
 
     private func teardownCamera() {
@@ -343,6 +422,12 @@ public struct CaptureView: View {
     // MARK: - Capture Actions
 
     private func captureAndProcess() {
+        // Check network before starting capture that requires upload
+        guard networkMonitor.isConnected else {
+            viewModel.uiState = .error(.networkTimeout)
+            return
+        }
+
         Task {
             do {
                 // Capture photo
@@ -358,13 +443,23 @@ public struct CaptureView: View {
 
                 // Process
                 await viewModel.handleDoubleTap(photoData: photoData)
+            } catch let error as CameraError {
+                cameraError = error
+                showingCameraError = true
             } catch {
-                print("Capture failed: \(error)")
+                cameraError = .captureFailure
+                showingCameraError = true
             }
         }
     }
 
     private func startBurstCapture() {
+        // Check network before starting capture that requires upload
+        guard networkMonitor.isConnected else {
+            viewModel.uiState = .error(.networkTimeout)
+            return
+        }
+
         longPressActive = true
         viewModel.startBurstCapture {
             try await cameraService.capturePhoto()

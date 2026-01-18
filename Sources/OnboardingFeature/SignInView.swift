@@ -1,11 +1,15 @@
 import SwiftUI
 import AuthenticationServices
 import Core
+import CameraFeature
 
 public struct SignInView: View {
     @ObservedObject var viewModel: AuthViewModel
+    @StateObject private var networkMonitor = NetworkMonitor.shared
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.colorScheme) private var colorScheme
+
+    @State private var showingNetworkError = false
 
     public init(viewModel: AuthViewModel) {
         self.viewModel = viewModel
@@ -19,6 +23,11 @@ public struct SignInView: View {
 
             VStack(spacing: 32) {
                 Spacer()
+
+                // Offline indicator at top
+                if !networkMonitor.isConnected {
+                    offlineWarning
+                }
 
                 // Leaf icon with brand mint green
                 leafIcon
@@ -36,7 +45,38 @@ public struct SignInView: View {
                     .padding(.bottom, 32)
             }
             .padding(.horizontal, 24)
+            .animation(.easeInOut(duration: 0.2), value: networkMonitor.isConnected)
         }
+    }
+
+    // MARK: - Offline Warning
+
+    private var offlineWarning: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 14, weight: .medium))
+
+            Text("No internet connection")
+                .font(.system(.subheadline, design: .rounded))
+        }
+        .foregroundStyle(Color.warningColor)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background {
+            if #available(iOS 26.0, macOS 26.0, *) {
+                if !reduceTransparency {
+                    Color.warningColor.opacity(0.15)
+                        .glassEffect(in: Capsule())
+                } else {
+                    Capsule()
+                        .fill(Color.warningColor.opacity(0.15))
+                }
+            } else {
+                Capsule()
+                    .fill(Color.warningColor.opacity(0.15))
+            }
+        }
+        .accessibilityLabel("No internet connection. Sign in requires internet access.")
     }
 
     // MARK: - Background
@@ -124,19 +164,55 @@ public struct SignInView: View {
     // MARK: - Error View
 
     private func errorView(error: Error) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(Color.errorColor)
+        VStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: errorIcon(for: error))
+                    .foregroundStyle(Color.errorColor)
 
-            Text(error.localizedDescription)
-                .font(.system(.caption, design: .rounded))
-                .foregroundStyle(Color.errorColor)
+                Text(error.localizedDescription)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.errorColor)
+                    .lineLimit(2)
+            }
+
+            // Retry button for network errors
+            if isNetworkError(error) {
+                Button {
+                    viewModel.error = nil
+                    Task {
+                        _ = await networkMonitor.checkConnection()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 12, weight: .medium))
+                        Text("Check Connection")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                    }
+                    .foregroundStyle(Color.accentPrimary)
+                }
+            }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .adaptiveGlass(cornerRadius: 8)
+        .padding(.vertical, 12)
+        .adaptiveGlass(cornerRadius: 12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(error.localizedDescription)")
+    }
+
+    private func errorIcon(for error: Error) -> String {
+        if isNetworkError(error) {
+            return "wifi.exclamationmark"
+        }
+        return "exclamationmark.triangle.fill"
+    }
+
+    private func isNetworkError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain ||
+               nsError.code == NSURLErrorNotConnectedToInternet ||
+               nsError.code == NSURLErrorTimedOut ||
+               nsError.code == NSURLErrorNetworkConnectionLost
     }
 
     // MARK: - Legal Text

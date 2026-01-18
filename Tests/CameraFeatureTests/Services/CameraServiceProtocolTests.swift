@@ -75,7 +75,7 @@ final class CameraServiceProtocolTests: XCTestCase {
             .store(in: &cancellables)
 
         // When
-        sut.stopSession()
+        await sut.stopSession()
 
         // Then
         await fulfillment(of: [expectation], timeout: 1.0)

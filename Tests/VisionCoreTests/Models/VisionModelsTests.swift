@@ -29,29 +29,7 @@ final class VisionModelsTests: XCTestCase {
         XCTAssertEqual(score.category, .low)
     }
 
-    func testHouseholdItem_initialization_setsPropertiesCorrectly() {
-        // Given
-        let id = UUID()
-        let label = "tent"
-        let confidence = ConfidenceScore(raw: 0.85)
-        let boundingBox = CGRect(x: 0.1, y: 0.2, width: 0.3, height: 0.4)
-        let imageSize = CGSize(width: 1000, height: 1000)
-
-        // When
-        let item = HouseholdItem(
-            id: id,
-            label: label,
-            confidence: confidence,
-            boundingBox: boundingBox,
-            imageSize: imageSize
-        )
-
-        // Then
-        XCTAssertEqual(item.id, id)
-        XCTAssertEqual(item.label, label)
-        XCTAssertEqual(item.confidence, confidence)
-        XCTAssertEqual(item.boundingBox, boundingBox)
-    }
+    // Note: HouseholdItem test removed as part of YOLO removal (server-side detection now)
 
     func testBarcodeResult_initialization_setsPropertiesCorrectly() {
         // Given

@@ -5,20 +5,18 @@ import Combine
 @MainActor
 final class CameraServiceTests: XCTestCase {
 
-    nonisolated(unsafe) var sut: CameraService!
-    nonisolated(unsafe) var cancellables: Set<AnyCancellable>!
+    var sut: CameraService!
+    var cancellables: Set<AnyCancellable>!
 
-    nonisolated override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
         sut = CameraService()
         cancellables = []
     }
 
-    nonisolated override func tearDown() {
-        sut?.stopSession()
+    override func tearDown() async throws {
+        await sut?.stopSession()
         cancellables = nil
         sut = nil
-        super.tearDown()
     }
 
     func testInit_sessionStateIsNotStarted() {
@@ -89,7 +87,7 @@ final class CameraServiceTests: XCTestCase {
             .store(in: &cancellables)
 
         // When
-        sut.stopSession()
+        await sut.stopSession()
 
         // Then
         await fulfillment(of: [expectation], timeout: 1.0)

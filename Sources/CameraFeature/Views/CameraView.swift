@@ -2,8 +2,8 @@ import SwiftUI
 import AVFoundation
 
 /// SwiftUI view for camera preview only (capture functionality removed).
-/// - Important: Use CameraDetectionView for real-time detection with capture.
-@available(*, deprecated, message: "Use CameraDetectionView for real-time detection experience.")
+/// - Important: Use CaptureView for server-side detection with capture.
+@available(*, deprecated, message: "Use CaptureView for server-side detection experience.")
 public struct LegacyCameraView: View {
 
     @StateObject private var viewModel: CameraViewModel
@@ -31,7 +31,7 @@ public struct LegacyCameraView: View {
             VStack {
                 Spacer()
 
-                Text("This view is deprecated.\nUse CameraDetectionView instead.")
+                Text("This view is deprecated.\nUse CaptureView instead.")
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
@@ -70,6 +70,6 @@ public struct LegacyCameraView: View {
 }
 
 /// Backward compatibility alias
-/// - Warning: Deprecated. Use CameraDetectionView instead.
-@available(*, deprecated, renamed: "LegacyCameraView", message: "Use CameraDetectionView for real-time detection")
+/// - Warning: Deprecated. Use CaptureView instead.
+@available(*, deprecated, renamed: "LegacyCameraView", message: "Use CaptureView for server-side detection")
 public typealias CameraView = LegacyCameraView

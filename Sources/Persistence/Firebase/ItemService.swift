@@ -17,7 +17,7 @@ extension Set {
     }
 }
 
-/// Metadata from Layer 1 (on-device YOLO detection)
+/// Metadata from Layer 1 (object detection)
 /// Captures detection results before Layer 2 cloud processing
 public struct Layer1Metadata: Sendable {
     public let detectedClass: String
@@ -133,7 +133,7 @@ public final class ItemService: ItemRepository {
     /// Triggers Layer 2a extraction via onItemCreated cloud function
     ///
     /// - Parameters:
-    ///   - itemId: Unique item ID (from YOLO detection)
+    ///   - itemId: Unique item ID (from object detection)
     ///   - userId: Owner's user ID
     ///   - imageUrl: Public URL of uploaded image in Firebase Storage
     ///   - layer1Metadata: On-device detection results (class, confidence, bounding box, quality)
@@ -173,7 +173,7 @@ public final class ItemService: ItemRepository {
     /// Triggers Layer 2a extraction via onItemCreated cloud function
     ///
     /// - Parameters:
-    ///   - itemId: Unique item ID (from YOLO detection)
+    ///   - itemId: Unique item ID (from object detection)
     ///   - userId: Owner's user ID
     ///   - imageUrl: Public URL of uploaded image in Firebase Storage
     ///   - layer1Metadata: On-device detection results

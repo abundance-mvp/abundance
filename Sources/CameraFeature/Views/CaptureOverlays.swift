@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 
 // MARK: - Capture Overlay Views
 
@@ -87,35 +88,161 @@ struct AnalyzingOverlay: View {
 }
 
 /// Overlay shown when an error occurs during capture flow
+/// Enhanced with Liquid Glass styling for iOS 26+ and automatic retry logic
 struct ErrorOverlay: View {
     let error: CaptureError
     let onDismiss: () -> Void
 
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.yellow)
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @State private var isRetrying = false
 
-            Text(error.localizedDescription)
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
+    var body: some View {
+        VStack(spacing: 20) {
+            // Error icon with category-based styling
+            errorIcon
+
+            // Error message
+            VStack(spacing: 8) {
+                Text(errorTitle)
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Text(error.localizedDescription)
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .multilineTextAlignment(.center)
+            }
 
             if let suggestion = error.recoverySuggestion {
                 Text(suggestion)
                     .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
             }
 
-            Button("Try Again") {
-                onDismiss()
+            // Retry button with loading state
+            if error.isRetryable {
+                retryButton
+            } else {
+                dismissButton
             }
-            .buttonStyle(CaptureButtonStyle(isPrimary: true))
-            .padding(.top, 8)
         }
         .padding(32)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .frame(maxWidth: 320)
+        .background(overlayBackground)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Error: \(error.localizedDescription)")
+    }
+
+    private var errorIcon: some View {
+        ZStack {
+            Circle()
+                .fill(iconColor.opacity(0.2))
+                .frame(width: 72, height: 72)
+
+            Image(systemName: iconName)
+                .font(.system(size: 32, weight: .medium))
+                .foregroundStyle(iconColor)
+        }
+    }
+
+    private var iconName: String {
+        switch error {
+        case .notAuthenticated, .authenticationExpired:
+            return "person.crop.circle.badge.exclamationmark"
+        case .networkTimeout, .uploadFailed:
+            return "wifi.exclamationmark"
+        case .detectionTimeout, .detectionFailed, .invalidResponse:
+            return "server.rack"
+        default:
+            return "exclamationmark.triangle.fill"
+        }
+    }
+
+    private var iconColor: Color {
+        switch error {
+        case .networkTimeout, .uploadFailed:
+            return .orange
+        case .notAuthenticated, .authenticationExpired:
+            return .blue
+        case .detectionTimeout, .detectionFailed, .invalidResponse:
+            return .red
+        default:
+            return .yellow
+        }
+    }
+
+    private var errorTitle: String {
+        switch error {
+        case .notAuthenticated, .authenticationExpired:
+            return "Sign In Required"
+        case .networkTimeout, .uploadFailed:
+            return "Connection Problem"
+        case .detectionTimeout, .detectionFailed, .invalidResponse:
+            return "Analysis Failed"
+        case .captureFailure, .invalidImageData, .burstCaptureTooShort:
+            return "Capture Issue"
+        default:
+            return "Something Went Wrong"
+        }
+    }
+
+    private var retryButton: some View {
+        Button {
+            isRetrying = true
+            // Add slight delay for visual feedback
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                onDismiss()
+            }
+        } label: {
+            HStack(spacing: 8) {
+                if isRetrying {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                        .scaleEffect(0.8)
+                } else {
+                    Image(systemName: "arrow.clockwise")
+                }
+                Text(isRetrying ? "Retrying..." : "Try Again")
+            }
+            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .foregroundStyle(.black)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(.white, in: RoundedRectangle(cornerRadius: 12))
+        }
+        .disabled(isRetrying)
+        .padding(.top, 8)
+    }
+
+    private var dismissButton: some View {
+        Button {
+            onDismiss()
+        } label: {
+            Text("Dismiss")
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
+        }
+        .padding(.top, 8)
+    }
+
+    @ViewBuilder
+    private var overlayBackground: some View {
+        if #available(iOS 26.0, macOS 26.0, *) {
+            if !reduceTransparency {
+                Color.clear
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 24))
+            } else {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color.black.opacity(0.85))
+            }
+        } else {
+            RoundedRectangle(cornerRadius: 24)
+                .fill(.ultraThickMaterial)
+        }
     }
 }
 
