@@ -18,14 +18,14 @@ public struct RescanComparisonSheet: View {
                     // Header
                     VStack(spacing: 8) {
                         Image(systemName: "arrow.left.arrow.right")
-                            .font(.system(size: 32))
+                            .font(.title)
                             .foregroundStyle(.orange)
 
                         Text("Compare Results")
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.title2.weight(.bold))
 
                         Text("Review the updated analysis from your new photo")
-                            .font(.system(size: 15, design: .rounded))
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                     }
@@ -72,7 +72,7 @@ public struct RescanComparisonSheet: View {
                         }
                     } label: {
                         Text("Looks Good")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .font(.body.weight(.semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                     }
@@ -86,7 +86,7 @@ public struct RescanComparisonSheet: View {
                             Image(systemName: "exclamationmark.triangle")
                             Text("Still Incorrect?")
                         }
-                        .font(.system(size: 17, weight: .medium, design: .rounded))
+                        .font(.body.weight(.medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                     }
@@ -131,7 +131,7 @@ private struct ComparisonCard: View {
         VStack(alignment: .leading, spacing: 12) {
             // Title badge
             Text(title)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(isHighlighted ? .white : .secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
@@ -165,6 +165,7 @@ private struct ComparisonCard: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 12))
+            .accessibilityLabel("\(title) photo of \(item.name ?? "item")")
 
             // Key fields
             VStack(alignment: .leading, spacing: 6) {
@@ -200,11 +201,11 @@ private struct CompactFieldRow: View {
     var body: some View {
         HStack {
             Text(label)
-                .font(.system(size: 12, design: .rounded))
+                .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(.caption.weight(.medium))
                 .lineLimit(1)
         }
     }
@@ -263,26 +264,26 @@ private struct FieldChangesSummary: View {
         if !changes.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Changes Detected")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(.secondary)
 
                 VStack(spacing: 8) {
                     ForEach(changes) { change in
                         HStack {
                             Text(change.field)
-                                .font(.system(size: 14, design: .rounded))
+                                .font(.footnote)
                             Spacer()
                             HStack(spacing: 4) {
                                 Text(change.from ?? "--")
                                     .strikethrough()
                                     .foregroundStyle(.secondary)
                                 Image(systemName: "arrow.right")
-                                    .font(.system(size: 10))
+                                    .font(.caption2)
                                     .foregroundStyle(.tertiary)
                                 Text(change.to ?? "--")
                                     .foregroundStyle(.green)
                             }
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .font(.caption.weight(.medium))
                         }
                     }
                 }

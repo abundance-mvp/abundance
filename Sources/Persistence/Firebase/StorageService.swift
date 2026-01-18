@@ -50,6 +50,12 @@ public final class StorageService: StorageServiceProtocol {
     private let uploadTimeout: TimeInterval = 60.0 // 60 seconds
     private let logger = Logger(subsystem: "com.abundance.persistence", category: "StorageService")
 
+    /// Cached ISO8601 date formatter - expensive to create, so reused across uploads
+    /// Thread safety: ISO8601DateFormatter is thread-safe; nonisolated(unsafe) allows Sendable conformance
+    nonisolated(unsafe) private static let iso8601Formatter: ISO8601DateFormatter = {
+        ISO8601DateFormatter()
+    }()
+
     // MARK: - Initialization
 
     public init(storage: Storage = Storage.storage()) {
@@ -91,7 +97,7 @@ public final class StorageService: StorageServiceProtocol {
         metadata.contentType = "image/jpeg"
         metadata.cacheControl = "public, max-age=3600" // 1 hour cache
         metadata.customMetadata = [
-            "uploadedAt": ISO8601DateFormatter().string(from: Date()),
+            "uploadedAt": Self.iso8601Formatter.string(from: Date()),
             "itemId": itemId,
             "userId": userId,
             "version": "1.0",
@@ -130,7 +136,7 @@ public final class StorageService: StorageServiceProtocol {
         metadata.contentType = "video/quicktime"
         metadata.cacheControl = "public, max-age=86400" // 24 hour cache
         metadata.customMetadata = [
-            "uploadedAt": ISO8601DateFormatter().string(from: Date()),
+            "uploadedAt": Self.iso8601Formatter.string(from: Date()),
             "itemId": itemId,
             "userId": userId,
             "type": "live-photo-motion",

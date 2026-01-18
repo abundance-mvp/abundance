@@ -33,9 +33,21 @@ public struct Layer1Metadata: Sendable {
     }
 }
 
-/// Repository protocol for Item persistence operations
-/// **Pattern:** DESIGN-037 Pattern 1 (Repository Protocol)
-public protocol ItemRepository: Sendable {
+// MARK: - Segregated Repository Protocols (Interface Segregation Principle)
+
+/// Read-only operations for fetching items
+/// **Pattern:** DESIGN-037 Pattern 1 (Repository Protocol) - Interface Segregation
+public protocol ItemReadRepository: Sendable {
+    /// Fetches a single item by ID
+    func getItem(id: String) async throws -> Item?
+
+    /// Fetches all items for a user (sorted by creation date, newest first)
+    func getItems(userId: String) async throws -> [Item]
+}
+
+/// Write operations for creating, updating, and deleting items
+/// **Pattern:** DESIGN-037 Pattern 1 (Repository Protocol) - Interface Segregation
+public protocol ItemWriteRepository: Sendable {
     /// Creates a new item document in Firestore
     func createItem(userId: String, imageUrl: String) async throws -> String
 
@@ -57,28 +69,6 @@ public protocol ItemRepository: Sendable {
         photoMetadata: PhotoMetadata
     ) async throws
 
-    /// Fetches a single item by ID
-    func getItem(id: String) async throws -> Item?
-
-    /// Fetches all items for a user (sorted by creation date, newest first)
-    func getItems(userId: String) async throws -> [Item]
-
-    /// Real-time listener for item updates
-    func observeItem(id: String, onChange: @escaping (Item?) -> Void) -> ListenerRegistration
-
-    /// Real-time listener for all user items
-    func observeItems(userId: String) -> AnyPublisher<[Item], Never>
-
-    /// Deletes a single item by ID
-    /// - Parameter id: The item document ID
-    /// - Throws: Error if deletion fails
-    func deleteItem(id: String) async throws
-
-    /// Deletes multiple items in a batch
-    /// - Parameter ids: Set of item document IDs to delete
-    /// - Throws: Error if batch deletion fails
-    func deleteItems(ids: Set<String>) async throws
-
     /// Updates an existing item with optional user-edited field tracking
     /// - Parameters:
     ///   - item: Updated item data
@@ -90,7 +80,31 @@ public protocol ItemRepository: Sendable {
     /// - Parameter item: Item with new imageUrl and updated fields
     /// - Throws: Error if Firestore write fails
     func rescanItem(_ item: Item) async throws
+
+    /// Deletes a single item by ID
+    /// - Parameter id: The item document ID
+    /// - Throws: Error if deletion fails
+    func deleteItem(id: String) async throws
+
+    /// Deletes multiple items in a batch
+    /// - Parameter ids: Set of item document IDs to delete
+    /// - Throws: Error if batch deletion fails
+    func deleteItems(ids: Set<String>) async throws
 }
+
+/// Observable/reactive operations for real-time updates
+/// **Pattern:** DESIGN-037 Pattern 2 (Firestore Real-Time Listener Integration)
+public protocol ItemObservableRepository: Sendable {
+    /// Real-time listener for item updates
+    func observeItem(id: String, onChange: @escaping (Item?) -> Void) -> ListenerRegistration
+
+    /// Real-time listener for all user items
+    func observeItems(userId: String) -> AnyPublisher<[Item], Never>
+}
+
+/// Full repository protocol combining all operations (backward compatible)
+/// **Pattern:** DESIGN-037 Pattern 1 (Repository Protocol)
+public protocol ItemRepository: ItemReadRepository, ItemWriteRepository, ItemObservableRepository {}
 
 /// Service for managing Item documents in Firestore
 /// Triggers: Creating item with status="pending" triggers onItemCreated → Layer 2a extraction

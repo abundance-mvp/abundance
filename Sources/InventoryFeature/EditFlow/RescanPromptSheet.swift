@@ -16,18 +16,19 @@ public struct RescanPromptSheet: View {
         VStack(spacing: 24) {
             // Icon
             Image(systemName: "camera.viewfinder")
-                .font(.system(size: 56))
+                .font(.largeTitle)
+                .imageScale(.large)
                 .foregroundStyle(.secondary)
                 .padding(.top, 32)
 
             // Title
             Text("Edit Requires New Photo")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.title2.weight(.bold))
                 .multilineTextAlignment(.center)
 
             // Description
             Text("To ensure accuracy, we'll re-analyze your item with a new photo. This helps maintain data quality.")
-                .font(.system(size: 16, design: .rounded))
+                .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
@@ -40,7 +41,7 @@ public struct RescanPromptSheet: View {
                     viewModel.beginRescan()
                 } label: {
                     Label("Take New Photo", systemImage: "camera.fill")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.body.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                 }
@@ -52,7 +53,7 @@ public struct RescanPromptSheet: View {
                     dismiss()
                 } label: {
                     Text("Cancel")
-                        .font(.system(size: 17, weight: .medium, design: .rounded))
+                        .font(.body.weight(.medium))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                 }

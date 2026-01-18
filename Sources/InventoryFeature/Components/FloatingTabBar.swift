@@ -54,10 +54,10 @@ public struct FloatingTabBar: View {
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: item.icon)
-                    .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                    .font(.title3.weight(isSelected ? .semibold : .regular))
 
                 Text(item.title)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .font(.caption2.weight(.medium))
             }
             .foregroundStyle(isSelected ? .primary : .secondary)
             .frame(minWidth: 64, minHeight: 48)

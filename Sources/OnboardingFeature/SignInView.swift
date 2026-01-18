@@ -101,7 +101,8 @@ public struct SignInView: View {
 
     private var leafIcon: some View {
         Image(systemName: "leaf.fill")
-            .font(.system(size: 80))
+            .font(.system(size: 80).leading(.tight))
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .foregroundStyle(Color.brandMintGreen)
             .shadow(color: Color.brandMintGreen.opacity(0.4), radius: 16, x: 0, y: 8)
             .accessibilityHidden(true)
@@ -112,7 +113,8 @@ public struct SignInView: View {
     private var titleSection: some View {
         VStack(spacing: 12) {
             Text("Sign in to Abundance")
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.system(size: 28, weight: .bold, design: .rounded).leading(.tight))
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
 
@@ -219,7 +221,7 @@ public struct SignInView: View {
 
     private var legalText: some View {
         Text("By signing in, you agree to our Terms of Service and Privacy Policy")
-            .font(.system(size: 13, design: .rounded))
+            .font(.footnote.leading(.tight))
             .foregroundStyle(.tertiary)
             .multilineTextAlignment(.center)
     }

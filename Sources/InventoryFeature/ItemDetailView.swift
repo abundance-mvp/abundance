@@ -41,7 +41,7 @@ public struct ItemDetailView: View {
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     .overlay {
                                         Image(systemName: "photo")
-                                            .font(.system(size: 80))
+                                            .font(.largeTitle)
                                             .foregroundStyle(.tertiary)
                                     }
                             @unknown default:
@@ -49,6 +49,7 @@ public struct ItemDetailView: View {
                             }
                         }
                         .clipped()
+                        .accessibilityLabel("Detail photo of \(item.name ?? "item")")
                     }
                     .frame(height: outerGeometry.size.height * 0.5)
                     .background(
@@ -66,7 +67,7 @@ public struct ItemDetailView: View {
                         // Header: Name + Edit
                         HStack {
                             Text(item.name ?? "Unnamed Item")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.title.weight(.bold))
                                 .foregroundStyle(.primary)
 
                             Spacer()
@@ -75,7 +76,7 @@ public struct ItemDetailView: View {
                                 startEditFlow()
                             } label: {
                                 Image(systemName: "pencil")
-                                    .font(.system(size: 20))
+                                    .font(.title3)
                                     .foregroundStyle(.primary)
                             }
                             .accessibilityLabel("Edit item")
@@ -86,12 +87,12 @@ public struct ItemDetailView: View {
                             HStack(spacing: 8) {
                                 if let brand = item.brand {
                                     Text(brand)
-                                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                                        .font(.subheadline.weight(.medium))
                                         .foregroundStyle(.secondary)
                                 }
                                 if let model = item.model {
                                     Text(model)
-                                        .font(.system(size: 14, design: .rounded))
+                                        .font(.footnote)
                                         .foregroundStyle(.tertiary)
                                 }
                             }
@@ -113,11 +114,11 @@ public struct ItemDetailView: View {
                         if let value = item.estimatedValue {
                             HStack {
                                 Text("Est. Value:")
-                                    .font(.system(size: 15, design: .rounded))
+                                    .font(.subheadline)
                                     .foregroundStyle(.secondary)
                                 Spacer()
                                 Text("$\(value, specifier: "%.2f")")
-                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                    .font(.title3.weight(.bold))
                                     .foregroundStyle(.green)
                             }
                             .accessibilityElement(children: .combine)
@@ -147,10 +148,10 @@ public struct ItemDetailView: View {
                         if let notes = item.processingNotes, !notes.isEmpty {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("AI Notes")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .font(.caption.weight(.medium))
                                     .foregroundStyle(.tertiary)
                                 Text(notes)
-                                    .font(.system(size: 14, design: .rounded))
+                                    .font(.footnote)
                                     .foregroundStyle(.secondary)
                             }
                             .padding(.top, 8)
@@ -290,7 +291,7 @@ private struct CategoryBadge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 12, weight: .medium, design: .rounded))
+            .font(.caption.weight(.medium))
             .foregroundStyle(.primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
@@ -309,10 +310,10 @@ private struct MetadataCell: View {
         if let value = value {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                    .font(.system(size: 11, design: .rounded))
+                    .font(.caption2)
                     .foregroundStyle(.tertiary)
                 Text(value)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.footnote.weight(.medium))
                     .foregroundStyle(.primary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -328,11 +329,11 @@ private struct ConfidenceRow: View {
             Image(systemName: confidenceIcon)
                 .foregroundStyle(confidenceColor)
             Text("AI Confidence")
-                .font(.system(size: 15, design: .rounded))
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
             Spacer()
             Text(confidence.rawValue.capitalized)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(confidenceColor)
         }
         .accessibilityElement(children: .combine)
