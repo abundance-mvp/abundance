@@ -18,6 +18,7 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import * as logger from 'firebase-functions/logger';
 import { detectObjectsInImages, getEmptyResultReasoning } from '../ai-pipeline/layer1/layer1-service';
 import { LAYER1_TIMEOUTS } from '../ai-pipeline/layer1/prompts';
 
@@ -59,7 +60,7 @@ export async function validateSessionDocument(
 ): Promise<ValidationResult> {
   // Validate userId exists and is a non-empty string
   if (!sessionData.userId || typeof sessionData.userId !== 'string' || sessionData.userId.trim() === '') {
-    console.error('Session validation failed: Invalid or missing userId');
+    logger.error('Session validation failed', { reason: 'Invalid or missing userId' });
     await sessionRef.update({
       status: 'failed',
       error: 'Invalid session document: missing userId',
@@ -71,7 +72,7 @@ export async function validateSessionDocument(
 
   // Validate originalImageUrls is a non-empty array
   if (!Array.isArray(sessionData.originalImageUrls) || sessionData.originalImageUrls.length === 0) {
-    console.error('Session validation failed: No images provided');
+    logger.error('Session validation failed', { reason: 'No images provided' });
     await sessionRef.update({
       status: 'failed',
       error: 'No images provided',
@@ -85,7 +86,7 @@ export async function validateSessionDocument(
   for (const url of sessionData.originalImageUrls as string[]) {
     const bucketMatch = url.match(/gs:\/\/([^/]+)\//);
     if (!bucketMatch || !ALLOWED_BUCKETS.some(b => bucketMatch[1].includes(b))) {
-      console.error(`Session validation failed: Unauthorized bucket in URL: ${url}`);
+      logger.error('Session validation failed', { reason: 'Unauthorized bucket', url });
       await sessionRef.update({
         status: 'failed',
         error: 'Unauthorized storage bucket',
@@ -146,7 +147,7 @@ export const onSessionCreated = onDocumentUpdated(
     const afterData = event.data?.after.data() as CaptureSession | undefined;
 
     if (!afterData) {
-      console.error('onSessionCreated: No document data');
+      logger.error('onSessionCreated: No document data');
       return;
     }
 
@@ -169,7 +170,11 @@ export const onSessionCreated = onDocumentUpdated(
     const db = getFirestore();
     const sessionRef = db.collection('sessions').doc(sessionId);
 
-    console.log(`Processing session ${sessionId}: ${afterData.captureMode} mode with ${afterData.originalImageUrls.length} images`);
+    logger.info('Processing session', {
+      sessionId,
+      captureMode: afterData.captureMode,
+      imageCount: afterData.originalImageUrls.length
+    });
 
     try {
       // Validate session document before processing
@@ -178,7 +183,11 @@ export const onSessionCreated = onDocumentUpdated(
         sessionRef
       );
       if (!validation.valid) {
-        console.error(`Session ${sessionId} validation failed: ${validation.errorMessage}`);
+        logger.error('Session validation failed', {
+          sessionId,
+          errorCode: validation.errorCode,
+          errorMessage: validation.errorMessage
+        });
         return;
       }
 
@@ -218,7 +227,10 @@ export const onSessionCreated = onDocumentUpdated(
           reasoning: result.detections.reasoning || null
         });
 
-        console.log(`Session ${sessionId}: Detected ${detectedObjects.length} objects`);
+        logger.info('Session detection completed', {
+          sessionId,
+          objectCount: detectedObjects.length
+        });
       } else {
         // No objects detected - include reasoning
         const reasoning = getEmptyResultReasoning(result.detections);
@@ -230,15 +242,21 @@ export const onSessionCreated = onDocumentUpdated(
           reasoning
         });
 
-        console.log(`Session ${sessionId}: No objects detected - ${reasoning}`);
+        logger.info('Session detection completed with no objects', {
+          sessionId,
+          reasoning
+        });
       }
 
     } catch (error) {
-      console.error(`Session ${sessionId} failed:`, error);
-
-      // Update session with error
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorCode = determineErrorCode(error);
+
+      logger.error('Session processing failed', {
+        sessionId,
+        error: errorMessage,
+        errorCode
+      });
 
       await sessionRef.update({
         status: 'failed',

@@ -48,6 +48,13 @@ OUTPUT: Return valid JSON array matching the schema.`;
 
 /**
  * Generation config for Gemini 3 Flash Layer 1
+ *
+ * Property casing verified against @google/genai SDK types (2026-01-18):
+ * - thinkingConfig (camelCase) - matches SDK GenerationConfig interface
+ * - thinkingLevel (camelCase) - matches SDK ThinkingConfig interface
+ * - ThinkingLevel enum values: LOW, MINIMAL, MEDIUM, HIGH
+ *
+ * @see node_modules/@google/genai/dist/genai.d.ts - GenerationConfig, ThinkingConfig
  */
 export const LAYER1_GENERATION_CONFIG = {
   temperature: 0.1,

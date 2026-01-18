@@ -9,6 +9,7 @@
  */
 
 import { Storage } from 'firebase-admin/storage';
+import * as logger from 'firebase-functions/logger';
 import { createVertexAIClient } from '../gemini/vertexai-config';
 import {
   LAYER1_MODEL_ID,
@@ -55,6 +56,27 @@ async function sleep(ms: number): Promise<void> {
 }
 
 /**
+ * Wraps a promise with a timeout
+ *
+ * @param promise - The promise to wrap
+ * @param timeoutMs - Timeout in milliseconds
+ * @param errorMessage - Error message if timeout is exceeded
+ * @returns The promise result or throws timeout error
+ */
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  errorMessage: string
+): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
+    })
+  ]);
+}
+
+/**
  * Call Gemini Flash with exponential backoff retry
  *
  * @param imageBase64s - Array of base64-encoded images
@@ -79,14 +101,16 @@ export async function callGeminiFlashWithRetry(
         throw lastError;
       }
 
-      console.warn(
-        `Gemini Flash attempt ${attempt + 1}/${maxRetries + 1} failed: ${lastError.message}`
-      );
+      logger.warn('Gemini Flash attempt failed', {
+        attempt: attempt + 1,
+        maxAttempts: maxRetries + 1,
+        error: lastError.message
+      });
 
       // Apply exponential backoff before next retry (except on last attempt)
       if (attempt < maxRetries) {
         const backoffMs = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
-        console.log(`Retrying in ${backoffMs}ms...`);
+        logger.info('Retrying Gemini Flash', { backoffMs });
         await sleep(backoffMs);
       }
     }
@@ -162,7 +186,7 @@ export async function detectObjectsInImages(
   // Validate response
   const validation = validateDetectionResponse(detections);
   if (!validation.valid) {
-    console.error('Invalid detection response:', validation.errors);
+    logger.error('Invalid detection response', { errors: validation.errors });
     // Return empty result on validation failure
     return {
       detections: { objects: [], reasoning: 'Invalid response from detection model' },
@@ -194,40 +218,48 @@ export async function detectObjectsInImages(
 }
 
 /**
- * Fetch image from GCS and return as base64
+ * Fetch image from GCS and return as base64 with timeout enforcement
  */
 async function fetchImageFromGCS(gcsUrl: string, storage: Storage): Promise<string> {
-  // Parse GCS URL formats:
-  // - gs://bucket/path
-  // - https://storage.googleapis.com/bucket/path
-  // - https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media&token=...
-  let bucket: string;
-  let path: string;
+  const fetchPromise = (async (): Promise<string> => {
+    // Parse GCS URL formats:
+    // - gs://bucket/path
+    // - https://storage.googleapis.com/bucket/path
+    // - https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media&token=...
+    let bucket: string;
+    let path: string;
 
-  if (gcsUrl.startsWith('gs://')) {
-    const match = gcsUrl.match(/^gs:\/\/([^/]+)\/(.+)$/);
-    if (!match) throw new Error(`Invalid GCS URL: ${gcsUrl}`);
-    bucket = match[1];
-    path = match[2];
-  } else if (gcsUrl.includes('firebasestorage.googleapis.com')) {
-    // Firebase Storage download URL format: /v0/b/{bucket}/o/{urlEncodedPath}
-    const url = new URL(gcsUrl);
-    const bucketMatch = url.pathname.match(/\/v0\/b\/([^/]+)\/o\/(.+)/);
-    if (!bucketMatch) throw new Error(`Invalid Firebase Storage URL: ${gcsUrl}`);
-    bucket = bucketMatch[1];
-    path = decodeURIComponent(bucketMatch[2]);
-  } else if (gcsUrl.includes('storage.googleapis.com')) {
-    const url = new URL(gcsUrl);
-    const pathParts = url.pathname.split('/').filter(Boolean);
-    bucket = pathParts[0];
-    path = pathParts.slice(1).join('/');
-  } else {
-    throw new Error(`Unsupported URL format: ${gcsUrl}`);
-  }
+    if (gcsUrl.startsWith('gs://')) {
+      const match = gcsUrl.match(/^gs:\/\/([^/]+)\/(.+)$/);
+      if (!match) throw new Error(`Invalid GCS URL: ${gcsUrl}`);
+      bucket = match[1];
+      path = match[2];
+    } else if (gcsUrl.includes('firebasestorage.googleapis.com')) {
+      // Firebase Storage download URL format: /v0/b/{bucket}/o/{urlEncodedPath}
+      const url = new URL(gcsUrl);
+      const bucketMatch = url.pathname.match(/\/v0\/b\/([^/]+)\/o\/(.+)/);
+      if (!bucketMatch) throw new Error(`Invalid Firebase Storage URL: ${gcsUrl}`);
+      bucket = bucketMatch[1];
+      path = decodeURIComponent(bucketMatch[2]);
+    } else if (gcsUrl.includes('storage.googleapis.com')) {
+      const url = new URL(gcsUrl);
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      bucket = pathParts[0];
+      path = pathParts.slice(1).join('/');
+    } else {
+      throw new Error(`Unsupported URL format: ${gcsUrl}`);
+    }
 
-  const file = storage.bucket(bucket).file(path);
-  const [buffer] = await file.download();
-  return buffer.toString('base64');
+    const file = storage.bucket(bucket).file(path);
+    const [buffer] = await file.download();
+    return buffer.toString('base64');
+  })();
+
+  return withTimeout(
+    fetchPromise,
+    LAYER1_TIMEOUTS.IMAGE_FETCH_TIMEOUT_MS,
+    `Image fetch timeout after ${LAYER1_TIMEOUTS.IMAGE_FETCH_TIMEOUT_MS}ms: ${gcsUrl}`
+  );
 }
 
 /**
@@ -265,15 +297,17 @@ async function callGeminiFlash(imageBase64s: string[]): Promise<Layer1DetectionR
 
   const text = response.text;
   if (!text) {
-    console.error('No text response from Gemini Flash');
+    logger.error('No text response from Gemini Flash');
     return { objects: [], reasoning: 'No response from detection model' };
   }
 
   try {
     return JSON.parse(text) as Layer1DetectionResponse;
   } catch (error) {
-    console.error('Failed to parse Gemini Flash response:', error);
-    console.error('Raw response:', text);
+    logger.error('Failed to parse Gemini Flash response', {
+      error: error instanceof Error ? error.message : String(error),
+      responsePreview: text.substring(0, 500)
+    });
     return { objects: [], reasoning: 'Failed to parse detection response' };
   }
 }
@@ -308,14 +342,20 @@ async function cropAndUploadObjects(
     for (const obj of groupObjects) {
       // Validate bounding box
       if (!isValidBoundingBox(obj.box_2d)) {
-        console.warn(`Skipping invalid bounding box for ${obj.label}:`, obj.box_2d);
+        logger.warn('Skipping invalid bounding box', {
+          label: obj.label,
+          box_2d: obj.box_2d
+        });
         continue;
       }
 
       // Get image for this detection
       const imageBase64 = imageBase64s[obj.image_index];
       if (!imageBase64) {
-        console.warn(`No image at index ${obj.image_index} for ${obj.label}`);
+        logger.warn('No image at index for detection', {
+          imageIndex: obj.image_index,
+          label: obj.label
+        });
         continue;
       }
 
@@ -324,7 +364,7 @@ async function cropAndUploadObjects(
         const imageBuffer = Buffer.from(imageBase64, 'base64');
         const metadata = await sharpLib(imageBuffer).metadata();
         if (!metadata.width || !metadata.height) {
-          console.warn(`Could not get image dimensions for ${obj.label}`);
+          logger.warn('Could not get image dimensions', { label: obj.label });
           continue;
         }
 
@@ -374,7 +414,11 @@ async function cropAndUploadObjects(
         });
 
       } catch (error) {
-        console.error(`Failed to crop object ${obj.label}:`, error);
+        logger.error('Failed to crop object', {
+          label: obj.label,
+          groupId,
+          error: error instanceof Error ? error.message : String(error)
+        });
         // Continue with other crops
       }
     }
