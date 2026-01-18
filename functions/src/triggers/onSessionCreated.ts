@@ -27,6 +27,79 @@ import { LAYER1_TIMEOUTS } from '../ai-pipeline/layer1/prompts';
 type SessionStatus = 'uploading' | 'detecting' | 'detected' | 'failed';
 
 /**
+ * Validation result for session documents
+ */
+export interface ValidationResult {
+  valid: boolean;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+/**
+ * Allowed storage buckets for image URLs
+ * These are the temp buckets where client-uploaded images are stored
+ */
+const ALLOWED_BUCKETS = ['abundance-temp', 'abundance-dev-temp', 'abundance-staging-temp'];
+
+/**
+ * Validate session document before processing
+ *
+ * Checks:
+ * 1. userId is a non-empty string
+ * 2. originalImageUrls is a non-empty array
+ * 3. All URLs are from allowed storage buckets
+ *
+ * @param sessionData - The session document data
+ * @param sessionRef - Reference to the session document for updating on failure
+ * @returns ValidationResult indicating if the document is valid
+ */
+export async function validateSessionDocument(
+  sessionData: Record<string, unknown>,
+  sessionRef: FirebaseFirestore.DocumentReference
+): Promise<ValidationResult> {
+  // Validate userId exists and is a non-empty string
+  if (!sessionData.userId || typeof sessionData.userId !== 'string' || sessionData.userId.trim() === '') {
+    console.error('Session validation failed: Invalid or missing userId');
+    await sessionRef.update({
+      status: 'failed',
+      error: 'Invalid session document: missing userId',
+      errorCode: 'INVALID_DOCUMENT',
+      failedAt: FieldValue.serverTimestamp()
+    });
+    return { valid: false, errorCode: 'INVALID_DOCUMENT', errorMessage: 'Missing userId' };
+  }
+
+  // Validate originalImageUrls is a non-empty array
+  if (!Array.isArray(sessionData.originalImageUrls) || sessionData.originalImageUrls.length === 0) {
+    console.error('Session validation failed: No images provided');
+    await sessionRef.update({
+      status: 'failed',
+      error: 'No images provided',
+      errorCode: 'NO_IMAGES',
+      failedAt: FieldValue.serverTimestamp()
+    });
+    return { valid: false, errorCode: 'NO_IMAGES', errorMessage: 'No images provided' };
+  }
+
+  // Validate all URLs are from allowed buckets
+  for (const url of sessionData.originalImageUrls as string[]) {
+    const bucketMatch = url.match(/gs:\/\/([^/]+)\//);
+    if (!bucketMatch || !ALLOWED_BUCKETS.some(b => bucketMatch[1].includes(b))) {
+      console.error(`Session validation failed: Unauthorized bucket in URL: ${url}`);
+      await sessionRef.update({
+        status: 'failed',
+        error: 'Unauthorized storage bucket',
+        errorCode: 'UNAUTHORIZED_BUCKET',
+        failedAt: FieldValue.serverTimestamp()
+      });
+      return { valid: false, errorCode: 'UNAUTHORIZED_BUCKET', errorMessage: 'Unauthorized bucket' };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
  * Capture mode enum
  */
 type CaptureMode = 'single' | 'burst';
@@ -99,6 +172,16 @@ export const onSessionCreated = onDocumentUpdated(
     console.log(`Processing session ${sessionId}: ${afterData.captureMode} mode with ${afterData.originalImageUrls.length} images`);
 
     try {
+      // Validate session document before processing
+      const validation = await validateSessionDocument(
+        afterData as unknown as Record<string, unknown>,
+        sessionRef
+      );
+      if (!validation.valid) {
+        console.error(`Session ${sessionId} validation failed: ${validation.errorMessage}`);
+        return;
+      }
+
       // Update status to detecting
       await sessionRef.update({
         status: 'detecting'
