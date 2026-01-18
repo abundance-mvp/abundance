@@ -14,6 +14,7 @@ import {
   LAYER1_MODEL_ID,
   LAYER1_SYSTEM_PROMPT,
   LAYER1_GENERATION_CONFIG,
+  LAYER1_TIMEOUTS,
   createImagePart
 } from './prompts';
 import {
@@ -26,6 +27,73 @@ import {
   addPadding,
   isValidBoundingBox
 } from './utils/bbox-converter';
+
+/**
+ * Retryable error codes from Gemini/Vertex AI API
+ * These are transient errors that may succeed on retry
+ */
+const RETRYABLE_ERROR_CODES = [
+  'UNAVAILABLE',
+  'DEADLINE_EXCEEDED',
+  'RESOURCE_EXHAUSTED',
+  'INTERNAL',
+  'UNKNOWN'
+];
+
+/**
+ * Check if an error is retryable (transient failure)
+ */
+function isRetryableError(error: Error): boolean {
+  return RETRYABLE_ERROR_CODES.some(code => error.message.includes(code));
+}
+
+/**
+ * Sleep for specified milliseconds
+ */
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Call Gemini Flash with exponential backoff retry
+ *
+ * @param imageBase64s - Array of base64-encoded images
+ * @param maxRetries - Maximum number of retry attempts (default from config)
+ * @returns Detection response from Gemini
+ * @throws Last error if all retries fail or non-retryable error
+ */
+export async function callGeminiFlashWithRetry(
+  imageBase64s: string[],
+  maxRetries: number = LAYER1_TIMEOUTS.GEMINI_FLASH_MAX_RETRIES
+): Promise<Layer1DetectionResponse> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await callGeminiFlash(imageBase64s);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // If error is not retryable, fail immediately
+      if (!isRetryableError(lastError)) {
+        throw lastError;
+      }
+
+      console.warn(
+        `Gemini Flash attempt ${attempt + 1}/${maxRetries + 1} failed: ${lastError.message}`
+      );
+
+      // Apply exponential backoff before next retry (except on last attempt)
+      if (attempt < maxRetries) {
+        const backoffMs = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
+        console.log(`Retrying in ${backoffMs}ms...`);
+        await sleep(backoffMs);
+      }
+    }
+  }
+
+  throw lastError ?? new Error('Gemini Flash failed with unknown error');
+}
 
 // Dynamic import for sharp (ESM module)
 let sharp: typeof import('sharp') | null = null;
@@ -88,8 +156,8 @@ export async function detectObjectsInImages(
     imageUrls.map(url => fetchImageFromGCS(url, storage))
   );
 
-  // Call Gemini 3 Flash for detection
-  const detections = await callGeminiFlash(imageBase64s);
+  // Call Gemini 3 Flash for detection with retry logic
+  const detections = await callGeminiFlashWithRetry(imageBase64s);
 
   // Validate response
   const validation = validateDetectionResponse(detections);
@@ -292,11 +360,13 @@ async function cropAndUploadObjects(
           }
         });
 
-        // Make file publicly readable (for iOS client to download)
-        await file.makePublic();
-
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${cropPath}`;
-        croppedUrls.push(publicUrl);
+        // Generate signed URL with 24-hour expiration (security: no public access)
+        const [signedUrl] = await file.getSignedUrl({
+          action: 'read',
+          expires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+          version: 'v4'
+        });
+        croppedUrls.push(signedUrl);
 
         boundingBoxes.push({
           imageIndex: obj.image_index,
