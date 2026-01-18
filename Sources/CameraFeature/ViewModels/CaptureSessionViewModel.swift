@@ -46,6 +46,9 @@ public final class CaptureSessionViewModel: ObservableObject {
     /// Last captured photo data (for displaying frozen frame and results)
     @Published public var lastCapturedPhoto: Data?
 
+    /// Accumulated errors during burst capture
+    @Published public var burstErrors: [CaptureError] = []
+
     // MARK: - Configuration
 
     /// Minimum burst hold duration (seconds)
@@ -179,6 +182,11 @@ public final class CaptureSessionViewModel: ObservableObject {
         let duration = Date().timeIntervalSince(startTime)
         burstStartTime = nil
 
+        // Log accumulated errors if any
+        if !burstErrors.isEmpty {
+            logger.warning("Burst completed with \(self.burstErrors.count) capture errors")
+        }
+
         // Check minimum duration
         if duration < minBurstDuration || capturedPhotos.count < 2 {
             isCapturing = false
@@ -240,7 +248,14 @@ public final class CaptureSessionViewModel: ObservableObject {
             // Haptic feedback for each capture
             await triggerHapticPulse()
         } catch {
+            // Accumulate errors and stop after 3 failures
+            let captureError = (error as? CaptureError) ?? .unknownError(underlying: error)
+            burstErrors.append(captureError)
             logger.error("Failed to capture burst photo: \(error.localizedDescription)")
+            if burstErrors.count >= 3 {
+                logger.error("Too many burst capture failures, stopping burst")
+                await endBurstCapture()
+            }
         }
     }
 
@@ -371,6 +386,7 @@ public final class CaptureSessionViewModel: ObservableObject {
         burstTask?.cancel()
         burstTask = nil
         lastCapturedPhoto = nil
+        burstErrors = []  // Clear errors on cleanup
     }
 
     private func triggerHapticPulse() async {
