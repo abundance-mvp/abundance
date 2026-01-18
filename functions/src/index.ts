@@ -5,9 +5,6 @@ import { getItem } from './items/getItem';
 import { listItems } from './items/listItems';
 
 // Import triggers
-import { onItemCreated } from './triggers/onItemCreated';
-import { onLayer2aComplete } from './triggers/onLayer2aComplete';
-import { onLayer2bComplete } from './triggers/onLayer2bComplete';
 import { onItemCreatedGemini3 } from './triggers/onItemCreatedGemini3';
 import { onItemDeleted } from './triggers/onItemDeleted';
 import { onSessionCreated } from './triggers/onSessionCreated';
@@ -183,9 +180,6 @@ export const listItemsHTTP = functions.https.onRequest(async (req, res) => {
 
 // Export Firestore triggers
 export {
-  onItemCreated,
-  onLayer2aComplete,
-  onLayer2bComplete,
   onItemCreatedGemini3,
   onItemDeleted,
   onSessionCreated,
