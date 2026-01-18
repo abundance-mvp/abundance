@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "abundance-loading-view.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

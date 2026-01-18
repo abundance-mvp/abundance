@@ -1,5 +1,4 @@
 import { GoogleGenAI } from '@google/genai';
-import * as functions from 'firebase-functions';
 import fetch from 'node-fetch';
 
 /**
@@ -10,11 +9,10 @@ export class GeminiProvider {
   private genAI: GoogleGenAI;
 
   constructor() {
-    // Support both local development and production deployment
-    // Priority: process.env.GOOGLE_API_KEY (local) > functions.config().gemini.api_key (production)
-    const apiKey = process.env.GOOGLE_API_KEY || functions.config().gemini?.api_key;
+    // GOOGLE_API_KEY is loaded from .env file (Firebase Functions supports .env natively)
+    const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
-      throw new Error('API key is required. Set GOOGLE_API_KEY environment variable (local) or configure functions.config().gemini.api_key (production)');
+      throw new Error('GOOGLE_API_KEY environment variable is required. Add it to functions/.env file.');
     }
 
     this.genAI = new GoogleGenAI({ apiKey });
