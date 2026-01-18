@@ -8,6 +8,7 @@ import Persistence
 public struct RescanCameraView: View {
     @Bindable var viewModel: EditItemViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var cameraService = CameraService()
     @State private var isCapturing = false
     @State private var captureSession: AVCaptureSession?
@@ -77,6 +78,7 @@ public struct RescanCameraView: View {
             // Processing overlay
             if viewModel.state == .processing {
                 ProcessingOverlay()
+                    .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
             }
         }
         .onAppear {

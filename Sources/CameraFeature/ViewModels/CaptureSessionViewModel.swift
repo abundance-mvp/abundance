@@ -1,4 +1,3 @@
-// swiftlint:disable type_body_length
 import Foundation
 import SwiftUI
 import Combine
@@ -291,7 +290,6 @@ public final class CaptureSessionViewModel: ObservableObject {
         sessionObserver?.cancel()
 
         sessionObserver = sessionService.observeSession(sessionId: sessionId)
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] session in
                 guard let self, let session else { return }
                 self.handleSessionUpdate(session)
@@ -459,4 +457,3 @@ public final class CaptureSessionViewModel: ObservableObject {
         itemObservers[itemId] = observer
     }
 }
-// swiftlint:enable type_body_length

@@ -75,6 +75,12 @@ public struct DetectionResultsView: View {
                         isCataloging: catalogingObjectIds.contains(object.groupId),
                         isCataloged: catalogedObjectIds.contains(object.groupId)
                     )
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Detected: \(object.label)")
+                    .accessibilityHint(
+                        selectedObjectId == object.groupId ? "Double tap to deselect" : "Double tap to select"
+                    )
+                    .accessibilityAddTraits(.isButton)
                     .onTapGesture {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedObjectId = selectedObjectId == object.groupId ? nil : object.groupId
@@ -112,6 +118,10 @@ public struct DetectionResultsView: View {
                                     onCatalogObject(object)
                                 }
                             )
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("\(object.label), \(object.category)")
+                            .accessibilityHint("Double tap to select this object")
+                            .accessibilityAddTraits(.isButton)
                             .onTapGesture {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     selectedObjectId = object.groupId
@@ -158,7 +168,7 @@ public struct DetectionResultsView: View {
                 Button("Catalog All") {
                     onCatalogAll()
                 }
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.blue)
             }
         }
@@ -259,7 +269,7 @@ struct BoundingBoxOverlay: View {
             }
 
             Text(object.label)
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.caption2.weight(.semibold))
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 6)
@@ -338,10 +348,10 @@ struct DetectedObjectCard: View {
     private var objectInfoView: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(object.label)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.body.weight(.semibold))
 
             Text(object.category.capitalized)
-                .font(.system(size: 12, design: .rounded))
+                .font(.caption)
                 .foregroundStyle(.secondary)
 
             attributesView
@@ -354,7 +364,7 @@ struct DetectedObjectCard: View {
             HStack(spacing: 4) {
                 ForEach(Array(object.attributes.prefix(2)), id: \.key) { _, value in
                     Text(value)
-                        .font(.system(size: 10, design: .rounded))
+                        .font(.caption2)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color.secondary.opacity(0.2))
@@ -368,14 +378,14 @@ struct DetectedObjectCard: View {
     private var catalogButton: some View {
         if isCataloged {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 24))
+                .font(.title2)
                 .foregroundStyle(.green)
         } else if isCataloging {
             ProgressView()
         } else {
             Button(action: onCatalog) {
                 Text("Catalog")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.caption.weight(.semibold))
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
@@ -396,7 +406,7 @@ struct NoObjectsDetectedView: View {
                 .foregroundStyle(.secondary)
 
             Text("No Objects Detected")
-                .font(.system(size: 22, weight: .semibold, design: .rounded))
+                .font(.title2.weight(.semibold))
 
             if let reasoning = reasoning {
                 Text(reasoning)
@@ -408,7 +418,7 @@ struct NoObjectsDetectedView: View {
 
             VStack(spacing: 12) {
                 Text("Tips for better detection:")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.caption.weight(.semibold))
 
                 VStack(alignment: .leading, spacing: 8) {
                     tipRow(icon: "light.max", text: "Ensure good lighting")

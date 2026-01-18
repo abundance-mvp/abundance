@@ -5,6 +5,7 @@ import Persistence
 public struct ItemDetailView: View {
     public let item: Item
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollOffset: CGFloat = 0
     @State private var editViewModel: EditItemViewModel?
     @State private var showRescanPrompt = false
@@ -33,7 +34,7 @@ public struct ItemDetailView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: geometry.size.width, height: geometry.size.height)
-                                    .offset(y: scrollOffset * 0.5) // Parallax effect
+                                    .offset(y: reduceMotion ? 0 : scrollOffset * 0.5) // Parallax effect
                                     .clipped()
                             case .failure:
                                 Rectangle()

@@ -54,10 +54,10 @@ public struct SignInView: View {
     private var offlineWarning: some View {
         HStack(spacing: 8) {
             Image(systemName: "wifi.slash")
-                .font(.system(size: 14, weight: .medium))
+                .font(.caption.weight(.medium))
 
             Text("No internet connection")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.subheadline)
         }
         .foregroundStyle(Color.warningColor)
         .padding(.horizontal, 16)
@@ -113,7 +113,7 @@ public struct SignInView: View {
     private var titleSection: some View {
         VStack(spacing: 12) {
             Text("Sign in to Abundance")
-                .font(.system(size: 28, weight: .bold, design: .rounded).leading(.tight))
+                .font(.title.weight(.bold).leading(.tight))
                 .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
@@ -187,9 +187,9 @@ public struct SignInView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.caption.weight(.medium))
                         Text("Check Connection")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .font(.caption.weight(.medium))
                     }
                     .foregroundStyle(Color.accentPrimary)
                 }

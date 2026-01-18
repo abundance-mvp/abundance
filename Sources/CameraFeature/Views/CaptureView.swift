@@ -246,6 +246,8 @@ public struct CaptureView: View {
                         .foregroundStyle(.white)
                         .padding(16)
                 }
+                .accessibilityLabel("Cancel capture")
+                .accessibilityHint("Dismisses the camera without saving")
 
                 Spacer()
 
@@ -271,7 +273,7 @@ public struct CaptureView: View {
         }()
 
         return Text(text)
-            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .font(.caption.weight(.semibold))
             .foregroundStyle(.white)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -286,6 +288,8 @@ public struct CaptureView: View {
                     Capsule().fill(.ultraThickMaterial)
                 }
             }
+            .accessibilityLabel("Capture status: \(text)")
+            .accessibilityAddTraits(.updatesFrequently)
     }
 
     // MARK: - Bottom Bar
@@ -328,7 +332,7 @@ public struct CaptureView: View {
             : "Double-tap to scan • Hold for burst"
 
         return Text(text)
-            .font(.system(size: 15, weight: .regular, design: .rounded))
+            .font(.subheadline)
             .foregroundStyle(.secondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -414,8 +418,9 @@ public struct CaptureView: View {
     }
 
     private func teardownCamera() {
+        let service = cameraService  // Capture reference before Task
         Task {
-            await cameraService.stopSession()
+            await service.stopSession()
         }
     }
 

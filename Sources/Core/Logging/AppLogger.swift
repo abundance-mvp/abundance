@@ -14,6 +14,13 @@ import Foundation
 /// Note: @unchecked Sendable because dictionaries with [String: Any] cannot be proven Sendable at compile time,
 /// but the enum is only used for logging and passed by value, making it thread-safe in practice.
 public enum LogEvent: @unchecked Sendable {
+    // MARK: - Static Cached Formatter
+    // ISO8601DateFormatter.string(from:) is documented as thread-safe
+    private nonisolated(unsafe) static let isoFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        return formatter
+    }()
+
     // MARK: - UI Interaction Events
     case buttonTapped(button: String, screen: String, context: [String: Any] = [:])
     case buttonUnresponsive(button: String, screen: String, reason: String)
@@ -89,7 +96,8 @@ public enum LogEvent: @unchecked Sendable {
             return "data"
         case .firestoreQueryStarted, .firestoreQueryCompleted, .firestoreWriteFailed, .firestoreRuleDenied:
             return "firebase"
-        case .visionDetectionStarted, .visionDetectionCompleted, .visionDetectionFailed, .barcodeDetected, .barcodeDetectionFailed:
+        case .visionDetectionStarted, .visionDetectionCompleted, .visionDetectionFailed,
+             .barcodeDetected, .barcodeDetectionFailed:
             return "ai-pipeline"
         case .authSignInStarted, .authSignInCompleted, .authSignInFailed, .authTokenRefreshed:
             return "auth"
@@ -176,7 +184,7 @@ public enum LogEvent: @unchecked Sendable {
 
     var metadata: [String: Any] {
         var meta: [String: Any] = [
-            "timestamp": ISO8601DateFormatter().string(from: Date()),
+            "timestamp": Self.isoFormatter.string(from: Date()),
             "category": category
         ]
 

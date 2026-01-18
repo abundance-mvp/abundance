@@ -12,7 +12,7 @@ Create git worktrees and dispatch specialized agents to work on triaged issues i
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        DISPATCH COORDINATOR                          │
 ├─────────────────────────────────────────────────────────────────────┤
-│  1. Parse triaged issues from .debug/issues/triaged/*.json          │
+│  1. Parse triaged issues from docs/issues/
 │  2. Classify each issue → select Axiom agent                         │
 │  3. Create isolated git worktrees                                    │
 │  4. Dispatch agents in parallel with:                                │
