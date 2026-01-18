@@ -7,6 +7,50 @@
 
 import SwiftUI
 
+// MARK: - Design Tokens
+
+/// Glass intensity design tokens for consistent visual weight across the app
+/// - light: Subtle background effects (e.g., hints, secondary containers)
+/// - medium: Standard glass effects (e.g., cards, sheets)
+/// - heavy: Prominent glass effects (e.g., modals, overlays)
+public enum GlassIntensity: Sendable {
+    case light
+    case medium
+    case heavy
+
+    /// Material style for iOS 17-25 fallback
+    @available(iOS 17.0, macOS 14.0, *)
+    @MainActor var fallbackMaterial: Material {
+        switch self {
+        case .light: return .thinMaterial
+        case .medium: return .thickMaterial
+        case .heavy: return .ultraThickMaterial
+        }
+    }
+
+    /// Opacity multiplier for solid color fallback (Reduce Transparency)
+    var solidOpacity: Double {
+        switch self {
+        case .light: return 0.7
+        case .medium: return 0.85
+        case .heavy: return 0.95
+        }
+    }
+}
+
+/// Corner radius design tokens for consistent shape language
+/// Reference: Abundance Brand Bible (docs/brand/abundance-brand-bible_090125.md)
+public enum GlassCornerRadius: CGFloat, Sendable {
+    /// Small radius (8pt) - chips, badges, small buttons
+    case small = 8
+    /// Medium radius (16pt) - cards, sheets, standard containers
+    case medium = 16
+    /// Large radius (24pt) - modals, full-screen overlays
+    case large = 24
+    /// Extra large radius (32pt) - hero cards, splash screens
+    case extraLarge = 32
+}
+
 // MARK: - iOS 26+ Liquid Glass Extensions
 
 /// Liquid Glass helper extensions for iOS 26+ / macOS 26+
@@ -167,5 +211,14 @@ public extension View {
     /// - Returns: View with glass effect in custom shape
     func adaptiveGlass<S: Shape>(in shape: S, tint: Color? = nil) -> some View {
         modifier(AdaptiveGlassModifier(shape: AnyShape(shape), tint: tint))
+    }
+
+    /// Apply adaptive glass using design tokens
+    /// - Parameters:
+    ///   - radius: Corner radius token (default: .medium)
+    ///   - tint: Optional color tint for iOS 26+ glass effect
+    /// - Returns: View with glass effect using design system tokens
+    func adaptiveGlass(radius: GlassCornerRadius, tint: Color? = nil) -> some View {
+        modifier(AdaptiveGlassModifier(cornerRadius: radius.rawValue, tint: tint))
     }
 }

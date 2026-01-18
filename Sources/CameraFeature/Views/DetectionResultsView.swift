@@ -128,7 +128,17 @@ public struct DetectionResultsView: View {
             bottomActions
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(.ultraThinMaterial)
+                .background {
+                    if reduceTransparency {
+                        #if os(iOS)
+                        Color(.systemBackground)
+                        #else
+                        Color(nsColor: .windowBackgroundColor)
+                        #endif
+                    } else {
+                        Rectangle().fill(.ultraThinMaterial)
+                    }
+                }
         }
         #if os(iOS)
         .background(Color(.systemBackground))

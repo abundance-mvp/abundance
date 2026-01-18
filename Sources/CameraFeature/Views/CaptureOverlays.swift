@@ -28,6 +28,8 @@ struct CaptureOverlay: View {
 struct UploadingOverlay: View {
     let progress: Double
 
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     var body: some View {
         VStack(spacing: 16) {
             ProgressView(value: progress)
@@ -43,7 +45,15 @@ struct UploadingOverlay: View {
                 .foregroundStyle(.white.opacity(0.8))
         }
         .padding(32)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background {
+            if reduceTransparency {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.black.opacity(0.85))
+            } else {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.ultraThinMaterial)
+            }
+        }
     }
 }
 
@@ -51,20 +61,33 @@ struct UploadingOverlay: View {
 struct AnalyzingOverlay: View {
     @State private var animationPhase: Double = 0
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     var body: some View {
         VStack(spacing: 16) {
-            // Pulsing scan lines animation
+            // Pulsing scan lines animation (disabled with Reduce Motion)
             ZStack {
-                ForEach(0..<3, id: \.self) { index in
-                    Rectangle()
-                        .fill(.white.opacity(0.3))
-                        .frame(height: 2)
-                        .offset(y: CGFloat(index - 1) * 30)
-                        .opacity(scanLineOpacity(for: index))
+                if reduceMotion {
+                    // Static indicator for Reduce Motion users
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.5)
+                } else {
+                    ForEach(0..<3, id: \.self) { index in
+                        Rectangle()
+                            .fill(.white.opacity(0.3))
+                            .frame(height: 2)
+                            .offset(y: CGFloat(index - 1) * 30)
+                            .opacity(scanLineOpacity(for: index))
+                    }
                 }
             }
             .frame(width: 100, height: 100)
-            .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: animationPhase)
+            .animation(
+                reduceMotion ? nil : .easeInOut(duration: 1.5).repeatForever(autoreverses: true),
+                value: animationPhase
+            )
 
             Text("Analyzing...")
                 .font(.system(.headline, design: .rounded))
@@ -75,9 +98,19 @@ struct AnalyzingOverlay: View {
                 .foregroundStyle(.white.opacity(0.8))
         }
         .padding(32)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .background {
+            if reduceTransparency {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.black.opacity(0.85))
+            } else {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(.ultraThinMaterial)
+            }
+        }
         .onAppear {
-            animationPhase = 1
+            if !reduceMotion {
+                animationPhase = 1
+            }
         }
     }
 

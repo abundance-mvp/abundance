@@ -17,6 +17,7 @@ struct ItemCard: View {
     var isSelected: Bool = false
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isPressed: Bool = false
 
     var body: some View {
@@ -43,6 +44,7 @@ struct ItemCard: View {
                     }
                 }
                 .clipShape(innerShape)
+                .accessibilityLabel("Photo of \(item.name ?? item.category ?? "item")")
 
                 // Metadata section
                 VStack(alignment: .leading, spacing: 4) {
@@ -103,8 +105,8 @@ struct ItemCard: View {
             }
         }
         .buttonStyle(.plain)
-        .animation(.brandSnappy, value: isPressed)
-        .animation(.brandSnappy, value: isSelected)
+        .animation(reduceMotion ? nil : .brandSnappy, value: isPressed)
+        .animation(reduceMotion ? nil : .brandSnappy, value: isSelected)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
         .accessibilityAddTraits(.isButton)
@@ -138,7 +140,7 @@ struct ItemCard: View {
 
             if isSelected {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.footnote.weight(.bold))
                     .foregroundStyle(.white)
             }
         }
@@ -163,7 +165,7 @@ struct ItemCard: View {
         ZStack {
             Color.gray.opacity(0.2)
             Image(systemName: "photo")
-                .font(.system(size: 40))
+                .font(.title)
                 .foregroundStyle(.secondary)
         }
         .frame(height: imageHeight)
@@ -198,16 +200,21 @@ struct ItemCard: View {
     }
 
     private func handleTap() {
-        withAnimation(.brandSnappy) {
-            isPressed = true
-        }
-        onTap?()
-
-        // Use DispatchQueue for delayed reset (avoids Task capture issues
-        // if view is removed mid-animation)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        if reduceMotion {
+            // Skip animation for Reduce Motion users
+            onTap?()
+        } else {
             withAnimation(.brandSnappy) {
-                isPressed = false
+                isPressed = true
+            }
+            onTap?()
+
+            // Use DispatchQueue for delayed reset (avoids Task capture issues
+            // if view is removed mid-animation)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.brandSnappy) {
+                    isPressed = false
+                }
             }
         }
     }

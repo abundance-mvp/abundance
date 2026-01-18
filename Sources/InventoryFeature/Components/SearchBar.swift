@@ -54,7 +54,7 @@ public struct SearchBar: View {
                 }
             } else {
                 Capsule()
-                    .fill(.thinMaterial)
+                    .fill(.thickMaterial)
             }
         }
         .accessibilityElement(children: .combine)
