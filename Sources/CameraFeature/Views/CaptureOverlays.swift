@@ -21,6 +21,18 @@ struct CaptureOverlay: View {
 
             Spacer()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isLongPress && photoCount > 0 ? "Burst capture: \(photoCount) photos" : "Ready to capture")
+        .accessibilityAddTraits(.updatesFrequently)
+        .onChange(of: photoCount) { oldValue, newValue in
+            // Announce count changes for VoiceOver users
+            if newValue > oldValue {
+                let announcement = newValue == 1
+                    ? "1 photo captured"
+                    : "\(newValue) photos captured"
+                AccessibilityNotification.Announcement(announcement).post()
+            }
+        }
     }
 }
 
