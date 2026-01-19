@@ -8,11 +8,19 @@
  * See: https://cloud.google.com/vertex-ai/generative-ai/docs/thought-signatures
  */
 
-import { Content, Part, FunctionCall, GenerateContentResponse } from '@google/genai';
+import { Content, Part, FunctionCall, GenerateContentResponse, CachedContent } from '@google/genai';
 import { createVertexAIClient } from './vertexai-config';
 import { CatalogItem } from './schemas/catalog-item';
 import { SYSTEM_PROMPT, CATALOG_TOOLS, GENERATION_CONFIG, GEMINI_MODEL_ID } from './prompts';
 import { executeToolCall } from '../tools/tool-executor';
+import {
+  saveCatalogHistory,
+  getRecentCatalogHistory,
+  formatHistoryForPrompt,
+  catalogItemToSnapshot
+} from './catalog-history-service';
+import { getOrCreateContextCache } from './context-cache-service';
+import { ToolCallRecord } from './schemas/catalog-history';
 
 /**
  * Process an image through Gemini 3 Pro and return catalog item(s).
@@ -187,4 +195,151 @@ async function fetchImageBase64(url: string): Promise<string> {
 
   const buffer = await response.arrayBuffer();
   return Buffer.from(buffer).toString('base64');
+}
+
+/**
+ * Process an image with session persistence.
+ * Uses previous catalog history for context continuity.
+ *
+ * @param imageUrl - Public URL of the image to process
+ * @param itemId - Optional item ID for history lookup (enables persistence)
+ * @param useContextCache - Whether to use cached system prompt (default: true)
+ * @returns CatalogItem or array of CatalogItems
+ */
+export async function processItemWithGeminiPersistent(
+  imageUrl: string,
+  itemId?: string,
+  useContextCache: boolean = true
+): Promise<CatalogItem | CatalogItem[]> {
+  const startTime = Date.now();
+  const toolCallRecords: ToolCallRecord[] = [];
+
+  // Get previous history if itemId provided
+  let historyContext = '';
+  if (itemId) {
+    const history = await getRecentCatalogHistory(itemId, 1);
+    historyContext = formatHistoryForPrompt(history);
+  }
+
+  const imageBase64 = await fetchImageBase64(imageUrl);
+  const ai = createVertexAIClient();
+
+  // Build user prompt with optional history context
+  const userPrompt = historyContext
+    ? `${historyContext}\n\nAnalyze this NEW image and update/confirm the catalog entry.`
+    : 'Analyze this image and create catalog entry(ies).';
+
+  let contents: Content[] = [{
+    role: 'user',
+    parts: [
+      { text: userPrompt },
+      { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } }
+    ]
+  }];
+
+  // Use context cache if enabled
+  let cachedContent: CachedContent | undefined;
+  if (useContextCache) {
+    try {
+      cachedContent = await getOrCreateContextCache();
+    } catch (err) {
+      console.warn('Context cache unavailable, falling back to inline config:', err);
+    }
+  }
+
+  const toolDeclarations = CATALOG_TOOLS.flatMap(t => t.functionDeclarations || []);
+
+  // Configure request - use cache or inline config
+  const requestConfig = cachedContent
+    ? { cachedContent: cachedContent.name }
+    : {
+        systemInstruction: SYSTEM_PROMPT,
+        tools: [{ functionDeclarations: toolDeclarations as any }],
+        ...GENERATION_CONFIG
+      };
+
+  let response = await ai.models.generateContent({
+    model: GEMINI_MODEL_ID,
+    contents,
+    config: requestConfig
+  });
+
+  let iterations = 0;
+  const maxIterations = 10;
+
+  while (iterations < maxIterations) {
+    const functionCalls = response.functionCalls || [];
+
+    if (functionCalls.length === 0) {
+      break;
+    }
+
+    console.log(`Iteration ${iterations + 1}: Processing ${functionCalls.length} function call(s)`);
+
+    const toolResults = await Promise.all(
+      functionCalls.map(async (call: FunctionCall) => {
+        const name = call.name || '';
+        const args = call.args || {};
+        let result: Record<string, unknown>;
+        let success = true;
+
+        try {
+          result = await executeToolCall(name, args, imageUrl) as Record<string, unknown>;
+        } catch (err) {
+          result = { error: err instanceof Error ? err.message : 'Unknown error' };
+          success = false;
+        }
+
+        // Record tool call for history
+        toolCallRecords.push({ name, args, result, success });
+
+        return {
+          functionResponse: { name, response: result }
+        };
+      })
+    );
+
+    const modelParts = getModelPartsWithThoughtSignature(response);
+    const userParts: Part[] = toolResults.map(r => ({ functionResponse: r.functionResponse }));
+
+    contents = [
+      ...contents,
+      { role: 'model', parts: modelParts },
+      { role: 'user', parts: userParts }
+    ];
+
+    response = await ai.models.generateContent({
+      model: GEMINI_MODEL_ID,
+      contents,
+      config: requestConfig
+    });
+
+    iterations++;
+  }
+
+  const text = response.text;
+  if (!text) {
+    throw new Error(`No text response from Gemini after ${iterations} iterations`);
+  }
+
+  const catalogResult = JSON.parse(text) as CatalogItem | CatalogItem[];
+  const durationMs = Date.now() - startTime;
+
+  // Save to history if itemId provided
+  if (itemId) {
+    const resultItem = Array.isArray(catalogResult) ? catalogResult[0] : catalogResult;
+    await saveCatalogHistory(itemId, {
+      model: GEMINI_MODEL_ID,
+      imageUrls: [imageUrl],
+      toolCalls: toolCallRecords,
+      result: catalogItemToSnapshot(resultItem),
+      metadata: {
+        totalTokens: 0, // TODO: Extract from response.usageMetadata
+        durationMs,
+        usedContextCache: !!cachedContent
+      }
+    });
+  }
+
+  return catalogResult;
 }
