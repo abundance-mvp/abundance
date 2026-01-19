@@ -36,7 +36,7 @@ This directory contains technical specifications for the Abundance MVP applicati
 |----|-------|--------|-------------|
 | [SPEC-PIPE-001](./SPEC-PIPE-001-layer1-detection.md) | Layer 1 Detection | Active | Gemini 3 Flash object detection, cropping |
 | [SPEC-PIPE-002](./SPEC-PIPE-002-layer2-cataloging.md) | Layer 2 Cataloging | Active | Gemini 3 Pro premium cataloging with tools |
-| [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md) | Session Persistence | **Planned** | Hybrid context caching design spec |
+| [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md) | Session Persistence | **Implemented** | Hybrid context caching with Firestore history |
 
 ### User Interface (SPEC-UI)
 

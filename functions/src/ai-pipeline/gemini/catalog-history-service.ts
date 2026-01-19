@@ -15,7 +15,7 @@ import {
 import { CatalogItem } from './schemas/catalog-item';
 
 const HISTORY_COLLECTION = 'catalogHistory';
-const MAX_HISTORY_ENTRIES = 5; // Keep last 5 entries per item
+const MAX_HISTORY_ENTRIES = 10; // Keep last 10 entries per item (matches SPEC-PIPE-003)
 
 /**
  * Input for saving a catalog history entry (without auto-generated fields)

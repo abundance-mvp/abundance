@@ -199,5 +199,32 @@ firebase deploy --only firestore:rules
 
 ## Documentation
 
-**Specs:** `docs/specs/` | **Plans:** `docs/plans/` | **Issues**: `docs/issues/`
+**Locations:** `docs/specs/` (specs) | `docs/plans/` (plans) | `docs/issues/` (issues) | `docs/adr/` (ADRs)
+
+### Specification Reference (`docs/specs/`)
+
+**Always check specs before implementing features or debugging issues.**
+
+| Spec | Purpose |
+|------|---------|
+| **Architecture (SPEC-ARCH)** | |
+| `SPEC-ARCH-001-system-overview.md` | High-level architecture, tech stack, module breakdown |
+| `SPEC-ARCH-002-layer1-layer2-pipeline.md` | AI pipeline architecture with Gemini Flash/Pro |
+| `SPEC-ARCH-003-security-authentication.md` | Firebase Auth, security rules, encryption |
+| **Data Layer (SPEC-DATA)** | |
+| `SPEC-DATA-001-firestore-schema.md` | Collections, document schemas, indexes, security rules |
+| `SPEC-DATA-002-storage-architecture.md` | GCS buckets, upload flows, privacy model |
+| **API (SPEC-API)** | |
+| `SPEC-API-001-cloud-functions.md` | 12 deployed Cloud Functions: triggers, callables, scheduled |
+| **AI Pipeline (SPEC-PIPE)** | |
+| `SPEC-PIPE-001-layer1-detection.md` | Gemini 3 Flash object detection and cropping |
+| `SPEC-PIPE-002-layer2-cataloging.md` | Gemini 3 Pro cataloging with tools (Lens, barcode, web search) |
+| `SPEC-PIPE-003-session-persistence.md` | Context caching, catalog history, cost optimization |
+| **User Interface (SPEC-UI)** | |
+| `SPEC-UI-001-camera-capture-flow.md` | Single/burst capture, state machine, haptics |
+| `SPEC-UI-002-catalog-inventory-flow.md` | List/detail/edit views, status indicators |
+| **Operations (SPEC-OPS)** | |
+| `SPEC-OPS-001-cicd-workflows.md` | GitHub Actions workflows (9 workflows) |
+| `SPEC-OPS-002-dev-workflow.md` | Setup, branching, commits, Claude Code integration |
+| `SPEC-OPS-003-cost-model.md` | AI, storage, Firebase costs with projections |
 

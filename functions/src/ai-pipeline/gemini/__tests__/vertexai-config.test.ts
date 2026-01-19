@@ -39,7 +39,7 @@ describe('Vertex AI Configuration', () => {
       delete process.env.GOOGLE_CLOUD_PROJECT;
 
       expect(() => getVertexAIConfig()).toThrow(
-        'GOOGLE_CLOUD_PROJECT environment variable is required for Vertex AI'
+        'Could not determine GCP project ID. Set GOOGLE_CLOUD_PROJECT or ensure Firebase Admin is initialized.'
       );
     });
   });

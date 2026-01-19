@@ -1,7 +1,7 @@
 # SPEC-PIPE-003: Session Persistence (Design)
 
 **Created:** 2026-01-18
-**Status:** Planned
+**Status:** Implemented
 **Author:** Claude Code Audit
 
 ---
@@ -628,7 +628,7 @@ items/{itemId}/catalogHistory/{entryId}
 
 ### Configuration
 
-- **MAX_HISTORY_ENTRIES:** 5 (auto-cleanup of older entries)
+- **MAX_HISTORY_ENTRIES:** 10 (auto-cleanup of older entries, matches retention policy)
 - **CACHE_TTL_SECONDS:** 3600 (1 hour)
 - **Estimated token savings:** 90% on cached system prompt (~2300 tokens)
 

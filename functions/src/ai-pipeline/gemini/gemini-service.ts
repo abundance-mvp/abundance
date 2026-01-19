@@ -213,6 +213,7 @@ export async function processItemWithGeminiPersistent(
 ): Promise<CatalogItem | CatalogItem[]> {
   const startTime = Date.now();
   const toolCallRecords: ToolCallRecord[] = [];
+  let totalTokens = 0;
 
   // Get previous history if itemId provided
   let historyContext = '';
@@ -263,6 +264,7 @@ export async function processItemWithGeminiPersistent(
     contents,
     config: requestConfig
   });
+  totalTokens += response.usageMetadata?.totalTokenCount ?? 0;
 
   let iterations = 0;
   const maxIterations = 10;
@@ -313,6 +315,7 @@ export async function processItemWithGeminiPersistent(
       contents,
       config: requestConfig
     });
+    totalTokens += response.usageMetadata?.totalTokenCount ?? 0;
 
     iterations++;
   }
@@ -334,7 +337,7 @@ export async function processItemWithGeminiPersistent(
       toolCalls: toolCallRecords,
       result: catalogItemToSnapshot(resultItem),
       metadata: {
-        totalTokens: 0, // TODO: Extract from response.usageMetadata
+        totalTokens,
         durationMs,
         usedContextCache: !!cachedContent
       }

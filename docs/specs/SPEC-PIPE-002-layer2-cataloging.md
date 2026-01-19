@@ -80,6 +80,9 @@ Layer 2 Premium Cataloging is the AI-powered item cataloging service in the Abun
 | `functions/src/ai-pipeline/tools/google-lens.ts` | Visual search via SerpAPI |
 | `functions/src/ai-pipeline/tools/barcode-lookup.ts` | UPC/EAN lookup via UPCitemdb |
 | `functions/src/ai-pipeline/tools/web-search.ts` | Price search via Gemini + Google Search |
+| `functions/src/ai-pipeline/gemini/catalog-history-service.ts` | Catalog history CRUD |
+| `functions/src/ai-pipeline/gemini/context-cache-service.ts` | Gemini context caching |
+| `functions/src/ai-pipeline/gemini/schemas/catalog-history.ts` | History data models |
 
 ---
 
@@ -660,6 +663,58 @@ export async function processItemWithGemini(
 }
 ```
 
+### Session Persistence Mode
+
+For items requiring context continuity across multiple catalog attempts, use `processItemWithGeminiPersistent()`:
+
+**Reference:** [SPEC-PIPE-003: Session Persistence](./SPEC-PIPE-003-session-persistence.md)
+
+```typescript
+export async function processItemWithGeminiPersistent(
+  imageUrl: string,
+  itemId?: string,
+  useContextCache: boolean = true
+): Promise<CatalogItem | CatalogItem[]>
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `imageUrl` | string | Public URL of the image to process |
+| `itemId` | string? | Optional item ID for history lookup/save |
+| `useContextCache` | boolean | Whether to use cached system prompt (default: true) |
+
+**Features:**
+
+1. **History Context Injection** - When `itemId` is provided, fetches recent catalog history and injects it into the prompt
+2. **Context Caching** - Caches system prompt + tool definitions for ~90% token cost reduction
+3. **Tool Call Recording** - Records all tool calls (including failures) for history
+4. **Token Tracking** - Accumulates `totalTokenCount` across all iterations
+5. **Auto-Save** - Saves catalog result to history subcollection after processing
+
+**History Storage:**
+
+```
+items/{itemId}/catalogHistory/{entryId}
+```
+
+Each entry contains:
+- `catalogedAt` - Timestamp
+- `model` - Gemini model ID
+- `imageUrls` - Images processed
+- `toolCalls` - Array of tool call records
+- `result` - CatalogResultSnapshot
+- `metadata` - Token count, duration, cache usage
+
+**Cost Savings:**
+
+| Scenario | Without Persistence | With Persistence |
+|----------|---------------------|------------------|
+| First catalog | ~$0.04 | ~$0.044 |
+| Subsequent catalogs | ~$0.04 | ~$0.016 |
+| 3 catalogs total | ~$0.12 | ~$0.076 (37% savings) |
+
 ### Tool Call Detection
 
 Tool calls are detected by checking `response.functionCalls`:
@@ -934,6 +989,10 @@ Based on COST-MODEL-001:
 | Web Search (Gemini + grounding) | ~$0.014 |
 | **Total (typical)** | **~$0.04** |
 
+**With Session Persistence:**
+
+When using `processItemWithGeminiPersistent()`, subsequent catalogs of the same item achieve significant cost savings through context caching and tool call deduplication. See [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md#cost-savings-analysis) for detailed analysis.
+
 ### Cost Logging
 
 ```typescript
@@ -1107,3 +1166,4 @@ export const CATALOG_TOOLS: Tool[] = [
 - [SPEC-ARCH-002: Layer 1 and Layer 2 Pipeline](./SPEC-ARCH-002-layer1-layer2-pipeline.md)
 - [SPEC-DATA-001: Firestore Schema](./SPEC-DATA-001-firestore-schema.md)
 - [SPEC-API-001: Cloud Functions](./SPEC-API-001-cloud-functions.md)
+- [SPEC-PIPE-003: Session Persistence](./SPEC-PIPE-003-session-persistence.md)
