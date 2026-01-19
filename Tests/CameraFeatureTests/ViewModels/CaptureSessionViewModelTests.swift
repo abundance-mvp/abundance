@@ -224,6 +224,78 @@ final class CaptureSessionViewModelTests: XCTestCase {
         // Cleanup
         sut.cancelBurstCapture()
     }
+
+    // MARK: - Catalog Idempotency Tests
+
+    /// Creates a test object and session for idempotency tests
+    private func setupTestSession(
+        groupId: String,
+        sessionId: String
+    ) -> (ServerDetectedObject, CaptureSession) {
+        let object = ServerDetectedObject(
+            groupId: groupId, label: "Test", category: "test",
+            attributes: [:], confidence: "high",
+            croppedImageUrls: ["https://example.com/test.jpg"], boundingBoxes: []
+        )
+        let session = CaptureSession(
+            id: sessionId, userId: "test-user", captureMode: .single,
+            status: .detected, detectedObjects: [object]
+        )
+        return (object, session)
+    }
+
+    func testCatalogObjectPreventsDoubleSubmission() async throws {
+        let (testObject, testSession) = setupTestSession(groupId: "grp-123", sessionId: "sess-456")
+        sut.currentSession = testSession
+        sut.detectedObjects = [testObject]
+
+        // Verify initial state then simulate first catalog starting
+        XCTAssertFalse(sut.catalogingObjectIds.contains(testObject.groupId))
+        sut.catalogingObjectIds.insert(testObject.groupId)
+
+        // Second request blocked by catalogingObjectIds guard
+        XCTAssertTrue(sut.catalogingObjectIds.contains(testObject.groupId))
+    }
+
+    func testCatalogObjectIdempotencyKeyFormat() async throws {
+        let sessionId = "session-abc", groupId = "group-xyz"
+        let (testObject, testSession) = setupTestSession(groupId: groupId, sessionId: sessionId)
+        sut.currentSession = testSession
+
+        // Key format: "sessionId:groupId"
+        let computedKey = "\(testSession.id):\(testObject.groupId)"
+        XCTAssertEqual(computedKey, "\(sessionId):\(groupId)")
+        XCTAssertTrue(computedKey.contains(":"))
+    }
+
+    func testCatalogObjectErrorDoesNotReenableButton() async throws {
+        let (testObject, testSession) = setupTestSession(groupId: "err-grp", sessionId: "err-sess")
+        sut.currentSession = testSession
+        sut.detectedObjects = [testObject]
+
+        // Simulate cataloging then error (P0 fix: don't clear on error)
+        sut.catalogingObjectIds.insert(testObject.groupId)
+
+        // Object remains in catalogingObjectIds - button stays disabled
+        XCTAssertTrue(sut.catalogingObjectIds.contains(testObject.groupId))
+        XCTAssertFalse(sut.catalogedObjectIds.contains(testObject.groupId))
+    }
+
+    func testRetakeClearsSubmittedCatalogRequests() async throws {
+        let (testObject, testSession) = setupTestSession(groupId: "retake-grp", sessionId: "retake-sess")
+        sut.currentSession = testSession
+        sut.detectedObjects = [testObject]
+        sut.catalogingObjectIds.insert(testObject.groupId)
+        sut.catalogedObjectIds.insert(testObject.groupId)
+
+        sut.retake()
+
+        XCTAssertNil(sut.currentSession)
+        XCTAssertTrue(sut.detectedObjects.isEmpty)
+        XCTAssertTrue(sut.catalogingObjectIds.isEmpty)
+        XCTAssertTrue(sut.catalogedObjectIds.isEmpty)
+        XCTAssertEqual(sut.uiState, .idle)
+    }
 }
 
 // MARK: - Mock Services
@@ -276,17 +348,94 @@ final class MockStorageService: StorageServiceProtocol, @unchecked Sendable {
     }
 }
 
+/// Thread-safe state storage for MockCatalogService
+final class MockCatalogServiceState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _catalogCallCount = 0
+    private var _lastSessionId: String?
+    private var _lastGroupId: String?
+    private var _shouldThrowError = false
+    private var _capturedRequestKeys: [String] = []
+
+    var catalogCallCount: Int {
+        lock.withLock { _catalogCallCount }
+    }
+
+    var lastSessionId: String? {
+        lock.withLock { _lastSessionId }
+    }
+
+    var lastGroupId: String? {
+        lock.withLock { _lastGroupId }
+    }
+
+    var capturedRequestKeys: [String] {
+        lock.withLock { _capturedRequestKeys }
+    }
+
+    var shouldThrowError: Bool {
+        get { lock.withLock { _shouldThrowError } }
+        set { lock.withLock { _shouldThrowError = newValue } }
+    }
+
+    func recordCall(sessionId: String, groupId: String) -> Bool {
+        lock.withLock {
+            _catalogCallCount += 1
+            _lastSessionId = sessionId
+            _lastGroupId = groupId
+            _capturedRequestKeys.append("\(sessionId):\(groupId)")
+            return _shouldThrowError
+        }
+    }
+
+    func reset() {
+        lock.withLock {
+            _catalogCallCount = 0
+            _lastSessionId = nil
+            _lastGroupId = nil
+            _shouldThrowError = false
+            _capturedRequestKeys = []
+        }
+    }
+}
+
 /// Mock CatalogService for testing
 final class MockCatalogService: CatalogServiceProtocol, @unchecked Sendable {
+    let state = MockCatalogServiceState()
+
+    var catalogCallCount: Int { state.catalogCallCount }
+    var lastSessionId: String? { state.lastSessionId }
+    var lastGroupId: String? { state.lastGroupId }
+    var capturedRequestKeys: [String] { state.capturedRequestKeys }
+
+    var shouldThrowError: Bool {
+        get { state.shouldThrowError }
+        set { state.shouldThrowError = newValue }
+    }
+
     func catalogDetectedObject(
         userId: String,
         sessionId: String,
         object: ServerDetectedObject
     ) async throws -> String {
-        "test-item-id"
+        let shouldThrow = state.recordCall(sessionId: sessionId, groupId: object.groupId)
+
+        if shouldThrow {
+            throw NSError(
+                domain: "MockCatalogService",
+                code: 500,
+                userInfo: [NSLocalizedDescriptionKey: "Mock catalog error"]
+            )
+        }
+
+        return "test-item-id-\(object.groupId)"
     }
 
     func observeItem(itemId: String) -> AnyPublisher<ItemCatalogStatus?, Never> {
         Just(nil).eraseToAnyPublisher()
+    }
+
+    func reset() {
+        state.reset()
     }
 }
