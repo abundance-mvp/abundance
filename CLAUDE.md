@@ -22,6 +22,10 @@ Never use `grep` - Use `rg`
 /project:device-tester                       # Iterative testing on physical device w-16e
 /axiom:apple-docs-research                   # Fetch Apple Developer documentation
 
+# Issue Tracking
+/project:file-issue [description]            # File standardized issue (bug, feature, etc.)
+/project:dispatch                            # Dispatch open issues to agents
+
 # Backend Operations
 /project:backend-superpowers                 # Firebase + GCP unified skill (59 MCP tools)
 /project:gcp-deploy <fn>                     # Deploy Cloud Function with verification
