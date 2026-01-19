@@ -38,9 +38,56 @@ export interface ValidationResult {
 
 /**
  * Allowed storage buckets for image URLs
- * These are the temp buckets where client-uploaded images are stored
+ * These are the buckets where client-uploaded images are stored
+ *
+ * Includes:
+ * - abundance-mvp.firebasestorage.app: Default Firebase Storage bucket (production)
+ * - abundance-temp, etc: Legacy temp bucket names (may be used in dev/staging)
  */
-const ALLOWED_BUCKETS = ['abundance-temp', 'abundance-dev-temp', 'abundance-staging-temp'];
+const ALLOWED_BUCKETS = [
+  'abundance-mvp.firebasestorage.app',  // Default Firebase Storage bucket
+  'abundance-temp',
+  'abundance-dev-temp',
+  'abundance-staging-temp'
+];
+
+/**
+ * Extract bucket name from various URL formats
+ *
+ * Supported formats:
+ * - gs://bucket/path
+ * - https://firebasestorage.googleapis.com[:port]/v0/b/{bucket}/o/{path}
+ * - https://storage.googleapis.com[:port]/{bucket}/{path}
+ *
+ * Note: Anchored regex patterns prevent domain spoofing attacks
+ * (e.g., evil-firebasestorage.googleapis.com.attacker.com)
+ *
+ * @param url - URL to extract bucket from
+ * @returns Bucket name or null if not parseable
+ */
+function extractBucketFromUrl(url: string): string | null {
+  // Format 1: gs://bucket/path
+  const gsMatch = url.match(/^gs:\/\/([^/]+)\//);
+  if (gsMatch) {
+    return gsMatch[1];
+  }
+
+  // Format 2: https://firebasestorage.googleapis.com[:port]/v0/b/{bucket}/o/{path}
+  // Anchored at start to prevent domain spoofing, optional port for production URLs
+  const firebaseMatch = url.match(/^https:\/\/firebasestorage\.googleapis\.com(?::\d+)?\/v0\/b\/([^/]+)\/o\//);
+  if (firebaseMatch) {
+    return firebaseMatch[1];
+  }
+
+  // Format 3: https://storage.googleapis.com[:port]/{bucket}/{path}
+  // Anchored at start to prevent domain spoofing, optional port for production URLs
+  const gcsMatch = url.match(/^https:\/\/storage\.googleapis\.com(?::\d+)?\/([^/]+)\//);
+  if (gcsMatch) {
+    return gcsMatch[1];
+  }
+
+  return null;
+}
 
 /**
  * Validate session document before processing
@@ -83,10 +130,12 @@ export async function validateSessionDocument(
   }
 
   // Validate all URLs are from allowed buckets
+  // SECURITY: Use exact match to prevent bucket name spoofing
+  // (e.g., "evil-abundance-mvp.firebasestorage.app" must NOT pass)
   for (const url of sessionData.originalImageUrls as string[]) {
-    const bucketMatch = url.match(/gs:\/\/([^/]+)\//);
-    if (!bucketMatch || !ALLOWED_BUCKETS.some(b => bucketMatch[1].includes(b))) {
-      logger.error('Session validation failed', { reason: 'Unauthorized bucket', url });
+    const bucketName = extractBucketFromUrl(url);
+    if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
+      logger.error('Session validation failed', { reason: 'Unauthorized bucket', url, bucketName });
       await sessionRef.update({
         status: 'failed',
         error: 'Unauthorized storage bucket',

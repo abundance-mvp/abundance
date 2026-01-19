@@ -265,6 +265,20 @@ describe('onSessionCreated validation', () => {
         expect(result.valid).toBe(true);
       });
 
+      it('accepts URL from abundance-mvp.firebasestorage.app bucket (gs:// format)', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          originalImageUrls: ['gs://abundance-mvp.firebasestorage.app/users/user-123/items/image.jpg']
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
       it('accepts multiple valid URLs from different allowed buckets', async () => {
         const sessionData = {
           userId: 'user-123',
@@ -283,10 +297,122 @@ describe('onSessionCreated validation', () => {
         expect(result.valid).toBe(true);
       });
 
-      it('rejects URL without gs:// prefix', async () => {
+      it('accepts Firebase Storage download URL from allowed bucket', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          originalImageUrls: [
+            'https://firebasestorage.googleapis.com/v0/b/abundance-mvp.firebasestorage.app/o/users%2Fuser-123%2Fitems%2Ftest.jpg?alt=media&token=abc123'
+          ]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
+      it('accepts HTTPS storage.googleapis.com URL from allowed bucket', async () => {
         const sessionData = {
           userId: 'user-123',
           originalImageUrls: ['https://storage.googleapis.com/abundance-temp/test.jpg']
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
+      it('accepts Firebase Storage URL with :443 port from allowed bucket', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          originalImageUrls: [
+            'https://firebasestorage.googleapis.com:443/v0/b/abundance-mvp.firebasestorage.app/o/users%2Fuser-123%2Fitems%2Ftest.jpg?alt=media&token=abc123'
+          ]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
+      it('accepts GCS URL with :443 port from allowed bucket', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          originalImageUrls: ['https://storage.googleapis.com:443/abundance-temp/test.jpg']
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
+      it('rejects malicious bucket name that contains allowed bucket as substring', async () => {
+        // SECURITY: This tests that exact matching is used, not substring matching
+        // "evil-abundance-mvp.firebasestorage.app" should NOT match "abundance-mvp.firebasestorage.app"
+        const sessionData = {
+          userId: 'user-123',
+          originalImageUrls: [
+            'https://firebasestorage.googleapis.com/v0/b/evil-abundance-mvp.firebasestorage.app/o/test.jpg?alt=media'
+          ]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('UNAUTHORIZED_BUCKET');
+      });
+
+      it('rejects malicious bucket with allowed bucket name as suffix', async () => {
+        // SECURITY: "attacker-abundance-temp" should NOT match "abundance-temp"
+        const sessionData = {
+          userId: 'user-123',
+          originalImageUrls: ['gs://attacker-abundance-temp/test.jpg']
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('UNAUTHORIZED_BUCKET');
+      });
+
+      it('rejects Firebase Storage URL from unauthorized bucket', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          originalImageUrls: [
+            'https://firebasestorage.googleapis.com/v0/b/malicious-bucket.firebasestorage.app/o/test.jpg?alt=media'
+          ]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('UNAUTHORIZED_BUCKET');
+      });
+
+      it('rejects URL with unparseable format', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          originalImageUrls: ['https://random-site.com/image.jpg']
         };
 
         const result = await validateSessionDocument(
