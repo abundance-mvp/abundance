@@ -9,6 +9,7 @@ public struct SearchBar: View {
     var placeholder: String = "Search items..."
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isFocused: Bool
 
     public init(text: Binding<String>, placeholder: String = "Search items...") {
@@ -29,7 +30,7 @@ public struct SearchBar: View {
 
             if !text.isEmpty {
                 Button {
-                    withAnimation(.brandSnappy) {
+                    withAnimation(reduceMotion ? nil : .brandSnappy) {
                         text = ""
                     }
                 } label: {

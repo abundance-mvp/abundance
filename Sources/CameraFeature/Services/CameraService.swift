@@ -93,25 +93,27 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
     }
 
     @objc private func sessionWasInterrupted(_ notification: Notification) {
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
             #if os(iOS)
             guard let userInfo = notification.userInfo,
                   let rawValue = userInfo[AVCaptureSessionInterruptionReasonKey] as? Int else {
                 return
             }
-            sessionStateSubject.send(.interrupted(reasonRawValue: rawValue))
+            self.sessionStateSubject.send(.interrupted(reasonRawValue: rawValue))
             #endif
         }
     }
 
     @objc private func sessionInterruptionEnded(_ notification: Notification) {
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
             // Restart session when interruption ends
-            let isRunning = await sessionActor.isRunning()
+            let isRunning = await self.sessionActor.isRunning()
             if !isRunning {
-                await sessionActor.startRunning()
+                await self.sessionActor.startRunning()
             }
-            sessionStateSubject.send(.running)
+            self.sessionStateSubject.send(.running)
         }
     }
 
@@ -200,8 +202,12 @@ extension CameraService: @preconcurrency AVCapturePhotoCaptureDelegate {
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
+        // Capture manager reference before Task to avoid data race (Swift 6 compliance)
+        // See: SE-0338 - nonisolated async functions must not send self across boundaries
+        let manager = captureManager
+
         Task {
-            let continuation = await captureManager.getContinuation()
+            let continuation = await manager.getContinuation()
 
             if let error = error {
                 continuation?.resume(throwing: error)

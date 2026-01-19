@@ -5,6 +5,7 @@ import Persistence
 public struct InventoryView: View {
     // Plain var for @Observable type - SwiftUI tracks changes automatically
     var viewModel: InventoryViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var searchText = ""
     @State private var isSelectionMode = false
     @State private var selectedItemIds: Set<String> = []
@@ -80,7 +81,7 @@ public struct InventoryView: View {
                 ToolbarItem(placement: .primaryAction) {
                     if !viewModel.items.isEmpty && !viewModel.isLoading {
                         Button(isSelectionMode ? "Done" : "Select") {
-                            withAnimation(.brandSnappy) {
+                            withAnimation(reduceMotion ? nil : .brandSnappy) {
                                 isSelectionMode.toggle()
                                 if !isSelectionMode {
                                     selectedItemIds.removeAll()
@@ -123,7 +124,7 @@ public struct InventoryView: View {
                 Button("Delete All", role: .destructive) {
                     let idsToDelete = selectedItemIds
                     // Clear selection state immediately with animation (before async work)
-                    withAnimation(.brandSnappy) {
+                    withAnimation(reduceMotion ? nil : .brandSnappy) {
                         isSelectionMode = false
                         selectedItemIds.removeAll()
                     }
@@ -181,6 +182,7 @@ private struct ItemGridView: View {
     let isSelectionMode: Bool
     @Binding var selectedItemIds: Set<String>
     let onDelete: (Item) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollView {
@@ -191,7 +193,7 @@ private struct ItemGridView: View {
                         ItemCard(
                             item: item,
                             onTap: {
-                                withAnimation(.brandSnappy) {
+                                withAnimation(reduceMotion ? nil : .brandSnappy) {
                                     if selectedItemIds.contains(item.id) {
                                         selectedItemIds.remove(item.id)
                                     } else {

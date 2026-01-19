@@ -7,6 +7,7 @@ public struct FloatingTabBar: View {
     @Binding var selection: Int
     let items: [TabItem]
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var tabNamespace
 
     public struct TabItem: Identifiable {
@@ -48,7 +49,7 @@ public struct FloatingTabBar: View {
         let isSelected: Bool = selection == index
 
         Button {
-            withAnimation(.brandDefault) {
+            withAnimation(reduceMotion ? nil : .brandDefault) {
                 selection = index
             }
         } label: {

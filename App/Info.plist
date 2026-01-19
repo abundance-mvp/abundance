@@ -4,6 +4,8 @@
 <dict>
     <key>NSCameraUsageDescription</key>
     <string>Abundance needs camera access to scan product barcodes and capture item photos.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Abundance may use the microphone for video capture features.</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleDisplayName</key>

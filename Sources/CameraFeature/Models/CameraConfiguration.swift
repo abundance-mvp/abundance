@@ -58,7 +58,7 @@ public struct CameraConfiguration: Sendable {
     public init(
         sessionPreset: AVCaptureSession.Preset = .photo,
         frameRate: Int32 = 30,
-        photoQualityPrioritization: AVCapturePhotoOutput.QualityPrioritization = .quality,
+        photoQualityPrioritization: AVCapturePhotoOutput.QualityPrioritization = .balanced,
         sessionQueueLabel: String = "com.abundance.camera.session",
         videoQueueLabel: String = "com.abundance.camera.video",
         videoQueueQoS: DispatchQoS = .userInitiated,

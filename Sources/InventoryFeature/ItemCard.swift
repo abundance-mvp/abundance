@@ -138,7 +138,7 @@ struct ItemCard: View {
         ZStack {
             Circle()
                 .fill(isSelected ? Color.accentColor : Color.white.opacity(0.8))
-                .frame(width: 28, height: 28)
+                .frame(width: 44, height: 44)
                 .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
 
             if isSelected {
@@ -233,7 +233,7 @@ private struct ConditionBadge: View {
             .font(.caption2)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(conditionColor.opacity(0.2))
+            .background(conditionColor.opacity(0.3))
             .foregroundStyle(conditionColor)
             .clipShape(Capsule())
     }
@@ -258,7 +258,7 @@ private struct StatusBadge: View {
             .font(.caption2)
             .padding(.horizontal, 8)
             .padding(.vertical, 2)
-            .background(statusColor.opacity(0.2))
+            .background(statusColor.opacity(0.3))
             .foregroundStyle(statusColor)
             .clipShape(Capsule())
     }
