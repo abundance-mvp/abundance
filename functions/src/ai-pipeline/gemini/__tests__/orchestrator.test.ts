@@ -27,10 +27,10 @@ jest.mock('firebase-admin', () => ({
   }))
 }));
 
-import { processItemWithGemini } from '../gemini-service';
+import { processItemWithGeminiPersistent } from '../gemini-service';
 
 describe('Orchestrator', () => {
-  const mockProcessItem = processItemWithGemini as jest.MockedFunction<typeof processItemWithGemini>;
+  const mockProcessItem = processItemWithGeminiPersistent as jest.MockedFunction<typeof processItemWithGeminiPersistent>;
 
   beforeEach(() => {
     jest.clearAllMocks();
