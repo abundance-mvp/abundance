@@ -573,26 +573,73 @@ For an item cataloged 3 times: First: $0.044 + 2×$0.016 = **$0.076**
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Data Model | **Planned** | Interfaces defined in this spec |
-| History Service | **Planned** | |
-| Context Cache Service | **Planned** | Pending SDK support verification |
-| Gemini Service Updates | **Planned** | |
-| Orchestrator Updates | **Planned** | |
-| Firestore Indexes | **Planned** | |
-| Tests | **Planned** | |
+| Data Model | **Implemented** | `functions/src/ai-pipeline/gemini/schemas/catalog-history.ts` |
+| History Service | **Implemented** | `functions/src/ai-pipeline/gemini/catalog-history-service.ts` |
+| Context Cache Service | **Implemented** | `functions/src/ai-pipeline/gemini/context-cache-service.ts` |
+| Gemini Service Updates | **Implemented** | `processItemWithGeminiPersistent()` in `gemini-service.ts` |
+| Orchestrator Updates | **Implemented** | Now uses persistent processing |
+| Firestore Indexes | **Implemented** | `catalogHistory` index in `firestore.indexes.json` |
+| Tests | **Implemented** | Unit tests for history and cache services |
 
-**Overall Status:** PLANNED
+**Overall Status:** IMPLEMENTED
 
 **Implementation Plan:** `docs/plans/2026-01-18-hybrid-session-persistence.md`
 
 ---
 
+## Implementation Details
+
+### Files Created/Modified
+
+| File | Purpose |
+|------|---------|
+| `functions/src/ai-pipeline/gemini/schemas/catalog-history.ts` | Data model interfaces |
+| `functions/src/ai-pipeline/gemini/schemas/index.ts` | Schema exports |
+| `functions/src/ai-pipeline/gemini/catalog-history-service.ts` | History CRUD operations |
+| `functions/src/ai-pipeline/gemini/context-cache-service.ts` | Gemini context caching |
+| `functions/src/ai-pipeline/gemini/gemini-service.ts` | Added `processItemWithGeminiPersistent()` |
+| `functions/src/ai-pipeline/gemini/orchestrator.ts` | Updated to use persistent processing |
+| `firestore.indexes.json` | Added catalogHistory index |
+| `functions/src/ai-pipeline/gemini/__tests__/catalog-history-service.test.ts` | Unit tests |
+| `functions/src/ai-pipeline/gemini/__tests__/context-cache-service.test.ts` | Unit tests |
+
+### Key Functions
+
+**catalog-history-service.ts:**
+- `saveCatalogHistory(itemId, entry)` - Persist catalog result to history
+- `getRecentCatalogHistory(itemId, limit)` - Retrieve recent history entries
+- `catalogItemToSnapshot(item)` - Convert CatalogItem to snapshot
+- `formatHistoryForPrompt(history)` - Format history for prompt injection
+
+**context-cache-service.ts:**
+- `getOrCreateContextCache()` - Get/create cached context for system prompt
+- `listContextCaches()` - List existing caches (debugging)
+- `deleteContextCache(name)` - Delete specific cache
+- `estimateTokenSavings()` - Cost analysis utility
+
+**gemini-service.ts:**
+- `processItemWithGeminiPersistent(imageUrl, itemId?, useContextCache?)` - Main entry point with persistence
+
+### Firestore Path
+
+```
+items/{itemId}/catalogHistory/{entryId}
+```
+
+### Configuration
+
+- **MAX_HISTORY_ENTRIES:** 5 (auto-cleanup of older entries)
+- **CACHE_TTL_SECONDS:** 3600 (1 hour)
+- **Estimated token savings:** 90% on cached system prompt (~2300 tokens)
+
+---
+
 ## References
 
-- [SPEC-ARCH-002: Layer 1 / Layer 2 Pipeline Architecture](/docs/specs/SPEC-ARCH-002-layer1-layer2-pipeline.md)
+- [SPEC-ARCH-002: Layer 1 / Layer 2 Pipeline Architecture](./SPEC-ARCH-002-layer1-layer2-pipeline.md)
 - [Gemini Context Caching Documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/context-caching)
-- [Current gemini-service.ts](/functions/src/ai-pipeline/gemini/gemini-service.ts)
-- [Current prompts.ts](/functions/src/ai-pipeline/gemini/prompts.ts)
+- gemini-service.ts: `functions/src/ai-pipeline/gemini/gemini-service.ts`
+- prompts.ts: `functions/src/ai-pipeline/gemini/prompts.ts`
 
 ---
 
@@ -601,3 +648,4 @@ For an item cataloged 3 times: First: $0.044 + 2×$0.016 = **$0.076**
 | Date | Version | Changes |
 |------|---------|---------|
 | 2026-01-18 | 1.0 | Initial design spec |
+| 2026-01-18 | 1.1 | Implementation complete - all components implemented |
