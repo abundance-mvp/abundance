@@ -15,12 +15,12 @@ if git diff --cached --name-only | grep -q "^docs/"; then
         exit 0  # Don't block commit, just warn
     fi
 
-    # Run validation with uv
-    if uv run scripts/validate_doc_references.py; then
-        echo "✅ Document references validated"
+    # Run quick validation (links only)
+    if uv run scripts/validate_docs.py --quick; then
+        echo "✅ Document links validated"
     else
-        echo "❌ Document reference validation failed"
-        echo "Run 'uv run scripts/fix_doc_references.py --apply' to fix"
+        echo "❌ Document validation failed"
+        echo "Run 'uv run scripts/validate_docs.py --verbose' to see details"
         exit 1
     fi
 fi

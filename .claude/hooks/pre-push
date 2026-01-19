@@ -1,0 +1,48 @@
+#!/bin/bash
+# Claude Code pre-push hook
+# Validates documentation health before push to main
+
+set -e
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Only validate on push to main
+if [[ "$BRANCH" != "main" ]]; then
+    exit 0
+fi
+
+echo "📚 Validating documentation health before push to main..."
+
+# Check if uv is available
+if ! command -v uv &> /dev/null; then
+    echo "⚠️  Warning: 'uv' not found. Skipping doc validation."
+    exit 0
+fi
+
+# Run full validation
+result=0
+uv run scripts/validate_docs.py || result=$?
+
+if [[ $result -eq 0 ]]; then
+    echo "✅ Documentation validated"
+elif [[ $result -eq 2 ]]; then
+    echo ""
+    echo "❌ Documentation validation failed: Archive required"
+    echo ""
+    echo "To fix:"
+    echo "  ./scripts/archive_doc.py --all"
+    echo ""
+    exit 1
+elif [[ $result -eq 1 ]]; then
+    echo ""
+    echo "❌ Documentation validation failed"
+    echo ""
+    echo "To fix:"
+    echo "  • Broken links: Update or remove the reference"
+    echo "  • Status drift: Update doc status in .doc-index.json"
+    echo "  • Run: uv run scripts/validate_docs.py --verbose"
+    echo ""
+    exit 1
+fi
+
+exit 0

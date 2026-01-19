@@ -61,11 +61,11 @@ git commit -m "docs: update SPEC-PIPE-003 status to Implemented and fix MAX_HIST
 
 Change line 39:
 ```markdown
-| [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md) | Session Persistence | **Planned** | Hybrid context caching design spec |
+| [SPEC-PIPE-003](../specs/SPEC-PIPE-003-session-persistence.md) | Session Persistence | **Planned** | Hybrid context caching design spec |
 ```
 To:
 ```markdown
-| [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md) | Session Persistence | **Implemented** | Hybrid context caching with Firestore history |
+| [SPEC-PIPE-003](../specs/SPEC-PIPE-003-session-persistence.md) | Session Persistence | **Implemented** | Hybrid context caching with Firestore history |
 ```
 
 **Step 2: Commit**
@@ -92,7 +92,7 @@ Insert after line 661 (after `processItemWithGemini` function ends), add new sec
 
 For items requiring context continuity across multiple catalog attempts, use `processItemWithGeminiPersistent()`:
 
-**Reference:** [SPEC-PIPE-003: Session Persistence](./SPEC-PIPE-003-session-persistence.md)
+**Reference:** [SPEC-PIPE-003: Session Persistence](../specs/SPEC-PIPE-003-session-persistence.md)
 
 ```typescript
 export async function processItemWithGeminiPersistent(
@@ -192,7 +192,7 @@ After the cost breakdown table (around line 936), add:
 
 **With Session Persistence:**
 
-When using `processItemWithGeminiPersistent()`, subsequent catalogs of the same item achieve significant cost savings through context caching and tool call deduplication. See [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md#cost-savings-analysis) for detailed analysis.
+When using `processItemWithGeminiPersistent()`, subsequent catalogs of the same item achieve significant cost savings through context caching and tool call deduplication. See [SPEC-PIPE-003](../specs/SPEC-PIPE-003-session-persistence.md#cost-savings-analysis) for detailed analysis.
 ```
 
 **Step 2: Commit**
@@ -214,7 +214,7 @@ git commit -m "docs: add session persistence cost savings reference to SPEC-PIPE
 At the end of the Related Specifications section (after line 1109), add:
 
 ```markdown
-- [SPEC-PIPE-003: Session Persistence](./SPEC-PIPE-003-session-persistence.md)
+- [SPEC-PIPE-003: Session Persistence](../specs/SPEC-PIPE-003-session-persistence.md)
 ```
 
 **Step 2: Commit**

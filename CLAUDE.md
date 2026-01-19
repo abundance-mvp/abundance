@@ -228,3 +228,34 @@ firebase deploy --only firestore:rules
 | `SPEC-OPS-002-dev-workflow.md` | Setup, branching, commits, Claude Code integration |
 | `SPEC-OPS-003-cost-model.md` | AI, storage, Firebase costs with projections |
 
+### Documentation Index
+
+**Index File:** `docs/.doc-index.json` - Machine-readable registry of all tracked documentation
+
+Before modifying documentation:
+1. Check `docs/.doc-index.json` for doc status and relationships
+2. When completing a plan: Update status to "Completed" and run `./scripts/archive_doc.py --all`
+3. When closing an issue: Update status to "Closed" or "Fixed"
+4. When deprecating a spec: Set status to "Deprecated" and add `superseded_by` field
+
+**Commands:**
+
+```bash
+# Validate docs (run before pushing to main)
+uv run scripts/validate_docs.py
+
+# Archive completed/closed docs
+./scripts/archive_doc.py --all              # Archive all ready docs
+./scripts/archive_doc.py <path>             # Archive specific doc
+
+# Update index
+./scripts/update_doc_index.py add <path>    # Add new doc
+./scripts/update_doc_index.py update <path> --status Completed
+./scripts/update_doc_index.py sync          # Sync with filesystem
+```
+
+**Pre-push hook blocks if:**
+- Docs have archival-ready status but aren't archived
+- Markdown links are broken
+- Code refs in specs point to deleted paths
+

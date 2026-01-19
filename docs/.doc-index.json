@@ -1,0 +1,489 @@
+{
+  "version": "1.0",
+  "generated": "2026-01-19T17:01:33Z",
+  "directories": {
+    "specs": {
+      "path": "docs/specs/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "SPEC-ARCH-001-system-overview.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/",
+            "functions/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-ARCH-002-layer1-layer2-pipeline.md": {
+          "status": "Active",
+          "code_refs": [
+            "functions/src/ai-pipeline/",
+            "Sources/CameraFeature/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-ARCH-003-security-authentication.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/OnboardingFeature/",
+            "functions/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-API-001-cloud-functions.md": {
+          "status": "Active",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-DATA-001-firestore-schema.md": {
+          "status": "Active",
+          "code_refs": [
+            "functions/src/",
+            "Sources/Core/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-DATA-002-storage-architecture.md": {
+          "status": "Active",
+          "code_refs": [
+            "functions/src/",
+            "Sources/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-PIPE-001-layer1-detection.md": {
+          "status": "Active",
+          "code_refs": [
+            "functions/src/ai-pipeline/gemini/",
+            "functions/src/ai-pipeline/layer1/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-PIPE-002-layer2-cataloging.md": {
+          "status": "Active",
+          "code_refs": [
+            "functions/src/ai-pipeline/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-PIPE-003-session-persistence.md": {
+          "status": "Active",
+          "code_refs": [
+            "functions/src/ai-pipeline/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-UI-001-camera-capture-flow.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CameraFeature/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-UI-002-catalog-inventory-flow.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/InventoryFeature/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-OPS-001-cicd-workflows.md": {
+          "status": "Active",
+          "code_refs": [
+            ".github/workflows/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-OPS-002-dev-workflow.md": {
+          "status": "Active",
+          "code_refs": [
+            "scripts/",
+            ".claude/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "SPEC-OPS-003-cost-model.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-18"
+        },
+        "SPEC-LAYER1-LAYER2-ARCHITECTURE.md": {
+          "status": "Deprecated",
+          "superseded_by": "SPEC-ARCH-002-layer1-layer2-pipeline.md",
+          "updated": "2026-01-18"
+        },
+        "AI-INTEGRATION-LAYER-002-gemini-3-pro-orchestration.md": {
+          "status": "Deprecated",
+          "superseded_by": "SPEC-PIPE-002-layer2-cataloging.md",
+          "updated": "2026-01-18"
+        },
+        "Abundance_Gemini3_Object_Detection_Spec.md": {
+          "status": "Deprecated",
+          "superseded_by": "SPEC-PIPE-001-layer1-detection.md",
+          "updated": "2026-01-18"
+        },
+        "README.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-18"
+        },
+        "business-strategy-validated.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "business-model-canvas.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "competitive-analysis-matrix.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "revenue-projections.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "user-persona-cards.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "user-journey-maps.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "trust-safety-framework.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "feature-prioritization-matrix.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ux-flow-diagrams.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        }
+      }
+    },
+    "plans": {
+      "path": "docs/plans/",
+      "archive_on": [
+        "Completed",
+        "Abandoned"
+      ],
+      "docs": {
+        "2026-01-19-doc-validation-archival-system.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-19-code-review-plan.md": {
+          "status": "Completed",
+          "related_branch": "fix/p0-code-quality-remediation",
+          "merged": "2026-01-19"
+        },
+        "2026-01-18-code-review-remediation-plan.md": {
+          "status": "Completed",
+          "related_branch": "fix/p0-code-quality-remediation",
+          "merged": "2026-01-19"
+        },
+        "2026-01-18-layer1-code-review-remediation.md": {
+          "status": "Completed",
+          "related_branch": "fix/p0-code-quality-remediation",
+          "merged": "2026-01-19"
+        },
+        "2026-01-18-remaining-code-quality-tasks.md": {
+          "status": "Completed",
+          "related_branch": "fix/p0-code-quality-remediation",
+          "merged": "2026-01-19"
+        },
+        "2026-01-18-legacy-pipeline-cleanup.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-spec-documents-audit.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-file-issue-skill-design.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-file-issue-implementation.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-hybrid-session-persistence.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-spec-updates-session-persistence.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-background-processing-ux-implementation.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-17-restore-claude-plugins-commands.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-17"
+        },
+        "PLAN-SUMMARY-stage-7.0.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-17"
+        },
+        "PLAN-SUMMARY-stage-7.1.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "brainstorm-burst-mode-dedup-fingerprinting.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-14-stage-3.5-multi-image-capture-plan.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-14-stage-7.1-gemini-integration-deployment.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-15-brand-bible-to-specs-liquid-glass.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-15"
+        },
+        "2026-01-14-architecture-cleanup-ios-superpowers-migration.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-14"
+        },
+        "2026-01-11-pr21-p1-remediation-plan.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-11"
+        },
+        "2026-01-17-code-quality-remediation-plan.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-17"
+        },
+        "2026-01-17-deprecate-legacy-pipeline.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-17"
+        },
+        "2026-01-17-mcp-skill-consolidation-plan.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-17"
+        },
+        "2026-01-14-stage-3.4-search-enhancements-plan.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-14-claude-workflow-restructure.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-14"
+        },
+        "2026-01-14-stage-2.7-observable-migration-glass-consolidation.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-15"
+        },
+        "2026-01-15-liquid-glass-migration.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-15"
+        },
+        "2026-01-16-gemini-layer1-capture-redesign.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-16"
+        },
+        "2026-01-14-stage-3.1-schema-metadata-plan.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-16"
+        },
+        "2026-01-11-pr21-p0-fixes.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-11"
+        },
+        "2026-01-16-ios-superpowers-axiom-enhancement-plan.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-16"
+        },
+        "2026-01-14-stage-2.6-ui-ux-refactoring-with-liquid-glass.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-15"
+        },
+        "2026-01-13-gemini-3-pipeline-design.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-14"
+        },
+        "2026-01-14-gemini3-vertexai-migration.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-14"
+        },
+        "2026-01-11-pr21-parallel-code-review.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-11"
+        },
+        "2026-01-14-stage-3.2-delete-operations-plan.md": {
+          "status": "Completed",
+          "related_branch": "test/verify-delete-cleanup",
+          "merged": "2026-01-18"
+        },
+        "2026-01-14-stage-7.0-gemini-3-pro-implementation.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-17"
+        },
+        "2026-01-14-stage-3.0-mvp-features-design.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-14-catalog-sharing-design.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-13-claude-commands-skills-audit-refactor.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": "2026-01-14"
+        },
+        "2026-01-14-stage-3.3-rescan-edit-flow-plan.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        }
+      }
+    },
+    "issues": {
+      "path": "docs/issues/",
+      "archive_on": [
+        "Closed",
+        "Fixed",
+        "Won't Fix"
+      ],
+      "docs": {
+        "2026-01-18-verify-delete-backend-cleanup.md": {
+          "status": "Fixed",
+          "related_branch": "test/verify-delete-cleanup",
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-done-button-non-functional.md": {
+          "status": "Fixed",
+          "related_branch": "fix/done-button-navigation",
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-bounding-box-misplacement-powerstrip.md": {
+          "status": "Fixed",
+          "related_branch": "fix/bounding-box-coordinates",
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-thumbnail-not-rendering-detected-objects.md": {
+          "status": "Fixed",
+          "related_branch": "fix/thumbnail-not-rendering",
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-edit-item-button-fails-silently.md": {
+          "status": "Fixed",
+          "related_branch": "fix/edit-item-navigation",
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-unauthorized-storage-bucket-detection-failure.md": {
+          "status": "Fixed",
+          "related_branch": "fix/storage-bucket-auth",
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-camera-preview-off-center-during-detection.md": {
+          "status": "Fixed",
+          "related_branch": "fix/camera-preview-offset",
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-app-icon-white-border-padding.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-background-processing-ux-redesign.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-18-catalog-button-ux-duplicate-items.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": "2026-01-18"
+        },
+        "2026-01-18-device-testing-logs.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-16-frozen-camera-after-error-dismiss.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        }
+      }
+    },
+    "dev-workflow": {
+      "path": "docs/dev-workflow/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "QUICK-REFERENCE.md": {
+          "status": "Active",
+          "code_refs": [],
+          "updated": "2026-01-18"
+        }
+      }
+    }
+  },
+  "archived": {
+    "plans": {},
+    "specs": {},
+    "issues": {}
+  }
+}
