@@ -180,7 +180,40 @@ Deterministic mapping: `(action, domain) → (axiom_agent, axiom_skill, superpow
      Task(subagent_type=agent)
 3. COMBINE audit_results
 4. Skill(skill="superpowers:requesting-code-review", context=audit_results)
-5. VERIFY()
+5. IF critical_findings (P0/P1):
+   OFFER_ISSUE_FILING(findings)
+6. VERIFY()
+```
+
+### Issue Filing from Review
+
+When code review finds critical issues (P0/P1 severity):
+
+```
+1. FOR each critical_finding:
+   - Extract: file, line, description, severity
+   - Present: "Found critical issue: [description] in [file]:[line]"
+
+2. Ask: "File as issue(s)? (y/n/select)"
+   - y → File all as separate issues
+   - n → Skip, continue review
+   - select → Let user pick which to file
+
+3. FOR each selected_finding:
+   Skill(skill="file-issue", args="--source code-review --context <finding>")
+
+   Context:
+   {
+     "source": "code-review",
+     "file": "path/to/file.swift",
+     "line": 123,
+     "finding": "description",
+     "severity": "P0",
+     "auditor": "axiom:concurrency-auditor"
+   }
+
+4. Continue with remaining review
+5. Summary includes: "Filed X issues: [links]"
 ```
 
 ### plan Execution
