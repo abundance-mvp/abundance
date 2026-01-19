@@ -113,10 +113,13 @@ struct ItemCard: View {
         .contextMenu {
             // Only show context menu when not in selection mode
             if !isSelectionMode {
-                Button {
-                    onEdit?()
-                } label: {
-                    Label("Edit", systemImage: "pencil")
+                // Only show Edit when functionality is implemented (Stage 3.3+)
+                if let onEdit = onEdit {
+                    Button {
+                        onEdit()
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
                 }
 
                 Button(role: .destructive) {

@@ -62,9 +62,6 @@ public struct InventoryView: View {
                             items: filteredItems,
                             isSelectionMode: isSelectionMode,
                             selectedItemIds: $selectedItemIds,
-                            onEdit: { _ in
-                                // TODO: Stage 3.3 - wire to rescan edit flow
-                            },
                             onDelete: { item in
                                 itemToDelete = item
                                 showDeleteConfirmation = true
@@ -183,7 +180,6 @@ private struct ItemGridView: View {
     let items: [Item]
     let isSelectionMode: Bool
     @Binding var selectedItemIds: Set<String>
-    let onEdit: (Item) -> Void
     let onDelete: (Item) -> Void
 
     var body: some View {
@@ -213,7 +209,6 @@ private struct ItemGridView: View {
                         } label: {
                             ItemCard(
                                 item: item,
-                                onEdit: { onEdit(item) },
                                 onDelete: { onDelete(item) }
                             )
                         }
