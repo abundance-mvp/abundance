@@ -19,6 +19,7 @@ Skill for implementing Gemini 3 Pro integration with tool calling in the abundan
 ## Reference Implementation
 
 See `functions/src/ai-pipeline/gemini/` for current implementation:
+
 - `gemini-service.ts` - Core Gemini client with thought signature handling
 - `prompts.ts` - Tool declarations and system prompts
 - `orchestrator.ts` - Firestore trigger integration
@@ -269,36 +270,7 @@ Function call is missing a thought_signature
 
 ---
 
-## Vertex AI MCP Server (Optional)
-
-For Claude Code integration with Gemini, you can use the community Vertex AI MCP server:
-
-**GitHub:** https://github.com/shariqriazz/vertex-ai-mcp-server
-
-**Install for Claude Desktop:**
-```bash
-bunx -y @smithery/cli install @shariqriazz/vertex-ai-mcp-server --client claude
-```
-
-**Claude Code:**
-```bash
-claude mcp add-json "vertex-ai-mcp-server" '{
-  "command": "bunx",
-  "args": ["-y", "vertex-ai-mcp-server"],
-  "env": {
-    "AI_PROVIDER": "vertex",
-    "GOOGLE_CLOUD_PROJECT": "abundance-mvp"
-  }
-}'
-```
-
-**Provided Tools:**
-- `answer_query_websearch` - Web-grounded responses
-- `answer_query_direct` - Direct knowledge answers
-- `code_analysis_with_docs` - Bug/security analysis
-- `technical_comparison` - Framework comparisons
-
----
+## Vertex AI & Gemini Documentation Retrieval
 
 ## Documentation Resources
 
@@ -306,16 +278,17 @@ When implementing Gemini integrations, consult:
 
 | Topic | URL |
 |-------|-----|
-| Function Calling | https://ai.google.dev/gemini-api/docs/function-calling |
-| Thought Signatures | https://ai.google.dev/gemini-api/docs/thought-signatures |
-| Gemini 3 Guide | https://ai.google.dev/gemini-api/docs/gemini-3 |
-| Vertex AI Docs | https://cloud.google.com/vertex-ai/generative-ai/docs |
+| Function Calling | <https://ai.google.dev/gemini-api/docs/function-calling> |
+| Thought Signatures | <https://ai.google.dev/gemini-api/docs/thought-signatures> |
+| Gemini 3 Guide | <https://ai.google.dev/gemini-api/docs/gemini-3> |
+| Vertex AI Docs | <https://cloud.google.com/vertex-ai/generative-ai/docs> |
 
 ---
 
 ## Testing Patterns
 
 See `functions/src/ai-pipeline/gemini/__tests__/` for test patterns:
+
 - Mock Gemini responses with thought signatures
 - Test tool call routing
 - Test error handling and retries

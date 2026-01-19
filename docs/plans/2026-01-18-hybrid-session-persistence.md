@@ -1,6 +1,6 @@
 # Hybrid Session Persistence Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use backend-superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Enable Gemini to remember previous catalog results when users add photos or request re-cataloging, using a hybrid approach of Firestore history + Context Caching.
 
@@ -13,6 +13,7 @@
 ## Background
 
 **Current State:** Each Layer 2 call in `gemini-service.ts:40-51` is stateless:
+
 ```typescript
 let contents: Content[] = [{
   role: 'user',
@@ -24,11 +25,13 @@ let contents: Content[] = [{
 ```
 
 **Problem:** When user adds more photos to an existing item or requests re-cataloging, Gemini has no memory of:
+
 - Previous identification (brand, model)
 - Previous tool calls and results
 - Previous confidence assessments
 
 **Solution:** Hybrid approach combining:
+
 1. **Firestore History:** Store catalog results in `items/{itemId}/catalogHistory` subcollection
 2. **Context Caching:** Cache system prompt + tool definitions (min 2048 tokens, 90% cost reduction)
 3. **Context Injection:** Include previous results in new prompts for continuity
@@ -38,7 +41,7 @@ let contents: Content[] = [{
 ## Prerequisites
 
 - Read: `docs/specs/SPEC-PIPE-003-session-persistence.md` (design spec)
-- Gemini Context Caching API: https://ai.google.dev/gemini-api/docs/caching
+- Gemini Context Caching API: <https://ai.google.dev/gemini-api/docs/caching>
 - Current implementation: `functions/src/ai-pipeline/gemini/gemini-service.ts`
 
 ---
@@ -46,6 +49,7 @@ let contents: Content[] = [{
 ## Task 1: Create Catalog History Data Model
 
 **Files:**
+
 - Create: `functions/src/ai-pipeline/gemini/schemas/catalog-history.ts`
 - Modify: `functions/src/ai-pipeline/gemini/schemas/catalog-item.ts:1-50`
 
@@ -125,6 +129,7 @@ Expected: File exists
 **Step 3: Export from schemas index**
 
 Add to `functions/src/ai-pipeline/gemini/schemas/index.ts`:
+
 ```typescript
 export * from './catalog-history';
 ```
@@ -147,6 +152,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 2: Create Catalog History Service
 
 **Files:**
+
 - Create: `functions/src/ai-pipeline/gemini/catalog-history-service.ts`
 
 **Step 1: Write the service**
@@ -311,6 +317,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 3: Implement Context Caching for System Prompt
 
 **Files:**
+
 - Create: `functions/src/ai-pipeline/gemini/context-cache-service.ts`
 - Modify: `functions/src/ai-pipeline/gemini/prompts.ts` (extract cacheable content)
 
@@ -444,11 +451,13 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 4: Modify Gemini Service to Use History and Cache
 
 **Files:**
+
 - Modify: `functions/src/ai-pipeline/gemini/gemini-service.ts`
 
 **Step 1: Add imports**
 
 Add to top of file after existing imports:
+
 ```typescript
 import {
   saveCatalogHistory,
@@ -639,6 +648,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 5: Update Orchestrator to Use Persistent Processing
 
 **Files:**
+
 - Modify: `functions/src/ai-pipeline/gemini/orchestrator.ts`
 
 **Step 1: Read current orchestrator**
@@ -648,6 +658,7 @@ Read: `functions/src/ai-pipeline/gemini/orchestrator.ts`
 **Step 2: Update to use processItemWithGeminiPersistent**
 
 Change the import and function call:
+
 ```typescript
 // Change import
 import { processItemWithGeminiPersistent } from './gemini-service';
@@ -683,11 +694,13 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 6: Add Firestore Indexes for History Queries
 
 **Files:**
+
 - Modify: `firestore.indexes.json`
 
 **Step 1: Add index for catalogHistory subcollection**
 
 Add to `indexes` array:
+
 ```json
 {
   "collectionGroup": "catalogHistory",
@@ -720,6 +733,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 7: Write Unit Tests
 
 **Files:**
+
 - Create: `functions/src/ai-pipeline/gemini/__tests__/catalog-history-service.test.ts`
 - Create: `functions/src/ai-pipeline/gemini/__tests__/context-cache-service.test.ts`
 
@@ -839,11 +853,13 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 ## Task 8: Update SPEC-PIPE-003 with Implementation Details
 
 **Files:**
+
 - Update: `docs/specs/SPEC-PIPE-003-session-persistence.md` (after created by spec audit)
 
 **Step 1: Add implementation section**
 
 After the design spec is created by the spec audit, add implementation details:
+
 - File locations
 - Function signatures
 - Firestore paths
@@ -880,6 +896,7 @@ Expected: Deployment successful
 **Step 4: Verify with MCP tools**
 
 Use Firebase MCP:
+
 ```
 functions_list_functions
 functions_get_logs function_names=["onItemCreatedGemini3"] min_severity="INFO" page_size=10
@@ -921,6 +938,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 **Estimated Token Savings:** 90% reduction on repeated Layer 2 calls (~$0.036 → ~$0.004 per call)
 
 **Data Model:**
+
 - `items/{itemId}/catalogHistory/{entryId}` - Subcollection for history entries
 - Max 5 entries per item (auto-cleanup)
 
