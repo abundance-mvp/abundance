@@ -236,7 +236,9 @@ struct ErrorOverlay: View {
         Button {
             isRetrying = true
             // Add slight delay for visual feedback
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            // Note: [weak self] not needed for SwiftUI structs - closures capture value types
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(300))
                 onDismiss()
             }
         } label: {

@@ -90,6 +90,11 @@ public struct InventoryView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(Color.accentPrimary)
+                        .accessibilityHint(
+                            isSelectionMode
+                                ? "Exit selection mode"
+                                : "Enter selection mode to select multiple items"
+                        )
                     }
                 }
             }
@@ -243,11 +248,12 @@ private struct EmptyInventoryView: View {
 private struct ErrorView: View {
     let message: String
     let retry: () -> Void
+    @ScaledMetric(relativeTo: .largeTitle) private var errorIconSize: CGFloat = 60
 
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 60))
+                .font(.system(size: errorIconSize))
                 .foregroundStyle(.red)
             Text("Error Loading Items")
                 .font(.title2)

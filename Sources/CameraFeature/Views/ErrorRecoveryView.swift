@@ -191,7 +191,9 @@ public struct ErrorRecoveryView: View {
             isRetrying = true
             action()
             // Reset after short delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            // Note: [weak self] not needed for SwiftUI structs - @State handles lifecycle
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(1))
                 isRetrying = false
             }
         } label: {

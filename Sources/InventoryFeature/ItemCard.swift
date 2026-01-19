@@ -172,6 +172,7 @@ struct ItemCard: View {
                 .foregroundStyle(.secondary)
         }
         .frame(height: imageHeight)
+        .accessibilityLabel("Image not available")
     }
 
     private var accessibilityDescription: String {
@@ -212,9 +213,8 @@ struct ItemCard: View {
             }
             onTap?()
 
-            // Use DispatchQueue for delayed reset (avoids Task capture issues
-            // if view is removed mid-animation)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(150))
                 withAnimation(.brandSnappy) {
                     isPressed = false
                 }

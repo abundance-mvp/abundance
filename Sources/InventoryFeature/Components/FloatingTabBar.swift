@@ -73,6 +73,7 @@ public struct FloatingTabBar: View {
             }
         }
         .accessibilityLabel("\(item.title), tab \(index + 1) of \(items.count)")
+        .accessibilityHint("Double tap to switch to this tab")
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
     }
 }

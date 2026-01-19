@@ -20,13 +20,15 @@ public struct SearchBar: View {
     public var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(.body, weight: .medium))
                 .foregroundStyle(.secondary)
 
             TextField(placeholder, text: $text)
                 .font(.system(.body, design: .rounded))
                 .focused($isFocused)
                 .submitLabel(.search)
+                .accessibilityLabel("Search items")
+                .accessibilityHint("Search by category, color, material, or condition")
 
             if !text.isEmpty {
                 Button {
@@ -35,7 +37,7 @@ public struct SearchBar: View {
                     }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
+                        .font(.system(.body))
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
