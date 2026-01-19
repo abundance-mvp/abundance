@@ -1,0 +1,139 @@
+# Abundance MVP Specifications
+
+> **Last Updated:** 2026-01-18
+> **Author:** Claude Code Audit
+
+This directory contains technical specifications for the Abundance MVP application.
+
+---
+
+## Specification Index
+
+### Architecture (SPEC-ARCH)
+
+| ID | Title | Status | Description |
+|----|-------|--------|-------------|
+| [SPEC-ARCH-001](./SPEC-ARCH-001-system-overview.md) | System Overview | Active | High-level architecture, tech stack, module breakdown |
+| [SPEC-ARCH-002](./SPEC-ARCH-002-layer1-layer2-pipeline.md) | Layer 1/Layer 2 Pipeline | Active | AI pipeline architecture with Gemini 3 Flash/Pro |
+| [SPEC-ARCH-003](./SPEC-ARCH-003-security-authentication.md) | Security & Authentication | Active | Firebase Auth, security rules, encryption |
+
+### Data Layer (SPEC-DATA)
+
+| ID | Title | Status | Description |
+|----|-------|--------|-------------|
+| [SPEC-DATA-001](./SPEC-DATA-001-firestore-schema.md) | Firestore Schema | Active | Collections, document schemas, indexes, rules |
+| [SPEC-DATA-002](./SPEC-DATA-002-storage-architecture.md) | Storage Architecture | Active | GCS buckets, upload flows, privacy model |
+
+### API (SPEC-API)
+
+| ID | Title | Status | Description |
+|----|-------|--------|-------------|
+| [SPEC-API-001](./SPEC-API-001-cloud-functions.md) | Cloud Functions API | Active | 12 deployed functions: triggers, callables, scheduled |
+
+### AI Pipeline (SPEC-PIPE)
+
+| ID | Title | Status | Description |
+|----|-------|--------|-------------|
+| [SPEC-PIPE-001](./SPEC-PIPE-001-layer1-detection.md) | Layer 1 Detection | Active | Gemini 3 Flash object detection, cropping |
+| [SPEC-PIPE-002](./SPEC-PIPE-002-layer2-cataloging.md) | Layer 2 Cataloging | Active | Gemini 3 Pro premium cataloging with tools |
+| [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md) | Session Persistence | **Planned** | Hybrid context caching design spec |
+
+### User Interface (SPEC-UI)
+
+| ID | Title | Status | Description |
+|----|-------|--------|-------------|
+| [SPEC-UI-001](./SPEC-UI-001-camera-capture-flow.md) | Camera Capture Flow | Active | Single/burst capture, state machine, haptics |
+| [SPEC-UI-002](./SPEC-UI-002-catalog-inventory-flow.md) | Catalog Inventory Flow | Active | List/detail/edit views, status indicators |
+
+### Operations (SPEC-OPS)
+
+| ID | Title | Status | Description |
+|----|-------|--------|-------------|
+| [SPEC-OPS-001](./SPEC-OPS-001-cicd-workflows.md) | CI/CD Workflows | Active | 9 GitHub Actions workflows |
+| [SPEC-OPS-002](./SPEC-OPS-002-dev-workflow.md) | Developer Workflow | Active | Setup, branching, commits, Claude Code |
+| [SPEC-OPS-003](./SPEC-OPS-003-cost-model.md) | Cost Model | Active | AI, storage, Firebase costs with projections |
+
+---
+
+## Status Legend
+
+| Status | Meaning |
+|--------|---------|
+| **Active** | Reflects current implementation |
+| **Planned** | Design spec for future implementation |
+| **Deprecated** | Superseded by newer spec |
+
+---
+
+## Superseded Specs
+
+| Old Spec | Replaced By | Notes |
+|----------|-------------|-------|
+| SPEC-LAYER1-LAYER2-ARCHITECTURE.md | SPEC-ARCH-002 | Original spec from 2026-01-17 |
+
+---
+
+## Related Documentation
+
+- **ADRs:** [`docs/adr/`](../adr/) - Architectural Decision Records
+- **Plans:** [`docs/plans/`](../plans/) - Implementation plans
+- **Issues:** [`docs/issues/`](../issues/) - Issue tracking
+
+---
+
+## Quick Links
+
+### For iOS Developers
+- [System Overview](./SPEC-ARCH-001-system-overview.md#technology-stack) - Tech stack
+- [Camera Capture Flow](./SPEC-UI-001-camera-capture-flow.md) - Capture UX
+- [Catalog Flow](./SPEC-UI-002-catalog-inventory-flow.md) - Inventory UX
+- [Dev Workflow](./SPEC-OPS-002-dev-workflow.md) - Setup guide
+
+### For Backend Developers
+- [Cloud Functions API](./SPEC-API-001-cloud-functions.md) - All endpoints
+- [Firestore Schema](./SPEC-DATA-001-firestore-schema.md) - Data model
+- [Storage Architecture](./SPEC-DATA-002-storage-architecture.md) - GCS patterns
+
+### For AI/ML Engineers
+- [Layer 1 Detection](./SPEC-PIPE-001-layer1-detection.md) - Gemini Flash
+- [Layer 2 Cataloging](./SPEC-PIPE-002-layer2-cataloging.md) - Gemini Pro + tools
+- [Session Persistence](./SPEC-PIPE-003-session-persistence.md) - Context caching design
+
+---
+
+## Conventions
+
+### Document Structure
+
+All specs follow this structure:
+
+```markdown
+# SPEC-{CATEGORY}-{NUMBER}: {Title}
+
+**Created:** YYYY-MM-DD
+**Updated:** YYYY-MM-DD (if applicable)
+**Status:** Active | Planned | Deprecated
+**Author:** Author Name
+
+---
+
+## Overview
+## Architecture / Implementation Details
+## API / Interface
+## Security Considerations
+## Future Considerations
+## Revision History
+```
+
+### File Naming
+
+- `SPEC-ARCH-NNN-*.md` - Architecture specs
+- `SPEC-DATA-NNN-*.md` - Data layer specs
+- `SPEC-API-NNN-*.md` - API specs
+- `SPEC-PIPE-NNN-*.md` - AI pipeline specs
+- `SPEC-UI-NNN-*.md` - User interface specs
+- `SPEC-OPS-NNN-*.md` - Operations specs
+
+---
+
+*Generated by Claude Code Audit on 2026-01-18*
