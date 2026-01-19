@@ -9,7 +9,7 @@ public struct CaptureView: View {
     @StateObject private var viewModel: CaptureSessionViewModel
     @StateObject private var networkMonitor = NetworkMonitor.shared
     private let cameraService: CameraService
-    @Environment(\.dismiss) private var dismiss
+    private let onDone: () -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     @State private var frozenFrame: Data?
@@ -23,10 +23,12 @@ public struct CaptureView: View {
 
     public init(
         viewModel: CaptureSessionViewModel = CaptureSessionViewModel(),
-        cameraService: CameraService = CameraService()
+        cameraService: CameraService = CameraService(),
+        onDone: @escaping () -> Void = {}
     ) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.cameraService = cameraService
+        self.onDone = onDone
     }
 
     public var body: some View {
@@ -65,7 +67,8 @@ public struct CaptureView: View {
                         onDismiss: {
                             showingCameraError = false
                             cameraError = nil
-                            dismiss()
+                            viewModel.retake()
+                            onDone()
                         }
                     )
                     .transition(.scale.combined(with: .opacity))
@@ -157,7 +160,11 @@ public struct CaptureView: View {
                         frozenFrame = nil
                     },
                     onDone: {
-                        dismiss()
+                        #if os(iOS)
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        #endif
+                        viewModel.retake()
+                        onDone()
                     }
                 )
             }
@@ -239,7 +246,8 @@ public struct CaptureView: View {
         VStack {
             HStack {
                 Button {
-                    dismiss()
+                    viewModel.retake()
+                    onDone()
                 } label: {
                     Text("Cancel")
                         .font(.system(.body, design: .rounded))
@@ -247,7 +255,7 @@ public struct CaptureView: View {
                         .padding(16)
                 }
                 .accessibilityLabel("Cancel capture")
-                .accessibilityHint("Dismisses the camera without saving")
+                .accessibilityHint("Returns to catalog view")
 
                 Spacer()
 
@@ -314,7 +322,11 @@ public struct CaptureView: View {
                     .buttonStyle(CaptureButtonStyle(isPrimary: false))
 
                     Button("Done") {
-                        dismiss()
+                        #if os(iOS)
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        #endif
+                        viewModel.retake()
+                        onDone()
                     }
                     .buttonStyle(CaptureButtonStyle(isPrimary: true))
                 }

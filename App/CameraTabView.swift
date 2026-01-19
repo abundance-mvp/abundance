@@ -2,7 +2,9 @@ import SwiftUI
 import CameraFeature
 
 struct CameraTabView: View {
+    let onNavigateToCatalog: () -> Void
+
     var body: some View {
-        CaptureView()
+        CaptureView(onDone: onNavigateToCatalog)
     }
 }

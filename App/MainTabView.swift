@@ -22,7 +22,9 @@ public struct MainTabView: View {
                 }
                 .tag(Tab.catalog)
 
-            CameraTabView()
+            CameraTabView(onNavigateToCatalog: {
+                selectedTab = .catalog
+            })
                 .tabItem {
                     Label("Camera", systemImage: "camera.fill")
                 }
