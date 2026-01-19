@@ -6,7 +6,7 @@
  */
 
 import * as admin from 'firebase-admin';
-import { processItemWithGemini } from './gemini-service';
+import { processItemWithGeminiPersistent } from './gemini-service';
 import { validateCatalogItem } from './schemas/catalog-item';
 
 /**
@@ -47,8 +47,12 @@ export async function handleItemCreated(
     // Get signed URL for image
     const imageUrl = await getSignedImageUrl(itemData.imagePath);
 
-    // Process with Gemini 3 Pro
-    const result = await processItemWithGemini(imageUrl);
+    // Process with Gemini 3 Pro (with session persistence and context caching)
+    const result = await processItemWithGeminiPersistent(
+      imageUrl,
+      itemId,  // Pass itemId for history tracking
+      true     // Use context cache
+    );
 
     // Validate result
     const catalogItems = Array.isArray(result) ? result : [result];
