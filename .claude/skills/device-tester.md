@@ -291,12 +291,65 @@ xcodebuild test \
 │     ├─ Crash? → Invoke crash-analyzer agent             │
 │     ├─ Slow? → Invoke performance-profiler agent        │
 │     ├─ Test fail? → Invoke test-debugger agent          │
-│     └─ Bug? → Fix code, go to step 1                    │
+│     ├─ Bug? → Offer to file issue, then fix or continue │
+│     └─ Feature idea? → File as enhancement              │
 └─────────────────────────────────────────────────────────┘
                           ↓
 ┌─────────────────────────────────────────────────────────┐
 │  5. REPEAT until fixed                                  │
 └─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Issue Filing Integration
+
+When an issue is discovered during device testing, use the file-issue skill to create a standardized issue.
+
+### Automatic Context Gathering
+
+Before invoking file-issue, gather:
+
+1. **Console logs** (last 50 relevant lines from launch output)
+2. **Device info**: w-16e, iOS version
+3. **Recent screenshots**:
+   ```bash
+   ls -lt screenshots/ | head -5
+   ```
+4. **Current test scenario** (what was being tested)
+
+### Invoke File-Issue
+
+```
+Skill(skill="file-issue", args="--source device-tester --context <gathered>")
+```
+
+Context JSON structure:
+```json
+{
+  "source": "device-tester",
+  "device": "w-16e",
+  "ios_version": "18.x",
+  "console_logs": "[last 50 lines]",
+  "screenshots": ["IMG_1234.png"],
+  "test_scenario": "Testing camera capture flow"
+}
+```
+
+### After Issue Filed
+
+Ask user:
+- **"Continue testing?"** → Resume testing loop at step 1
+- **"Stop to investigate?"** → Offer to start debugging with `ios-superpowers debug`
+
+### Quick Filing
+
+For obvious bugs during testing:
+
+```
+"I noticed [issue]. Should I file this as an issue?"
+- Yes → Invoke file-issue with gathered context
+- No → Continue testing
 ```
 
 ## Quick Commands Reference
