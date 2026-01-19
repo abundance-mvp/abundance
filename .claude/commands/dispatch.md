@@ -12,13 +12,15 @@ Create git worktrees and dispatch specialized agents to work on triaged issues i
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        DISPATCH COORDINATOR                          │
 ├─────────────────────────────────────────────────────────────────────┤
-│  1. Parse triaged issues from docs/issues/
-│  2. Classify each issue → select Axiom agent                         │
+│  1. Parse triaged issues from docs/issues/                           │
+│  2. Classify each issue:                                             │
+│     - component: ios → ios-superpowers + Axiom agent                 │
+│     - component: backend → backend-superpowers + MCP tools           │
+│     - component: shared → ios-superpowers (primary) + flag backend   │
 │  3. Create isolated git worktrees                                    │
-│  4. Dispatch agents in parallel with:                                │
-│     - ios-superpowers (Apple docs grounding)                         │
-│     - Axiom agent (iOS-specific patterns + debugging)                │
-│  5. Monitor and report progress                                      │
+│  4. Dispatch agents in parallel                                      │
+│  5. Update issue metadata (axiom-agent, branch, status)              │
+│  6. Monitor and report progress                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -109,6 +111,84 @@ Create git worktrees and dispatch specialized agents to work on triaged issues i
 
 ---
 
+## Backend Routing (component: backend)
+
+When issue has `component: backend`, route to backend-superpowers instead of ios-superpowers.
+
+### Backend Issue Detection
+
+| Issue Contains | Routes To |
+|----------------|-----------|
+| Firestore, database, queries, documents | Firestore MCP tools |
+| Cloud Functions, deployment, functions | Functions MCP + deploy workflow |
+| Auth, users, permissions, Firebase Auth | Auth MCP tools |
+| Gemini, AI pipeline, tool calling, prompts | `gemini-integration` skill |
+| Logs, errors, monitoring, metrics | Observability MCP tools |
+| Storage, buckets, GCS, files | Storage MCP tools |
+| FCM, push notifications, messaging | FCM MCP tools |
+| Remote Config, feature flags | Remote Config MCP tools |
+
+### Backend Agent Prompt Template
+
+```markdown
+## Task: Fix [ISSUE-ID] - [Title]
+
+### Context
+- **Worktree:** ../abundance-worktrees/[branch-name]
+- **Spec:** [path to issue in docs/issues/]
+- **Component:** backend
+
+### Instructions
+
+1. **Navigate to worktree:**
+   ```bash
+   cd ../abundance-worktrees/[branch-name]
+   ```
+
+2. **Read the issue:**
+   ```bash
+   cat docs/issues/[issue-file].md
+   ```
+
+3. **Invoke backend-superpowers:**
+   ```
+   Skill(skill="backend-superpowers")
+   ```
+
+   This will:
+   - Detect backend domain (Firestore, Functions, Auth, etc.)
+   - Route Gemini patterns to gemini-integration skill
+   - Use appropriate MCP tools for Firebase/GCP operations
+   - Verify deployments and check logs
+
+4. **For Gemini/AI Pipeline issues:**
+   - Skill auto-routes to gemini-integration
+   - Follow thought signature patterns
+   - Test tool calling with proper SDK usage
+
+5. **Verify fix:**
+   - Check Cloud Functions logs for errors
+   - Verify Firestore operations succeed
+   - Test end-to-end if applicable
+
+6. **Commit changes:**
+   ```bash
+   git add -A
+   git commit -m "[type]: [description]"
+   ```
+
+7. **Report completion:**
+   ```
+   ✅ [ISSUE-ID] fixed
+   - Backend domain: [firestore/functions/auth/gemini/etc.]
+   - MCP tools used: [list]
+   - Deployment verified: yes/no
+   - Ready for PR
+   ```
+```
+
+---
+
 ## ios-superpowers Integration
 
 **Every dispatched agent MUST use ios-superpowers** for Apple documentation grounding:
@@ -146,24 +226,36 @@ Parse each JSON file to extract:
 - `symptoms`: Error messages, behaviors
 - `severity`: P0, P1, P2
 
-### 2. Classify and select Axiom agent
+### 2. Classify by component and select agent
 
-For each issue, use the routing matrix above:
+For each issue, first check the `component` field from issue metadata:
 
 ```
-IF issue.symptoms contains "BUILD FAILED" OR "module not found":
-    axiom_agent = "axiom:build-fixer"
-ELSE IF issue.symptoms contains "memory leak" OR "retain cycle":
-    axiom_agent = "axiom:memory-auditor"
-ELSE IF issue.symptoms contains "@MainActor" OR "Sendable":
-    axiom_agent = "axiom:concurrency-auditor"
-ELSE IF issue.type == "ux-issue" AND issue.symptoms contains "accessibility":
-    axiom_agent = "axiom:accessibility-auditor"
-ELSE IF issue.type == "performance":
-    axiom_agent = "axiom:swift-performance-analyzer"
-ELSE:
-    axiom_agent = None  # Use ios-superpowers only
+IF issue.component == "backend":
+    # Use backend-superpowers routing
+    Skill(skill="backend-superpowers")
+    # See "Backend Routing" section above
+
+ELSE IF issue.component == "ios" OR issue.component == "shared":
+    # Use ios-superpowers + Axiom routing (existing logic)
+    IF issue.symptoms contains "BUILD FAILED" OR "module not found":
+        axiom_agent = "axiom:build-fixer"
+    ELSE IF issue.symptoms contains "memory leak" OR "retain cycle":
+        axiom_agent = "axiom:memory-auditor"
+    ELSE IF issue.symptoms contains "@MainActor" OR "Sendable":
+        axiom_agent = "axiom:concurrency-auditor"
+    ELSE IF issue.type == "ux-issue" AND issue.symptoms contains "accessibility":
+        axiom_agent = "axiom:accessibility-auditor"
+    ELSE IF issue.type == "performance":
+        axiom_agent = "axiom:swift-performance-analyzer"
+    ELSE:
+        axiom_agent = None  # Use ios-superpowers only
 ```
+
+If issue doesn't have `component` field, detect from content:
+- `.swift`, SwiftUI, UIKit, Apple frameworks → `ios`
+- `.ts`, Firebase, Firestore, GCP → `backend`
+- Ambiguous → default to `ios`
 
 ### 3. Create worktrees
 
@@ -181,7 +273,37 @@ Branch naming:
 
 Use the Task tool to launch agents. For EACH issue, create ONE agent.
 
-**Agent Prompt Template:**
+**iOS Issues (component: ios):**
+```
+Task(
+  description="Fix [ISSUE-ID] (iOS)",
+  prompt="[iOS agent template]",
+  subagent_type="[axiom_agent from routing matrix]"
+)
+```
+
+**Backend Issues (component: backend):**
+```
+Task(
+  description="Fix [ISSUE-ID] (Backend)",
+  prompt="[Backend agent template with backend-superpowers invocation]",
+  subagent_type="general-purpose"
+)
+```
+
+**Shared Issues (component: shared):**
+```
+# Dispatch iOS agent as primary
+Task(
+  description="Fix [ISSUE-ID] (iOS - primary)",
+  prompt="[iOS agent template, note backend implications]",
+  subagent_type="[axiom_agent]"
+)
+
+# Flag for backend follow-up after iOS fix
+```
+
+**iOS Agent Prompt Template:**
 
 ```markdown
 ## Task: Fix [ISSUE-ID] - [Title]
