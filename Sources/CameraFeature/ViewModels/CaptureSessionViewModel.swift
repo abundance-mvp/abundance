@@ -84,6 +84,10 @@ public final class CaptureSessionViewModel: ObservableObject {
     /// Tracks which objects have been cataloged successfully
     @Published public var catalogedObjectIds: Set<String> = []
 
+    /// Track (sessionId, groupId) pairs that have been submitted to prevent duplicates
+    /// This prevents rapid double-taps from creating duplicate catalog items
+    private var submittedCatalogRequests: Set<String> = []
+
     // MARK: - Initialization
 
     public init(
@@ -407,6 +411,7 @@ public final class CaptureSessionViewModel: ObservableObject {
         detectedObjects = []
         catalogingObjectIds = []
         catalogedObjectIds = []
+        submittedCatalogRequests = []  // Clear submission cache on retake
         isCapturing = false
         cleanupCapture()
         uiState = .idle
@@ -431,12 +436,20 @@ public final class CaptureSessionViewModel: ObservableObject {
             return
         }
 
-        guard !catalogingObjectIds.contains(object.groupId),
+        // Create composite key for idempotency - prevents duplicate submissions
+        let requestKey = "\(sessionId):\(object.groupId)"
+
+        // Check if already submitted, cataloging, or cataloged
+        guard !submittedCatalogRequests.contains(requestKey),
+              !catalogingObjectIds.contains(object.groupId),
               !catalogedObjectIds.contains(object.groupId) else {
-            logger.warning("Object \(object.groupId) already cataloging or cataloged")
+            logger.warning("Object \(object.groupId) already submitted, cataloging, or cataloged")
             return
         }
 
+        // ATOMIC: Mark as submitted AND cataloging BEFORE any async work
+        // This prevents race conditions from rapid double-taps
+        submittedCatalogRequests.insert(requestKey)
         catalogingObjectIds.insert(object.groupId)
         logger.info("Starting catalog for object \(object.groupId): \(object.label)")
 
@@ -451,7 +464,10 @@ public final class CaptureSessionViewModel: ObservableObject {
             observeItemCataloging(itemId: itemId, groupId: object.groupId)
         } catch {
             logger.error("Failed to catalog object: \(error.localizedDescription)")
-            catalogingObjectIds.remove(object.groupId)
+            // P0 FIX: Do NOT remove from catalogingObjectIds on error
+            // This keeps the button disabled showing "Processing..." state
+            // Prevents user from tapping again and creating duplicates
+            // User can retry from inventory view if needed
         }
     }
 
