@@ -31,6 +31,13 @@
         { "fieldPath": "subscription.tier", "order": "ASCENDING" },
         { "fieldPath": "subscription.expiresAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "catalogHistory",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "catalogedAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
