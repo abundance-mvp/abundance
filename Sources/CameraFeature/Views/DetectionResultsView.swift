@@ -322,27 +322,40 @@ struct DetectedObjectCard: View {
     }
 
     private var thumbnailView: some View {
-        AsyncImage(url: URL(string: object.croppedImageUrls.first ?? "")) { phase in
-            switch phase {
-            case .success(let image):
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            case .failure:
-                Image(systemName: "photo")
-                    .foregroundStyle(.secondary)
-            case .empty:
-                ProgressView()
-            @unknown default:
-                EmptyView()
+        Group {
+            if let urlString = object.croppedImageUrls.first,
+               !urlString.isEmpty,
+               let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().aspectRatio(contentMode: .fill)
+                    case .failure:
+                        thumbnailPlaceholder
+                    case .empty:
+                        ProgressView()
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+            } else {
+                thumbnailPlaceholder
             }
         }
         .frame(width: 60, height: 60)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
-        )
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(isSelected ? Color.blue : .clear, lineWidth: 2))
+    }
+
+    private var thumbnailPlaceholder: some View {
+        ZStack {
+            #if os(iOS)
+            Color(.secondarySystemFill)
+            #else
+            Color(nsColor: .controlBackgroundColor)
+            #endif
+            Image(systemName: "photo.badge.exclamationmark").font(.title3).foregroundStyle(.secondary)
+        }
     }
 
     private var objectInfoView: some View {
@@ -458,38 +471,18 @@ struct NoObjectsDetectedView: View {
     DetectionResultsView(
         capturedImage: nil,
         detectedObjects: [
-            ServerDetectedObject(
-                groupId: "1",
-                label: "Table Lamp",
-                category: "lighting",
-                attributes: ["color": "brass", "material": "metal"],
-                confidence: "high",
-                croppedImageUrls: [],
-                boundingBoxes: [BoundingBoxInfo(imageIndex: 0, box2d: [100, 200, 400, 600])]
-            ),
-            ServerDetectedObject(
-                groupId: "2",
-                label: "Hardcover Book",
-                category: "books",
-                attributes: ["color": "blue"],
-                confidence: "medium",
-                croppedImageUrls: [],
-                boundingBoxes: [BoundingBoxInfo(imageIndex: 0, box2d: [500, 100, 700, 300])]
-            )
+            ServerDetectedObject(groupId: "1", label: "Table Lamp", category: "lighting",
+                attributes: ["color": "brass"], confidence: "high", croppedImageUrls: [],
+                boundingBoxes: [BoundingBoxInfo(imageIndex: 0, box2d: [100, 200, 400, 600])]),
+            ServerDetectedObject(groupId: "2", label: "Book", category: "books",
+                attributes: [:], confidence: "medium", croppedImageUrls: [],
+                boundingBoxes: [BoundingBoxInfo(imageIndex: 0, box2d: [500, 100, 700, 300])])
         ],
-        catalogingObjectIds: [],
-        catalogedObjectIds: [],
-        onCatalogObject: { _ in },
-        onCatalogAll: { },
-        onRetake: { },
-        onDone: { }
-    )
+        catalogingObjectIds: [], catalogedObjectIds: [],
+        onCatalogObject: { _ in }, onCatalogAll: { }, onRetake: { }, onDone: { })
 }
 
 #Preview("No Objects") {
-    NoObjectsDetectedView(
-        reasoning: "Only built-in fixtures (cabinets, countertops) found.",
-        onRetake: { }
-    )
+    NoObjectsDetectedView(reasoning: "Only fixtures found.", onRetake: { })
 }
 #endif
