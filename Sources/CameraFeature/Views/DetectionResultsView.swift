@@ -224,9 +224,10 @@ struct BoundingBoxOverlay: View {
             // Use first bounding box for display
             if let firstBox = object.boundingBoxes.first {
                 let rect = firstBox.normalizedRect
+                // normalizedRect already uses SwiftUI coordinates (origin top-left)
                 let frame = CGRect(
                     x: rect.minX * geometry.size.width,
-                    y: (1 - rect.maxY) * geometry.size.height, // Flip Y for SwiftUI coords
+                    y: rect.minY * geometry.size.height,
                     width: rect.width * geometry.size.width,
                     height: rect.height * geometry.size.height
                 )

@@ -67,7 +67,15 @@ public struct BoundingBoxInfo: Sendable, Codable {
         self.box2d = box2d
     }
 
-    /// Convert to CGRect in normalized coordinates (0-1, origin bottom-left for Vision)
+    /// Convert to CGRect in normalized coordinates (0-1, origin top-left for SwiftUI)
+    ///
+    /// Gemini format: [ymin, xmin, ymax, xmax] where:
+    /// - ymin = top edge (0 = top of image)
+    /// - ymax = bottom edge (1000 = bottom of image)
+    /// - xmin = left edge (0 = left of image)
+    /// - xmax = right edge (1000 = right of image)
+    ///
+    /// This matches SwiftUI's coordinate system (origin top-left), so no Y-flip needed.
     public var normalizedRect: CGRect {
         guard box2d.count == 4 else {
             return .zero
@@ -79,7 +87,7 @@ public struct BoundingBoxInfo: Sendable, Codable {
 
         return CGRect(
             x: xmin,
-            y: 1.0 - ymax, // Flip for Vision coordinates (origin bottom-left)
+            y: ymin, // No flip - Gemini ymin is top edge, matching SwiftUI origin
             width: xmax - xmin,
             height: ymax - ymin
         )
