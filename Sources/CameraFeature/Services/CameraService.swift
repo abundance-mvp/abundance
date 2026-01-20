@@ -109,9 +109,16 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
         Task { @MainActor [weak self] in
             guard let self = self else { return }
             // Restart session when interruption ends
-            let isRunning = await self.sessionActor.isRunning()
-            if !isRunning {
-                await self.sessionActor.startRunning()
+            let captureSession = await self.sessionActor.captureSession
+            let sessionQueue = self.sessionQueue
+
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                sessionQueue.async {
+                    if !captureSession.isRunning {
+                        captureSession.startRunning()
+                    }
+                    continuation.resume()
+                }
             }
             self.sessionStateSubject.send(.running)
         }
@@ -139,7 +146,18 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
         do {
             try await sessionActor.configure()
             await sessionActor.setSampleBufferDelegate(self, queue: videoQueue)
-            await sessionActor.startRunning()
+
+            // startRunning() is a blocking call - must run on dedicated session queue
+            // NOT on main thread or actor executor (Apple: "Don't call startRunning on main thread")
+            let captureSession = await sessionActor.captureSession
+
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                sessionQueue.async {
+                    captureSession.startRunning()
+                    continuation.resume()
+                }
+            }
+
             sessionStateSubject.send(.running)
         } catch {
             sessionStateSubject.send(.failed(error))
@@ -148,7 +166,14 @@ public final class CameraService: NSObject, @preconcurrency CameraServiceProtoco
     }
 
     public func stopSession() async {
-        await sessionActor.stopRunning()
+        // stopRunning() is also blocking - run on session queue for consistency
+        let captureSession = await sessionActor.captureSession
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            sessionQueue.async {
+                captureSession.stopRunning()
+                continuation.resume()
+            }
+        }
         sessionStateSubject.send(.stopped)
     }
 
