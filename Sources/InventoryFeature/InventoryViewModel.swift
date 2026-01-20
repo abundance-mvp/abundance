@@ -14,6 +14,17 @@ public final class InventoryViewModel {
     public var isLoading: Bool = false
     public var error: String?
     public var deleteError: String?
+    public var searchText: String = ""
+
+    /// Filters items based on search text matching any searchable text field.
+    /// Searches: category, color, material, condition (and name, subCategory, brand, model after Stage 3.1)
+    /// Uses case-insensitive, locale-aware matching per Apple best practices.
+    public var filteredItems: [Item] {
+        guard !searchText.isEmpty else {
+            return items
+        }
+        return items.filter { $0.matchesSearchQuery(searchText) }
+    }
 
     private let itemRepository: ItemRepository
     private let userId: String?

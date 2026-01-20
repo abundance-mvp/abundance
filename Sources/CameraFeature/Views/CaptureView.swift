@@ -15,6 +15,7 @@ public struct CaptureView: View {
     @State private var frozenFrame: Data?
     @State private var longPressActive = false
     @State private var captureSession: AVCaptureSession?
+    @State private var isCaptureInProgress = false  // Synchronous guard for race prevention
 
     // Error recovery state
     @State private var cameraError: CameraError?
@@ -91,6 +92,7 @@ public struct CaptureView: View {
     /// Only enable gestures in idle state to prevent blocking UI elements
     private var gesturesEnabled: Bool {
         guard !showingCameraError else { return false }
+        guard !isCaptureInProgress else { return false }  // Synchronous race prevention
         if case .idle = viewModel.uiState {
             return true
         }
@@ -445,7 +447,12 @@ public struct CaptureView: View {
             return
         }
 
+        // Synchronous guard - prevents race condition on rapid double-taps
+        guard !isCaptureInProgress else { return }
+        isCaptureInProgress = true
+
         Task {
+            defer { isCaptureInProgress = false }
             do {
                 // Capture photo
                 let photoData = try await cameraService.capturePhoto()

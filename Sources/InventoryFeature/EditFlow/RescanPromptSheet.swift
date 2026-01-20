@@ -72,7 +72,8 @@ public struct RescanPromptSheet: View {
 
 #if DEBUG
 #Preview("Rescan Prompt Sheet") {
-    @Previewable @State var viewModel = EditItemViewModel(
+    // @Observable manages its own state - no @State wrapper needed
+    let viewModel = EditItemViewModel(
         item: Item(
             id: "preview-1",
             userId: "user-1",

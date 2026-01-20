@@ -4,9 +4,8 @@ import Persistence
 
 public struct InventoryView: View {
     // Plain var for @Observable type - SwiftUI tracks changes automatically
-    var viewModel: InventoryViewModel
+    @Bindable var viewModel: InventoryViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var searchText = ""
     @State private var isSelectionMode = false
     @State private var selectedItemIds: Set<String> = []
     @State private var itemToDelete: Item?
@@ -23,25 +22,12 @@ public struct InventoryView: View {
         self.onOpenCamera = onOpenCamera
     }
 
-    /// Filters items based on search text matching any searchable text field.
-    /// Searches: category, color, material, condition (and name, subCategory, brand, model after Stage 3.1)
-    /// Uses case-insensitive, locale-aware matching per Apple best practices.
-    private var filteredItems: [Item] {
-        guard !searchText.isEmpty else {
-            return viewModel.items
-        }
-
-        return viewModel.items.filter { item in
-            item.matchesSearchQuery(searchText)
-        }
-    }
-
     public var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Search bar at top when items exist
                 if !viewModel.items.isEmpty && !viewModel.isLoading {
-                    SearchBar(text: $searchText)
+                    SearchBar(text: $viewModel.searchText)
                         .padding(.horizontal)
                         .padding(.vertical, 8)
                 }
@@ -55,12 +41,12 @@ public struct InventoryView: View {
                         })
                     } else if viewModel.items.isEmpty {
                         EmptyInventoryView(onOpenCamera: onOpenCamera)
-                    } else if filteredItems.isEmpty {
+                    } else if viewModel.filteredItems.isEmpty {
                         // No search results
-                        ContentUnavailableView.search(text: searchText)
+                        ContentUnavailableView.search(text: viewModel.searchText)
                     } else {
                         ItemGridView(
-                            items: filteredItems,
+                            items: viewModel.filteredItems,
                             isSelectionMode: isSelectionMode,
                             selectedItemIds: $selectedItemIds,
                             onDelete: { item in
