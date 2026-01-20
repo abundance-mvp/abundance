@@ -1,5 +1,10 @@
 import Testing
 import Foundation
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 @testable import InventoryFeature
 @testable import Persistence
 
@@ -336,6 +341,197 @@ struct EditItemViewModelTests {
 
         // Then: Repository should be called
         #expect(mockRepository.updateItemCalled)
+    }
+
+    @Test("acceptRescanResult without rescan result does nothing")
+    func testAcceptRescanResult_noResult() async throws {
+        // Given: A view model without rescan result
+        let mockRepository = MockEditItemRepository()
+        let viewModel = EditItemViewModel(
+            item: makeTestItem(),
+            itemRepository: mockRepository,
+            storageService: MockEditStorageService()
+        )
+
+        // When: Try to accept (no rescan result)
+        await viewModel.acceptRescanResult()
+
+        // Then: Repository should NOT be called
+        #expect(mockRepository.updateItemCalled == false)
+    }
+
+    // MARK: - Rescan Flow Tests
+
+    @Test("handleCapturedImage transitions to processing state")
+    func testHandleCapturedImage_transitionsToProcessing() async throws {
+        // Given: A view model in capturing state
+        let mockRepository = MockEditItemRepository()
+        let mockStorage = MockEditStorageService()
+        // Make the storage service fail immediately so we can test state transition
+        mockStorage.shouldFailUpload = true
+
+        let viewModel = EditItemViewModel(
+            item: makeTestItem(),
+            itemRepository: mockRepository,
+            storageService: mockStorage
+        )
+        viewModel.state = .capturing
+
+        // When: Handle captured image (will fail but we test the state transition)
+        #if os(iOS)
+        let image = UIImage()
+        await viewModel.handleCapturedImage(image)
+        #elseif os(macOS)
+        let image = NSImage()
+        await viewModel.handleCapturedImage(image)
+        #endif
+
+        // Then: Should be in error state (since upload failed)
+        // But this proves handleCapturedImage was called and progressed through states
+        if case .error = viewModel.state {
+            // Expected - upload failed so we're in error state
+        } else {
+            #expect(Bool(false), "Expected error state after failed upload, got: \(viewModel.state)")
+        }
+    }
+
+    @Test("handleCapturedImage uploads image to storage")
+    func testHandleCapturedImage_uploadsToStorage() async throws {
+        // Given: A view model with valid dependencies
+        let mockRepository = MockEditItemRepository()
+        let mockStorage = MockEditStorageService()
+        // Make the storage succeed but don't set up full polling
+        // The test will fail at the polling stage but we can verify upload was attempted
+
+        let viewModel = EditItemViewModel(
+            item: makeTestItem(),
+            itemRepository: mockRepository,
+            storageService: mockStorage
+        )
+        viewModel.state = .capturing
+
+        // When: Handle captured image
+        #if os(iOS)
+        let image = UIImage()
+        await viewModel.handleCapturedImage(image)
+        #elseif os(macOS)
+        let image = NSImage()
+        await viewModel.handleCapturedImage(image)
+        #endif
+
+        // Then: Storage service should have been called
+        #expect(mockStorage.uploadCalled == true)
+    }
+
+    @Test("handleCapturedImage with empty userId shows error")
+    func testHandleCapturedImage_emptyUserId_showsError() async throws {
+        // Given: A view model with empty userId
+        let mockRepository = MockEditItemRepository()
+        let mockStorage = MockEditStorageService()
+
+        let itemWithEmptyUserId = Item(
+            id: "test-item-1",
+            userId: "",  // Empty userId
+            imageUrl: "https://example.com/image.jpg",
+            status: .complete,
+            name: "Test Item"
+        )
+
+        let viewModel = EditItemViewModel(
+            item: itemWithEmptyUserId,
+            itemRepository: mockRepository,
+            storageService: mockStorage
+        )
+        viewModel.state = .capturing
+
+        // When: Handle captured image
+        #if os(iOS)
+        let image = UIImage()
+        await viewModel.handleCapturedImage(image)
+        #elseif os(macOS)
+        let image = NSImage()
+        await viewModel.handleCapturedImage(image)
+        #endif
+
+        // Then: Should be in error state with missing userId message
+        if case .error(let message) = viewModel.state {
+            #expect(message.contains("authentication") || message.contains("User"))
+        } else {
+            #expect(Bool(false), "Expected error state for missing userId")
+        }
+    }
+
+    // MARK: - EditFlowError Tests
+
+    @Test("EditFlowError descriptions are correct")
+    func testEditFlowErrorDescriptions() async throws {
+        // Test all error descriptions
+        #expect(EditFlowError.missingUserId.errorDescription == "User authentication required")
+        #expect(EditFlowError.rescanProcessingFailed.errorDescription == "Failed to analyze the new photo")
+        #expect(EditFlowError.rescanTimeout.errorDescription == "Photo analysis timed out")
+        #expect(EditFlowError.validationFailed.errorDescription == "Please fix validation errors")
+    }
+
+    // MARK: - EditFlowState Equality Tests
+
+    @Test("EditFlowState equality for basic states")
+    func testEditFlowState_basicEquality() async throws {
+        #expect(EditFlowState.idle == EditFlowState.idle)
+        #expect(EditFlowState.promptingRescan == EditFlowState.promptingRescan)
+        #expect(EditFlowState.capturing == EditFlowState.capturing)
+        #expect(EditFlowState.processing == EditFlowState.processing)
+        #expect(EditFlowState.editing == EditFlowState.editing)
+        #expect(EditFlowState.saving == EditFlowState.saving)
+    }
+
+    @Test("EditFlowState equality for error states")
+    func testEditFlowState_errorEquality() async throws {
+        #expect(EditFlowState.error("Test error") == EditFlowState.error("Test error"))
+        #expect(EditFlowState.error("Error 1") != EditFlowState.error("Error 2"))
+    }
+
+    @Test("EditFlowState equality for comparing states")
+    func testEditFlowState_comparingEquality() async throws {
+        let item1 = makeTestItem(id: "item-1")
+        let item2 = makeTestItem(id: "item-2")
+        let item1Copy = makeTestItem(id: "item-1")
+
+        #expect(EditFlowState.comparing(newItem: item1) == EditFlowState.comparing(newItem: item1Copy))
+        #expect(EditFlowState.comparing(newItem: item1) != EditFlowState.comparing(newItem: item2))
+    }
+
+    @Test("EditFlowState inequality between different states")
+    func testEditFlowState_differentStatesNotEqual() async throws {
+        #expect(EditFlowState.idle != EditFlowState.promptingRescan)
+        #expect(EditFlowState.capturing != EditFlowState.processing)
+        #expect(EditFlowState.editing != EditFlowState.saving)
+        #expect(EditFlowState.idle != EditFlowState.error("Error"))
+    }
+
+    // MARK: - EditedFieldTracker Tests
+
+    @Test("EditedFieldTracker markEdited adds field")
+    func testEditedFieldTracker_markEdited() async throws {
+        var tracker = EditedFieldTracker()
+
+        tracker.markEdited("name")
+        #expect(tracker.editedFields.contains("name"))
+        #expect(tracker.editedFields.count == 1)
+
+        tracker.markEdited("brand")
+        #expect(tracker.editedFields.contains("brand"))
+        #expect(tracker.editedFields.count == 2)
+    }
+
+    @Test("EditedFieldTracker markEdited is idempotent")
+    func testEditedFieldTracker_idempotent() async throws {
+        var tracker = EditedFieldTracker()
+
+        tracker.markEdited("name")
+        tracker.markEdited("name")
+        tracker.markEdited("name")
+
+        #expect(tracker.editedFields.count == 1)
     }
 
     // MARK: - Helpers

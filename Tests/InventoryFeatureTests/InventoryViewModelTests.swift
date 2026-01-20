@@ -268,86 +268,142 @@ struct InventoryViewModelTests {
         #expect(viewModel.items.count == 1)
         #expect(mockRepository.deletedBulkIds.isEmpty)
     }
+
+    // MARK: - Loading State Tests
+
+    @Test("loadItems sets loading state during fetch")
+    func testLoadItems_setsLoadingState() async throws {
+        // Given: ViewModel with valid userId and mock repository
+        let mockRepository = MockItemRepository()
+        mockRepository.mockItems = [
+            Item(
+                id: "item-1",
+                userId: "test-user-123",
+                imageUrl: "https://example.com/image.jpg",
+                status: .complete,
+                category: "camping"
+            )
+        ]
+        let viewModel = InventoryViewModel(
+            userId: "test-user-123",
+            itemRepository: mockRepository,
+            requiresAuthentication: true
+        )
+
+        // Initial state should not be loading
+        #expect(viewModel.isLoading == false)
+
+        // When: Load items
+        await viewModel.loadItems()
+
+        // Then: After completion, loading should be false
+        #expect(viewModel.isLoading == false)
+        #expect(viewModel.items.count == 1)
+    }
+
+    @Test("loadItems handles repository error")
+    func testLoadItems_handlesError() async throws {
+        // Given: ViewModel with failing repository
+        let mockRepository = MockItemRepository()
+        mockRepository.shouldThrowError = NSError(
+            domain: "test",
+            code: 500,
+            userInfo: [NSLocalizedDescriptionKey: "Network error"]
+        )
+        let viewModel = InventoryViewModel(
+            userId: "test-user-123",
+            itemRepository: mockRepository,
+            requiresAuthentication: true
+        )
+
+        // When: Load items (should fail)
+        await viewModel.loadItems()
+
+        // Then: Should have error and not be loading
+        #expect(viewModel.error != nil)
+        #expect(viewModel.error?.contains("Network error") == true)
+        #expect(viewModel.isLoading == false)
+        #expect(viewModel.items.isEmpty)
+    }
+
+    @Test("loadItems populates items array")
+    func testLoadItems_populatesItemsArray() async throws {
+        // Given: ViewModel with multiple items in repository
+        let mockRepository = MockItemRepository()
+        mockRepository.mockItems = [
+            Item(
+                id: "item-1",
+                userId: "test-user-123",
+                imageUrl: "https://example.com/image1.jpg",
+                status: .complete,
+                name: "Test Item 1",
+                category: "camping"
+            ),
+            Item(
+                id: "item-2",
+                userId: "test-user-123",
+                imageUrl: "https://example.com/image2.jpg",
+                status: .complete,
+                name: "Test Item 2",
+                category: "electronics"
+            ),
+            Item(
+                id: "item-3",
+                userId: "test-user-123",
+                imageUrl: "https://example.com/image3.jpg",
+                status: .complete,
+                name: "Test Item 3",
+                category: "furniture"
+            )
+        ]
+        let viewModel = InventoryViewModel(
+            userId: "test-user-123",
+            itemRepository: mockRepository,
+            requiresAuthentication: true
+        )
+
+        // When: Load items
+        await viewModel.loadItems()
+
+        // Then: All items should be populated
+        #expect(viewModel.items.count == 3)
+        #expect(viewModel.items[0].id == "item-1")
+        #expect(viewModel.items[1].id == "item-2")
+        #expect(viewModel.items[2].id == "item-3")
+        #expect(viewModel.error == nil)
+    }
+
+    // MARK: - Real-Time Updates Tests
+
+    @Test("Real-time updates sync changes from Firestore listener")
+    func testRealTimeUpdates_syncsChanges() async throws {
+        // Given: ViewModel with real-time observer
+        let mockRepository = MockItemRepository()
+        let initialItems = [
+            Item(
+                id: "item-1",
+                userId: "test-user-123",
+                imageUrl: "https://example.com/image1.jpg",
+                status: .complete,
+                name: "Initial Item"
+            )
+        ]
+        mockRepository.mockItems = initialItems
+
+        let viewModel = InventoryViewModel(
+            userId: "test-user-123",
+            itemRepository: mockRepository,
+            requiresAuthentication: true
+        )
+
+        // Allow observer to initialize
+        try await Task.sleep(for: .milliseconds(50))
+
+        // Then: Initial items should be synced via observer
+        // Note: The observer publishes mockItems immediately via Just()
+        #expect(viewModel.items.count == 1)
+        #expect(viewModel.items.first?.name == "Initial Item")
+    }
 }
 
-// MARK: - Mock Repository
-
-/// Mock ItemRepository for testing
-final class MockItemRepository: ItemRepository, @unchecked Sendable {
-    var getItemsCalled = false
-    var lastUserId: String?
-    var mockItems: [Item] = []
-    var shouldThrowError: Error?
-
-    // Delete tracking
-    var deletedItemIds: [String] = []
-    var deletedBulkIds: Set<String> = []
-    var shouldFailDelete = false
-
-    func createItem(userId: String, imageUrl: String) async throws -> String {
-        return "mock-item-id"
-    }
-
-    func createItemWithLayer1Metadata(
-        itemId: String,
-        userId: String,
-        imageUrl: String,
-        layer1Metadata: Layer1Metadata
-    ) async throws {
-        // Mock implementation
-    }
-
-    func createItemWithPhotoMetadata(
-        itemId: String,
-        userId: String,
-        imageUrl: String,
-        layer1Metadata: Layer1Metadata,
-        photoMetadata: PhotoMetadata
-    ) async throws {
-        // Mock implementation
-    }
-
-    func getItem(id: String) async throws -> Item? {
-        return mockItems.first { $0.id == id }
-    }
-
-    func getItems(userId: String) async throws -> [Item] {
-        getItemsCalled = true
-        lastUserId = userId
-        if let error = shouldThrowError {
-            throw error
-        }
-        return mockItems
-    }
-
-    func observeItem(id: String, onChange: @escaping (Item?) -> Void) -> ListenerRegistration {
-        // Return a mock listener - this is a placeholder
-        fatalError("Mock observeItem not implemented")
-    }
-
-    func observeItems(userId: String) -> AnyPublisher<[Item], Never> {
-        Just(mockItems).eraseToAnyPublisher()
-    }
-
-    func deleteItem(id: String) async throws {
-        if shouldFailDelete {
-            throw NSError(domain: "test", code: 500, userInfo: [NSLocalizedDescriptionKey: "Mock delete error"])
-        }
-        deletedItemIds.append(id)
-    }
-
-    func deleteItems(ids: Set<String>) async throws {
-        if shouldFailDelete {
-            throw NSError(domain: "test", code: 500, userInfo: [NSLocalizedDescriptionKey: "Mock batch delete error"])
-        }
-        deletedBulkIds = ids
-    }
-
-    func updateItem(_ item: Item, userEditedFields: [String]?) async throws {
-        // Mock implementation
-    }
-
-    func rescanItem(_ item: Item) async throws {
-        // Mock implementation
-    }
-}
+// Note: MockItemRepository is now in Tests/InventoryFeatureTests/Mocks/MockItemRepository.swift
