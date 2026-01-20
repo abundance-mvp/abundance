@@ -4,6 +4,31 @@ import AVFoundation
 @testable import CameraFeature
 
 #if os(iOS)
+
+// MARK: - Test Helpers for Reliable Async Testing
+
+/// Waits for a condition to become true with polling, avoiding flaky fixed sleeps.
+/// - Parameters:
+///   - timeout: Maximum time to wait (default 2 seconds)
+///   - pollingInterval: Time between condition checks (default 10ms)
+///   - condition: Closure that returns true when the expected state is reached
+/// - Returns: True if condition was met within timeout, false otherwise
+@MainActor
+func waitFor(
+    timeout: TimeInterval = 2.0,
+    pollingInterval: TimeInterval = 0.01,
+    condition: @escaping () -> Bool
+) async -> Bool {
+    let deadline = Date().addingTimeInterval(timeout)
+    while Date() < deadline {
+        if condition() {
+            return true
+        }
+        try? await Task.sleep(nanoseconds: UInt64(pollingInterval * 1_000_000_000))
+    }
+    return condition()
+}
+
 @Suite("CameraService Tests")
 @MainActor
 struct CameraServiceTests {
@@ -203,8 +228,14 @@ struct CameraServiceTests {
         do {
             try await sut.startSession()
 
-            // Give camera time to warm up
-            try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            // Wait for camera to be ready (condition-based with timeout)
+            var cancellables = Set<AnyCancellable>()
+            var isRunning = false
+            sut.sessionState.sink { state in
+                isRunning = (state == .running)
+            }.store(in: &cancellables)
+
+            _ = await waitFor(timeout: 2.0) { isRunning }
 
             // When
             let photoData = try await sut.capturePhoto()
@@ -244,16 +275,22 @@ struct CameraServiceTests {
         do {
             try await sut.startSession()
 
-            // Give camera time to warm up
-            try await Task.sleep(nanoseconds: 300_000_000)
+            // Wait for camera to be ready (condition-based)
+            var cancellables = Set<AnyCancellable>()
+            var isRunning = false
+            sut.sessionState.sink { state in
+                isRunning = (state == .running)
+            }.store(in: &cancellables)
+
+            _ = await waitFor(timeout: 2.0) { isRunning }
 
             // When: Start first capture (don't await it)
             let captureTask = Task {
                 return try await sut.capturePhoto()
             }
 
-            // Small delay to ensure first capture has started
-            try await Task.sleep(nanoseconds: 50_000_000)
+            // Small delay to ensure first capture has started (minimal wait)
+            _ = await waitFor(timeout: 0.5) { false } // Just a brief yield
 
             // Then: Second capture should throw captureInProgress
             do {
@@ -303,15 +340,13 @@ struct CameraServiceTests {
                 userInfo: [AVCaptureSessionInterruptionReasonKey: AVCaptureSession.InterruptionReason.audioDeviceInUseByAnotherClient.rawValue]
             )
 
-            // Give notification time to process
-            try await Task.sleep(nanoseconds: 100_000_000)
+            // Wait for interrupted state (condition-based)
+            let gotInterrupted = await waitFor(timeout: 1.0) {
+                states.contains { if case .interrupted = $0 { return true }; return false }
+            }
 
             // Then: Should have received interrupted state
-            let hasInterruptedState = states.contains { state in
-                if case .interrupted = state { return true }
-                return false
-            }
-            #expect(hasInterruptedState, "Should publish interrupted state on interruption notification")
+            #expect(gotInterrupted, "Should publish interrupted state on interruption notification")
 
             await sut.stopSession()
         } catch {
@@ -345,7 +380,10 @@ struct CameraServiceTests {
                 userInfo: [AVCaptureSessionInterruptionReasonKey: AVCaptureSession.InterruptionReason.audioDeviceInUseByAnotherClient.rawValue]
             )
 
-            try await Task.sleep(nanoseconds: 100_000_000)
+            // Wait for interrupted state (condition-based)
+            _ = await waitFor(timeout: 1.0) {
+                states.contains { if case .interrupted = $0 { return true }; return false }
+            }
 
             // Clear states to track only resumption
             states.removeAll()
@@ -356,12 +394,13 @@ struct CameraServiceTests {
                 object: captureSession
             )
 
-            // Give notification time to process
-            try await Task.sleep(nanoseconds: 200_000_000)
+            // Wait for running state (condition-based)
+            let gotRunning = await waitFor(timeout: 1.0) {
+                states.contains { $0 == .running }
+            }
 
             // Then: Should have resumed to running state
-            let hasRunningState = states.contains { $0 == .running }
-            #expect(hasRunningState, "Should publish running state after interruption ends")
+            #expect(gotRunning, "Should publish running state after interruption ends")
 
             await sut.stopSession()
         } catch {
@@ -416,10 +455,13 @@ struct CameraServiceTests {
             }
             .store(in: &cancellables)
 
-        // Small delay to receive initial value
-        try await Task.sleep(nanoseconds: 50_000_000)
+        // Wait for initial value (condition-based)
+        let gotInitialState = await waitFor(timeout: 1.0) {
+            initialState != nil
+        }
 
         // Then
+        #expect(gotInitialState, "Should receive initial state")
         #expect(initialState == .notStarted, "Initial state should be notStarted")
     }
 
@@ -438,10 +480,14 @@ struct CameraServiceTests {
             }
             .store(in: &cancellables)
 
-        // When: Wait briefly without starting session
-        try await Task.sleep(nanoseconds: 200_000_000)
+        // When: Wait to verify no frames are emitted (this inherently needs time)
+        // Using condition-based wait that should timeout (proving no frames)
+        let gotFrame = await waitFor(timeout: 0.3) {
+            frameCount > 0
+        }
 
         // Then
+        #expect(!gotFrame, "Should not receive any frames")
         #expect(frameCount == 0, "No frames should be emitted without running session")
     }
 }

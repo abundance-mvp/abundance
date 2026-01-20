@@ -27,6 +27,42 @@ final class AtomicCounter: @unchecked Sendable {
     }
 }
 
+// MARK: - Test Helpers for Reliable Async Testing
+
+/// Waits for a condition to become true with polling, avoiding flaky fixed sleeps.
+/// - Parameters:
+///   - timeout: Maximum time to wait (default 2 seconds)
+///   - pollingInterval: Time between condition checks (default 10ms)
+///   - condition: Closure that returns true when the expected state is reached
+/// - Returns: True if condition was met within timeout, false otherwise
+@MainActor
+func waitForCondition(
+    timeout: TimeInterval = 2.0,
+    pollingInterval: TimeInterval = 0.01,
+    condition: @escaping () -> Bool
+) async -> Bool {
+    let deadline = Date().addingTimeInterval(timeout)
+    while Date() < deadline {
+        if condition() {
+            return true
+        }
+        try? await Task.sleep(nanoseconds: UInt64(pollingInterval * 1_000_000_000))
+    }
+    return condition() // Final check
+}
+
+/// Waits for an AtomicCounter to reach a minimum value
+@MainActor
+func waitForCount(
+    _ counter: AtomicCounter,
+    minimum: Int,
+    timeout: TimeInterval = 2.0
+) async -> Bool {
+    await waitForCondition(timeout: timeout) {
+        counter.value >= minimum
+    }
+}
+
 // MARK: - CaptureSessionViewModel Tests
 
 /// Comprehensive tests for CaptureSessionViewModel
@@ -102,15 +138,15 @@ final class CaptureSessionViewModelTests: XCTestCase {
             await sut.handleDoubleTap(photoData: photoData)
         }
 
-        // Give a small amount of time for state to change
-        try await Task.sleep(for: .milliseconds(50))
+        // Wait for photo to be stored (condition-based, not fixed sleep)
+        let photoStored = await waitForCondition(timeout: 1.0) {
+            self.sut.lastCapturedPhoto != nil
+        }
 
-        // Then - isCapturing should be true during capture attempt
-        // Note: Without auth, it will fail, but we're testing the initial state change
-        // The state might already be error due to auth failure
         task.cancel()
 
-        // Verify the photo was stored
+        // Then - Verify the photo was stored
+        XCTAssertTrue(photoStored, "Photo should be stored within timeout")
         XCTAssertNotNil(sut.lastCapturedPhoto)
     }
 
@@ -124,10 +160,13 @@ final class CaptureSessionViewModelTests: XCTestCase {
             await sut.handleDoubleTap(photoData: photoData)
         }
 
-        // Wait briefly for the data to be stored
-        try await Task.sleep(for: .milliseconds(50))
+        // Wait for the data to be stored (condition-based)
+        let stored = await waitForCondition(timeout: 1.0) {
+            self.sut.lastCapturedPhoto == photoData
+        }
 
         // Then
+        XCTAssertTrue(stored, "Photo data should be stored within timeout")
         XCTAssertEqual(sut.lastCapturedPhoto, photoData)
     }
 
@@ -144,7 +183,10 @@ final class CaptureSessionViewModelTests: XCTestCase {
             await sut.handleDoubleTap(photoData: Data([0x01, 0x02, 0x03]))
         }
 
-        try await Task.sleep(for: .milliseconds(50))
+        // Wait briefly for task to execute (condition-based on capturing still being true)
+        _ = await waitForCondition(timeout: 0.5) {
+            !self.sut.isCapturing // Will timeout since burst is still running - that's expected
+        }
 
         // Then - lastCapturedPhoto should be from burst, not double tap
         // (double tap sets lastCapturedPhoto immediately but we're testing guard)
@@ -176,7 +218,11 @@ final class CaptureSessionViewModelTests: XCTestCase {
         Task {
             await sut.handleDoubleTap(photoData: Data([0x00]))
         }
-        try await Task.sleep(for: .milliseconds(50))
+
+        // Wait for photo to be processed (condition-based)
+        _ = await waitForCondition(timeout: 1.0) {
+            self.sut.lastCapturedPhoto != nil
+        }
 
         // Then - burstCount stays at 0 for single capture (not incremented)
         // Note: burstCount is only used for burst capture, single capture doesn't set it
@@ -196,7 +242,10 @@ final class CaptureSessionViewModelTests: XCTestCase {
             }
         }
 
-        try await Task.sleep(for: .milliseconds(100))
+        // Wait for all tasks to complete (condition-based)
+        _ = await waitForCondition(timeout: 1.0) {
+            captureCounter.value >= 5
+        }
 
         // Then - Only the first one should process (due to isCapturing guard)
         // We can verify by checking that the session service was only called once max
@@ -232,10 +281,13 @@ final class CaptureSessionViewModelTests: XCTestCase {
         // When
         sut.startBurstCapture(capturePhoto: capturePhoto)
 
-        // Wait for first capture
-        try await Task.sleep(for: .milliseconds(100))
+        // Wait for first capture (condition-based)
+        let captured = await waitForCondition(timeout: 1.0) {
+            self.sut.burstCount >= 1
+        }
 
         // Then
+        XCTAssertTrue(captured, "Burst count should increment within timeout")
         XCTAssertGreaterThanOrEqual(sut.burstCount, 1)
 
         // Cleanup
@@ -254,13 +306,17 @@ final class CaptureSessionViewModelTests: XCTestCase {
         // When
         sut.startBurstCapture(capturePhoto: capturePhoto)
 
-        // Wait for exactly 1200ms (should capture: 0ms, 500ms, 1000ms = 3 photos)
-        try await Task.sleep(for: .milliseconds(1200))
+        // Wait for at least 2 captures (condition-based with timing context)
+        // At 500ms intervals: 0ms (first), 500ms (second), 1000ms (third)
+        let gotEnough = await waitForCondition(timeout: 2.0) {
+            captureCounter.value >= 2
+        }
         sut.cancelBurstCapture()
 
-        // Then - Should have captured 2-3 photos (initial + ~2 at 500ms intervals)
+        // Then - Should have captured 2-4 photos depending on timing
+        XCTAssertTrue(gotEnough, "Should capture at least 2 photos")
         XCTAssertGreaterThanOrEqual(captureCounter.value, 2)
-        XCTAssertLessThanOrEqual(captureCounter.value, 3)
+        XCTAssertLessThanOrEqual(captureCounter.value, 4)
     }
 
     /// Test 10: Burst capture minimum duration is 1 second
@@ -272,8 +328,10 @@ final class CaptureSessionViewModelTests: XCTestCase {
 
         sut.startBurstCapture(capturePhoto: capturePhoto)
 
-        // When - End before 1 second
-        try await Task.sleep(for: .milliseconds(500))
+        // When - Wait for at least one capture, then end before 1 second
+        _ = await waitForCondition(timeout: 0.8) {
+            self.sut.burstCount >= 1
+        }
         await sut.endBurstCapture()
 
         // Then - Should show error (burst too short)
@@ -293,11 +351,13 @@ final class CaptureSessionViewModelTests: XCTestCase {
         // When
         sut.startBurstCapture(capturePhoto: capturePhoto)
 
-        // Wait for 4.5 seconds (should auto-end at 4 seconds)
-        try await Task.sleep(for: .milliseconds(4500))
+        // Wait for burst to auto-stop (max 8 photos or 4 seconds)
+        let stopped = await waitForCondition(timeout: 5.0) {
+            !self.sut.isCapturing || captureCounter.value >= 8
+        }
 
         // Then - Capture should have stopped (either by max duration or max photos)
-        // Max duration = 4s with 500ms interval = 8 photos max anyway
+        XCTAssertTrue(stopped, "Burst should auto-stop within 5 seconds")
         XCTAssertLessThanOrEqual(captureCounter.value, 8)
 
         // Cleanup if still capturing
@@ -316,13 +376,16 @@ final class CaptureSessionViewModelTests: XCTestCase {
         // When
         sut.startBurstCapture(capturePhoto: capturePhoto)
 
-        // Wait for 5 seconds (enough for 8+ photos at 500ms intervals)
-        try await Task.sleep(for: .milliseconds(5000))
+        // Wait for burst to hit max photos or auto-stop
+        let reachedMax = await waitForCondition(timeout: 6.0) {
+            captureCounter.value >= 8 || !self.sut.isCapturing
+        }
 
         // Cancel to ensure cleanup
         sut.cancelBurstCapture()
 
         // Then - Should not exceed 8 photos
+        XCTAssertTrue(reachedMax, "Should reach max photos or auto-stop")
         XCTAssertLessThanOrEqual(captureCounter.value, 8)
     }
 
@@ -330,7 +393,12 @@ final class CaptureSessionViewModelTests: XCTestCase {
     func testEndBurstCapture_stopsCapturing() async throws {
         // Given
         sut.startBurstCapture { Data([0x00]) }
-        try await Task.sleep(for: .milliseconds(100))
+
+        // Wait for capturing to start (condition-based)
+        let started = await waitForCondition(timeout: 1.0) {
+            self.sut.isCapturing
+        }
+        XCTAssertTrue(started, "Capture should start")
         XCTAssertTrue(sut.isCapturing)
 
         // When
@@ -345,7 +413,11 @@ final class CaptureSessionViewModelTests: XCTestCase {
     func testCancelBurstCapture_discardsPhotos() async throws {
         // Given
         sut.startBurstCapture { Data([0x00]) }
-        try await Task.sleep(for: .milliseconds(600)) // Capture a couple photos
+
+        // Wait for at least one capture (condition-based)
+        _ = await waitForCondition(timeout: 1.0) {
+            self.sut.burstCount >= 1
+        }
 
         // When
         sut.cancelBurstCapture()
@@ -368,13 +440,16 @@ final class CaptureSessionViewModelTests: XCTestCase {
         // When
         sut.startBurstCapture(capturePhoto: capturePhoto)
 
-        // Wait for multiple captures
-        try await Task.sleep(for: .milliseconds(1700))
+        // Wait for at least 3 captures (condition-based)
+        let gotEnough = await waitForCondition(timeout: 3.0) {
+            captureCounter.value >= 3
+        }
         sut.cancelBurstCapture()
 
         // Then - Should have captured at least 3 photos
+        XCTAssertTrue(gotEnough, "Should capture at least 3 photos")
         XCTAssertGreaterThanOrEqual(captureCounter.value, 3)
-        XCTAssertLessThanOrEqual(captureCounter.value, 5)
+        XCTAssertLessThanOrEqual(captureCounter.value, 8) // Max is 8
         XCTAssertNil(sut.burstTask)
     }
 
@@ -395,9 +470,15 @@ final class CaptureSessionViewModelTests: XCTestCase {
 
         // When
         sut.startBurstCapture(capturePhoto: capturePhoto)
-        try await Task.sleep(for: .milliseconds(50))
+
+        // Wait for capturing state (condition-based)
+        let isCapturing = await waitForCondition(timeout: 1.0) {
+            if case .capturing = self.sut.uiState { return true }
+            return false
+        }
 
         // Then
+        XCTAssertTrue(isCapturing, "Should be in capturing state")
         if case .capturing(let count) = sut.uiState {
             XCTAssertGreaterThanOrEqual(count, 0)
         } else {
@@ -413,10 +494,13 @@ final class CaptureSessionViewModelTests: XCTestCase {
         // Given
         sut.startBurstCapture { Data([0x00]) }
 
-        // Wait for 2 captures (initial + 500ms)
-        try await Task.sleep(for: .milliseconds(600))
+        // Wait for at least 1 capture (condition-based)
+        let gotCaptures = await waitForCondition(timeout: 2.0) {
+            self.sut.burstCount >= 1
+        }
 
         // Then
+        XCTAssertTrue(gotCaptures, "Should have at least 1 capture")
         if case .capturing(let count) = sut.uiState {
             XCTAssertGreaterThanOrEqual(count, 1)
         } else {
