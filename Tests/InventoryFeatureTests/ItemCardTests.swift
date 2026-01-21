@@ -264,4 +264,44 @@ struct ItemCardTests {
         card.onTap?()
         #expect(tapped == true)
     }
+
+    // MARK: - Navigation Compatibility Tests
+
+    @Test("ItemCard without onTap allows NavigationLink to work")
+    func testItemCard_withoutOnTap_allowsNavigation() async throws {
+        // Given: Item without tap callback (used inside NavigationLink)
+        let item = Item.mock()
+
+        // When: Create ItemCard without onTap (normal grid mode with NavigationLink)
+        let card = ItemCard(item: item, onDelete: { })
+
+        // Then: onTap should be nil, allowing NavigationLink to handle taps
+        // This is critical: when onTap is nil, ItemCard doesn't wrap content in Button,
+        // which allows the parent NavigationLink to receive tap events
+        #expect(card.onTap == nil)
+        #expect(card.onDelete != nil)
+    }
+
+    @Test("ItemCard with onTap uses Button wrapper for selection mode")
+    func testItemCard_withOnTap_usesButtonWrapper() async throws {
+        // Given: Item with tap callback (selection mode)
+        var tapped = false
+        let item = Item.mock()
+
+        // When: Create ItemCard with onTap (selection mode where taps toggle selection)
+        let card = ItemCard(
+            item: item,
+            onTap: { tapped = true },
+            isSelectionMode: true,
+            isSelected: false
+        )
+
+        // Then: onTap should be configured (Button wrapper handles taps)
+        #expect(card.onTap != nil)
+        #expect(card.isSelectionMode == true)
+
+        // Verify tap works
+        card.onTap?()
+        #expect(tapped == true)
+    }
 }

@@ -21,9 +21,59 @@ struct ItemCard: View {
     @State private var isPressed: Bool = false
 
     var body: some View {
-        Button(action: handleTap) {
-            ZStack(alignment: .topTrailing) {
-                VStack(alignment: .leading, spacing: 12) {
+        cardContent
+            .animation(reduceMotion ? nil : .brandSnappy, value: isPressed)
+            .animation(reduceMotion ? nil : .brandSnappy, value: isSelected)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityDescription)
+            .accessibilityAddTraits(.isButton)
+            .contextMenu {
+            // Only show context menu when not in selection mode
+            if !isSelectionMode {
+                // Only show Edit when functionality is implemented (Stage 3.3+)
+                if let onEdit = onEdit {
+                    Button {
+                        onEdit()
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                }
+
+                Button(role: .destructive) {
+                    onDelete?()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+        }
+    }
+
+    // MARK: - Card Content
+
+    /// Card visual content - wrapped in Button only when onTap is provided
+    /// This allows NavigationLink to work when ItemCard is used as its label
+    @ViewBuilder
+    private var cardContent: some View {
+        if let onTap = onTap {
+            // Selection mode or explicit tap handler - use Button
+            Button(action: {
+                handleTap()
+                onTap()
+            }) {
+                cardVisual
+            }
+            .buttonStyle(.plain)
+        } else {
+            // No tap handler - don't wrap in Button (allows NavigationLink to work)
+            cardVisual
+        }
+    }
+
+    /// The actual visual content of the card
+    @ViewBuilder
+    private var cardVisual: some View {
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 12) {
                 // Cropped object image
                 AsyncImage(url: URL(string: item.imageUrl)) { phase in
                     switch phase {
@@ -89,44 +139,18 @@ struct ItemCard: View {
                 .padding(.bottom, 12)
             }
 
-                // Selection checkmark overlay (multi-select mode)
-                if isSelectionMode {
-                    selectionIndicator
-                }
-            }
-            .adaptiveGlass(in: outerShape)
-            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .overlay {
-                if isSelected {
-                    outerShape
-                        .stroke(Color.accentColor, lineWidth: 3)
-                }
+            // Selection checkmark overlay (multi-select mode)
+            if isSelectionMode {
+                selectionIndicator
             }
         }
-        .buttonStyle(.plain)
-        .animation(reduceMotion ? nil : .brandSnappy, value: isPressed)
-        .animation(reduceMotion ? nil : .brandSnappy, value: isSelected)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityDescription)
-        .accessibilityAddTraits(.isButton)
-        .contextMenu {
-            // Only show context menu when not in selection mode
-            if !isSelectionMode {
-                // Only show Edit when functionality is implemented (Stage 3.3+)
-                if let onEdit = onEdit {
-                    Button {
-                        onEdit()
-                    } label: {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                }
-
-                Button(role: .destructive) {
-                    onDelete?()
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
+        .adaptiveGlass(in: outerShape)
+        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .overlay {
+            if isSelected {
+                outerShape
+                    .stroke(Color.accentColor, lineWidth: 3)
             }
         }
     }
