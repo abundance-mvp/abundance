@@ -45,6 +45,13 @@ public struct ItemDetailView: View {
                                             .font(.largeTitle)
                                             .foregroundStyle(.tertiary)
                                     }
+                                    .onAppear {
+                                        AppLogger.log(.imageLoadFailed(
+                                            url: item.imageUrl,
+                                            itemId: item.id,
+                                            context: "ItemDetailView.heroImage"
+                                        ))
+                                    }
                             @unknown default:
                                 EmptyView()
                             }

@@ -73,6 +73,9 @@ public enum LogEvent: @unchecked Sendable {
         reproSteps: [String]
     )
 
+    // MARK: - Image Loading Events
+    case imageLoadFailed(url: String, itemId: String?, context: String)
+
     // MARK: - Private Helpers
 
     /// Sanitizes user IDs for logging to prevent PII exposure.
@@ -107,13 +110,15 @@ public enum LogEvent: @unchecked Sendable {
             return "spec-violation"
         case .silentFailure:
             return "silent-failure"
+        case .imageLoadFailed:
+            return "image"
         }
     }
 
     var severity: OSLogType {
         switch self {
         case .buttonUnresponsive, .navigationFailed, .dataLoadFailed, .firestoreWriteFailed, .firestoreRuleDenied,
-             .visionDetectionFailed, .barcodeDetectionFailed, .authSignInFailed:
+             .visionDetectionFailed, .barcodeDetectionFailed, .authSignInFailed, .imageLoadFailed:
             return .error
         case .dataMissing, .dataStale, .memoryWarning:
             return .fault
@@ -179,6 +184,9 @@ public enum LogEvent: @unchecked Sendable {
             return "SPEC VIOLATION: \(spec) § \(section) - Expected: \(expected), Actual: \(actual)"
         case .silentFailure(let feature, let expected, let actual, _):
             return "SILENT FAILURE: \(feature) - Expected: \(expected), Actual: \(actual)"
+        case .imageLoadFailed(let url, let itemId, let context):
+            let truncatedUrl = url.count > 60 ? "\(url.prefix(60))..." : url
+            return "Image load failed: \(truncatedUrl) (item: \(itemId ?? "unknown"), context: \(context))"
         }
     }
 
@@ -217,6 +225,10 @@ public enum LogEvent: @unchecked Sendable {
             meta["expectedBehavior"] = expected
             meta["actualBehavior"] = actual
             meta["reproSteps"] = reproSteps
+        case .imageLoadFailed(let url, let itemId, let context):
+            meta["url"] = url
+            meta["itemId"] = itemId ?? "unknown"
+            meta["context"] = context
         default:
             break
         }

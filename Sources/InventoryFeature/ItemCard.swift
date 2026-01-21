@@ -89,6 +89,13 @@ struct ItemCard: View {
                             .clipped()
                     case .failure:
                         placeholderImage
+                            .onAppear {
+                                AppLogger.log(.imageLoadFailed(
+                                    url: item.imageUrl,
+                                    itemId: item.id,
+                                    context: "ItemCard.thumbnail"
+                                ))
+                            }
                     @unknown default:
                         placeholderImage
                     }

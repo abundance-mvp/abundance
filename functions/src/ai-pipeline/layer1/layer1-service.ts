@@ -10,6 +10,7 @@
 
 import { Storage } from 'firebase-admin/storage';
 import * as logger from 'firebase-functions/logger';
+import { randomUUID } from 'crypto';
 import { createVertexAIClient } from '../gemini/vertexai-config';
 import {
   LAYER1_MODEL_ID,
@@ -53,6 +54,22 @@ function isRetryableError(error: Error): boolean {
  */
 async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Generate a Firebase Storage download URL (permanent, doesn't expire)
+ *
+ * Unlike signed URLs which expire, Firebase download URLs with tokens
+ * are permanent and work as long as the file exists.
+ *
+ * @param bucket - Storage bucket name
+ * @param path - File path in the bucket
+ * @param token - Download token (UUID)
+ * @returns Firebase Storage download URL
+ */
+function generateFirebaseDownloadUrl(bucket: string, path: string, token: string): string {
+  const encodedPath = encodeURIComponent(path);
+  return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media&token=${token}`;
 }
 
 /**
@@ -383,10 +400,13 @@ async function cropAndUploadObjects(
           .jpeg({ quality: 85 })
           .toBuffer();
 
-        // Upload to GCS
+        // Upload to GCS with Firebase download token for permanent URL
         const cropPath = `users/${userId}/items/${groupId}_crop_${croppedUrls.length}.jpg`;
         const bucket = storage.bucket();
         const file = bucket.file(cropPath);
+
+        // Generate a download token for permanent Firebase Storage URL
+        const downloadToken = randomUUID();
 
         await file.save(croppedBuffer, {
           metadata: {
@@ -395,18 +415,17 @@ async function cropAndUploadObjects(
               sessionId,
               groupId,
               label: obj.label,
-              imageIndex: obj.image_index.toString()
+              imageIndex: obj.image_index.toString(),
+              // Set Firebase download token for permanent URL access
+              firebaseStorageDownloadTokens: downloadToken
             }
           }
         });
 
-        // Generate signed URL with 24-hour expiration (security: no public access)
-        const [signedUrl] = await file.getSignedUrl({
-          action: 'read',
-          expires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-          version: 'v4'
-        });
-        croppedUrls.push(signedUrl);
+        // Generate permanent Firebase download URL (doesn't expire like signed URLs)
+        const bucketName = bucket.name;
+        const downloadUrl = generateFirebaseDownloadUrl(bucketName, cropPath, downloadToken);
+        croppedUrls.push(downloadUrl);
 
         boundingBoxes.push({
           imageIndex: obj.image_index,
