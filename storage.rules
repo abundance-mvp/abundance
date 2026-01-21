@@ -1,7 +1,7 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Users can only upload to their own folder
+    // Users can upload to their items folder (original images from iOS app)
     // Matches both flat files (items/{itemId}.jpg) and nested paths (items/{itemId}/motion.mov)
     match /users/{userId}/items/{allPaths=**} {
       allow read: if request.auth != null && request.auth.uid == userId;
@@ -9,6 +9,14 @@ service firebase.storage {
                    && request.auth.uid == userId
                    && request.resource.size < 10 * 1024 * 1024  // 10MB limit
                    && request.resource.contentType.matches('image/.*|video/.*');
+    }
+
+    // Session crops are written by backend Cloud Functions (service account)
+    // and read by authenticated users who own the session
+    // Note: Cloud Functions bypass rules, but users need read access
+    match /users/{userId}/sessions/{sessionId}/crops/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Write is handled by Cloud Functions service account (bypasses rules)
     }
   }
 }

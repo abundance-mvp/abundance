@@ -401,7 +401,8 @@ async function cropAndUploadObjects(
           .toBuffer();
 
         // Upload to GCS with Firebase download token for permanent URL
-        const cropPath = `users/${userId}/items/${groupId}_crop_${croppedUrls.length}.jpg`;
+        // Include sessionId in path to prevent different sessions from overwriting each other's crops
+        const cropPath = `users/${userId}/sessions/${sessionId}/crops/${groupId}_crop_${croppedUrls.length}.jpg`;
         const bucket = storage.bucket();
         const file = bucket.file(cropPath);
 
