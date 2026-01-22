@@ -26,7 +26,7 @@ private actor CaptureManager {
 /// Concrete implementation of CameraServiceProtocol using AVFoundation
 /// @MainActor ensures thread-safe access to camera resources
 @MainActor
-public final class CameraService: NSObject, @preconcurrency CameraServiceProtocol {
+public final class CameraService: NSObject, ObservableObject, @preconcurrency CameraServiceProtocol {
 
     // MARK: - Properties
 

@@ -26,6 +26,13 @@ DETECTION RULES:
 3. For each object, provide a bounding box as [ymin, xmin, ymax, xmax] normalized to 0-1000
 4. Provide a specific label (e.g., "leather armchair" not just "chair")
 
+CRITICAL - BOUNDING BOX ACCURACY:
+Each bounding box MUST accurately frame ONLY the specific object described by its label.
+- Double-check that [ymin, xmin, ymax, xmax] coordinates enclose ONLY the labeled item
+- Do NOT include adjacent objects in a bounding box
+- If two objects are close together, draw SEPARATE tight boxes around each one
+- Verify the label matches what is INSIDE the bounding box, not nearby objects
+
 MULTI-IMAGE RULES:
 When given multiple images:
 1. Identify if the SAME object appears in multiple photos (different angles)
@@ -57,7 +64,7 @@ OUTPUT: Return valid JSON array matching the schema.`;
  * @see node_modules/@google/genai/dist/genai.d.ts - GenerationConfig, ThinkingConfig
  */
 export const LAYER1_GENERATION_CONFIG = {
-  temperature: 0.1,
+  temperature: 0,  // Deterministic bounding boxes for consistent object detection
   topP: 0.95,
   maxOutputTokens: 4096,
   responseMimeType: 'application/json',

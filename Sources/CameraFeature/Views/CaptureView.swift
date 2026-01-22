@@ -11,6 +11,7 @@ public struct CaptureView: View {
     private let cameraService: CameraService
     private let onDone: () -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var frozenFrame: Data?
     @State private var longPressActive = false
@@ -77,11 +78,37 @@ public struct CaptureView: View {
             }
             .animation(.easeInOut(duration: 0.3), value: showingCameraError)
             .animation(.easeInOut(duration: 0.2), value: networkMonitor.isConnected)
+            .onAppear {
+                // Restart camera when returning to this tab
+                Task {
+                    await restartCameraIfNeeded()
+                }
+            }
             .task {
+                // Initial authorization check on first appearance
                 await checkCameraAuthorization()
             }
             .onDisappear {
                 teardownCamera()
+            }
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                Task {
+                    switch newPhase {
+                    case .active:
+                        // App returning to foreground - restart camera if authorized
+                        if authorizationStatus == .authorized {
+                            await restartCameraIfNeeded()
+                        }
+                    case .background:
+                        // App going to background - stop camera to save battery
+                        teardownCamera()
+                    case .inactive:
+                        // Transitioning state - do nothing
+                        break
+                    @unknown default:
+                        break
+                    }
+                }
             }
         }
         #if os(iOS)
@@ -429,6 +456,24 @@ public struct CaptureView: View {
 
         // Re-check authorization in case user changed settings
         await checkCameraAuthorization()
+    }
+
+    /// Restart camera session when returning to this tab (after onDisappear stopped it)
+    private func restartCameraIfNeeded() async {
+        // Only restart if we're authorized
+        guard authorizationStatus == .authorized else { return }
+
+        // Get the CURRENT session from the service, not cached @State
+        let currentSession = await cameraService.getCaptureSession()
+
+        if let session = currentSession, !session.isRunning {
+            // Session exists but stopped - restart it
+            await setupCameraSession()
+        } else if currentSession == nil {
+            // No session yet - set up fresh
+            await setupCameraSession()
+        }
+        // else: session already running, nothing to do
     }
 
     private func teardownCamera() {

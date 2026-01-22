@@ -377,9 +377,19 @@ async function cropAndUploadObjects(
       }
 
       try {
-        // Get image dimensions
+        // Get image dimensions AFTER EXIF rotation normalization
+        // Gemini sees the image in its visual orientation (post-EXIF-rotation),
+        // so we need the rotated dimensions for accurate bounding box conversion
         const imageBuffer = Buffer.from(imageBase64, 'base64');
-        const metadata = await sharpLib(imageBuffer).metadata();
+
+        // First, apply rotation and get the normalized buffer
+        // .rotate() with no args auto-rotates based on EXIF orientation metadata
+        const rotatedBuffer = await sharpLib(imageBuffer)
+          .rotate()
+          .toBuffer();
+
+        // Now get metadata from the rotated image (correct dimensions)
+        const metadata = await sharpLib(rotatedBuffer).metadata();
         if (!metadata.width || !metadata.height) {
           logger.warn('Could not get image dimensions', { label: obj.label });
           continue;
@@ -389,8 +399,8 @@ async function cropAndUploadObjects(
         const absCoords = boxToAbsolute(obj.box_2d, metadata.width, metadata.height);
         const paddedCoords = addPadding(absCoords, 0.05, metadata.width, metadata.height);
 
-        // Crop the image
-        const croppedBuffer = await sharpLib(imageBuffer)
+        // Crop from the already-rotated image
+        const croppedBuffer = await sharpLib(rotatedBuffer)
           .extract({
             left: paddedCoords.x1,
             top: paddedCoords.y1,

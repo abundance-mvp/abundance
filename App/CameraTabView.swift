@@ -4,7 +4,10 @@ import CameraFeature
 struct CameraTabView: View {
     let onNavigateToCatalog: () -> Void
 
+    // Persist CameraService across tab switches using @StateObject
+    @StateObject private var cameraService = CameraService()
+
     var body: some View {
-        CaptureView(onDone: onNavigateToCatalog)
+        CaptureView(cameraService: cameraService, onDone: onNavigateToCatalog)
     }
 }

@@ -27,25 +27,11 @@ struct ItemCard: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityDescription)
             .accessibilityAddTraits(.isButton)
-            .contextMenu {
-            // Only show context menu when not in selection mode
-            if !isSelectionMode {
-                // Only show Edit when functionality is implemented (Stage 3.3+)
-                if let onEdit = onEdit {
-                    Button {
-                        onEdit()
-                    } label: {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                }
-
-                Button(role: .destructive) {
-                    onDelete?()
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-            }
-        }
+            .modifier(SelectionModeContextMenuModifier(
+                isSelectionMode: isSelectionMode,
+                onEdit: onEdit,
+                onDelete: onDelete
+            ))
     }
 
     // MARK: - Card Content
@@ -310,6 +296,40 @@ private struct StatusBadge: View {
         case .layer2aComplete, .complete: return .green
         case .failed, .failedLayer2a, .failedLayer2b: return .red
         default: return .gray
+        }
+    }
+}
+
+// MARK: - Context Menu Modifier
+
+/// Conditionally applies context menu only when NOT in selection mode.
+/// This avoids gesture conflicts where the context menu intercepts taps in selection mode.
+private struct SelectionModeContextMenuModifier: ViewModifier {
+    let isSelectionMode: Bool
+    let onEdit: (() -> Void)?
+    let onDelete: (() -> Void)?
+
+    func body(content: Content) -> some View {
+        if isSelectionMode {
+            // No context menu in selection mode - allows taps to work
+            content
+        } else {
+            content.contextMenu {
+                // Only show Edit when functionality is implemented (Stage 3.3+)
+                if let onEdit = onEdit {
+                    Button {
+                        onEdit()
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                }
+
+                Button(role: .destructive) {
+                    onDelete?()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
         }
     }
 }

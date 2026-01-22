@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isPremium() {
+      return isSignedIn() && request.auth.token.premium == true;
+    }
+
+    // Users collection: users can only read/write their own profile
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && request.resource.data.userId == userId;
+      allow delete: if false; // Users cannot delete their own accounts
+    }
+
+    // Items collection: users can only access their own items
+    match /items/{itemId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'processing'
+        && request.resource.data.deletedAt == null;
+
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId; // Can't change ownership
+
+      allow delete: if false; // Soft delete only (via update)
+    }
+
+    // Subscriptions collection: read-only for users, write-only for Cloud Functions
+    match /subscriptions/{subscriptionId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false; // Only Cloud Functions can write via Admin SDK
+    }
+  }
+}
