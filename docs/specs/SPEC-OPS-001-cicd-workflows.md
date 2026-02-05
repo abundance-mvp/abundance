@@ -398,9 +398,15 @@ Branch: main
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `sim.sh` | Fast iOS development loop (simulator or device) | `./scripts/sim.sh [--device\|--sim] [device-name]` |
 | `regenerate-xcode-project.sh` | Regenerates Xcode project from XcodeGen spec | `./scripts/regenerate-xcode-project.sh [--yes]` |
 | `check-health.sh` | Checks health of external dependencies | `./scripts/check-health.sh` |
+
+**Build & Deploy Tools (via MCP + CLI):**
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| XcodeBuildMCP | 72 MCP tools for build, deploy, test, inspect | `claude mcp add XcodeBuildMCP -- npx -y xcodebuildmcp@beta mcp` |
+| AXe | Accessibility tree inspection + UI automation (simulator) | `brew install cameroncooke/axe/axe` |
 
 ### 6.3 Documentation Tools
 
@@ -442,25 +448,22 @@ Installs two Git hooks:
 - iOS tests if `.swift` files changed
 - Backend tests if `functions/*.ts` files changed
 
-#### sim.sh
+#### Device Testing (XcodeBuildMCP + AXe)
 
-Fast iteration script for iOS development:
-```bash
-# Run on simulator (default)
-./scripts/sim.sh
+Build, deploy, and inspect via the device-tester skill (`/project:device-tester`):
 
-# Run on physical device
-./scripts/sim.sh --device w-16e
+**XcodeBuildMCP** provides MCP tools for structured build/deploy:
+- `build_device` / `build_sim` - Build for device or simulator
+- `launch_app_device` / `launch_app_sim` - Launch with log capture
+- `snapshot_ui` - View hierarchy with coordinates (simulator)
+- `test_device` / `test_sim` - Run tests
 
-# Force regenerate Xcode project
-./scripts/sim.sh --regenerate
-```
+**AXe** provides accessibility tree inspection (simulator only):
+- `axe describe-ui` - Full accessibility tree with element types, identifiers, frames
+- `axe tap --id "elementID"` - Tap by accessibility identifier
+- `axe type "text"` - Type text into focused field
 
-Features:
-- Auto-generates Xcode project with XcodeGen
-- Builds for simulator or device
-- Captures logs to `.debug/logs/`
-- Provides issue capture workflow
+**Fallback:** Raw `xcodebuild` + `xcrun devicectl` commands documented in `.claude/skills/device-tester.md`
 
 ---
 

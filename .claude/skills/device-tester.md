@@ -1,20 +1,29 @@
 ---
 name: device-tester
 description: |
-  Iterative testing and troubleshooting workflow for physical iOS devices.
-  Use when deploying to device, capturing logs, analyzing crashes, and iterating on fixes.
+  Iterative testing and troubleshooting workflow for physical iOS devices and simulators.
+  Use when deploying to device, capturing logs, analyzing crashes, inspecting UI, and iterating on fixes.
 
   Example triggers:
   - "Test on my device"
   - "Debug on w-16e"
   - "Iterate on device testing"
   - "Capture device logs"
+  - "Inspect the UI"
+  - "Run on simulator"
 user-invocable: true
 ---
 
-# Physical Device Testing Workflow
+# Device Testing Workflow
 
-Iterative testing on physical iOS devices using `devicectl` and related tools.
+Iterative testing on physical devices and simulators using XcodeBuildMCP (primary) and AXe for UI inspection.
+
+## Tools
+
+| Tool | Purpose | Install |
+|------|---------|---------|
+| **XcodeBuildMCP** | Build, deploy, test, inspect via MCP tools | `claude mcp add XcodeBuildMCP -- npx -y xcodebuildmcp@beta mcp` |
+| **AXe** | Accessibility tree inspection + UI automation (simulator) | `brew install cameroncooke/axe/axe` |
 
 ## Routing Logic
 
@@ -108,50 +117,48 @@ Use mcp__observability__list_group_stats with:
 
 ---
 
-### General Device Testing → Use commands below
+### UI Issue → **UI Inspection** (see below)
+
+**Triggers:**
+- User reports visual bug
+- Layout looks wrong
+- Element not responding to taps
+- Need to verify UI state after code change
+
+**Action:** Use AXe `describe-ui` (simulator) or check `./screenshots/` (device)
+
+---
+
+### General Device Testing → Use workflows below
 
 **Triggers:**
 - Deploy and test manually
 - Capture logs
 - Iterate on fixes
 
-## Device Commands Reference
+## Device Info
 
-### Your Device
-- **Name:** `w-16e`
+- **Physical Device:** `w-16e`
 - **Bundle ID:** `com.abundance.mvp`
 - **Identifier:** `6C65EE17-7E22-59FA-B47B-29AE0D69973D`
 
-### Screenshots Location
+## Build & Deploy: Physical Device (w-16e)
 
-**IMPORTANT:** Always check for new screenshots when user reports UI issues or is iterating on device.
+### Using XcodeBuildMCP (Primary)
 
-Device screenshots sync to: `./screenshots/` (symlinked to iCloud)
+Use XcodeBuildMCP MCP tools for structured build/deploy. These are MCP tools invoked directly, not bash commands.
 
-```bash
-# ALWAYS run this first when debugging UI issues
-ls -lt screenshots/ | head -5
-
-# Then read the most recent screenshot
-# Claude is multimodal and can analyze the image
+```
+1. build_device        → Build for physical device (scheme: Abundance, device: w-16e)
+2. install_app_device  → Install .app to device
+3. launch_app_device   → Launch app on device
+4. start_device_log_cap → Start capturing device logs
+5. stop_device_log_cap  → Stop app and return captured logs
 ```
 
-**Workflow:**
-1. User takes screenshot on device (w-16e)
-2. Screenshot syncs via iCloud → appears in `./screenshots/`
-3. **You read and analyze the screenshot** to understand UI state
-4. Suggest fixes based on what you see
-5. User redeploys → takes new screenshot → repeat
+### Fallback: Raw Commands
 
-**When to check screenshots:**
-- User mentions "look at this" or "here's a screenshot"
-- User reports a UI bug or visual issue
-- Debugging any display/layout problem
-- Verifying a fix worked
-
-### Setup & Deploy
-
-**Build fails?** → Invoke `build-fixer` agent (or `/axiom:fix-build`)
+If XcodeBuildMCP is unavailable, use these commands:
 
 ```bash
 # 1. Verify device is connected
@@ -196,60 +203,177 @@ xcrun devicectl device process launch \
   --device w-16e \
   --payload-url "abundance://capture" \
   com.abundance.mvp
-
-# Launch with environment variables
-xcrun devicectl device process launch \
-  --device w-16e \
-  --environment-variables '{"DEBUG_MODE": "1"}' \
-  com.abundance.mvp
 ```
 
-### Capture Evidence
+## Build & Deploy: Simulator
 
-#### Check Running Processes
-```bash
-xcrun devicectl device info processes --device w-16e | grep -i abundance
+### Using XcodeBuildMCP (Primary)
+
+```
+1. list_sims           → List available simulators
+2. boot_sim            → Boot target simulator
+3. build_sim           → Build for simulator (scheme: Abundance)
+4. launch_app_sim      → Launch app on simulator
+5. snapshot_ui         → Get view hierarchy with coordinates
+6. screenshot          → Capture screenshot
 ```
 
-#### Crash Logs
-```bash
-# After crash, find logs
-ls -lt ~/Library/Logs/CrashReporter/MobileDevice/w-16e/*.ips | head -5
+### Fallback: Raw Commands
 
-# Then invoke crash-analyzer agent
+```bash
+# List simulators
+xcrun simctl list devices available | grep iPhone
+
+# Boot simulator
+xcrun simctl boot <UDID>
+
+# Build for simulator
+xcodebuild \
+  -scheme Abundance \
+  -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
+  -configuration Debug \
+  build
+
+# Launch
+xcrun simctl launch --console-pty <UDID> com.abundance.mvp
 ```
 
-#### App Data
-```bash
-# List files in app container
-xcrun devicectl device info files --device w-16e \
-  --domain-type appDataContainer \
-  --domain-identifier com.abundance.mvp
+## UI Inspection
 
-# Copy files for inspection
-xcrun devicectl device copy from --device w-16e \
-  --source appDataContainer:com.abundance.mvp/Documents/ \
-  --destination /tmp/device-data/
+### Simulator: AXe Accessibility Tree (Preferred for Agents)
+
+**The accessibility tree gives structured data (element types, identifiers, labels, frames) which is more useful for iteration than screenshots alone.**
+
+```bash
+# Get the booted simulator UDID
+UDID=$(xcrun simctl list devices -j | jq -r '.devices | to_entries[] | .value[] | select(.state == "Booted") | .udid' | head -1)
+
+# Full accessibility tree - ALWAYS run this before UI interactions
+axe describe-ui --udid $UDID
+
+# Element at specific coordinates
+axe describe-ui --point 200,400 --udid $UDID
+
+# Screenshot (instant, no iCloud delay)
+axe screenshot --output /tmp/sim-screenshot.png --udid $UDID
 ```
 
-### Process Control
-
-```bash
-# Terminate app
-xcrun devicectl device process terminate --device w-16e com.abundance.mvp
-
-# Send memory warning
-xcrun devicectl device process sendMemoryWarning --device w-16e --pid <PID>
-
-# Suspend/Resume
-xcrun devicectl device process suspend --device w-16e --pid <PID>
-xcrun devicectl device process resume --device w-16e --pid <PID>
+**Example tree output:**
+```json
+{
+  "type": "Button",
+  "identifier": "captureButton",
+  "label": "Capture",
+  "frame": {"x": 150, "y": 700, "width": 100, "height": 44},
+  "enabled": true
+}
 ```
 
-### Run XCUITests on Device
+**When to use `describe-ui`:**
+- Debugging UI layout issues (get exact frames)
+- Verifying accessibility identifiers are set correctly
+- Finding why an element isn't tappable (check `enabled` state)
+- Before automated interaction (tap/type/swipe)
+
+### Simulator: AXe UI Automation
+
+After inspecting the tree, interact by accessibility identifier (stable) not coordinates (fragile):
 
 ```bash
-# Run all UI tests
+# Tap by accessibility identifier (preferred)
+axe tap --id "captureButton" --udid $UDID
+
+# Tap by label
+axe tap --label "Capture" --udid $UDID
+
+# Type text (focus field first)
+axe tap --id "searchField" --udid $UDID
+axe type "kitchen items" --udid $UDID
+
+# Gestures
+axe gesture scroll-down --udid $UDID
+axe gesture swipe-from-left-edge --udid $UDID  # Back navigation
+```
+
+### Simulator: XcodeBuildMCP snapshot_ui
+
+Alternative to AXe - use XcodeBuildMCP's `snapshot_ui` MCP tool for view hierarchy with precise coordinates. This is an MCP tool call, not a bash command.
+
+### Physical Device: Screenshots
+
+Physical device UI inspection still uses iCloud-synced screenshots:
+
+```bash
+# ALWAYS run this first when debugging device UI issues
+ls -lt screenshots/ | head -5
+
+# Then read the most recent screenshot
+# Claude is multimodal and can analyze the image
+```
+
+**Device screenshot workflow:**
+1. User takes screenshot on device (w-16e)
+2. Screenshot syncs via iCloud to `./screenshots/`
+3. **Claude reads and analyzes the screenshot** to understand UI state
+4. Suggest fixes based on what you see
+5. User redeploys -> takes new screenshot -> repeat
+
+**When to check screenshots:**
+- User mentions "look at this" or "here's a screenshot"
+- User reports a UI bug or visual issue
+- Debugging any display/layout problem
+- Verifying a fix worked
+
+## Iterative Workflow
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  1. BUILD & DEPLOY                                      │
+│     → XcodeBuildMCP: build_device / build_sim           │
+│     → If fails: Invoke build-fixer agent                │
+└─────────────────────────────────────────────────────────┘
+                          |
+┌─────────────────────────────────────────────────────────┐
+│  2. LAUNCH & CAPTURE LOGS                               │
+│     → XcodeBuildMCP: launch_app_device / launch_app_sim │
+│     → XcodeBuildMCP: start_device_log_cap (device)      │
+└─────────────────────────────────────────────────────────┘
+                          |
+┌─────────────────────────────────────────────────────────┐
+│  3. INSPECT UI                                          │
+│     → Simulator: axe describe-ui (accessibility tree)   │
+│     → Simulator: snapshot_ui (view hierarchy)           │
+│     → Device: Check ./screenshots/ (iCloud sync)        │
+└─────────────────────────────────────────────────────────┘
+                          |
+┌─────────────────────────────────────────────────────────┐
+│  4. IF ISSUE FOUND                                      │
+│     ├─ Crash? → Invoke crash-analyzer agent             │
+│     ├─ Slow? → Invoke performance-profiler agent        │
+│     ├─ Test fail? → Invoke test-debugger agent          │
+│     ├─ UI bug? → axe describe-ui + screenshot           │
+│     ├─ Bug? → Offer to file issue, then fix or continue │
+│     └─ Feature idea? → File as enhancement              │
+└─────────────────────────────────────────────────────────┘
+                          |
+┌─────────────────────────────────────────────────────────┐
+│  5. REPEAT until fixed                                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Testing
+
+### Run Tests via XcodeBuildMCP (Primary)
+
+```
+test_device   → Run tests on physical device (scheme: AbundanceUITests)
+test_sim      → Run tests on simulator
+```
+
+### Fallback: Raw Commands
+
+```bash
+# Run all UI tests on device
 xcodebuild test \
   -scheme AbundanceUITests \
   -destination "platform=iOS,name=w-16e" \
@@ -263,44 +387,47 @@ xcodebuild test \
   -resultBundlePath /tmp/test-results.xcresult
 ```
 
-## Iterative Workflow
+## Capture Evidence
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  1. BUILD & DEPLOY                                      │
-│     → Use xcodebuild (see below)                        │
-│     → If fails: Invoke build-fixer agent                │
-└─────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────┐
-│  2. LAUNCH WITH CONSOLE                                 │
-│     xcrun devicectl device process launch               │
-│       --device w-16e --console --terminate-existing     │
-│       com.abundance.mvp                                 │
-└─────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────┐
-│  3. TEST & OBSERVE                                      │
-│     - Watch console output                              │
-│     - Interact with app                                 │
-│     - Note issues                                       │
-└─────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────┐
-│  4. IF ISSUE FOUND                                      │
-│     ├─ Crash? → Invoke crash-analyzer agent             │
-│     ├─ Slow? → Invoke performance-profiler agent        │
-│     ├─ Test fail? → Invoke test-debugger agent          │
-│     ├─ Bug? → Offer to file issue, then fix or continue │
-│     └─ Feature idea? → File as enhancement              │
-└─────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────┐
-│  5. REPEAT until fixed                                  │
-└─────────────────────────────────────────────────────────┘
+### Check Running Processes
+```bash
+xcrun devicectl device info processes --device w-16e | grep -i abundance
 ```
 
----
+### Crash Logs
+```bash
+# After crash, find logs
+ls -lt ~/Library/Logs/CrashReporter/MobileDevice/w-16e/*.ips | head -5
+
+# Then invoke crash-analyzer agent
+```
+
+### App Data
+```bash
+# List files in app container
+xcrun devicectl device info files --device w-16e \
+  --domain-type appDataContainer \
+  --domain-identifier com.abundance.mvp
+
+# Copy files for inspection
+xcrun devicectl device copy from --device w-16e \
+  --source appDataContainer:com.abundance.mvp/Documents/ \
+  --destination /tmp/device-data/
+```
+
+## Process Control
+
+```bash
+# Terminate app
+xcrun devicectl device process terminate --device w-16e com.abundance.mvp
+
+# Send memory warning
+xcrun devicectl device process sendMemoryWarning --device w-16e --pid <PID>
+
+# Suspend/Resume
+xcrun devicectl device process suspend --device w-16e --pid <PID>
+xcrun devicectl device process resume --device w-16e --pid <PID>
+```
 
 ## Issue Filing Integration
 
@@ -312,10 +439,7 @@ Before invoking file-issue, gather:
 
 1. **Console logs** (last 50 relevant lines from launch output)
 2. **Device info**: w-16e, iOS version
-3. **Recent screenshots**:
-   ```bash
-   ls -lt screenshots/ | head -5
-   ```
+3. **UI state**: `axe describe-ui` output (simulator) or recent screenshots (device)
 4. **Current test scenario** (what was being tested)
 
 ### Invoke File-Issue
@@ -332,6 +456,7 @@ Context JSON structure:
   "ios_version": "18.x",
   "console_logs": "[last 50 lines]",
   "screenshots": ["IMG_1234.png"],
+  "ui_tree": "[axe describe-ui output if simulator]",
   "test_scenario": "Testing camera capture flow"
 }
 ```
@@ -339,8 +464,8 @@ Context JSON structure:
 ### After Issue Filed
 
 Ask user:
-- **"Continue testing?"** → Resume testing loop at step 1
-- **"Stop to investigate?"** → Offer to start debugging with `ios-superpowers debug`
+- **"Continue testing?"** -> Resume testing loop at step 1
+- **"Stop to investigate?"** -> Offer to start debugging with `ios-superpowers debug`
 
 ### Quick Filing
 
@@ -348,24 +473,31 @@ For obvious bugs during testing:
 
 ```
 "I noticed [issue]. Should I file this as an issue?"
-- Yes → Invoke file-issue with gathered context
-- No → Continue testing
+- Yes -> Invoke file-issue with gathered context
+- No -> Continue testing
 ```
 
 ## Quick Commands Reference
 
-| Task | Command |
-|------|---------|
-| List devices | `xcrun devicectl list devices` |
-| Launch app | `xcrun devicectl device process launch --device w-16e com.abundance.mvp` |
-| Launch with console | `xcrun devicectl device process launch --device w-16e --console com.abundance.mvp` |
-| Terminate app | `xcrun devicectl device process terminate --device w-16e com.abundance.mvp` |
-| List processes | `xcrun devicectl device info processes --device w-16e` |
-| List installed apps | `xcrun devicectl device info apps --device w-16e` |
-| Install app | `xcrun devicectl device install app --device w-16e /path/to/App.app` |
-| Copy from device | `xcrun devicectl device copy from --device w-16e --source appDataContainer:com.abundance.mvp/path --destination /local/path` |
-| Send memory warning | `xcrun devicectl device process sendMemoryWarning --device w-16e --pid <PID>` |
-| Reboot device | `xcrun devicectl device reboot --device w-16e` |
+| Task | XcodeBuildMCP Tool | Fallback Command |
+|------|--------------------|------------------|
+| List devices | `list_devices` | `xcrun devicectl list devices` |
+| Build for device | `build_device` | `xcodebuild -scheme Abundance -destination "platform=iOS,name=w-16e" build` |
+| Install to device | `install_app_device` | `xcrun devicectl device install app --device w-16e /path/to/App.app` |
+| Launch on device | `launch_app_device` | `xcrun devicectl device process launch --device w-16e com.abundance.mvp` |
+| Capture device logs | `start_device_log_cap` | `xcrun devicectl device process launch --device w-16e --console com.abundance.mvp` |
+| Build for simulator | `build_sim` | `xcodebuild -scheme Abundance -sdk iphonesimulator build` |
+| Launch on simulator | `launch_app_sim` | `xcrun simctl launch <UDID> com.abundance.mvp` |
+| Inspect UI (sim) | `snapshot_ui` | `axe describe-ui --udid $UDID` |
+| Screenshot (sim) | `screenshot` | `axe screenshot --output /tmp/screenshot.png --udid $UDID` |
+| Test on device | `test_device` | `xcodebuild test -scheme AbundanceUITests -destination "platform=iOS,name=w-16e"` |
+| Test on simulator | `test_sim` | `xcodebuild test -scheme AbundanceUITests -destination "platform=iOS Simulator,name=iPhone 16 Pro"` |
+| Terminate app | `stop_app_device` | `xcrun devicectl device process terminate --device w-16e com.abundance.mvp` |
+| List processes | - | `xcrun devicectl device info processes --device w-16e` |
+| List installed apps | - | `xcrun devicectl device info apps --device w-16e` |
+| Copy from device | - | `xcrun devicectl device copy from --device w-16e --source appDataContainer:com.abundance.mvp/path --destination /local/path` |
+| Send memory warning | - | `xcrun devicectl device process sendMemoryWarning --device w-16e --pid <PID>` |
+| Reboot device | - | `xcrun devicectl device reboot --device w-16e` |
 
 ## Troubleshooting
 
@@ -383,9 +515,10 @@ xcrun devicectl list devices
 # Check if installed
 xcrun devicectl device info apps --device w-16e | grep -i abundance
 
-# Reinstall
+# Reinstall via XcodeBuildMCP: build_device then install_app_device
+# Or fallback:
 xcrun devicectl device uninstall app --device w-16e com.abundance.mvp
-./scripts/sim.sh --device w-16e
+# Then rebuild and install using the commands above
 ```
 
 ### Console Shows Nothing
@@ -396,4 +529,10 @@ let logger = Logger(subsystem: "com.abundance.mvp", category: "debug")
 logger.info("This will appear in Console.app")
 ```
 
-Then view in **Console.app** → select your device → filter by subsystem.
+Then view in **Console.app** -> select your device -> filter by subsystem.
+
+### AXe Not Finding Elements
+1. Run `axe describe-ui` to see available elements
+2. Check element has `accessibilityIdentifier` set in code
+3. Ensure element is visible (not off-screen)
+4. Try adding `--pre-delay 0.5` for slow-loading UI

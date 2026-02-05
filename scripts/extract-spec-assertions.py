@@ -158,7 +158,7 @@ def generate_manual_checklist(assertions: List[SpecAssertion]) -> str:
 
     checklist = "# Manual Testing Checklist (Auto-Generated)\n\n"
     checklist += "Generated from spec documents. Use this checklist during manual testing sessions.\n\n"
-    checklist += "**Usage**: Run `./scripts/sim.sh`, then work through this checklist.\n\n"
+    checklist += "**Usage**: Build and deploy via `/project:device-tester`, then work through this checklist.\n\n"
     checklist += "**Capture issues**: If any item fails, tell Claude: 'capture this issue' (reference spec: <spec-name>)\n\n"
     checklist += "---\n\n"
 
