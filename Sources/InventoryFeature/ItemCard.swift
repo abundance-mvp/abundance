@@ -24,6 +24,7 @@ struct ItemCard: View {
         cardContent
             .animation(reduceMotion ? nil : .brandSnappy, value: isPressed)
             .animation(reduceMotion ? nil : .brandSnappy, value: isSelected)
+            .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityDescription)
             .accessibilityAddTraits(.isButton)
             .modifier(SelectionModeContextMenuModifier(

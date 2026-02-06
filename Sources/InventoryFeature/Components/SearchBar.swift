@@ -63,7 +63,7 @@ public struct SearchBar: View {
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Search, \(text.isEmpty ? "empty" : text)")
+        .accessibilityIdentifier("inventory.searchBar")
     }
 }
 
