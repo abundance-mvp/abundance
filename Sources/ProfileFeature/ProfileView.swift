@@ -129,7 +129,7 @@ public struct ProfileView: View {
                 HStack {
                     Image(systemName: "tablecells")
                         .font(.title3)
-                        .foregroundStyle(Color.textBrightBlue)
+                        .foregroundStyle(Color.salmon)
                     Text("Export as CSV")
                         .font(.body.weight(.medium))
                         .foregroundStyle(Color.textPrimary)
@@ -208,7 +208,7 @@ private struct SettingsRow: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.body)
-                    .foregroundStyle(Color.textBrightBlue)
+                    .foregroundStyle(Color.salmon)
                     .frame(width: 24)
 
                 Text(title)

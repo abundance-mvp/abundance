@@ -65,7 +65,7 @@ public struct UserInfoCard: View {
             Text(avatarInitials)
                 .font(.title)
                 .fontWeight(.bold)
-                .foregroundStyle(Color.textBrightBlue)
+                .foregroundStyle(Color.salmon)
         }
         .accessibilityHidden(true)
     }
@@ -74,7 +74,7 @@ public struct UserInfoCard: View {
         HStack(spacing: 8) {
             Image(systemName: "tray.full")
                 .font(.body)
-                .foregroundStyle(Color.textBrightBlue)
+                .foregroundStyle(Color.salmon)
 
             Text("\(itemCount) items")
                 .font(.callout)

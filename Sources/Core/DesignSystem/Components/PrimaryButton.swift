@@ -38,21 +38,21 @@ public struct PrimaryButton: View {
             .frame(minHeight: 44) // Accessibility tap target
             .adaptiveGlass(in: Capsule())
             .shadow(
-                color: Color.brandBrightBlue.opacity(isEnabled ? 0.5 : 0.2),
+                color: Color.salmon.opacity(isEnabled ? 0.5 : 0.2),
                 radius: isPressed ? 8 : 12,
                 x: 0,
                 y: 4
             )
             .overlay {
                 Capsule()
-                    .stroke(Color.brandBrightBlue.opacity(isEnabled ? 1.0 : 0.3), lineWidth: 2)
+                    .stroke(Color.salmon.opacity(isEnabled ? 1.0 : 0.3), lineWidth: 2)
             }
             .scaleEffect(isPressed ? 0.96 : 1.0)
             .opacity(isEnabled ? 1.0 : 0.5)
         }
         .disabled(!isEnabled || isLoading)
         .sensoryFeedback(.impact(weight: .medium), trigger: isPressed)
-        .animation(.brandSnappy, value: isPressed)
+        .animation(.brandPress, value: isPressed)
         .accessibilityLabel(title)
         .accessibilityAddTraits(.isButton)
         .accessibilityRemoveTraits(isEnabled ? [] : .isButton)

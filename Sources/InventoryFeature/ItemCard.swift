@@ -24,8 +24,8 @@ struct ItemCard: View {
 
     var body: some View {
         cardContent
-            .animation(reduceMotion ? nil : .brandSnappy, value: isPressed)
-            .animation(reduceMotion ? nil : .brandSnappy, value: isSelected)
+            .animation(reduceMotion ? nil : .brandPress, value: isPressed)
+            .animation(reduceMotion ? nil : .brandPress, value: isSelected)
             .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityDescription)
             .accessibilityAddTraits(.isButton)
@@ -230,7 +230,7 @@ struct ItemCard: View {
             // Skip animation for Reduce Motion users
             onTap?()
         } else {
-            withAnimation(.brandSnappy) {
+            withAnimation(.brandPress) {
                 isPressed = true
             }
             onTap?()
@@ -239,7 +239,7 @@ struct ItemCard: View {
             pressAnimationTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(150))
                 guard !Task.isCancelled else { return }
-                withAnimation(.brandSnappy) {
+                withAnimation(.brandPress) {
                     isPressed = false
                 }
             }
