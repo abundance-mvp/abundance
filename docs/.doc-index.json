@@ -91,6 +91,25 @@
           ],
           "updated": "2026-01-18"
         },
+        "SPEC-UI-003-design-system.md": {
+          "status": "Draft",
+          "code_refs": [
+            "Sources/Core/DesignSystem/",
+            "Sources/InventoryFeature/",
+            "Sources/CameraFeature/",
+            "Sources/ProfileFeature/"
+          ],
+          "updated": "2026-02-06"
+        },
+        "SPEC-UI-004-liquid-glass-adoption.md": {
+          "status": "Draft",
+          "code_refs": [
+            "App/",
+            "Sources/Core/DesignSystem/",
+            "Sources/InventoryFeature/Components/"
+          ],
+          "updated": "2026-02-06"
+        },
         "SPEC-OPS-001-cicd-workflows.md": {
           "status": "Active",
           "code_refs": [
@@ -199,6 +218,11 @@
           "status": "Active",
           "related_branch": null,
           "merged": null
+        },
+        "2026-02-06-brand-bible-revision-design-system-specs.md": {
+          "status": "Active",
+          "related_branch": "feature/brand-design-system",
+          "merged": null
         }
       }
     },
@@ -249,6 +273,26 @@
           "status": "Open",
           "related_branch": null,
           "merged": null
+        }
+      }
+    },
+    "brand": {
+      "path": "docs/brand/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "abundance-brand-bible_090125.md": {
+          "status": "Deprecated",
+          "superseded_by": "abundance-brand-bible-v3-2026-02-06.md",
+          "updated": "2026-01-09"
+        },
+        "abundance-brand-bible-v3-2026-02-06.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/Core/DesignSystem/"
+          ],
+          "updated": "2026-02-06"
         }
       }
     },
