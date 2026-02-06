@@ -19,7 +19,7 @@ public struct RescanComparisonSheet: View {
                     VStack(spacing: 8) {
                         Image(systemName: "arrow.left.arrow.right")
                             .font(.title)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color.salmon)
 
                         Text("Compare Results")
                             .font(.title2.weight(.bold))
@@ -77,7 +77,7 @@ public struct RescanComparisonSheet: View {
                             .padding(.vertical, 16)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.green)
+                    .tint(Color.mutedSage)
 
                     Button {
                         viewModel.unlockManualEdit()
@@ -91,11 +91,12 @@ public struct RescanComparisonSheet: View {
                         .padding(.vertical, 12)
                     }
                     .buttonStyle(.bordered)
-                    .tint(.orange)
+                    .tint(Color.salmon)
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
-                .adaptiveGlass(cornerRadius: 16)
+                .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
             }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -137,7 +138,7 @@ private struct ComparisonCard: View {
                 .padding(.vertical, 4)
                 .background {
                     Capsule()
-                        .fill(isHighlighted ? Color.green : Color.secondary.opacity(0.2))
+                        .fill(isHighlighted ? Color.mutedSage : Color.secondary.opacity(0.2))
                 }
 
             // Image thumbnail
@@ -184,11 +185,12 @@ private struct ComparisonCard: View {
             }
         }
         .padding(12)
-        .adaptiveGlass(cornerRadius: 16)
+        .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
         .overlay {
             if isHighlighted {
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.green, lineWidth: 2)
+                    .stroke(Color.mutedSage, lineWidth: 2)
             }
         }
     }
@@ -281,14 +283,15 @@ private struct FieldChangesSummary: View {
                                     .font(.caption2)
                                     .foregroundStyle(.tertiary)
                                 Text(change.to ?? "--")
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(Color.mutedSage)
                             }
                             .font(.caption.weight(.medium))
                         }
                     }
                 }
                 .padding(12)
-                .adaptiveGlass(cornerRadius: 12)
+                .background(Color.cream, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.peach, lineWidth: 1))
             }
         }
     }

@@ -433,7 +433,7 @@ private struct SavingOverlay: View {
                     .font(.system(size: 15, weight: .medium, design: .rounded))
             }
             .padding(24)
-            .adaptiveGlass(cornerRadius: 16)
+            .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 }

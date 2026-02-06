@@ -189,7 +189,8 @@ public struct InventoryView: View {
             .disabled(selectedItemIds.isEmpty)
         }
         .padding()
-        .adaptiveGlass(cornerRadius: 16)
+        .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
     }
 }
 

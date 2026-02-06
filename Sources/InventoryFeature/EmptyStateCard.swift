@@ -35,7 +35,8 @@ struct EmptyStateCard: View {
         }
         .padding(32)
         .frame(maxWidth: .infinity)
-        .adaptiveGlass(cornerRadius: 24)
+        .background(Color.cream, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color.peach, lineWidth: 1))
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
 }

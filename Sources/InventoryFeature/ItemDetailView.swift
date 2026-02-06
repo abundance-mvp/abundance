@@ -302,7 +302,8 @@ public struct ItemDetailView: View {
                         }
                     }
                     .padding(24)
-                    .adaptiveGlass(in: metadataCardShape)
+                    .background(Color.cream, in: metadataCardShape)
+                    .overlay(metadataCardShape.stroke(Color.peach, lineWidth: 1))
                     .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: -8)
                     .padding(.horizontal, 16)
                     .offset(y: -60) // Overlap hero
