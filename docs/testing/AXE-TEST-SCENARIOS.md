@@ -33,6 +33,7 @@
 | Identifier | Element |
 |---|---|
 | `detail.editButton` | Edit (pencil) button |
+| `detail.recatalogButton` | Re-catalog (arrows) button |
 | `detail.itemName` | Item name text |
 
 ### Edit Flow (`EditItemSheet`)
@@ -253,6 +254,7 @@
 
 **Assertions:**
 - Context menu appears with "Delete" option
+- "Re-catalog" option present in context menu
 - "Edit" option may or may not be present (depends on implementation)
 - Delete shows confirmation dialog
 - Cancel dismisses without deleting
@@ -350,9 +352,12 @@
 - Layer 2 data present in item detail: name, brand, model, value, confidence
 - Catalog triggered via Firestore write -> onItemFromSession -> Gemini 3 Pro
 
-**Skip if:** Not on detection results screen (camera not available on simulator). On simulator, verify identifiers exist and states are correct for any pre-existing items in inventory instead.
+**Alternative (Simulator):** Re-catalog can be triggered from inventory without a camera:
+1. Long-press any item card → tap "Re-catalog" in context menu
+2. Or tap into detail view → tap re-catalog button (`detail.recatalogButton`)
+3. Confirm in the dialog → item status resets to "pending" → Cloud Function re-triggers
 
-**Note:** This is an end-to-end test. On device, the full flow is testable. On simulator, test the inventory-side verification (Scenario 13 below covers what's verifiable without camera).
+**Note:** This is an end-to-end test. On device, the full capture flow is testable. On simulator, use the re-catalog flow (context menu or detail view) to trigger the AI pipeline for existing items. E2E test mode (`--e2e-test-mode` launch arg) enables image injection via PHPicker for full pipeline testing on simulator.
 
 ---
 
@@ -398,4 +403,5 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 
 | Date | Change |
 |---|---|
+| 2026-02-05 | Added re-catalog identifiers, updated Scenario 8 & 12 for re-catalog flow |
 | 2026-02-05 | Initial creation with 13 scenarios |

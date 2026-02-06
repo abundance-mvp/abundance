@@ -142,7 +142,6 @@ public final class InventoryViewModel {
         guard let userId = userId else { return }
 
         itemRepository.observeItems(userId: userId)
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] items in
                 self?.items = items
             }
