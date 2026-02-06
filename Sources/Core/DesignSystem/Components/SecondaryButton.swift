@@ -48,7 +48,7 @@ public struct SecondaryButton: View {
         isPressed = true
         action()
 
-        Task {
+        Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.2))
             isPressed = false
         }

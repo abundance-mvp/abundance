@@ -56,7 +56,7 @@ public struct PrimaryButton: View {
         action()
 
         // Reset pressed state after animation
-        Task {
+        Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.2))
             isPressed = false
         }
