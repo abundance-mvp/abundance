@@ -118,6 +118,7 @@ public struct DetectionResultsView: View {
                                     onCatalogObject(object)
                                 }
                             )
+                            .accessibilityIdentifier("detection.object.\(object.groupId)")
                             .accessibilityElement(children: .combine)
                             .accessibilityLabel("\(object.label), \(object.category)")
                             .accessibilityHint("Double tap to select this object")
@@ -170,6 +171,7 @@ public struct DetectionResultsView: View {
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.blue)
+                .accessibilityIdentifier("detection.catalogAllButton")
             }
         }
     }
@@ -198,6 +200,7 @@ public struct DetectionResultsView: View {
                 Label("Retake", systemImage: "arrow.counterclockwise")
             }
             .buttonStyle(.bordered)
+            .accessibilityIdentifier("detection.retakeButton")
 
             Spacer()
 
@@ -206,6 +209,7 @@ public struct DetectionResultsView: View {
                     .fontWeight(.semibold)
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("detection.doneButton")
         }
     }
 
@@ -403,6 +407,7 @@ struct DetectedObjectCard: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
+            .accessibilityIdentifier("detection.catalogButton.\(object.groupId)")
         }
     }
 }

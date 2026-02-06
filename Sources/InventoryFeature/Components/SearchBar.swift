@@ -27,6 +27,7 @@ public struct SearchBar: View {
                 .font(.system(.body, design: .rounded))
                 .focused($isFocused)
                 .submitLabel(.search)
+                .accessibilityIdentifier("inventory.searchField")
                 .accessibilityLabel("Search items")
                 .accessibilityHint("Search by category, color, material, or condition")
 
@@ -41,6 +42,7 @@ public struct SearchBar: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("inventory.searchClearButton")
                 .accessibilityLabel("Clear search")
             }
         }
@@ -60,7 +62,7 @@ public struct SearchBar: View {
                     .fill(.thickMaterial)
             }
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("Search, \(text.isEmpty ? "empty" : text)")
     }
 }

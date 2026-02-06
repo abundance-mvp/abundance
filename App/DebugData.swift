@@ -99,140 +99,153 @@ private final class NoOpListenerRegistration: NSObject, ListenerRegistration {
 // MARK: - Simulator Item Factory
 
 /// Creates 8 test items covering various statuses, conditions, and categories.
+/// Images loaded from bundled DebugResources (object-1..8.jpeg).
 enum SimulatorItemFactory {
     static let userId = "simulator-debug-user"
+
+    /// Returns a file URL string for a bundled debug image, with picsum fallback.
+    private static func imageUrl(for name: String) -> String {
+        // SPM uses Bundle.module; Xcode project uses Bundle.main
+        let url: URL? = {
+            #if SWIFT_PACKAGE
+            return Bundle.module.url(forResource: name, withExtension: "jpeg")
+            #else
+            return Bundle.main.url(forResource: name, withExtension: "jpeg")
+            #endif
+        }()
+        return url?.absoluteString ?? "https://picsum.photos/seed/\(name)/400/400"
+    }
 
     static func makeItems() -> [Item] {
         let now = Date()
         return [
+            // 1. MelodySusie nail drill — pink, boxed, new condition
             Item(
                 id: "sim-001",
                 userId: userId,
-                imageUrl: "https://picsum.photos/seed/coleman-tent/400/400",
+                imageUrl: imageUrl(for: "object-1"),
                 status: .complete,
-                name: "Coleman Sundome Tent",
-                category: "Outdoor & Camping",
-                subCategory: "Tents",
-                brand: "Coleman",
-                model: "Sundome 4-Person",
-                color: "Green/Gray",
-                material: "Polyester",
-                condition: .good,
-                dimensions: "4-person, 9' x 7'",
+                name: "MelodySusie Nail Drill",
+                category: "Beauty & Personal Care",
+                subCategory: "Nail Tools",
+                brand: "MelodySusie",
+                color: "Pink",
+                material: "Plastic",
+                condition: .new,
                 quantity: 1,
-                estimatedValue: 89.99,
+                estimatedValue: 35.99,
                 confidence: .high,
                 createdAt: now.addingTimeInterval(-86400 * 7),
                 updatedAt: now.addingTimeInterval(-86400 * 2)
             ),
+            // 2. Hurma knife sharpener — beige/brown, used
             Item(
                 id: "sim-002",
                 userId: userId,
-                imageUrl: "https://picsum.photos/seed/kitchenaid-mixer/400/400",
+                imageUrl: imageUrl(for: "object-2"),
                 status: .complete,
-                name: "KitchenAid Stand Mixer",
+                name: "Hurma Knife Sharpener",
                 category: "Kitchen Appliances",
-                subCategory: "Mixers",
-                brand: "KitchenAid",
-                model: "Artisan 5-Qt",
-                color: "Empire Red",
-                material: "Die-cast metal",
-                condition: .likeNew,
+                subCategory: "Knife Sharpeners",
+                brand: "Hurma",
+                color: "Beige/Brown",
+                material: "Plastic/Ceramic",
+                condition: .good,
                 quantity: 1,
-                estimatedValue: 349.99,
+                estimatedValue: 19.99,
                 confidence: .high,
                 createdAt: now.addingTimeInterval(-86400 * 6),
                 updatedAt: now.addingTimeInterval(-86400 * 1)
             ),
+            // 3. Panasonic vintage AM/FM radio — wood cabinet, fair condition
             Item(
                 id: "sim-003",
                 userId: userId,
-                imageUrl: "https://picsum.photos/seed/bose-qc45/400/400",
+                imageUrl: imageUrl(for: "object-3"),
                 status: .layer2aComplete,
-                name: "Bose QuietComfort 45",
+                name: "Panasonic AM/FM Radio",
                 category: "Electronics",
-                subCategory: "Headphones",
-                brand: "Bose",
-                model: "QC45",
-                color: "Black",
-                material: "Plastic/Leather",
-                condition: .good,
+                subCategory: "Radios",
+                brand: "Panasonic",
+                color: "Walnut/Silver",
+                material: "Wood/Metal",
+                condition: .fair,
                 quantity: 1,
-                estimatedValue: 229.00,
+                estimatedValue: 65.00,
                 confidence: .medium,
                 createdAt: now.addingTimeInterval(-86400 * 5),
                 updatedAt: now.addingTimeInterval(-86400 * 3)
             ),
+            // 4. Ceramic plant pot on metal stand with trailing vine
             Item(
                 id: "sim-004",
                 userId: userId,
-                imageUrl: "https://picsum.photos/seed/ikea-kallax/400/400",
+                imageUrl: imageUrl(for: "object-4"),
                 status: .complete,
-                name: "IKEA KALLAX Shelf",
-                category: "Furniture",
-                subCategory: "Shelving",
-                brand: "IKEA",
-                model: "KALLAX 4x2",
-                color: "White",
-                material: "Particleboard",
-                condition: .fair,
-                dimensions: "77 x 147 cm",
+                name: "Ceramic Plant Pot with Stand",
+                category: "Home & Garden",
+                subCategory: "Planters",
+                color: "Cream/Terracotta",
+                material: "Ceramic/Metal",
+                condition: .good,
                 quantity: 1,
-                estimatedValue: 69.99,
+                estimatedValue: 28.00,
                 confidence: .high,
                 createdAt: now.addingTimeInterval(-86400 * 4),
                 updatedAt: now.addingTimeInterval(-86400 * 4)
             ),
+            // 5. Amber glass bowl vase
             Item(
                 id: "sim-005",
                 userId: userId,
-                imageUrl: "https://picsum.photos/seed/dyson-v15/400/400",
+                imageUrl: imageUrl(for: "object-5"),
                 status: .complete,
-                name: "Dyson V15 Detect",
-                category: "Home Appliances",
-                subCategory: "Vacuums",
-                brand: "Dyson",
-                model: "V15 Detect",
-                color: "Gold/Nickel",
-                material: "Polycarbonate",
-                condition: .new,
+                name: "Amber Glass Bowl Vase",
+                category: "Home Decor",
+                subCategory: "Vases",
+                color: "Amber",
+                material: "Glass",
+                condition: .good,
                 quantity: 1,
-                estimatedValue: 649.99,
+                estimatedValue: 42.00,
                 confidence: .high,
                 createdAt: now.addingTimeInterval(-86400 * 3),
                 updatedAt: now.addingTimeInterval(-86400 * 1)
             ),
+            // 6. Round gold-framed wall mirror
             Item(
                 id: "sim-006",
                 userId: userId,
-                imageUrl: "https://picsum.photos/seed/vintage-satchel/400/400",
+                imageUrl: imageUrl(for: "object-6"),
                 status: .layer2aComplete,
-                name: "Vintage Leather Satchel",
-                category: "Bags & Accessories",
-                subCategory: "Bags",
-                color: "Brown",
-                material: "Leather",
+                name: "Round Gold Wall Mirror",
+                category: "Furniture",
+                subCategory: "Mirrors",
+                color: "Gold",
+                material: "Glass/Metal",
                 condition: .good,
+                dimensions: "30\" diameter",
                 quantity: 1,
-                estimatedValue: 45.00,
+                estimatedValue: 89.00,
                 confidence: .medium,
                 createdAt: now.addingTimeInterval(-86400 * 2),
                 updatedAt: now.addingTimeInterval(-86400 * 2)
             ),
+            // 7. Non-stick frying pan — pending (minimal metadata)
             Item(
                 id: "sim-007",
                 userId: userId,
-                imageUrl: "https://picsum.photos/seed/unknown-electronics/400/400",
+                imageUrl: imageUrl(for: "object-7"),
                 status: .pending,
-                name: "Unknown Electronics",
-                category: "Electronics",
+                category: "Kitchen Appliances",
                 createdAt: now.addingTimeInterval(-3600),
                 updatedAt: now.addingTimeInterval(-3600)
             ),
+            // 8. Yellow ceramic bowl — failed processing
             Item(
                 id: "sim-008",
                 userId: userId,
-                imageUrl: "https://picsum.photos/seed/failed-item/400/400",
+                imageUrl: imageUrl(for: "object-8"),
                 status: .failed,
                 processingNotes: "Layer 2a extraction timed out after 3 retries",
                 createdAt: now.addingTimeInterval(-7200),

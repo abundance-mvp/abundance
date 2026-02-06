@@ -49,6 +49,7 @@ public struct UserInfoCard: View {
         .padding(24)
         .frame(maxWidth: .infinity)
         .adaptiveGlass(cornerRadius: 20, tint: Color.accentPrimary.opacity(0.1))
+        .accessibilityIdentifier("profile.userInfoCard")
         .accessibilityElement(children: .combine)
         .accessibilityLabel("User profile: \(displayName), \(email), \(itemCount) items")
     }

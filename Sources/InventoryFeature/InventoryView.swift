@@ -35,12 +35,14 @@ public struct InventoryView: View {
                 Group {
                     if viewModel.isLoading {
                         ProgressView("Loading items...")
+                            .accessibilityIdentifier("inventory.loading")
                     } else if let error = viewModel.error {
                         ErrorView(message: error, retry: {
                             Task { await viewModel.loadItems() }
                         })
                     } else if viewModel.items.isEmpty {
                         EmptyInventoryView(onOpenCamera: onOpenCamera)
+                            .accessibilityIdentifier("inventory.emptyState")
                     } else if viewModel.filteredItems.isEmpty {
                         // No search results
                         ContentUnavailableView.search(text: viewModel.searchText)
@@ -76,6 +78,7 @@ public struct InventoryView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(Color.accentPrimary)
+                        .accessibilityIdentifier("inventory.selectButton")
                         .accessibilityHint(
                             isSelectionMode
                                 ? "Exit selection mode"
@@ -151,6 +154,7 @@ public struct InventoryView: View {
             } label: {
                 Text("Deselect All")
             }
+            .accessibilityIdentifier("inventory.deselectAllButton")
 
             Spacer()
 
@@ -159,6 +163,7 @@ public struct InventoryView: View {
             } label: {
                 Label("Delete (\(selectedItemIds.count))", systemImage: "trash")
             }
+            .accessibilityIdentifier("inventory.bulkDeleteButton")
             .disabled(selectedItemIds.isEmpty)
         }
         .padding()
@@ -195,6 +200,7 @@ private struct ItemGridView: View {
                             isSelectionMode: true,
                             isSelected: selectedItemIds.contains(item.id)
                         )
+                        .accessibilityIdentifier("inventory.item.\(item.id)")
                     } else {
                         // Normal mode with navigation
                         NavigationLink {
@@ -206,9 +212,11 @@ private struct ItemGridView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("inventory.item.\(item.id)")
                     }
                 }
             }
+            .accessibilityIdentifier("inventory.grid")
             .padding()
         }
     }
@@ -249,6 +257,7 @@ private struct ErrorView: View {
                 .multilineTextAlignment(.center)
             Button("Retry", action: retry)
                 .buttonStyle(.bordered)
+                .accessibilityIdentifier("inventory.retryButton")
         }
         .padding()
     }

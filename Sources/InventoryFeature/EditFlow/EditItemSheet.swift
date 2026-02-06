@@ -25,6 +25,7 @@ public struct EditItemSheet: View {
                         ),
                         error: viewModel.validationErrors["name"]
                     )
+                    .accessibilityIdentifier("edit.nameField")
                     .focused($focusedField, equals: .name)
 
                     EditableTextField(
@@ -34,6 +35,7 @@ public struct EditItemSheet: View {
                             set: { viewModel.updateField(\.brand, value: $0.isEmpty ? nil : $0, fieldName: "brand") }
                         )
                     )
+                    .accessibilityIdentifier("edit.brandField")
                     .focused($focusedField, equals: .brand)
 
                     EditableTextField(
@@ -43,6 +45,7 @@ public struct EditItemSheet: View {
                             set: { viewModel.updateField(\.model, value: $0.isEmpty ? nil : $0, fieldName: "model") }
                         )
                     )
+                    .accessibilityIdentifier("edit.modelField")
                     .focused($focusedField, equals: .model)
                 } header: {
                     Text("Basic Information")
@@ -63,6 +66,7 @@ public struct EditItemSheet: View {
                             }
                         )
                     )
+                    .accessibilityIdentifier("edit.categoryField")
 
                     EditableTextField(
                         title: "Sub-Category",
@@ -77,6 +81,7 @@ public struct EditItemSheet: View {
                             }
                         )
                     )
+                    .accessibilityIdentifier("edit.subCategoryField")
                 } header: {
                     Text("Categorization")
                 }
@@ -96,6 +101,7 @@ public struct EditItemSheet: View {
                             }
                         )
                     )
+                    .accessibilityIdentifier("edit.colorField")
 
                     EditableTextField(
                         title: "Material",
@@ -110,6 +116,7 @@ public struct EditItemSheet: View {
                             }
                         )
                     )
+                    .accessibilityIdentifier("edit.materialField")
 
                     EditableTextField(
                         title: "Dimensions",
@@ -125,6 +132,7 @@ public struct EditItemSheet: View {
                         ),
                         placeholder: "e.g., 10\" x 5\" x 3\""
                     )
+                    .accessibilityIdentifier("edit.dimensionsField")
 
                     // Condition Picker
                     Picker("Condition", selection: Binding(
@@ -137,6 +145,7 @@ public struct EditItemSheet: View {
                         Text("Fair").tag(ItemCondition.fair)
                         Text("Poor").tag(ItemCondition.poor)
                     }
+                    .accessibilityIdentifier("edit.conditionPicker")
                 } header: {
                     Text("Physical Properties")
                 }
@@ -151,6 +160,7 @@ public struct EditItemSheet: View {
                         ),
                         error: viewModel.validationErrors["quantity"]
                     )
+                    .accessibilityIdentifier("edit.quantityStepper")
 
                     EditableCurrencyField(
                         title: "Estimated Value",
@@ -160,6 +170,7 @@ public struct EditItemSheet: View {
                         ),
                         error: viewModel.validationErrors["estimatedValue"]
                     )
+                    .accessibilityIdentifier("edit.valueField")
                 } header: {
                     Text("Value")
                 } footer: {
@@ -199,6 +210,7 @@ public struct EditItemSheet: View {
                         viewModel.cancelFlow()
                         dismiss()
                     }
+                    .accessibilityIdentifier("edit.cancelButton")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -210,6 +222,7 @@ public struct EditItemSheet: View {
                             }
                         }
                     }
+                    .accessibilityIdentifier("edit.saveButton")
                     .buttonStyle(.borderedProminent)
                     .tint(Color.successColor)
                     .disabled(!viewModel.validationErrors.isEmpty || viewModel.state == .saving)

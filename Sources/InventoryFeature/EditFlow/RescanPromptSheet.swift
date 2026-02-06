@@ -49,6 +49,17 @@ public struct RescanPromptSheet: View {
                 .tint(.orange)
 
                 Button {
+                    viewModel.state = .editing
+                } label: {
+                    Text("Edit Without Rescan")
+                        .font(.body.weight(.medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("edit.skipRescanButton")
+
+                Button {
                     viewModel.cancelFlow()
                     dismiss()
                 } label: {

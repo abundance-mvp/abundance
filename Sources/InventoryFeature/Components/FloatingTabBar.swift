@@ -72,6 +72,7 @@ public struct FloatingTabBar: View {
                     .matchedGeometryEffect(id: "selectedTab", in: tabNamespace)
             }
         }
+        .accessibilityIdentifier("tab.\(item.title.lowercased())")
         .accessibilityLabel("\(item.title), tab \(index + 1) of \(items.count)")
         .accessibilityHint("Double tap to switch to this tab")
         .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)

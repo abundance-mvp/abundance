@@ -24,7 +24,6 @@ struct ItemCard: View {
         cardContent
             .animation(reduceMotion ? nil : .brandSnappy, value: isPressed)
             .animation(reduceMotion ? nil : .brandSnappy, value: isSelected)
-            .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityDescription)
             .accessibilityAddTraits(.isButton)
             .modifier(SelectionModeContextMenuModifier(
@@ -40,11 +39,11 @@ struct ItemCard: View {
     /// This allows NavigationLink to work when ItemCard is used as its label
     @ViewBuilder
     private var cardContent: some View {
-        if let onTap = onTap {
+        if onTap != nil {
             // Selection mode or explicit tap handler - use Button
+            // handleTap() delegates to onTap?() internally
             Button(action: {
                 handleTap()
-                onTap()
             }) {
                 cardVisual
             }

@@ -77,6 +77,7 @@ public struct ItemDetailView: View {
                             Text(item.name ?? "Unnamed Item")
                                 .font(.title.weight(.bold))
                                 .foregroundStyle(.primary)
+                                .accessibilityIdentifier("detail.itemName")
 
                             Spacer()
 
@@ -86,7 +87,9 @@ public struct ItemDetailView: View {
                                 Image(systemName: "pencil")
                                     .font(.title3)
                                     .foregroundStyle(.primary)
+                                    .frame(minWidth: 44, minHeight: 44)
                             }
+                            .accessibilityIdentifier("detail.editButton")
                             .accessibilityLabel("Edit item")
                         }
 

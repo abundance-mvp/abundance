@@ -89,6 +89,7 @@ public struct ProfileView: View {
                     title: "Notifications",
                     action: { /* Navigate to notifications settings */ }
                 )
+                .accessibilityIdentifier("profile.notifications")
 
                 Divider()
                     .padding(.leading, 48)
@@ -98,6 +99,7 @@ public struct ProfileView: View {
                     title: "Privacy",
                     action: { /* Navigate to privacy settings */ }
                 )
+                .accessibilityIdentifier("profile.privacy")
 
                 Divider()
                     .padding(.leading, 48)
@@ -107,6 +109,7 @@ public struct ProfileView: View {
                     title: "Help",
                     action: { /* Navigate to help */ }
                 )
+                .accessibilityIdentifier("profile.help")
             }
             .adaptiveGlass(cornerRadius: 16)
         }
@@ -149,6 +152,7 @@ public struct ProfileView: View {
             .padding(.vertical, 16)
             .adaptiveGlass(cornerRadius: 16)
         }
+        .accessibilityIdentifier("profile.signOutButton")
         .accessibilityLabel("Sign out")
         .accessibilityHint("Double tap to sign out of your account")
     }
@@ -235,6 +239,7 @@ private struct ExportButton: View {
             .adaptiveGlass(cornerRadius: 16)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("profile.export\(format.rawValue)")
         .accessibilityLabel("Export as \(format.rawValue)")
     }
 
