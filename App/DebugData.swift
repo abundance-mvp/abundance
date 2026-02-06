@@ -105,14 +105,11 @@ enum SimulatorItemFactory {
 
     /// Returns a file URL string for a bundled debug image, with picsum fallback.
     private static func imageUrl(for name: String) -> String {
-        // SPM uses Bundle.module; Xcode project uses Bundle.main
-        let url: URL? = {
-            #if SWIFT_PACKAGE
-            return Bundle.module.url(forResource: name, withExtension: "jpeg")
-            #else
-            return Bundle.main.url(forResource: name, withExtension: "jpeg")
-            #endif
-        }()
+        // Xcode project copies DebugResources as a folder → images in subdirectory
+        // SPM .process() flattens resources into Bundle.module root
+        let url: URL? =
+            Bundle.main.url(forResource: name, withExtension: "jpeg", subdirectory: "DebugResources")
+            ?? Bundle.main.url(forResource: name, withExtension: "jpeg")
         return url?.absoluteString ?? "https://picsum.photos/seed/\(name)/400/400"
     }
 
