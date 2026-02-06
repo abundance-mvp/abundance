@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 import InventoryFeature
 import ProfileFeature
 
@@ -40,6 +41,7 @@ public struct MainTabView: View {
                 .accessibilityIdentifier("tab.profile")
                 .tag(Tab.profile)
         }
+        .tint(Color.salmon)
     }
 }
 
