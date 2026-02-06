@@ -51,6 +51,9 @@ public struct InventoryView: View {
                             items: viewModel.filteredItems,
                             isSelectionMode: isSelectionMode,
                             selectedItemIds: $selectedItemIds,
+                            onRecatalog: { item in
+                                Task { await viewModel.recatalogItem(item) }
+                            },
                             onDelete: { item in
                                 itemToDelete = item
                                 showDeleteConfirmation = true
@@ -77,8 +80,7 @@ public struct InventoryView: View {
                             }
                         }
                         .buttonStyle(.borderedProminent)
-                        .controlSize(.regular)
-                        .frame(minHeight: 44)
+                        .controlSize(.large)
                         .tint(Color.accentPrimary)
                         .accessibilityIdentifier("inventory.selectButton")
                         .accessibilityHint(
@@ -179,6 +181,7 @@ private struct ItemGridView: View {
     let items: [Item]
     let isSelectionMode: Bool
     @Binding var selectedItemIds: Set<String>
+    let onRecatalog: (Item) -> Void
     let onDelete: (Item) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -205,10 +208,14 @@ private struct ItemGridView: View {
                     } else {
                         // Normal mode with navigation
                         NavigationLink {
-                            ItemDetailView(item: item)
+                            ItemDetailView(
+                                item: item,
+                                onRecatalog: { onRecatalog(item) }
+                            )
                         } label: {
                             ItemCard(
                                 item: item,
+                                onRecatalog: { onRecatalog(item) },
                                 onDelete: { onDelete(item) }
                             )
                         }
@@ -217,9 +224,9 @@ private struct ItemGridView: View {
                     }
                 }
             }
-            .accessibilityIdentifier("inventory.grid")
             .padding()
         }
+        .accessibilityIdentifier("inventory.grid")
     }
 }
 

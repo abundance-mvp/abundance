@@ -4,6 +4,7 @@ import Persistence
 
 public struct ItemDetailView: View {
     public let item: Item
+    public var onRecatalog: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollOffset: CGFloat = 0
@@ -12,9 +13,11 @@ public struct ItemDetailView: View {
     @State private var showRescanCamera = false
     @State private var showRescanComparison = false
     @State private var showEditSheet = false
+    @State private var showRecatalogConfirmation = false
 
-    public init(item: Item) {
+    public init(item: Item, onRecatalog: (() -> Void)? = nil) {
         self.item = item
+        self.onRecatalog = onRecatalog
     }
 
     public var body: some View {
@@ -80,6 +83,19 @@ public struct ItemDetailView: View {
                                 .accessibilityIdentifier("detail.itemName")
 
                             Spacer()
+
+                            if onRecatalog != nil {
+                                Button {
+                                    showRecatalogConfirmation = true
+                                } label: {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                        .font(.title3)
+                                        .foregroundStyle(.primary)
+                                        .frame(minWidth: 44, minHeight: 44)
+                                }
+                                .accessibilityIdentifier("detail.recatalogButton")
+                                .accessibilityLabel("Re-catalog item")
+                            }
 
                             Button {
                                 startEditFlow()
@@ -225,6 +241,18 @@ public struct ItemDetailView: View {
                             handleStateChange(newState)
                         }
                 }
+            }
+            .confirmationDialog(
+                "Re-catalog Item",
+                isPresented: $showRecatalogConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Re-catalog") {
+                    onRecatalog?()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will re-process the item through the AI pipeline. Existing metadata will be replaced with new results.")
             }
         }
     }

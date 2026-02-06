@@ -134,6 +134,17 @@ public final class InventoryViewModel {
         }
     }
 
+    /// Re-catalogs an item by resetting its status to pending
+    /// - Parameter item: The item to re-catalog
+    /// - Note: Triggers the AI pipeline to re-process the item
+    public func recatalogItem(_ item: Item) async {
+        do {
+            try await itemRepository.rescanItem(item)
+        } catch {
+            deleteError = "Failed to re-catalog item: \(error.localizedDescription)"
+        }
+    }
+
     // MARK: - Private Methods
 
     /// Real-time listener for items

@@ -25,22 +25,22 @@ struct E2ETestMainTabView: View {
             InventoryView(onOpenCamera: { selectedTab = .camera })
                 .tabItem {
                     Label("Catalog", systemImage: "square.grid.2x2.fill")
-                        .accessibilityIdentifier("tab.catalog")
                 }
+                .accessibilityIdentifier("tab.catalog")
                 .tag(Tab.catalog)
 
             E2EImageInjectionView(onDone: { selectedTab = .catalog })
                 .tabItem {
                     Label("Camera", systemImage: "camera.fill")
-                        .accessibilityIdentifier("tab.camera")
                 }
+                .accessibilityIdentifier("tab.camera")
                 .tag(Tab.camera)
 
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
-                        .accessibilityIdentifier("tab.profile")
                 }
+                .accessibilityIdentifier("tab.profile")
                 .tag(Tab.profile)
         }
     }

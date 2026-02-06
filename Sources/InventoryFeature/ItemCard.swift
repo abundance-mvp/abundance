@@ -8,6 +8,7 @@ struct ItemCard: View {
     let item: Item
     var onTap: (() -> Void)?
     var onEdit: (() -> Void)?
+    var onRecatalog: (() -> Void)?
     var onDelete: (() -> Void)?
 
     /// Whether the card is in multi-select mode
@@ -30,6 +31,7 @@ struct ItemCard: View {
             .modifier(SelectionModeContextMenuModifier(
                 isSelectionMode: isSelectionMode,
                 onEdit: onEdit,
+                onRecatalog: onRecatalog,
                 onDelete: onDelete
             ))
     }
@@ -308,6 +310,7 @@ private struct StatusBadge: View {
 private struct SelectionModeContextMenuModifier: ViewModifier {
     let isSelectionMode: Bool
     let onEdit: (() -> Void)?
+    let onRecatalog: (() -> Void)?
     let onDelete: (() -> Void)?
 
     func body(content: Content) -> some View {
@@ -322,6 +325,14 @@ private struct SelectionModeContextMenuModifier: ViewModifier {
                         onEdit()
                     } label: {
                         Label("Edit", systemImage: "pencil")
+                    }
+                }
+
+                if let onRecatalog = onRecatalog {
+                    Button {
+                        onRecatalog()
+                    } label: {
+                        Label("Re-catalog", systemImage: "arrow.triangle.2.circlepath")
                     }
                 }
 

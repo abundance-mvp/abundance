@@ -70,8 +70,6 @@
 | `profile.privacy` | Privacy settings row |
 | `profile.help` | Help settings row |
 | `profile.exportCSV` | Export CSV button |
-| `profile.exportJSON` | Export JSON button |
-| `profile.exportPDF` | Export PDF button |
 | `profile.signOutButton` | Sign Out button |
 
 ---
@@ -275,7 +273,7 @@
 - `profile.userInfoCard` visible
 - `profile.signOutButton` visible
 - Settings rows visible: `profile.notifications`, `profile.privacy`, `profile.help`
-- Export buttons visible: `profile.exportCSV`, `profile.exportJSON`, `profile.exportPDF`
+- Export button visible: `profile.exportCSV`
 
 **Note:** Settings rows (Notifications, Privacy, Help) are placeholder - just verify they render, don't test navigation.
 
@@ -381,6 +379,15 @@
 
 ---
 
+## Known Limitations
+
+| Issue | Workaround |
+|---|---|
+| SwiftUI toolbar buttons (`edit.cancelButton`, `edit.saveButton`) not exposed as children in the AX tree | Identifiers are correctly applied in code; this is a SwiftUI accessibility limitation. Assert by label text ("Cancel", "Save") instead. |
+| Tab bar identifiers require `.accessibilityIdentifier()` on the tab content view, not on the `Label` inside `.tabItem {}` | Fixed in code — identifiers moved to content view level (matching `MainTabView.swift` pattern). |
+
+---
+
 ## Execution Model
 
 When the user says "run the test scenarios" or invokes `/device-tester`:
@@ -403,5 +410,6 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 
 | Date | Change |
 |---|---|
+| 2026-02-06 | Fixed 7 AXe findings: tab IDs, grid ID, recatalog button/context menu, CSV-only export, select button height, known limitations |
 | 2026-02-05 | Added re-catalog identifiers, updated Scenario 8 & 12 for re-catalog flow |
 | 2026-02-05 | Initial creation with 13 scenarios |

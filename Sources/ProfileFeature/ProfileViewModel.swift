@@ -11,8 +11,6 @@ import Persistence
 /// Export format options for user data
 public enum ExportFormat: String, CaseIterable, Sendable {
     case csv = "CSV"
-    case json = "JSON"
-    case pdf = "PDF"
 }
 
 /// ViewModel for Profile view
@@ -130,7 +128,7 @@ public final class ProfileViewModel {
     }
 
     /// Export user data in the specified format
-    /// - Parameter format: The export format (CSV, JSON, or PDF)
+    /// - Parameter format: The export format (CSV)
     public func exportData(format: ExportFormat) async {
         guard userId != nil else {
             error = "Authentication required"
