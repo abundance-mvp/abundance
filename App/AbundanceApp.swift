@@ -57,11 +57,15 @@ struct AbundanceApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
+                #if DEBUG && targetEnvironment(simulator)
+                DebugMainTabView()
+                #else
                 if authViewModel.isAuthenticated {
                     MainTabView()
                 } else {
                     SignInView(viewModel: authViewModel)
                 }
+                #endif
             }
         }
     }

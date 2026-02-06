@@ -146,6 +146,7 @@ let package: Package = Package(
                 "OnboardingFeature",
                 "CameraFeature",
                 "InventoryFeature",
+                "ProfileFeature",
                 "Persistence",
                 "VisionCore",
                 .product(name: "FirebaseCore", package: "firebase-ios-sdk"),
