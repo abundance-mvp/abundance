@@ -197,7 +197,8 @@ public struct SignInView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .adaptiveGlass(cornerRadius: 12)
+        .background(Color.cream, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.peach, lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(error.localizedDescription)")
     }

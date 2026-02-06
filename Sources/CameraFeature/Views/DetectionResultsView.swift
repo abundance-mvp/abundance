@@ -188,7 +188,7 @@ public struct DetectionResultsView: View {
                     onCatalogAll()
                 }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.accentPrimary)
                 .accessibilityIdentifier("detection.catalogAllButton")
             }
         }
@@ -271,11 +271,11 @@ struct BoundingBoxOverlay: View {
 
     private var borderColor: Color {
         if isCataloged {
-            return .green
+            return .successColor
         } else if isCataloging {
             return .yellow
         } else if isSelected {
-            return .blue
+            return .accentPrimary
         } else {
             return .white.opacity(0.8)
         }
@@ -316,7 +316,7 @@ struct DetectedObjectCard: View {
 
     private var backgroundFillColor: Color {
         if isSelected {
-            return Color.blue.opacity(0.1)
+            return Color.accentPrimary.opacity(0.1)
         } else {
             #if os(iOS)
             return Color(.secondarySystemBackground)
@@ -340,7 +340,7 @@ struct DetectedObjectCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 1)
+                .stroke(isSelected ? Color.accentPrimary : Color.clear, lineWidth: 1)
         )
     }
 
@@ -367,7 +367,7 @@ struct DetectedObjectCard: View {
         }
         .frame(width: 60, height: 60)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(isSelected ? Color.blue : .clear, lineWidth: 2))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(isSelected ? Color.accentPrimary : .clear, lineWidth: 2))
     }
 
     private var thumbnailPlaceholder: some View {
@@ -415,7 +415,7 @@ struct DetectedObjectCard: View {
         if isCataloged {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title2)
-                .foregroundStyle(.green)
+                .foregroundStyle(Color.successColor)
         } else if isCataloging {
             ProgressView()
         } else {
@@ -479,7 +479,7 @@ struct NoObjectsDetectedView: View {
     private func tipRow(icon: String, text: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.accentPrimary)
                 .frame(width: 20)
 
             Text(text)

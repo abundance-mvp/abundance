@@ -111,7 +111,8 @@ public struct ProfileView: View {
                 )
                 .accessibilityIdentifier("profile.help")
             }
-            .adaptiveGlass(cornerRadius: 16)
+            .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
         }
     }
 
@@ -141,7 +142,8 @@ public struct ProfileView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .adaptiveGlass(cornerRadius: 16)
+                .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
             }
             .buttonStyle(.plain)
             .contentShape(Rectangle())
@@ -165,7 +167,8 @@ public struct ProfileView: View {
             .foregroundStyle(Color.errorColor)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .adaptiveGlass(cornerRadius: 16)
+            .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
         }
         .accessibilityIdentifier("profile.signOutButton")
         .accessibilityLabel("Sign out")
