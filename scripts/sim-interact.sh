@@ -21,6 +21,7 @@ fi
 
 # --- Internal: map device coords to screen coords ---
 _sim_screen_coords() {
+    # NOTE: Hardcoded for iPhone 16 Pro @ 1x (402x874). Change these values for other devices.
     local DX=$1 DY=$2
     osascript -e "
 tell application \"System Events\"
@@ -135,18 +136,12 @@ sim_swipe() {
     esac
 }
 
-# Type text into a focused field
+# Type text into a focused field (uses cliclick to avoid shell injection)
 # Usage: sim_type "text to type"
 sim_type() {
     local TEXT="$1"
     _sim_focus
-    osascript -e "
-tell application \"System Events\"
-    tell process \"Simulator\"
-        keystroke \"$TEXT\"
-    end tell
-end tell
-" 2>/dev/null
+    cliclick t:"$TEXT"
 }
 
 # Press a special key

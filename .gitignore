@@ -1,6 +1,9 @@
 # Xcode - generated project (regenerate with: xcodegen generate)
 Abundance.xcodeproj/
 
+# XcodeBuildMCP (machine-local session config)
+.xcodebuildmcp/
+
 # Xcode user data (always ignored)
 *.xcworkspace/
 xcuserdata/

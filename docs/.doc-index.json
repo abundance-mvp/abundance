@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-01-19T17:31:13Z",
+  "generated": "2026-02-06T07:36:03Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -184,6 +184,21 @@
           "status": "Active",
           "related_branch": null,
           "merged": null
+        },
+        "PLAN-axe-test-followups.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-20-comprehensive-test-suite-plan.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-05-iteration-workflow-modernization-design.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
         }
       }
     },
@@ -206,6 +221,31 @@
           "merged": null
         },
         "2026-01-16-frozen-camera-after-error-dismiss.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-20-multi-select-fails-silently.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-20-item-images-missing-for-some-items.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-20-catalog-misidentification-swapped-crops.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-20-camera-stops-working-after-tab-switch.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-20-thumbnail-orientation-breaks-layout.md": {
           "status": "Open",
           "related_branch": null,
           "merged": null
