@@ -57,16 +57,36 @@ struct AbundanceApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                #if DEBUG && targetEnvironment(simulator)
-                DebugMainTabView()
-                #else
-                if authViewModel.isAuthenticated {
-                    MainTabView()
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("--e2e-test-mode") {
+                    E2ETestMainTabView()
+                } else if isSimulator {
+                    DebugMainTabView()
                 } else {
-                    SignInView(viewModel: authViewModel)
+                    authContent
                 }
+                #else
+                authContent
                 #endif
             }
         }
+    }
+
+    @ViewBuilder
+    private var authContent: some View {
+        if authViewModel.isAuthenticated {
+            MainTabView()
+        } else {
+            SignInView(viewModel: authViewModel)
+        }
+    }
+
+    /// Check if running on simulator at runtime
+    private var isSimulator: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return false
+        #endif
     }
 }

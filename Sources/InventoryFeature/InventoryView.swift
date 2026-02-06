@@ -77,6 +77,8 @@ public struct InventoryView: View {
                             }
                         }
                         .buttonStyle(.borderedProminent)
+                        .controlSize(.regular)
+                        .frame(minHeight: 44)
                         .tint(Color.accentPrimary)
                         .accessibilityIdentifier("inventory.selectButton")
                         .accessibilityHint(
