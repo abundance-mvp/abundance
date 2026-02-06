@@ -12,6 +12,7 @@ public struct InventoryView: View {
     @State private var showDeleteConfirmation = false
     @State private var showBulkDeleteConfirmation = false
     @State private var showDeleteErrorAlert = false
+    @State private var showRecatalogErrorAlert = false
     var onOpenCamera: (() -> Void)?
 
     public init(
@@ -144,6 +145,17 @@ public struct InventoryView: View {
             }
             .onChange(of: viewModel.deleteError) { _, newValue in
                 showDeleteErrorAlert = newValue != nil
+            }
+            // Re-catalog error alert
+            .alert("Re-catalog Failed", isPresented: $showRecatalogErrorAlert) {
+                Button("OK") {
+                    viewModel.recatalogError = nil
+                }
+            } message: {
+                Text(viewModel.recatalogError ?? "An error occurred")
+            }
+            .onChange(of: viewModel.recatalogError) { _, newValue in
+                showRecatalogErrorAlert = newValue != nil
             }
         }
     }

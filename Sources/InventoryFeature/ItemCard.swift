@@ -20,6 +20,7 @@ struct ItemCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isPressed: Bool = false
+    @State private var pressAnimationTask: Task<Void, Never>?
 
     var body: some View {
         cardContent
@@ -28,6 +29,9 @@ struct ItemCard: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityDescription)
             .accessibilityAddTraits(.isButton)
+            .onDisappear {
+                pressAnimationTask?.cancel()
+            }
             .modifier(SelectionModeContextMenuModifier(
                 isSelectionMode: isSelectionMode,
                 onEdit: onEdit,
@@ -233,8 +237,10 @@ struct ItemCard: View {
             }
             onTap?()
 
-            Task { @MainActor in
+            pressAnimationTask?.cancel()
+            pressAnimationTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(150))
+                guard !Task.isCancelled else { return }
                 withAnimation(.brandSnappy) {
                     isPressed = false
                 }
@@ -336,10 +342,12 @@ private struct SelectionModeContextMenuModifier: ViewModifier {
                     }
                 }
 
-                Button(role: .destructive) {
-                    onDelete?()
-                } label: {
-                    Label("Delete", systemImage: "trash")
+                if let onDelete = onDelete {
+                    Button(role: .destructive) {
+                        onDelete()
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
             }
         }

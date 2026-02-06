@@ -147,6 +147,7 @@ public struct ProfileView: View {
             .contentShape(Rectangle())
             .accessibilityIdentifier("profile.exportCSV")
             .accessibilityLabel("Export as CSV")
+            .accessibilityHint("Double tap to export your inventory data as a CSV file")
         }
     }
 
@@ -226,6 +227,7 @@ private struct SettingsRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+        .accessibilityHint("Double tap to open \(title.lowercased()) settings")
         .accessibilityAddTraits(.isButton)
     }
 }

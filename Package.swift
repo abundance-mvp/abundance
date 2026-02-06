@@ -155,6 +155,7 @@ let package: Package = Package(
                 .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
             ],
             path: "App",
+            exclude: ["Info.plist"],
             resources: [
                 .process("GoogleService-Info.plist"),
                 .process("Assets.xcassets"),

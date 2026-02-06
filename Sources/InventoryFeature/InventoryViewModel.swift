@@ -14,6 +14,7 @@ public final class InventoryViewModel {
     public var isLoading: Bool = false
     public var error: String?
     public var deleteError: String?
+    public var recatalogError: String?
     public var searchText: String = ""
 
     /// Filters items based on search text matching any searchable text field.
@@ -141,7 +142,7 @@ public final class InventoryViewModel {
         do {
             try await itemRepository.rescanItem(item)
         } catch {
-            deleteError = "Failed to re-catalog item: \(error.localizedDescription)"
+            recatalogError = "Failed to re-catalog item: \(error.localizedDescription)"
         }
     }
 
