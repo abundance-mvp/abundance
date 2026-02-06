@@ -106,7 +106,7 @@ public struct InventoryView: View {
                     itemToDelete = nil
                 }
             } message: { item in
-                let name = item.category ?? "this item"
+                let name = item.name ?? item.category ?? "this item"
                 Text("Are you sure you want to delete \"\(name)\"? This action cannot be undone.")
             }
             // Bulk delete confirmation

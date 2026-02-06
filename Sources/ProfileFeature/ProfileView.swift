@@ -234,11 +234,12 @@ private struct ExportButton: View {
                     .fontWeight(.medium)
                     .foregroundStyle(Color.textPrimary)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .padding(.vertical, 16)
             .adaptiveGlass(cornerRadius: 16)
         }
         .buttonStyle(.plain)
+        .contentShape(Rectangle())
         .accessibilityIdentifier("profile.export\(format.rawValue)")
         .accessibilityLabel("Export as \(format.rawValue)")
     }

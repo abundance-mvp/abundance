@@ -71,6 +71,7 @@ struct ItemCard: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: .infinity)
                             .frame(height: imageHeight)
                             .clipped()
                     case .failure:
