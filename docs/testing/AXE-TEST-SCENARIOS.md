@@ -81,13 +81,13 @@
 **Goal:** All 3 tabs are reachable and show correct content.
 
 **Steps:**
-1. `axe describe-ui` - verify "Tab Bar" group present
-2. Tap Catalog tab by coordinate (x=100, y=850)
-3. `axe describe-ui` - verify "Inventory" navigation title
-4. Tap Camera tab by coordinate (x=200, y=850)
-5. `axe describe-ui` - verify camera content ("Camera" heading or `camera.simulatorPlaceholder`)
-6. Tap Profile tab by coordinate (x=300, y=850)
-7. `axe describe-ui` - verify "Profile" navigation title
+1. `snapshot_ui` - verify tab bar area present
+2. `tap(x: 100, y: 850)` - Catalog tab
+3. `snapshot_ui` - verify "Inventory" navigation title
+4. `tap(x: 200, y: 850)` - Camera tab
+5. `snapshot_ui` - verify camera content ("Camera" heading or `camera.simulatorPlaceholder`)
+6. `tap(x: 300, y: 850)` - Profile tab
+7. `snapshot_ui` - verify "Profile" navigation title
 
 **Assertions:**
 - "Tab Bar" group exists in the AX tree
@@ -109,8 +109,8 @@
 **Precondition:** Fresh user or cleared inventory.
 
 **Steps:**
-1. Navigate to Catalog tab: `axe tap --id "tab.catalog"`
-2. `axe describe-ui` - inspect inventory state
+1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
+2. `snapshot_ui` - inspect inventory state
 
 **Assertions:**
 - `inventory.emptyState` is visible
@@ -128,11 +128,11 @@
 **Precondition:** 5+ items in account.
 
 **Steps:**
-1. Navigate to Catalog tab
-2. `axe describe-ui` - check grid and items
+1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
+2. `snapshot_ui` - check grid and items
 3. Count `inventory.item.*` identifiers
-4. `axe swipe --direction down` - scroll down
-5. `axe describe-ui` - check for additional items
+4. `swipe(direction: "up")` - scroll down (swipe up to scroll content down)
+5. `snapshot_ui` - check for additional items
 
 **Assertions:**
 - `inventory.grid` exists
@@ -149,15 +149,16 @@
 
 **Steps:**
 1. Navigate to Catalog tab (with items present)
-2. `axe describe-ui` - count initial items
-3. `axe tap --id "inventory.searchField"` - focus search
-4. `axe type --text "<known-item-term>"` - type a search term
-5. `axe describe-ui` - verify filtered results (fewer items)
-6. `axe tap --id "inventory.searchClearButton"` - clear search
-7. `axe describe-ui` - verify all items restored
-8. `axe tap --id "inventory.searchField"` - focus again
-9. `axe type --text "zzz_nonexistent_item_zzz"` - type nonsense
-10. `axe describe-ui` - verify empty search state (ContentUnavailableView)
+2. `snapshot_ui` - count initial items
+3. `tap(id: "inventory.searchField")` - focus search (MUST use id, not coordinates)
+4. `snapshot_ui` - confirm focus (AXValue changes from placeholder)
+5. `type_text("<known-item-term>")` - type a search term from a visible item's label
+6. `snapshot_ui` - verify filtered results (fewer items)
+7. `tap(id: "inventory.searchClearButton")` - clear search
+8. `snapshot_ui` - verify all items restored
+9. `tap(id: "inventory.searchField")` - focus again
+10. `type_text("zzz_nonexistent_item_zzz")` - type nonsense
+11. `snapshot_ui` - verify empty search state (ContentUnavailableView)
 
 **Assertions:**
 - Search filters items (count decreases with relevant query)
@@ -174,10 +175,10 @@
 
 **Steps:**
 1. Navigate to Catalog tab (with items present)
-2. Find first `inventory.item.*` identifier
-3. `axe tap --id "inventory.item.<id>"` - tap item
-4. `axe describe-ui` - inspect detail view
-5. Scroll down to see all metadata
+2. `snapshot_ui` - find first `inventory.item.*` identifier
+3. `tap(id: "inventory.item.<id>")` - tap item
+4. `snapshot_ui` - inspect detail view
+5. `swipe(direction: "up")` - scroll down to see all metadata
 
 **Assertions:**
 - `detail.editButton` visible
@@ -195,19 +196,22 @@
 
 **Steps:**
 1. Navigate to an item's detail view (see Scenario 5)
-2. `axe tap --id "detail.editButton"` - tap edit
-3. Rescan prompt sheet appears - tap "Skip, Edit Manually" or equivalent
-4. `axe describe-ui` - verify edit sheet
-5. Verify all edit field identifiers present
-6. `axe tap --id "edit.nameField"` - focus name field
-7. `axe type --text " modified"` - append text
-8. `axe tap --id "edit.cancelButton"` - cancel edits
-9. `axe describe-ui` - verify back on detail view, name unchanged
+2. `tap(id: "detail.editButton")` - tap edit
+3. `snapshot_ui` - verify **rescan prompt sheet** appears (NOT the edit form directly — see Known Limitations)
+4. Verify rescan prompt identifiers: `edit.takeNewPhotoButton`, `edit.skipRescanButton`, `edit.cancelButton`
+5. `tap(id: "edit.skipRescanButton")` - skip rescan to reach edit form
+6. `snapshot_ui` - verify edit form with field identifiers
+7. Verify all edit field identifiers present
+8. `tap(id: "edit.nameField")` - focus name field
+9. `type_text(" modified")` - append text
+10. Dismiss edit form: `swipe(x: 200, y: 100, direction: "down", duration: 0.3)` — toolbar Cancel/Save buttons are NOT in AX tree (see Known Limitations)
+11. `snapshot_ui` - verify back on detail view, name unchanged
 
 **Assertions:**
-- `edit.nameField`, `edit.brandField`, `edit.modelField` etc. all present
-- `edit.saveButton`, `edit.cancelButton` visible in toolbar
-- Cancel discards changes (name reverts)
+- Rescan prompt sheet appears first with `edit.skipRescanButton`
+- `edit.nameField`, `edit.brandField`, `edit.modelField` etc. all present in edit form
+- `edit.saveButton`, `edit.cancelButton` identifiers exist in code but are NOT accessible via AXe (SwiftUI toolbar limitation)
+- Swipe-to-dismiss discards changes (name reverts)
 
 **Skip if:** No items, or edit flow not yet implemented.
 
@@ -219,15 +223,15 @@
 
 **Steps:**
 1. Navigate to Catalog tab (with 2+ items)
-2. `axe tap --id "inventory.selectButton"` - enter selection mode
-3. `axe describe-ui` - verify button text changed to "Done"
-4. Tap two item cards to select them
-5. `axe describe-ui` - verify checkmarks appear, selection count in toolbar
-6. `axe tap --id "inventory.bulkDeleteButton"` - tap bulk delete
-7. `axe describe-ui` - verify confirmation dialog appears
+2. `tap(id: "inventory.selectButton")` - enter selection mode
+3. `snapshot_ui` - verify button label changed to "Done"
+4. `tap(id: "inventory.item.<id1>")` then `tap(id: "inventory.item.<id2>")` - select two items
+5. `snapshot_ui` - verify "selected" in item labels, selection count in delete button
+6. `tap(id: "inventory.bulkDeleteButton")` - tap bulk delete
+7. `snapshot_ui` - verify confirmation dialog appears
 8. Tap "Cancel" in the dialog
-9. `axe tap --id "inventory.deselectAllButton"` - deselect all
-10. `axe tap --id "inventory.selectButton"` - exit selection mode (tap "Done")
+9. `tap(id: "inventory.deselectAllButton")` - deselect all
+10. `tap(id: "inventory.selectButton")` - exit selection mode (tap "Done")
 
 **Assertions:**
 - Button toggles between "Select" and "Done"
@@ -246,18 +250,18 @@
 
 **Steps:**
 1. Navigate to Catalog tab (with items, NOT in selection mode)
-2. Find an item: `inventory.item.<id>`
-3. `axe long-press --id "inventory.item.<id>"` - long press
-4. `axe describe-ui` - verify context menu
-5. Check for "Delete" menu option
+2. `snapshot_ui` - find an item `inventory.item.<id>` and note its frame center coordinates
+3. `long_press(x: <center_x>, y: <center_y>, duration: 1500)` — `long_press` does NOT accept an `id` parameter, must use coordinates calculated from item's AXFrame (x + width/2, y + height/2). See Known Limitations.
+4. `snapshot_ui` - verify context menu
+5. Check for "Delete" and "Re-catalog" menu options
 6. Tap "Delete" if present
-7. `axe describe-ui` - verify confirmation dialog
-8. Tap "Cancel" to dismiss
+7. `snapshot_ui` - verify confirmation dialog
+8. Tap "Cancel" to dismiss (or tap "Dismiss context menu" button if no action taken)
 
 **Assertions:**
 - Context menu appears with "Delete" option
 - "Re-catalog" option present in context menu
-- "Edit" option may or may not be present (depends on implementation)
+- "Preview" option present in context menu
 - Delete shows confirmation dialog
 - Cancel dismisses without deleting
 
@@ -270,8 +274,8 @@
 **Goal:** Profile screen shows user info, settings, export, sign out.
 
 **Steps:**
-1. `axe tap --id "tab.profile"` - navigate to Profile tab
-2. `axe describe-ui` - inspect profile screen
+1. `tap(x: 300, y: 850)` - navigate to Profile tab (coordinate-based, see Known Limitations)
+2. `snapshot_ui` - inspect profile screen
 
 **Assertions:**
 - `profile.userInfoCard` visible
@@ -288,9 +292,9 @@
 **Goal:** No zero-sized or off-screen interactive elements.
 
 **Steps:**
-1. `axe describe-ui --format json` - get structured UI tree
-2. Parse all interactive elements (buttons, links, text fields)
-3. Check frame dimensions
+1. `snapshot_ui` - get structured UI tree on each screen visited during prior scenarios
+2. Parse all interactive elements (buttons, links, text fields) from collected AX data
+3. Check frame dimensions from AXFrame values
 
 **Assertions:**
 - All buttons/links have `frame.width >= 44` and `frame.height >= 44` (Apple HIG minimum touch target)
@@ -303,15 +307,15 @@
 
 ### Scenario 11: Accessibility Identifier Audit
 
-**Goal:** All identifiers from Step 1 are present in the accessibility tree.
+**Goal:** All identifiers from the Identifier Reference are present in the accessibility tree.
 
 **Steps:**
-1. Navigate to Catalog tab: `axe tap --id "tab.catalog"`
-2. `axe describe-ui` - check for inventory identifiers
-3. Navigate to Profile tab: `axe tap --id "tab.profile"`
-4. `axe describe-ui` - check for profile identifiers
+1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
+2. `snapshot_ui` - check for inventory identifiers
+3. Navigate to Profile tab: `tap(x: 300, y: 850)`
+4. `snapshot_ui` - check for profile identifiers
 5. If items exist, tap into detail view and check detail identifiers
-6. If edit flow is accessible, check edit identifiers
+6. If edit flow is accessible, check edit identifiers (remember two-step flow: rescan prompt → edit form)
 
 **Output:** Report listing:
 - Found identifiers (with screen)
@@ -326,9 +330,12 @@
 
 | Issue | Workaround |
 |---|---|
-| SwiftUI toolbar buttons (`edit.cancelButton`, `edit.saveButton`) not exposed as children in the AX tree | Identifiers are correctly applied in code; this is a SwiftUI accessibility limitation. Assert by label text ("Cancel", "Save") instead. |
-| SwiftUI `TabView` tab bar buttons not traversable by `snapshot_ui`/AXe | Identifiers (`tab.catalog`, `tab.camera`, `tab.profile`) are correctly set on content views in code. `UITabBarButton` elements are not exposed through the AXe accessibility hierarchy. Use coordinate-based tapping: Catalog (100,850), Camera (200,850), Profile (300,850). Works correctly in XCUITest via `tabBars.buttons["Catalog"]`. |
+| SwiftUI toolbar buttons (`edit.cancelButton`, `edit.saveButton`) not exposed as children in the AX tree when inside NavigationBar | Identifiers are correctly applied in code; this is a SwiftUI accessibility limitation. The `edit.cancelButton` on the **rescan prompt sheet** IS accessible — only the edit form's NavigationBar toolbar buttons are hidden. To dismiss the edit form, **swipe down** (y=100 → y=800, duration 0.3s). |
+| SwiftUI `TabView` tab bar buttons not traversable by `snapshot_ui`/AXe | Identifiers (`tab.catalog`, `tab.camera`, `tab.profile`) are correctly set on content views in code. `UITabBarButton` elements are not exposed through the AXe accessibility hierarchy. Use coordinate-based tapping: **Catalog (100,850), Camera (200,850), Profile (300,850)**. If tap doesn't register (scrollable content intercepts), take a `screenshot` to verify tab bar position and adjust y (try 840-860). Works correctly in XCUITest via `tabBars.buttons["Catalog"]`. |
 | `inventory.grid` identifier on `LazyVGrid` not exposed as a separate AX element | Grid items appear as direct children of the Application. The `LazyVGrid` container is not represented as a distinct element in the AX tree. Verify grid by checking for multiple `inventory.item.*` identifiers instead. |
+| Search field requires tap-by-ID before typing | The SwiftUI `.searchable` field does not activate from a coordinate tap alone. Always use `tap(id: "inventory.searchField")` first, confirm focus via `snapshot_ui` (AXValue changes from placeholder to empty or typed text), then use `type_text`. |
+| Edit flow has a rescan prompt before the edit form | Tapping `detail.editButton` opens a rescan prompt sheet with `edit.takeNewPhotoButton`, `edit.skipRescanButton`, and `edit.cancelButton`. Tap `edit.skipRescanButton` ("Edit Without Rescan") to reach the actual edit form. |
+| `long_press` requires explicit coordinates, not element ID | The XcodeBuildMCP `long_press` tool only accepts `x`, `y`, `duration` — no `id` parameter. Calculate coordinates from the target element's frame center (x + width/2, y + height/2). Use duration 1500ms. |
 
 ---
 
@@ -340,9 +347,9 @@ When the user says "run the test scenarios" or invokes `/device-tester`:
 2. Claude runs each scenario from this doc sequentially
 3. For each scenario, Claude:
    - Checks skip conditions (adapts to current app state)
-   - Runs the AXe commands
-   - Inspects `describe-ui` output for assertions
-   - Takes screenshots at key points
+   - Uses XcodeBuildMCP tools: `snapshot_ui`, `tap`, `swipe`, `long_press`, `type_text`
+   - Inspects `snapshot_ui` output for assertions
+   - Takes `screenshot` at key points
    - Reports PASS / FAIL / SKIP with details
 4. At the end, Claude summarizes: X passed, Y failed, Z skipped, with screenshots
 
@@ -354,6 +361,7 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 
 | Date | Change |
 |---|---|
+| 2026-02-07 | Updated all scenario steps from stale `axe` CLI syntax to XcodeBuildMCP tool names (`snapshot_ui`, `tap`, `swipe`, `long_press`, `type_text`). Expanded Known Limitations to 6 entries (search field, edit flow, long_press). Updated Scenario 6 for two-step edit flow and swipe-to-dismiss. Updated Scenario 8 for coordinate-based long_press. Updated Scenarios 1, 2, 9, 11 for coordinate-based tab navigation. |
 | 2026-02-07 | Removed Scenario 12 (Catalog Processing States) — requires cloud API calls, violates no-network-calls policy. Now 11 scenarios total. |
 | 2026-02-07 | Removed Scenario 12 (Deep Catalog Trigger) — catalog pipeline requires Cloud Functions/network, not suitable for AXe testing. Renumbered Scenario 13 → 12. Now 12 scenarios total. |
 | 2026-02-07 | Fixed 4 AXe issues: search clear button 44x44 touch target, item IDs in selection mode, tab IDs on content views, Scenario 12 rewritten for simulator re-catalog flow. Documented 3 known limitations (tab bar, toolbar buttons, grid container). |
