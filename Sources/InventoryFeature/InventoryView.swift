@@ -189,8 +189,7 @@ public struct InventoryView: View {
             .disabled(selectedItemIds.isEmpty)
         }
         .padding()
-        .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
+        .abundanceCardStyle()
     }
 }
 

@@ -74,8 +74,7 @@ public struct RescanPromptSheet: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 32)
         }
-        .background(Color.cream, in: RoundedRectangle(cornerRadius: 32, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 32, style: .continuous).stroke(Color.peach, lineWidth: 1))
+        .abundanceCardStyle(cornerRadius: 32)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .interactiveDismissDisabled(viewModel.state == .processing)

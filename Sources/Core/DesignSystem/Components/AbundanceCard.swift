@@ -26,6 +26,29 @@ public struct AbundanceCard<Content: View>: View {
     }
 }
 
+// MARK: - AbundanceCard Modifier
+
+/// ViewModifier that applies cream background + peach stroke card styling
+/// Complements AbundanceCard wrapper — use when you need modifier syntax
+struct AbundanceCardModifier: ViewModifier {
+    var cornerRadius: CGFloat = 16
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        content
+            .background(Color.cream, in: shape)
+            .overlay(shape.stroke(Color.peach, lineWidth: contrast == .increased ? 2 : 1))
+    }
+}
+
+extension View {
+    /// Apply standard Abundance card styling (cream background, peach stroke)
+    public func abundanceCardStyle(cornerRadius: CGFloat = 16) -> some View {
+        modifier(AbundanceCardModifier(cornerRadius: cornerRadius))
+    }
+}
+
 #Preview("AbundanceCard") {
     VStack(spacing: 16) {
         AbundanceCard {

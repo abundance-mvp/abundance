@@ -302,8 +302,7 @@ public struct ItemDetailView: View {
                         }
                     }
                     .padding(24)
-                    .background(Color.cream, in: metadataCardShape)
-                    .overlay(metadataCardShape.stroke(Color.peach, lineWidth: 1))
+                    .abundanceCardStyle(cornerRadius: 24)
                     .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: -8)
                     .padding(.horizontal, 16)
                     .offset(y: -60) // Overlap hero
@@ -474,9 +473,6 @@ public struct ItemDetailView: View {
         value.formatted(.currency(code: "USD"))
     }
 
-    private var metadataCardShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: 24)
-    }
 }
 
 // MARK: - Scroll Offset Tracking

@@ -48,8 +48,7 @@ public struct UserInfoCard: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity)
-        .background(Color.cream, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(Color.peach, lineWidth: 1))
+        .abundanceCardStyle(cornerRadius: 20)
         .accessibilityIdentifier("profile.userInfoCard")
         .accessibilityElement(children: .combine)
         .accessibilityLabel("User profile: \(displayName), \(email), \(itemCount) items")

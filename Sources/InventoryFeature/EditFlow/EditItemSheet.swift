@@ -433,7 +433,7 @@ private struct SavingOverlay: View {
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
             }
             .padding(24)
-            .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .abundanceCardStyle()
         }
     }
 }

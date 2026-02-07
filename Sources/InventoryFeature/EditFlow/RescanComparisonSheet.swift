@@ -95,8 +95,7 @@ public struct RescanComparisonSheet: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
-                .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
+                .abundanceCardStyle()
             }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -185,8 +184,7 @@ private struct ComparisonCard: View {
             }
         }
         .padding(12)
-        .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.peach, lineWidth: 1))
+        .abundanceCardStyle()
         .overlay {
             if isHighlighted {
                 RoundedRectangle(cornerRadius: 16)
@@ -298,8 +296,7 @@ private struct FieldChangesSummary: View {
                     }
                 }
                 .padding(12)
-                .background(Color.cream, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.peach, lineWidth: 1))
+                .abundanceCardStyle(cornerRadius: 12)
             }
         }
     }
