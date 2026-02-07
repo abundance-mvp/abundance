@@ -9,6 +9,7 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 ├── skills/                    # Auto-loaded context skills
 │   ├── ios-superpowers/       # iOS development orchestrator
 │   ├── backend-superpowers/   # Firebase + GCP unified skill (NEW)
+│   ├── troubleshoot/          # End-to-end troubleshooting pipeline
 │   ├── device-tester.md       # Physical device testing
 │   ├── gemini-integration/    # AI pipeline patterns
 │   ├── firebase-superpowers/  # DEPRECATED → use backend-superpowers
@@ -31,6 +32,7 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 |-------|---------|-------------|
 | `ios-superpowers` | iOS development orchestrator | ALL iOS/Swift work |
 | `backend-superpowers` | Firebase + GCP + Gemini operations | ALL backend work (auto-routes to gemini-integration) |
+| `troubleshoot` | End-to-end troubleshooting pipeline | Build failures, runtime crashes, test failures, production errors |
 | `device-tester` | Physical device testing | Device debugging |
 
 ### Sub-Skills (Auto-Routed)
@@ -59,6 +61,9 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 
 /project:device-tester
   Physical device testing workflow
+
+/project:troubleshoot <issue-description>
+  End-to-end troubleshooting: triage → debug → verify → test → review → report
 ```
 
 ### Backend Operations

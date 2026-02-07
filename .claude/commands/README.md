@@ -47,6 +47,21 @@ Iterative testing on physical device with crash analysis and screenshot debuggin
 
 ---
 
+### Troubleshooting
+
+#### `/project:troubleshoot <issue-description>`
+
+End-to-end troubleshooting pipeline: triage, debug via superpowers skills, verify fix, write regression test, code review, and report.
+
+**Examples:**
+- `/project:troubleshoot "camera crash on tab switch"` — iOS domain, routes to `ios-superpowers debug`
+- `/project:troubleshoot "Cloud Function 403"` — Backend domain, routes to `backend-superpowers`
+- `/project:troubleshoot "upload 403 + function never fires"` — Multi-domain, parallel agents
+
+**See:** `.claude/skills/troubleshoot/SKILL.md`
+
+---
+
 ### Infrastructure Commands
 
 #### `/project:gcp-deploy <function>`
