@@ -11,6 +11,7 @@ let package: Package = Package(
         .library(name: "ProfileFeature", targets: ["ProfileFeature"]),
         .library(name: "Persistence", targets: ["Persistence"]),
         .library(name: "VisionCore", targets: ["VisionCore"]),
+        .library(name: "EdgeTAMFeature", targets: ["EdgeTAMFeature"]),
         .library(name: "Core", targets: ["Core"]),
         .executable(name: "AbundanceApp", targets: ["AbundanceApp"])
     ],
@@ -44,6 +45,7 @@ let package: Package = Package(
             dependencies: [
                 "Persistence",
                 "VisionCore",
+                "EdgeTAMFeature",
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             swiftSettings: [
@@ -126,6 +128,20 @@ let package: Package = Package(
             resources: [
                 .copy("Resources")
             ]
+        ),
+        .target(
+            name: "EdgeTAMFeature",
+            dependencies: ["VisionCore"],
+            resources: [
+                .process("Resources")
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
+            ]
+        ),
+        .testTarget(
+            name: "EdgeTAMFeatureTests",
+            dependencies: ["EdgeTAMFeature"]
         ),
         .target(
             name: "Core",
