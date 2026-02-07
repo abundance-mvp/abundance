@@ -48,7 +48,7 @@ final class SimulatorItemRepository: @preconcurrency ItemRepository {
 
     func createItem(userId: String, imageUrl: String) async throws -> String {
         let id = UUID().uuidString
-        let item = Item(id: id, userId: userId, imageUrl: imageUrl, status: .pending)
+        let item = Item(id: id, userId: userId, imageUrl: imageUrl, status: .processing)
         items.append(item)
         subject.send(items)
         return id
@@ -76,6 +76,18 @@ final class SimulatorItemRepository: @preconcurrency ItemRepository {
 
     func rescanItem(_ item: Item) async throws {
         // No-op for simulator
+    }
+
+    func refreshImageUrl(id: String) async throws -> String? {
+        items.first { $0.id == id }?.imageUrl
+    }
+
+    func requestDeepScan(id: String) async throws {
+        if let index = items.firstIndex(where: { $0.id == id }) {
+            items[index].deepScanRequested = true
+            items[index].status = .processing
+            subject.send(items)
+        }
     }
 
     func deleteItem(id: String) async throws {
@@ -116,7 +128,7 @@ enum SimulatorItemFactory {
     static func makeItems() -> [Item] {
         let now = Date()
         return [
-            // 1. MelodySusie nail drill — pink, boxed, new condition
+            // 1. MelodySusie nail drill — pink, boxed, new condition (multi-photo)
             Item(
                 id: "sim-001",
                 userId: userId,
@@ -132,6 +144,10 @@ enum SimulatorItemFactory {
                 quantity: 1,
                 estimatedValue: 35.99,
                 confidence: .high,
+                additionalImageUrls: [
+                    imageUrl(for: "object-2"),
+                    imageUrl(for: "object-3")
+                ],
                 createdAt: now.addingTimeInterval(-86400 * 7),
                 updatedAt: now.addingTimeInterval(-86400 * 2)
             ),
@@ -159,7 +175,7 @@ enum SimulatorItemFactory {
                 id: "sim-003",
                 userId: userId,
                 imageUrl: imageUrl(for: "object-3"),
-                status: .layer2aComplete,
+                status: .processing,
                 name: "Panasonic AM/FM Radio",
                 category: "Electronics",
                 subCategory: "Radios",
@@ -191,7 +207,7 @@ enum SimulatorItemFactory {
                 createdAt: now.addingTimeInterval(-86400 * 4),
                 updatedAt: now.addingTimeInterval(-86400 * 4)
             ),
-            // 5. Amber glass bowl vase
+            // 5. Amber glass bowl vase (multi-photo)
             Item(
                 id: "sim-005",
                 userId: userId,
@@ -206,6 +222,9 @@ enum SimulatorItemFactory {
                 quantity: 1,
                 estimatedValue: 42.00,
                 confidence: .high,
+                additionalImageUrls: [
+                    imageUrl(for: "object-6")
+                ],
                 createdAt: now.addingTimeInterval(-86400 * 3),
                 updatedAt: now.addingTimeInterval(-86400 * 1)
             ),
@@ -214,7 +233,7 @@ enum SimulatorItemFactory {
                 id: "sim-006",
                 userId: userId,
                 imageUrl: imageUrl(for: "object-6"),
-                status: .layer2aComplete,
+                status: .processing,
                 name: "Round Gold Wall Mirror",
                 category: "Furniture",
                 subCategory: "Mirrors",
@@ -233,7 +252,7 @@ enum SimulatorItemFactory {
                 id: "sim-007",
                 userId: userId,
                 imageUrl: imageUrl(for: "object-7"),
-                status: .pending,
+                status: .processing,
                 category: "Kitchen Appliances",
                 createdAt: now.addingTimeInterval(-3600),
                 updatedAt: now.addingTimeInterval(-3600)

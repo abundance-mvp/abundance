@@ -285,6 +285,12 @@ final class MockSearchTestItemRepository: ItemRepository, @unchecked Sendable {
     func rescanItem(_ item: Item) async throws {
         // Mock implementation
     }
+
+    func refreshImageUrl(id: String) async throws -> String? {
+        nil
+    }
+
+    func requestDeepScan(id: String) async throws {}
 }
 
 // swiftlint:enable explicit_type_interface

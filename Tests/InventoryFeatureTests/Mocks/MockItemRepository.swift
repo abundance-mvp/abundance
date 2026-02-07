@@ -163,6 +163,22 @@ final class MockItemRepository: ItemRepository, @unchecked Sendable {
         lastRescanItem = item
     }
 
+    var refreshImageUrlCalled = false
+    var refreshedImageUrl: String?
+
+    func refreshImageUrl(id: String) async throws -> String? {
+        refreshImageUrlCalled = true
+        return refreshedImageUrl ?? itemsToReturn.first { $0.id == id }?.imageUrl
+    }
+
+    var requestDeepScanCalled = false
+    var lastDeepScanId: String?
+
+    func requestDeepScan(id: String) async throws {
+        requestDeepScanCalled = true
+        lastDeepScanId = id
+    }
+
     func deleteItem(id: String) async throws {
         deleteItemCalled = true
         if let error = deleteError {
@@ -304,6 +320,14 @@ final class MockStorageService: StorageServiceProtocol, @unchecked Sendable {
         URL(string: "https://example.com/motion/\(itemId).mov")!
     }
 
+    func uploadAdditionalPhoto(_ image: PlatformImage, itemId: String, photoIndex: Int, userId: String) async throws -> URL {
+        if let error = uploadError { throw error }
+        uploadCount += 1
+        let url = URL(string: "https://example.com/uploaded/\(itemId)_photo_\(photoIndex).jpg")!
+        uploadedURLs.append(url)
+        return url
+    }
+
     func reset() {
         uploadCalled = false
         uploadCount = 0
@@ -381,12 +405,12 @@ enum TestItemFactory {
         }
     }
 
-    /// Create an item in pending status (awaiting processing)
-    static func makePendingItem(id: String = "pending-item", userId: String = "test-user") -> Item {
+    /// Create an item in processing status (awaiting AI pipeline)
+    static func makeProcessingItem(id: String = "processing-item", userId: String = "test-user") -> Item {
         makeItem(
             id: id,
             userId: userId,
-            status: .pending,
+            status: .processing,
             name: nil,
             category: nil,
             confidence: nil

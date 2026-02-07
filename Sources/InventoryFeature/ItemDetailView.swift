@@ -5,6 +5,8 @@ import Persistence
 public struct ItemDetailView: View {
     public let item: Item
     public var onRecatalog: (() -> Void)?
+    public var onDeepScan: (() -> Void)?
+    public var onDeletePhoto: ((Int) -> Void)?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrollOffset: CGFloat = 0
@@ -14,64 +16,88 @@ public struct ItemDetailView: View {
     @State private var showRescanComparison = false
     @State private var showEditSheet = false
     @State private var showRecatalogConfirmation = false
+    @State private var showDeepScanConfirmation = false
+    @State private var showAddPhotoCamera = false
+    @State private var isRecataloging = false
+    @State private var isDeepScanning = false
 
-    public init(item: Item, onRecatalog: (() -> Void)? = nil) {
+    private var isProcessing: Bool {
+        isRecataloging || item.status == .processing
+    }
+
+    public init(
+        item: Item,
+        onRecatalog: (() -> Void)? = nil,
+        onDeepScan: (() -> Void)? = nil,
+        onDeletePhoto: ((Int) -> Void)? = nil
+    ) {
         self.item = item
         self.onRecatalog = onRecatalog
+        self.onDeepScan = onDeepScan
+        self.onDeletePhoto = onDeletePhoto
     }
 
     public var body: some View {
         GeometryReader { outerGeometry in
             ScrollView {
                 VStack(spacing: 0) {
-                    // Hero Image with Parallax
-                    GeometryReader { geometry in
-                        AsyncImage(url: URL(string: item.imageUrl)) { phase in
-                            switch phase {
-                            case .empty:
-                                ProgressView()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .background(.gray.opacity(0.1))
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: geometry.size.width, height: geometry.size.height)
-                                    .offset(y: reduceMotion ? 0 : scrollOffset * 0.5) // Parallax effect
-                                    .clipped()
-                            case .failure:
-                                Rectangle()
-                                    .fill(.gray.opacity(0.3))
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .overlay {
-                                        Image(systemName: "photo")
-                                            .font(.largeTitle)
-                                            .foregroundStyle(.tertiary)
-                                    }
-                                    .onAppear {
-                                        AppLogger.log(.imageLoadFailed(
-                                            url: item.imageUrl,
-                                            itemId: item.id,
-                                            context: "ItemDetailView.heroImage"
-                                        ))
-                                    }
-                            @unknown default:
-                                EmptyView()
+                    // Hero Image: Carousel for multi-photo, Parallax for single
+                    if item.photoCount > 1 {
+                        PhotoCarouselView(
+                            imageUrls: item.allImageUrls,
+                            onDeletePhoto: onDeletePhoto
+                        )
+                        .frame(height: outerGeometry.size.height * 0.5)
+                        .accessibilityLabel("Photos of \(item.name ?? "item"), \(item.photoCount) photos")
+                    } else {
+                        GeometryReader { geometry in
+                            AsyncImage(url: URL(string: item.imageUrl)) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        .background(.gray.opacity(0.1))
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: geometry.size.width, height: geometry.size.height)
+                                        .offset(y: reduceMotion ? 0 : scrollOffset * 0.5)
+                                        .clipped()
+                                case .failure:
+                                    Rectangle()
+                                        .fill(.gray.opacity(0.3))
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        .overlay {
+                                            Image(systemName: "photo")
+                                                .font(.largeTitle)
+                                                .foregroundStyle(.tertiary)
+                                        }
+                                        .onAppear {
+                                            AppLogger.log(.imageLoadFailed(
+                                                url: item.imageUrl,
+                                                itemId: item.id,
+                                                context: "ItemDetailView.heroImage"
+                                            ))
+                                        }
+                                @unknown default:
+                                    EmptyView()
+                                }
                             }
+                            .clipped()
+                            .accessibilityLabel("Detail photo of \(item.name ?? "item")")
                         }
-                        .clipped()
-                        .accessibilityLabel("Detail photo of \(item.name ?? "item")")
+                        .frame(height: outerGeometry.size.height * 0.5)
+                        .background(
+                            GeometryReader { scrollGeometry in
+                                Color.clear
+                                    .preference(
+                                        key: ScrollOffsetPreferenceKey.self,
+                                        value: scrollGeometry.frame(in: .named("scrollView")).minY
+                                    )
+                            }
+                        )
                     }
-                    .frame(height: outerGeometry.size.height * 0.5)
-                    .background(
-                        GeometryReader { scrollGeometry in
-                            Color.clear
-                                .preference(
-                                    key: ScrollOffsetPreferenceKey.self,
-                                    value: scrollGeometry.frame(in: .named("scrollView")).minY
-                                )
-                        }
-                    )
 
                     // Expanded Metadata Card with Liquid Glass
                     VStack(alignment: .leading, spacing: 16) {
@@ -88,13 +114,40 @@ public struct ItemDetailView: View {
                                 Button {
                                     showRecatalogConfirmation = true
                                 } label: {
-                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                        .font(.title3)
-                                        .foregroundStyle(.primary)
-                                        .frame(minWidth: 44, minHeight: 44)
+                                    Group {
+                                        if isProcessing {
+                                            ProgressView()
+                                        } else {
+                                            Image(systemName: "arrow.triangle.2.circlepath")
+                                        }
+                                    }
+                                    .font(.title3)
+                                    .foregroundStyle(isProcessing ? .secondary : .primary)
+                                    .frame(minWidth: 44, minHeight: 44)
                                 }
+                                .disabled(isProcessing)
                                 .accessibilityIdentifier("detail.recatalogButton")
-                                .accessibilityLabel("Re-catalog item")
+                                .accessibilityLabel(isProcessing ? "Re-cataloging in progress" : "Re-catalog item")
+                            }
+
+                            if onDeepScan != nil {
+                                Button {
+                                    showDeepScanConfirmation = true
+                                } label: {
+                                    Group {
+                                        if isDeepScanning {
+                                            ProgressView()
+                                        } else {
+                                            Image(systemName: "sparkles")
+                                        }
+                                    }
+                                    .font(.title3)
+                                    .foregroundStyle(isDeepScanning ? Color.secondary : Color.purple)
+                                    .frame(minWidth: 44, minHeight: 44)
+                                }
+                                .disabled(isDeepScanning || item.deepScanCompletedAt != nil)
+                                .accessibilityIdentifier("detail.deepScanButton")
+                                .accessibilityLabel(isDeepScanning ? "Deep scan in progress" : "Deep scan item")
                             }
 
                             Button {
@@ -135,6 +188,23 @@ public struct ItemDetailView: View {
                             }
                         }
 
+                        // Processing banner
+                        if isProcessing {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text("Re-cataloging with AI...")
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                            .accessibilityIdentifier("detail.processingBanner")
+                        }
+
                         Divider()
 
                         // Estimated Value
@@ -169,6 +239,53 @@ public struct ItemDetailView: View {
                         // AI Confidence Section
                         if let confidence = item.confidence {
                             ConfidenceRow(confidence: confidence)
+                        }
+
+                        // Deep Scan Details
+                        if item.deepScanRequested == true || item.deepScanCompletedAt != nil {
+                            Divider()
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "sparkles")
+                                        .foregroundStyle(.purple)
+                                    Text("Deep Scan Details")
+                                        .font(.subheadline.weight(.semibold))
+                                }
+
+                                if item.deepScanCompletedAt != nil {
+                                    LazyVGrid(columns: [
+                                        GridItem(.flexible()),
+                                        GridItem(.flexible())
+                                    ], spacing: 12) {
+                                        MetadataCell(label: "UPC Code", value: item.upcCode)
+                                        MetadataCell(label: "Market Price", value: item.marketPriceRange)
+                                        MetadataCell(
+                                            label: "Retail Price",
+                                            value: item.originalRetailPrice.map { "$\(String(format: "%.2f", $0))" }
+                                        )
+                                        MetadataCell(label: "Product URL", value: item.productUrl != nil ? "View" : nil)
+                                    }
+                                } else if isDeepScanning {
+                                    HStack(spacing: 8) {
+                                        ProgressView()
+                                            .controlSize(.small)
+                                        Text("Scanning...")
+                                            .font(.footnote)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                } else {
+                                    LazyVGrid(columns: [
+                                        GridItem(.flexible()),
+                                        GridItem(.flexible())
+                                    ], spacing: 12) {
+                                        MetadataCell(label: "UPC Code", value: "--")
+                                        MetadataCell(label: "Market Price", value: "--")
+                                        MetadataCell(label: "Retail Price", value: "--")
+                                        MetadataCell(label: "Product URL", value: "--")
+                                    }
+                                    .foregroundStyle(.tertiary)
+                                }
+                            }
                         }
 
                         // Processing Notes (if any)
@@ -242,17 +359,56 @@ public struct ItemDetailView: View {
                         }
                 }
             }
+            #if os(iOS)
+            .fullScreenCover(isPresented: $showAddPhotoCamera) {
+                if let vm = editViewModel {
+                    AddPhotoCameraView(viewModel: vm)
+                        .onChange(of: vm.state) { _, newState in
+                            handleStateChange(newState)
+                        }
+                }
+            }
+            #else
+            .sheet(isPresented: $showAddPhotoCamera) {
+                if let vm = editViewModel {
+                    AddPhotoCameraView(viewModel: vm)
+                        .onChange(of: vm.state) { _, newState in
+                            handleStateChange(newState)
+                        }
+                }
+            }
+            #endif
             .confirmationDialog(
                 "Re-catalog Item",
                 isPresented: $showRecatalogConfirmation,
                 titleVisibility: .visible
             ) {
                 Button("Re-catalog") {
+                    isRecataloging = true
                     onRecatalog?()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This will re-process the item through the AI pipeline. Existing metadata will be replaced with new results.")
+            }
+            .onChange(of: item.status) { _, newStatus in
+                if newStatus != .processing {
+                    isRecataloging = false
+                    isDeepScanning = false
+                }
+            }
+            .confirmationDialog(
+                "Deep Scan",
+                isPresented: $showDeepScanConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Start Deep Scan") {
+                    isDeepScanning = true
+                    onDeepScan?()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Deep Scan uses advanced AI to find pricing, dimensions, product details, and market value.")
             }
         }
     }
@@ -290,7 +446,12 @@ public struct ItemDetailView: View {
             showRescanPrompt = false
             showRescanCamera = false
             showRescanComparison = false
+            showAddPhotoCamera = false
             showEditSheet = true
+
+        case .addingPhoto:
+            showEditSheet = false
+            showAddPhotoCamera = true
 
         case .idle:
             // Reset all sheets
@@ -298,6 +459,7 @@ public struct ItemDetailView: View {
             showRescanCamera = false
             showRescanComparison = false
             showEditSheet = false
+            showAddPhotoCamera = false
             editViewModel = nil
 
         default:

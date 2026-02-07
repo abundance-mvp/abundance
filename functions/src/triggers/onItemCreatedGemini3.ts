@@ -39,6 +39,13 @@ export const onItemCreatedGemini3 = onDocumentCreated(
       return;
     }
 
+    // Skip session items — handled by onItemFromSession to avoid race conditions
+    const itemData = event.data.data();
+    if (itemData.sessionId && itemData.fromDetection) {
+      console.log(`onItemCreatedGemini3: Skipping session item ${event.params.itemId} (handled by onItemFromSession)`);
+      return;
+    }
+
     // SERPAPI_KEY still needed for Google Lens tool
     process.env.SERPAPI_KEY = serpApiKey.value();
 

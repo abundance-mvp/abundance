@@ -56,7 +56,7 @@ describe('Orchestrator', () => {
     const mockSnapshot = {
       data: () => ({
         userId: 'user123',
-        imagePath: 'users/user123/items/item123.jpg',
+        imageUrl: 'https://firebasestorage.googleapis.com/v0/b/bucket/items/item123.jpg',
         status: 'pending'
       }),
       ref: {
@@ -89,7 +89,7 @@ describe('Orchestrator', () => {
     const mockSnapshot = {
       data: () => ({
         userId: 'user123',
-        imagePath: 'users/user123/items/item123.jpg',
+        imageUrl: 'https://firebasestorage.googleapis.com/v0/b/bucket/items/item123.jpg',
         status: 'pending'
       }),
       ref: {
@@ -183,7 +183,7 @@ describe('Orchestrator', () => {
     const mockSnapshot = {
       data: () => ({
         userId: 'user123',
-        imagePath: 'users/user123/items/item123.jpg',
+        imageUrl: 'https://firebasestorage.googleapis.com/v0/b/bucket/items/item123.jpg',
         status: 'pending'
       }),
       ref: {
@@ -204,6 +204,75 @@ describe('Orchestrator', () => {
           expect.objectContaining({ name: 'Product 1' }),
           expect.objectContaining({ name: 'Product 2' })
         ])
+      })
+    );
+  });
+
+  it('should fall back to imagePath when imageUrl is not present', async () => {
+    mockProcessItem.mockResolvedValueOnce({
+      name: 'Legacy Product',
+      category: 'electronics',
+      subCategory: 'gadgets',
+      brand: null,
+      model: null,
+      color: 'black',
+      condition: 'good',
+      dimensions: null,
+      quantity: 1,
+      estimatedValue: 30.00,
+      confidence: 'medium',
+      processingNotes: null
+    });
+
+    const mockUpdate = jest.fn().mockResolvedValue({});
+    const mockSnapshot = {
+      data: () => ({
+        userId: 'user123',
+        imagePath: 'users/user123/items/item123.jpg',
+        status: 'pending'
+      }),
+      ref: {
+        update: mockUpdate
+      }
+    };
+
+    const mockContext = {
+      params: { itemId: 'item123' }
+    };
+
+    await handleItemCreated(mockSnapshot as any, mockContext as any);
+
+    expect(mockProcessItem).toHaveBeenCalled();
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'complete',
+        name: 'Legacy Product'
+      })
+    );
+  });
+
+  it('should fail when neither imageUrl nor imagePath is present', async () => {
+    const mockUpdate = jest.fn().mockResolvedValue({});
+    const mockSnapshot = {
+      data: () => ({
+        userId: 'user123',
+        status: 'pending'
+      }),
+      ref: {
+        update: mockUpdate
+      }
+    };
+
+    const mockContext = {
+      params: { itemId: 'item123' }
+    };
+
+    await handleItemCreated(mockSnapshot as any, mockContext as any);
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'failed',
+        error: expect.stringContaining('neither imageUrl nor imagePath')
       })
     );
   });

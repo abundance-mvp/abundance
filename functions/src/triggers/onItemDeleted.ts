@@ -85,7 +85,22 @@ export const onItemDeleted = onDocumentDeleted(
       logger.error('Failed to list cropped images', error as Error, { prefix: cropPrefix });
     }
 
-    // 3. Delete Live Photo motion clip if it exists
+    // 3. Delete additional photos (from multi-photo feature)
+    // Path pattern: users/{userId}/items/{itemId}_photo_*.jpg
+    const photoPrefix = `users/${userId}/items/${itemId}_photo_`;
+    try {
+      const [photoFiles] = await bucket.getFiles({ prefix: photoPrefix });
+      if (photoFiles.length > 0) {
+        logger.info('Found additional photos to delete', { count: photoFiles.length, prefix: photoPrefix });
+        for (const file of photoFiles) {
+          deletePromises.push(deleteFile(file.name, 'additional photo'));
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to list additional photos', error as Error, { prefix: photoPrefix });
+    }
+
+    // 4. Delete Live Photo motion clip if it exists
     // Path format: users/{userId}/items/{itemId}/motion.mov
     const motionPath = `users/${userId}/items/${itemId}/motion.mov`;
     deletePromises.push(deleteFile(motionPath, 'motion clip'));

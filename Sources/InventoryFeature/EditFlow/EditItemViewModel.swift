@@ -12,6 +12,7 @@ public enum EditFlowState: Equatable {
     case comparing(newItem: Item)
     case editing
     case saving
+    case addingPhoto
     case error(String)
 
     public static func == (lhs: EditFlowState, rhs: EditFlowState) -> Bool {
@@ -21,7 +22,8 @@ public enum EditFlowState: Equatable {
              (.capturing, .capturing),
              (.processing, .processing),
              (.editing, .editing),
-             (.saving, .saving):
+             (.saving, .saving),
+             (.addingPhoto, .addingPhoto):
             return true
         case (.comparing(let lhsItem), .comparing(let rhsItem)):
             return lhsItem.id == rhsItem.id
@@ -60,6 +62,8 @@ public final class EditItemViewModel {
     public var rescanResult: Item?
     public var fieldTracker = EditedFieldTracker()
     public var validationErrors: [String: String] = [:]
+    public var isUploadingPhoto = false
+    public var photoError: String?
 
     // MARK: - Dependencies
 
@@ -174,6 +178,61 @@ public final class EditItemViewModel {
         }
     }
 
+    // MARK: - Photo Management
+
+    /// Start the add-photo camera flow
+    public func beginAddPhoto() {
+        state = .addingPhoto
+    }
+
+    /// Whether the given photo index can be deleted (primary photo is protected)
+    public func canDeletePhoto(at index: Int) -> Bool {
+        index > 0
+    }
+
+    /// Delete a photo at the given index (0 = primary, protected)
+    public func deletePhoto(at index: Int) {
+        guard canDeletePhoto(at: index) else { return }
+        let additionalIndex = index - 1
+        guard var urls = editableItem.additionalImageUrls,
+              additionalIndex < urls.count else { return }
+
+        urls.remove(at: additionalIndex)
+        editableItem.additionalImageUrls = urls.isEmpty ? nil : urls
+        fieldTracker.markEdited("additionalImageUrls")
+    }
+
+    /// Handle a captured additional photo
+    public func handleAdditionalPhotoCapture(_ image: PlatformImage) async {
+        isUploadingPhoto = true
+        photoError = nil
+
+        do {
+            guard let userId = editableItem.userId.nilIfEmpty else {
+                throw EditFlowError.missingUserId
+            }
+
+            let photoIndex = (editableItem.additionalImageUrls?.count ?? 0) + 1
+            let url = try await storageService.uploadAdditionalPhoto(
+                image,
+                itemId: editableItem.id,
+                photoIndex: photoIndex,
+                userId: userId
+            )
+
+            var urls = editableItem.additionalImageUrls ?? []
+            urls.append(url.absoluteString)
+            editableItem.additionalImageUrls = urls
+            fieldTracker.markEdited("additionalImageUrls")
+            state = .editing
+        } catch {
+            photoError = "Failed to upload photo: \(error.localizedDescription)"
+            state = .editing
+        }
+
+        isUploadingPhoto = false
+    }
+
     // MARK: - Field Editing
 
     /// Update a field and track the edit
@@ -233,7 +292,7 @@ public final class EditItemViewModel {
             id: editableItem.id,
             userId: editableItem.userId,
             imageUrl: newImageUrl.absoluteString,
-            status: .pending,
+            status: .processing,
             name: editableItem.name,
             category: editableItem.category,
             subCategory: editableItem.subCategory,
@@ -266,10 +325,10 @@ public final class EditItemViewModel {
             try await Task.sleep(for: .seconds(1))
 
             if let item = try await itemRepository.getItem(id: editableItem.id) {
-                if item.status == .complete || item.status == .layer2aComplete {
+                if item.status == .complete {
                     return item
                 }
-                if item.status == .failed || item.status == .failedLayer2a {
+                if item.status == .failed {
                     throw EditFlowError.rescanProcessingFailed
                 }
             }

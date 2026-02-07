@@ -55,6 +55,12 @@ public struct InventoryView: View {
                             onRecatalog: { item in
                                 Task { await viewModel.recatalogItem(item) }
                             },
+                            onDeepScan: { item in
+                                Task { await viewModel.requestDeepScan(item) }
+                            },
+                            onDeletePhoto: { item, index in
+                                Task { await viewModel.deletePhoto(from: item, at: index) }
+                            },
                             onDelete: { item in
                                 itemToDelete = item
                                 showDeleteConfirmation = true
@@ -194,6 +200,8 @@ private struct ItemGridView: View {
     let isSelectionMode: Bool
     @Binding var selectedItemIds: Set<String>
     let onRecatalog: (Item) -> Void
+    let onDeepScan: (Item) -> Void
+    let onDeletePhoto: (Item, Int) -> Void
     let onDelete: (Item) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -222,7 +230,9 @@ private struct ItemGridView: View {
                         NavigationLink {
                             ItemDetailView(
                                 item: item,
-                                onRecatalog: { onRecatalog(item) }
+                                onRecatalog: { onRecatalog(item) },
+                                onDeepScan: { onDeepScan(item) },
+                                onDeletePhoto: { index in onDeletePhoto(item, index) }
                             )
                         } label: {
                             ItemCard(

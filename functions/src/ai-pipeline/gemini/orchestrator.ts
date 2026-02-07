@@ -44,8 +44,8 @@ export async function handleItemCreated(
   });
 
   try {
-    // Get signed URL for image
-    const imageUrl = await getSignedImageUrl(itemData.imagePath);
+    // Resolve image URL: prefer imageUrl (full URL from iOS), fall back to imagePath (GCS path)
+    const imageUrl = await resolveImageUrl(itemData);
 
     // Process with Gemini 3 Pro (with session persistence and context caching)
     const result = await processItemWithGeminiPersistent(
@@ -112,6 +112,24 @@ export async function handleItemCreated(
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
   }
+}
+
+/**
+ * Resolve image URL from item data
+ * iOS writes `imageUrl` (full download URL); legacy items may have `imagePath` (GCS path)
+ */
+async function resolveImageUrl(itemData: Record<string, unknown>): Promise<string> {
+  // Prefer imageUrl (full URL written by iOS client)
+  if (typeof itemData.imageUrl === 'string' && itemData.imageUrl) {
+    return itemData.imageUrl;
+  }
+
+  // Fall back to imagePath (GCS path → signed URL) for legacy items
+  if (typeof itemData.imagePath === 'string' && itemData.imagePath) {
+    return await getSignedImageUrl(itemData.imagePath);
+  }
+
+  throw new Error('Item has neither imageUrl nor imagePath');
 }
 
 /**

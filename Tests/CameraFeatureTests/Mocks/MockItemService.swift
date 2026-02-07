@@ -113,6 +113,16 @@ final class MockItemService: ItemRepository, @unchecked Sendable {
         }
     }
 
+    func refreshImageUrl(id: String) async throws -> String? {
+        nil
+    }
+
+    func requestDeepScan(id: String) async throws {
+        if shouldFail {
+            throw NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
+        }
+    }
+
     func reset() {
         createItemCalled = false
         createItemWithLayer1MetadataCalled = false

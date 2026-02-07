@@ -46,7 +46,7 @@ struct SimulatorDebugItemTests {
         // 3. Panasonic vintage AM/FM radio (walnut wood cabinet)
         (
             id: "sim-003", imageFile: "object-3",
-            status: .layer2aComplete,
+            status: .processing,
             name: "Panasonic AM/FM Radio",
             category: "Electronics", subCategory: "Radios",
             brand: "Panasonic", color: "Walnut/Silver", material: "Wood/Metal",
@@ -73,7 +73,7 @@ struct SimulatorDebugItemTests {
         // 6. Round gold-framed wall mirror
         (
             id: "sim-006", imageFile: "object-6",
-            status: .layer2aComplete,
+            status: .processing,
             name: "Round Gold Wall Mirror",
             category: "Furniture", subCategory: "Mirrors",
             brand: nil, color: "Gold", material: "Glass/Metal",
@@ -82,7 +82,7 @@ struct SimulatorDebugItemTests {
         // 7. Non-stick frying pan — pending status (minimal metadata)
         (
             id: "sim-007", imageFile: "object-7",
-            status: .pending,
+            status: .processing,
             name: nil,
             category: "Kitchen Appliances", subCategory: nil,
             brand: nil, color: nil, material: nil,
@@ -119,19 +119,21 @@ struct SimulatorDebugItemTests {
         }
     }
 
-    @Test("Analyzed items have partial metadata")
-    func analyzedItemsHavePartialMetadata() {
-        let analyzedItems = Self.expectedItems.filter { $0.status == .layer2aComplete }
-        #expect(analyzedItems.count == 2, "Expected 2 analyzed items")
+    @Test("Processing items have partial or no metadata")
+    func processingItemsHavePartialMetadata() {
+        let processingItems = Self.expectedItems.filter { $0.status == .processing }
+        #expect(processingItems.count == 3, "Expected 3 processing items (2 analyzed + 1 pending)")
 
-        for item in analyzedItems {
-            #expect(item.name != nil, "\(item.id) missing name")
+        // Items sim-003 and sim-006 were formerly "analyzed" (layer2aComplete)
+        let analyzed = processingItems.filter { $0.name != nil }
+        #expect(analyzed.count == 2, "Expected 2 processing items with partial metadata")
+        for item in analyzed {
             #expect(item.category != nil, "\(item.id) missing category")
             #expect(item.confidence == .medium, "\(item.id) should have medium confidence")
         }
     }
 
-    @Test("Pending item has minimal metadata")
+    @Test("Pending/processing item sim-007 has minimal metadata")
     func pendingItemHasMinimalMetadata() {
         let pending = Self.expectedItems.first { $0.id == "sim-007" }!
         #expect(pending.name == nil)
@@ -263,13 +265,13 @@ struct SimulatorDebugItemTests {
         }
     }
 
-    @Test("All status variants are represented")
+    @Test("All 3 status variants are represented")
     func allStatusVariantsPresent() {
         let statuses = Set(Self.expectedItems.map(\.status))
         #expect(statuses.contains(.complete))
-        #expect(statuses.contains(.layer2aComplete))
-        #expect(statuses.contains(.pending))
+        #expect(statuses.contains(.processing))
         #expect(statuses.contains(.failed))
+        #expect(statuses.count == 3, "Expected exactly 3 status variants")
     }
 
     @Test("All condition variants are represented in complete/analyzed items")

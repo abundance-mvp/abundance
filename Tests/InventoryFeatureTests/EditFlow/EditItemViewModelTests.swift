@@ -628,6 +628,12 @@ final class MockEditItemRepository: ItemRepository, @unchecked Sendable {
         rescanItemCalled = true
         lastRescanItem = item
     }
+
+    func refreshImageUrl(id: String) async throws -> String? {
+        nil
+    }
+
+    func requestDeepScan(id: String) async throws {}
 }
 
 // MARK: - Mock Storage Service
@@ -646,6 +652,13 @@ final class MockEditStorageService: StorageServiceProtocol, @unchecked Sendable 
 
     func uploadLivePhotoMotion(_ motionData: Data, itemId: String, userId: String) async throws -> URL {
         URL(string: "https://example.com/motion/\(itemId).mov")!
+    }
+
+    func uploadAdditionalPhoto(_ image: PlatformImage, itemId: String, photoIndex: Int, userId: String) async throws -> URL {
+        if shouldFailUpload {
+            throw NSError(domain: "test", code: 500, userInfo: [NSLocalizedDescriptionKey: "Mock upload error"])
+        }
+        return URL(string: "https://example.com/uploaded/\(itemId)_photo_\(photoIndex).jpg")!
     }
 }
 

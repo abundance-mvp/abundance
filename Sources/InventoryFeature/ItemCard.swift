@@ -219,11 +219,9 @@ struct ItemCard: View {
 
     private func statusText(for status: ItemStatus) -> String {
         switch status {
-        case .pending: return "Processing"
-        case .layer2aComplete: return "Analyzed"
+        case .processing: return "Processing"
         case .complete: return "Complete"
-        case .failed, .failedLayer2a, .failedLayer2b: return "Failed"
-        default: return status.rawValue
+        case .failed: return "Failed"
         }
     }
 
@@ -291,20 +289,17 @@ private struct StatusBadge: View {
 
     private var statusText: String {
         switch status {
-        case .pending: return "Processing"
-        case .layer2aComplete: return "Analyzed"
+        case .processing: return "Processing"
         case .complete: return "Complete"
-        case .failed, .failedLayer2a, .failedLayer2b: return "Failed"
-        default: return status.rawValue
+        case .failed: return "Failed"
         }
     }
 
     private var statusColor: Color {
         switch status {
-        case .pending: return .blue
-        case .layer2aComplete, .complete: return .green
-        case .failed, .failedLayer2a, .failedLayer2b: return .red
-        default: return .gray
+        case .processing: return .blue
+        case .complete: return .green
+        case .failed: return .red
         }
     }
 }

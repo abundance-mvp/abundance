@@ -377,6 +377,12 @@ extension MockItemRepository: ItemRepository {
     func rescanItem(_ item: Item) async throws {
         // Mock implementation
     }
+
+    func refreshImageUrl(id: String) async throws -> String? {
+        nil
+    }
+
+    func requestDeepScan(id: String) async throws {}
 }
 
 /// Mock AuthService for testing

@@ -146,6 +146,45 @@ public final class InventoryViewModel {
         }
     }
 
+    /// Request a deep scan for an item
+    /// - Parameter item: The item to deep scan
+    public func requestDeepScan(_ item: Item) async {
+        do {
+            try await itemRepository.requestDeepScan(id: item.id)
+        } catch {
+            recatalogError = "Failed to start deep scan: \(error.localizedDescription)"
+        }
+    }
+
+    /// Delete a photo from an item at the given index
+    /// - Parameters:
+    ///   - item: The item to modify
+    ///   - index: Photo index (0 = primary, protected; 1+ = additional)
+    /// - Note: Optimistically updates local array, rolls back on failure
+    public func deletePhoto(from item: Item, at index: Int) async {
+        guard index > 0 else { return } // Primary photo protected
+        guard var additionalUrls = item.additionalImageUrls, index - 1 < additionalUrls.count else { return }
+
+        // Store original item for rollback
+        guard let itemIndex = items.firstIndex(where: { $0.id == item.id }) else { return }
+        let originalItem = items[itemIndex]
+
+        // Optimistic update
+        additionalUrls.remove(at: index - 1)
+        var updatedItem = item
+        updatedItem.additionalImageUrls = additionalUrls.isEmpty ? nil : additionalUrls
+        items[itemIndex] = updatedItem
+        deleteError = nil
+
+        do {
+            try await itemRepository.updateItem(updatedItem, userEditedFields: nil)
+        } catch {
+            // Rollback on failure
+            items[itemIndex] = originalItem
+            deleteError = "Failed to delete photo: \(error.localizedDescription)"
+        }
+    }
+
     // MARK: - Private Methods
 
     /// Real-time listener for items

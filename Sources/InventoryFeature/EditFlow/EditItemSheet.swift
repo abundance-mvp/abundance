@@ -178,6 +178,89 @@ public struct EditItemSheet: View {
                         .font(.footnote)
                 }
 
+                // Photos Section
+                Section {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            // Existing photos
+                            ForEach(Array(viewModel.editableItem.allImageUrls.enumerated()), id: \.offset) { index, urlString in
+                                ZStack(alignment: .topTrailing) {
+                                    AsyncImage(url: URL(string: urlString)) { phase in
+                                        switch phase {
+                                        case .success(let image):
+                                            image
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                        default:
+                                            Rectangle()
+                                                .fill(.gray.opacity(0.2))
+                                                .overlay {
+                                                    ProgressView()
+                                                }
+                                        }
+                                    }
+                                    .frame(width: 80, height: 80)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                                    if index == 0 {
+                                        Text("Primary")
+                                            .font(.caption2.weight(.semibold))
+                                            .padding(.horizontal, 4)
+                                            .padding(.vertical, 2)
+                                            .background(.ultraThinMaterial, in: Capsule())
+                                            .padding(4)
+                                    } else {
+                                        Button {
+                                            viewModel.deletePhoto(at: index)
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.callout)
+                                                .symbolRenderingMode(.palette)
+                                                .foregroundStyle(.white, .red)
+                                        }
+                                        .padding(4)
+                                        .accessibilityLabel("Remove photo \(index + 1)")
+                                    }
+                                }
+                            }
+
+                            // Add Photo button
+                            Button {
+                                viewModel.beginAddPhoto()
+                            } label: {
+                                VStack(spacing: 4) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.title2)
+                                    Text("Add")
+                                        .font(.caption2)
+                                }
+                                .frame(width: 80, height: 80)
+                                .background(.gray.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+                            }
+                            .disabled(viewModel.isUploadingPhoto)
+                            .accessibilityIdentifier("edit.addPhotoButton")
+                        }
+                        .padding(.vertical, 4)
+                    }
+
+                    if viewModel.isUploadingPhoto {
+                        HStack {
+                            ProgressView()
+                            Text("Uploading photo...")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if let photoError = viewModel.photoError {
+                        Text(photoError)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                } header: {
+                    Text("Photos")
+                }
+
                 // AI Metadata (Read-Only)
                 Section {
                     if let confidence = viewModel.editableItem.confidence {

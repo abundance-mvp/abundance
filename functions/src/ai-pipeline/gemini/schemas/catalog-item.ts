@@ -26,6 +26,18 @@ export interface CatalogItem {
   processingNotes: string | null;
 }
 
+/**
+ * DeepScanResult - extended output schema for Gemini Pro deep scan
+ * Includes pricing, product identification, and market data
+ */
+export interface DeepScanResult {
+  productUrl: string | null;
+  upcCode: string | null;
+  marketPriceRange: string | null;
+  originalRetailPrice: number | null;
+  processingNotes: string | null;
+}
+
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
@@ -64,6 +76,18 @@ export function validateCatalogItem(item: CatalogItem): ValidationResult {
 
   return { valid: errors.length === 0, errors };
 }
+
+export const DEEP_SCAN_SCHEMA = {
+  type: 'object',
+  properties: {
+    productUrl: { type: ['string', 'null'], description: 'URL to product page or listing' },
+    upcCode: { type: ['string', 'null'], description: 'UPC/EAN barcode if identifiable' },
+    marketPriceRange: { type: ['string', 'null'], description: 'Current market price range (e.g. "$25-$45")' },
+    originalRetailPrice: { type: ['number', 'null'], description: 'Original retail price in USD if known' },
+    processingNotes: { type: ['string', 'null'], description: 'Notes about deep scan results' }
+  },
+  required: []
+};
 
 export const CATALOG_ITEM_SCHEMA = {
   type: 'object',

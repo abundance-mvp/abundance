@@ -52,7 +52,7 @@ public struct DetectionResultsView: View {
 
     @ViewBuilder
     private func imageWithBoundingBoxes(geometry: GeometryProxy) -> some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             Color.black
 
             // Background image
@@ -88,6 +88,24 @@ public struct DetectionResultsView: View {
                     }
                 }
             }
+
+            // Retake overlay button
+            Button(action: onRetake) {
+                HStack(spacing: 4) {
+                    Image(systemName: "camera")
+                        .font(.caption2.weight(.semibold))
+                    Text("Retake")
+                        .font(.caption.weight(.semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.black.opacity(0.5))
+                .clipShape(Capsule())
+            }
+            .padding(12)
+            .accessibilityIdentifier("detection.retakeOverlayButton")
+            .accessibilityLabel("Retake photo")
         }
     }
 

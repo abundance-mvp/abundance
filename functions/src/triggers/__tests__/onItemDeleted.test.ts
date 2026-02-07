@@ -92,14 +92,17 @@ describe('onItemDeleted trigger', () => {
       await import('../onItemDeleted');
     });
 
-    it('should delete primary image, crop files, and motion clip', async () => {
-      // Setup: mock crop files found
+    it('should delete primary image, crop files, additional photos, and motion clip', async () => {
+      // Setup: mock crop files found, no additional photos
       const mockCropFiles = [
         { name: 'users/user123/items/item456_crop_0.jpg' },
         { name: 'users/user123/items/item456_crop_1.jpg' },
         { name: 'users/user123/items/item456_crop_2.jpg' },
       ];
-      mockGetFiles.mockResolvedValue([mockCropFiles]);
+      // First call returns crops, second call returns no additional photos
+      mockGetFiles
+        .mockResolvedValueOnce([mockCropFiles])
+        .mockResolvedValueOnce([[]]);
       mockDelete.mockResolvedValue([{}]);
 
       const event = createMockEvent(
@@ -118,6 +121,11 @@ describe('onItemDeleted trigger', () => {
         prefix: 'users/user123/items/item456_crop_',
       });
 
+      // Verify additional photos listing
+      expect(mockGetFiles).toHaveBeenCalledWith({
+        prefix: 'users/user123/items/item456_photo_',
+      });
+
       // Verify motion clip deletion attempted
       expect(mockFile).toHaveBeenCalledWith('users/user123/items/item456/motion.mov');
 
@@ -130,8 +138,8 @@ describe('onItemDeleted trigger', () => {
       expect(mockDelete).toHaveBeenCalledTimes(5);
     });
 
-    it('should handle single image capture (no crops)', async () => {
-      // Setup: no crop files found
+    it('should handle single image capture (no crops, no additional photos)', async () => {
+      // Setup: no crop files or additional photos found
       mockGetFiles.mockResolvedValue([[]]);
       mockDelete.mockResolvedValue([{}]);
 
@@ -139,7 +147,7 @@ describe('onItemDeleted trigger', () => {
 
       await capturedHandler!(event);
 
-      // Should still attempt primary and motion, but no crops
+      // Should still attempt primary and motion, but no crops or additional photos
       expect(mockFile).toHaveBeenCalledWith('users/user456/items/item789.jpg');
       expect(mockFile).toHaveBeenCalledWith('users/user456/items/item789/motion.mov');
 
@@ -163,7 +171,7 @@ describe('onItemDeleted trigger', () => {
     });
 
     it('should not throw when primary image does not exist (404)', async () => {
-      mockGetFiles.mockResolvedValue([[]]);
+      mockGetFiles.mockResolvedValue([[]]); // Same empty for both crop and photo listings
       mockDelete.mockRejectedValue({ code: 404 });
 
       const event = createMockEvent('item123', 'user789', 'gs://test/image.jpg');
@@ -218,6 +226,7 @@ describe('onItemDeleted trigger', () => {
 
     it('should handle getFiles failure gracefully', async () => {
       const listError = new Error('Permission denied');
+      // Both crop and photo listing fail
       mockGetFiles.mockRejectedValue(listError);
       mockDelete.mockResolvedValue([{}]);
 
@@ -238,9 +247,12 @@ describe('onItemDeleted trigger', () => {
     });
 
     it('should continue with other deletions when one file fails', async () => {
-      mockGetFiles.mockResolvedValue([
-        [{ name: 'users/user333/items/item444_crop_0.jpg' }],
-      ]);
+      // First getFiles returns crops, second returns no additional photos
+      mockGetFiles
+        .mockResolvedValueOnce([
+          [{ name: 'users/user333/items/item444_crop_0.jpg' }],
+        ])
+        .mockResolvedValueOnce([[]]);
 
       // First delete succeeds, second fails with non-404 error
       mockDelete
@@ -273,12 +285,15 @@ describe('onItemDeleted trigger', () => {
     });
 
     it('should accurately count deleted files', async () => {
-      mockGetFiles.mockResolvedValue([
-        [
-          { name: 'users/u1/items/i1_crop_0.jpg' },
-          { name: 'users/u1/items/i1_crop_1.jpg' },
-        ],
-      ]);
+      // First getFiles call returns crops, second returns no additional photos
+      mockGetFiles
+        .mockResolvedValueOnce([
+          [
+            { name: 'users/u1/items/i1_crop_0.jpg' },
+            { name: 'users/u1/items/i1_crop_1.jpg' },
+          ],
+        ])
+        .mockResolvedValueOnce([[]]);
       mockDelete.mockResolvedValue([{}]);
 
       const event = createMockEvent('i1', 'u1', 'gs://test/image.jpg');
@@ -299,9 +314,12 @@ describe('onItemDeleted trigger', () => {
     });
 
     it('should accurately count mixed results', async () => {
-      mockGetFiles.mockResolvedValue([
-        [{ name: 'users/u2/items/i2_crop_0.jpg' }],
-      ]);
+      // First getFiles returns crops, second returns no additional photos
+      mockGetFiles
+        .mockResolvedValueOnce([
+          [{ name: 'users/u2/items/i2_crop_0.jpg' }],
+        ])
+        .mockResolvedValueOnce([[]]);
 
       // Primary succeeds, crop returns 404, motion has error
       mockDelete
@@ -372,7 +390,10 @@ describe('onItemDeleted trigger', () => {
       const manyCrops = Array.from({ length: 10 }, (_, i) => ({
         name: `users/uX/items/iX_crop_${i}.jpg`,
       }));
-      mockGetFiles.mockResolvedValue([manyCrops]);
+      // First getFiles returns crops, second returns no additional photos
+      mockGetFiles
+        .mockResolvedValueOnce([manyCrops])
+        .mockResolvedValueOnce([[]]);
       mockDelete.mockResolvedValue([{}]);
 
       const event = createMockEvent('iX', 'uX', 'gs://test/image.jpg');
@@ -389,7 +410,7 @@ describe('onItemDeleted trigger', () => {
     });
 
     it('should log userId and imageUrl at start', async () => {
-      mockGetFiles.mockResolvedValue([[]]);
+      mockGetFiles.mockResolvedValue([[]]); // Same empty for both listings
       mockDelete.mockResolvedValue([{}]);
 
       const event = createMockEvent(

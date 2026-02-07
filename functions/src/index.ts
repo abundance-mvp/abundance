@@ -9,6 +9,7 @@ import { onItemCreatedGemini3 } from './triggers/onItemCreatedGemini3';
 import { onItemDeleted } from './triggers/onItemDeleted';
 import { onSessionCreated } from './triggers/onSessionCreated';
 import { onItemFromSession } from './triggers/onItemFromSession';
+import { onItemUpdatedDeepScan } from './triggers/onItemUpdatedDeepScan';
 
 // Import scheduled jobs
 import { cleanupDeletedItemsScheduled } from './scheduled/cleanupDeletedItems';
@@ -182,6 +183,7 @@ export const listItemsHTTP = functions.https.onRequest(async (req, res) => {
 export {
   onItemCreatedGemini3,
   onItemDeleted,
+  onItemUpdatedDeepScan,
   onSessionCreated,
   onItemFromSession
 };

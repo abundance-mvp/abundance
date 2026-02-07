@@ -113,6 +113,8 @@ private final class PreviewItemRepository: ItemRepository, @unchecked Sendable {
     func deleteItems(ids: Set<String>) async throws {}
     func updateItem(_ item: Item, userEditedFields: [String]?) async throws {}
     func rescanItem(_ item: Item) async throws {}
+    func refreshImageUrl(id: String) async throws -> String? { nil }
+    func requestDeepScan(id: String) async throws {}
 }
 // swiftlint:enable line_length
 
@@ -122,6 +124,9 @@ private final class PreviewStorageService: StorageServiceProtocol, @unchecked Se
     }
     func uploadLivePhotoMotion(_ motionData: Data, itemId: String, userId: String) async throws -> URL {
         URL(string: "https://example.com/motion.mov")!
+    }
+    func uploadAdditionalPhoto(_ image: PlatformImage, itemId: String, photoIndex: Int, userId: String) async throws -> URL {
+        URL(string: "https://example.com/photo_\(photoIndex).jpg")!
     }
 }
 #endif

@@ -98,6 +98,41 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
     /// Timestamp of last rescan (for edit flow)
     public var lastRescanAt: Date?
 
+    // MARK: - Additional Photos
+
+    /// URLs for additional photos beyond the primary imageUrl
+    public var additionalImageUrls: [String]?
+
+    /// All image URLs: primary + additional
+    public var allImageUrls: [String] {
+        [imageUrl] + (additionalImageUrls ?? [])
+    }
+
+    /// Total number of photos
+    public var photoCount: Int {
+        1 + (additionalImageUrls?.count ?? 0)
+    }
+
+    // MARK: - Deep Scan
+
+    /// Whether a deep scan has been requested
+    public var deepScanRequested: Bool?
+
+    /// When deep scan completed
+    public var deepScanCompletedAt: Date?
+
+    /// Product URL from deep scan
+    public var productUrl: String?
+
+    /// UPC/barcode from deep scan
+    public var upcCode: String?
+
+    /// Market price range from deep scan (e.g., "$50-$80")
+    public var marketPriceRange: String?
+
+    /// Original retail price from deep scan
+    public var originalRetailPrice: Double?
+
     // MARK: - Photo Metadata
 
     /// Captured photo metadata for fraud prevention
@@ -130,6 +165,13 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         processingNotes: String? = nil,
         userEditedFields: [String]? = nil,
         lastRescanAt: Date? = nil,
+        additionalImageUrls: [String]? = nil,
+        deepScanRequested: Bool? = nil,
+        deepScanCompletedAt: Date? = nil,
+        productUrl: String? = nil,
+        upcCode: String? = nil,
+        marketPriceRange: String? = nil,
+        originalRetailPrice: Double? = nil,
         photoMetadata: PhotoMetadata? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
@@ -153,20 +195,43 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         self.processingNotes = processingNotes
         self.userEditedFields = userEditedFields
         self.lastRescanAt = lastRescanAt
+        self.additionalImageUrls = additionalImageUrls
+        self.deepScanRequested = deepScanRequested
+        self.deepScanCompletedAt = deepScanCompletedAt
+        self.productUrl = productUrl
+        self.upcCode = upcCode
+        self.marketPriceRange = marketPriceRange
+        self.originalRetailPrice = originalRetailPrice
         self.photoMetadata = photoMetadata
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
 }
 
-/// Item processing status matching Firestore trigger states
+/// Item processing status — simplified to 3 states
+/// Legacy Firestore values (pending, layer2a_complete, etc.) are mapped on decode
 public enum ItemStatus: String, Codable, Sendable {
-    case pending = "pending"
-    case layer2aComplete = "layer2a_complete"
-    case layer2bScheduled = "layer2b_scheduled"
-    case layer2bComplete = "layer2b_complete"
+    case processing = "processing"
     case complete = "complete"
     case failed = "failed"
-    case failedLayer2a = "failed_layer2a"
-    case failedLayer2b = "failed_layer2b"
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = ItemStatus.fromFirestoreValue(rawValue)
+    }
+
+    /// Maps Firestore status strings (including legacy values) to the 3-state enum
+    public static func fromFirestoreValue(_ value: String) -> ItemStatus {
+        switch value {
+        case "complete":
+            return .complete
+        case "failed", "failed_layer2a", "failed_layer2b":
+            return .failed
+        case "processing", "pending", "layer2a_complete", "layer2b_scheduled", "layer2b_complete":
+            return .processing
+        default:
+            return .processing
+        }
+    }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import FirebaseFirestore
+import FirebaseStorage
 import Combine
 import os
 
@@ -81,6 +82,15 @@ public protocol ItemWriteRepository: Sendable {
     /// - Throws: Error if Firestore write fails
     func rescanItem(_ item: Item) async throws
 
+    /// Regenerate the download URL for an item's image if expired
+    /// - Parameter id: The item document ID
+    /// - Returns: Fresh download URL, or nil if item has no storage path
+    func refreshImageUrl(id: String) async throws -> String?
+
+    /// Request a deep scan for an item
+    /// - Parameter id: The item document ID
+    func requestDeepScan(id: String) async throws
+
     /// Deletes a single item by ID
     /// - Parameter id: The item document ID
     /// - Throws: Error if deletion fails
@@ -134,7 +144,7 @@ public final class ItemService: ItemRepository {
             "id": itemId,
             "userId": userId,
             "imageUrl": imageUrl,
-            "status": ItemStatus.pending.rawValue,
+            "status": "pending",
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp()
         ]
@@ -175,7 +185,7 @@ public final class ItemService: ItemRepository {
                     "qualityScore": layer1Metadata.qualityScore
                 ]
             ],
-            "status": ItemStatus.pending.rawValue,  // Triggers Cloud Function for Layer 2a
+            "status": "pending",  // Triggers Cloud Function for Layer 2a
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp()
         ]
@@ -218,7 +228,7 @@ public final class ItemService: ItemRepository {
                 ]
             ],
             "photoMetadata": photoMetadata.toFirestoreData(),
-            "status": ItemStatus.pending.rawValue,
+            "status": "pending",
             "createdAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp()
         ]
@@ -337,6 +347,46 @@ public final class ItemService: ItemRepository {
             .eraseToAnyPublisher()
     }
 
+    // MARK: - Deep Scan
+
+    /// Request a deep scan for an item (sets deepScanRequested=true, status=pending)
+    public func requestDeepScan(id: String) async throws {
+        let itemRef = db.collection("items").document(id)
+        try await itemRef.updateData([
+            "deepScanRequested": true,
+            "status": "pending",
+            "updatedAt": FieldValue.serverTimestamp()
+        ])
+        os_log(.info, log: .default, "Requested deep scan for item id=%{public}@", id)
+    }
+
+    // MARK: - Image URL Refresh
+
+    /// Regenerate the download URL for an item's image if expired
+    /// Reads `imagePath` from Firestore, generates a new download URL from Storage
+    public func refreshImageUrl(id: String) async throws -> String? {
+        let doc = try await db.collection("items").document(id).getDocument()
+        guard let data = doc.data() else { return nil }
+
+        // If the item has an imagePath (GCS path), generate a fresh download URL
+        guard let imagePath = data["imagePath"] as? String, !imagePath.isEmpty else {
+            // No storage path — imageUrl was either direct or already a download URL
+            return data["imageUrl"] as? String
+        }
+
+        let storageRef = Storage.storage().reference().child(imagePath)
+        let freshUrl = try await storageRef.downloadURL()
+        let urlString = freshUrl.absoluteString
+
+        // Update Firestore with the fresh URL
+        try await db.collection("items").document(id).updateData([
+            "imageUrl": urlString,
+            "updatedAt": FieldValue.serverTimestamp()
+        ])
+
+        return urlString
+    }
+
     // MARK: - Delete Operations
 
     /// Deletes a single item document from Firestore
@@ -403,6 +453,11 @@ public final class ItemService: ItemRepository {
             data["lastRescanAt"] = Timestamp(date: lastRescanAt)
         }
 
+        // Write additional image URLs if present
+        if let additionalUrls = item.additionalImageUrls {
+            data["additionalImageUrls"] = additionalUrls
+        }
+
         try await itemRef.updateData(data)
         os_log(.info, log: .default, "Updated item id=%{public}@", item.id)
     }
@@ -415,7 +470,7 @@ public final class ItemService: ItemRepository {
 
         let data: [String: Any] = [
             "imageUrl": item.imageUrl,
-            "status": ItemStatus.pending.rawValue, // Triggers Cloud Function
+            "status": "pending", // Triggers Cloud Function
             "lastRescanAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp()
         ]
@@ -471,11 +526,14 @@ public final class ItemService: ItemRepository {
             photoMetadata = nil
         }
 
+        // Parse deep scan completion timestamp
+        let deepScanCompletedAt = (data["deepScanCompletedAt"] as? Timestamp)?.dateValue()
+
         return Item(
             id: id,
             userId: data["userId"] as? String ?? "",
             imageUrl: data["imageUrl"] as? String ?? "",
-            status: ItemStatus(rawValue: data["status"] as? String ?? "pending") ?? .pending,
+            status: ItemStatus.fromFirestoreValue(data["status"] as? String ?? "pending"),
             name: data["name"] as? String,
             category: data["category"] as? String,
             subCategory: data["subCategory"] as? String,
@@ -491,6 +549,13 @@ public final class ItemService: ItemRepository {
             processingNotes: data["processingNotes"] as? String,
             userEditedFields: data["userEditedFields"] as? [String],
             lastRescanAt: lastRescanAt,
+            additionalImageUrls: data["additionalImageUrls"] as? [String],
+            deepScanRequested: data["deepScanRequested"] as? Bool,
+            deepScanCompletedAt: deepScanCompletedAt,
+            productUrl: data["productUrl"] as? String,
+            upcCode: data["upcCode"] as? String,
+            marketPriceRange: data["marketPriceRange"] as? String,
+            originalRetailPrice: data["originalRetailPrice"] as? Double,
             photoMetadata: photoMetadata,
             createdAt: createdAt,
             updatedAt: updatedAt

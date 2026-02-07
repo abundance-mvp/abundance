@@ -119,28 +119,16 @@ struct ItemCardTests {
 
     // MARK: - Status Badge Tests
 
-    @Test("Status badge shows Processing for pending state")
+    @Test("Status badge shows Processing for processing state")
     func testItemCard_statusBadge_processingState() async throws {
-        // Given: Item with pending status
-        let item = Item.mock(status: .pending)
+        // Given: Item with processing status
+        let item = Item.mock(status: .processing)
 
         // When: Create ItemCard
         let card = ItemCard(item: item)
 
-        // Then: Status should be pending (displayed as "Processing")
-        #expect(card.item.status == .pending)
-    }
-
-    @Test("Status badge shows Analyzed for layer2a complete state")
-    func testItemCard_statusBadge_analyzedState() async throws {
-        // Given: Item with layer2a complete status
-        let item = Item.mock(status: .layer2aComplete)
-
-        // When: Create ItemCard
-        let card = ItemCard(item: item)
-
-        // Then: Status should be layer2aComplete (displayed as "Analyzed")
-        #expect(card.item.status == .layer2aComplete)
+        // Then: Status should be processing
+        #expect(card.item.status == .processing)
     }
 
     @Test("Status badge shows Complete for complete state")
