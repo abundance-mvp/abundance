@@ -11,6 +11,8 @@ public struct SignInView: View {
 
     @State private var showingNetworkError = false
 
+    @ScaledMetric(relativeTo: .largeTitle) private var leafIconSize: CGFloat = 80
+
     public init(viewModel: AuthViewModel) {
         self.viewModel = viewModel
     }
@@ -101,7 +103,7 @@ public struct SignInView: View {
 
     private var leafIcon: some View {
         Image(systemName: "leaf.fill")
-            .font(.system(size: 80).leading(.tight))
+            .font(.system(size: leafIconSize).leading(.tight))
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .foregroundStyle(Color.softTeal)
             .shadow(color: Color.softTeal.opacity(0.4), radius: 16, x: 0, y: 8)

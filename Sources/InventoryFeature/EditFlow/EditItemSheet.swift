@@ -430,7 +430,7 @@ private struct SavingOverlay: View {
                 ProgressView()
                     .scaleEffect(1.2)
                 Text("Saving...")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
             }
             .padding(24)
             .background(Color.cream, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

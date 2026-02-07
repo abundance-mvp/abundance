@@ -194,10 +194,12 @@ public struct DetectionResultsView: View {
         }
     }
 
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
+
     private var noObjectsView: some View {
         VStack(spacing: 16) {
             Image(systemName: "viewfinder")
-                .font(.system(size: 48))
+                .font(.system(size: emptyIconSize))
                 .foregroundStyle(.secondary)
 
             Text("No objects detected")
@@ -285,7 +287,7 @@ struct BoundingBoxOverlay: View {
         HStack(spacing: 4) {
             if isCataloged {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 10))
+                    .font(.caption2)
             } else if isCataloging {
                 ProgressView()
                     .scaleEffect(0.5)
@@ -436,10 +438,12 @@ struct NoObjectsDetectedView: View {
     let reasoning: String?
     let onRetake: () -> Void
 
+    @ScaledMetric(relativeTo: .largeTitle) private var noObjectsIconSize: CGFloat = 64
+
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: "viewfinder.circle")
-                .font(.system(size: 64))
+                .font(.system(size: noObjectsIconSize))
                 .foregroundStyle(.secondary)
 
             Text("No Objects Detected")

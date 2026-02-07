@@ -47,7 +47,7 @@ public struct RescanCameraView: View {
 
                 // Instruction text
                 Text("Position the item in frame")
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(.body, design: .rounded, weight: .medium))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
@@ -150,7 +150,7 @@ private struct ProcessingOverlay: View {
                     .tint(.white)
 
                 Text("Analyzing your photo...")
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(.body, design: .rounded, weight: .medium))
                     .foregroundStyle(.white)
             }
             .padding(32)
