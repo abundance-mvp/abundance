@@ -9,6 +9,7 @@
  */
 
 import { Content, Part, FunctionCall, GenerateContentResponse, CachedContent } from '@google/genai';
+import { getStorage } from 'firebase-admin/storage';
 import { createVertexAIClient } from './vertexai-config';
 import { CatalogItem } from './schemas/catalog-item';
 import { SYSTEM_PROMPT, CATALOG_TOOLS, GENERATION_CONFIG, GEMINI_MODEL_ID } from './prompts';
@@ -137,7 +138,50 @@ export async function processItemWithGemini(
     throw new Error(`No text response from Gemini after ${iterations} iterations`);
   }
 
-  return JSON.parse(text) as CatalogItem | CatalogItem[];
+  return parseGeminiJson(text);
+}
+
+/**
+ * Parse JSON from Gemini, attempting repair if truncated.
+ * Gemini may exhaust output tokens mid-response, producing invalid JSON.
+ */
+function parseGeminiJson(text: string): CatalogItem | CatalogItem[] {
+  try {
+    return JSON.parse(text) as CatalogItem | CatalogItem[];
+  } catch (firstError) {
+    console.warn('JSON parse failed, attempting repair:', (firstError as Error).message);
+
+    // Try to repair truncated JSON by closing open structures
+    let repaired = text.trimEnd();
+
+    // Remove trailing incomplete key-value pair (e.g. `"key": "unterminated`)
+    repaired = repaired.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"{}[\]]*$/, '');
+
+    // Close open strings, arrays, objects
+    const openBraces = (repaired.match(/{/g) || []).length - (repaired.match(/}/g) || []).length;
+    const openBrackets = (repaired.match(/\[/g) || []).length - (repaired.match(/]/g) || []).length;
+
+    // Close any open string
+    const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length;
+    if (quoteCount % 2 !== 0) {
+      repaired += '"';
+    }
+
+    for (let i = 0; i < openBrackets; i++) repaired += ']';
+    for (let i = 0; i < openBraces; i++) repaired += '}';
+
+    try {
+      const result = JSON.parse(repaired) as CatalogItem | CatalogItem[];
+      console.log('JSON repair succeeded');
+      return result;
+    } catch {
+      // Repair failed — throw original error with context
+      throw new Error(
+        `Failed to parse Gemini response as JSON: ${(firstError as Error).message}. ` +
+        `Response length: ${text.length} chars`
+      );
+    }
+  }
 }
 
 /**
@@ -182,6 +226,11 @@ async function fetchImageBase64(url: string): Promise<string> {
     throw new Error('Invalid data URL format');
   }
 
+  // Use Admin SDK for Firebase Storage URLs (bypasses security rules, no token needed)
+  if (url.includes('firebasestorage.googleapis.com')) {
+    return fetchImageFromStorage(url);
+  }
+
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -195,6 +244,29 @@ async function fetchImageBase64(url: string): Promise<string> {
 
   const buffer = await response.arrayBuffer();
   return Buffer.from(buffer).toString('base64');
+}
+
+/**
+ * Fetch image from Firebase Storage using Admin SDK.
+ * Bypasses security rules and download tokens — always works from Cloud Functions.
+ *
+ * @param url - Firebase Storage download URL
+ * @returns Base64-encoded image data
+ */
+async function fetchImageFromStorage(url: string): Promise<string> {
+  const parsedUrl = new URL(url);
+  const bucketMatch = parsedUrl.pathname.match(/\/v0\/b\/([^/]+)\/o\/(.+)/);
+  if (!bucketMatch) {
+    throw new Error(`Invalid Firebase Storage URL: ${url}`);
+  }
+
+  const bucket = bucketMatch[1];
+  const path = decodeURIComponent(bucketMatch[2]);
+
+  const storage = getStorage();
+  const file = storage.bucket(bucket).file(path);
+  const [buffer] = await file.download();
+  return buffer.toString('base64');
 }
 
 /**
@@ -325,7 +397,7 @@ export async function processItemWithGeminiPersistent(
     throw new Error(`No text response from Gemini after ${iterations} iterations`);
   }
 
-  const catalogResult = JSON.parse(text) as CatalogItem | CatalogItem[];
+  const catalogResult = parseGeminiJson(text);
   const durationMs = Date.now() - startTime;
 
   // Save to history if itemId provided

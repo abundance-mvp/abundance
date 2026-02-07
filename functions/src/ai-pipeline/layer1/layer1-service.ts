@@ -124,10 +124,12 @@ export async function callGeminiFlashWithRetry(
         error: lastError.message
       });
 
-      // Apply exponential backoff before next retry (except on last attempt)
+      // Apply exponential backoff with jitter before next retry (except on last attempt)
       if (attempt < maxRetries) {
-        const backoffMs = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
-        logger.info('Retrying Gemini Flash', { backoffMs });
+        const baseMs = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
+        const jitter = Math.random() * baseMs * 0.5; // 0-50% jitter
+        const backoffMs = baseMs + jitter;
+        logger.info('Retrying Gemini Flash', { backoffMs: Math.round(backoffMs) });
         await sleep(backoffMs);
       }
     }

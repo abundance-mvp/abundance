@@ -240,10 +240,23 @@ export const onSessionCreated = onDocumentUpdated(
         return;
       }
 
-      // Update status to detecting
-      await sessionRef.update({
-        status: 'detecting'
+      // Atomically claim processing to prevent duplicate execution
+      // Both Case 1 (uploading→detecting) and Case 2 (all images uploaded) can fire
+      // simultaneously for the same session. The transaction ensures only one wins.
+      const claimed = await db.runTransaction(async (tx) => {
+        const snap = await tx.get(sessionRef);
+        const currentStatus = snap.data()?.status;
+        if (currentStatus === 'detecting' || currentStatus === 'detected' || currentStatus === 'failed') {
+          return false; // Already being processed or completed
+        }
+        tx.update(sessionRef, { status: 'detecting' });
+        return true;
       });
+
+      if (!claimed) {
+        logger.info('Session already being processed, skipping duplicate', { sessionId });
+        return;
+      }
 
       // Get storage instance
       const storage = getStorage();
