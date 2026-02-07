@@ -193,6 +193,21 @@ public final class SessionService: SessionServiceProtocol {
             detectedObjects = []
         }
 
+        let sweepCrops: [SweepCropInfo]
+        if let cropsArray = data["sweepCrops"] as? [[String: Any]] {
+            sweepCrops = cropsArray.compactMap { cropData in
+                guard let cropUrl = cropData["cropUrl"] as? String,
+                      let boundingBox = cropData["boundingBox"] as? [Int],
+                      let frameIndex = cropData["frameIndex"] as? Int,
+                      let groupId = cropData["groupId"] as? String else {
+                    return nil
+                }
+                return SweepCropInfo(cropUrl: cropUrl, boundingBox: boundingBox, frameIndex: frameIndex, groupId: groupId)
+            }
+        } else {
+            sweepCrops = []
+        }
+
         return CaptureSession(
             id: id,
             userId: data["userId"] as? String ?? "",
@@ -206,7 +221,8 @@ public final class SessionService: SessionServiceProtocol {
             detectedObjects: detectedObjects,
             reasoning: data["reasoning"] as? String,
             error: data["error"] as? String,
-            errorCode: data["errorCode"] as? String
+            errorCode: data["errorCode"] as? String,
+            sweepCrops: sweepCrops
         )
     }
 }

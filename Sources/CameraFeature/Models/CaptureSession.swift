@@ -6,6 +6,8 @@ public enum CaptureMode: String, Sendable, Codable {
     case single
     /// Multiple photos from long-press burst
     case burst
+    /// Camera sweep with EdgeTAM on-device segmentation
+    case sweep
 }
 
 /// Session status matching Firestore document
@@ -94,6 +96,25 @@ public struct BoundingBoxInfo: Sendable, Codable {
     }
 }
 
+/// Crop metadata for sweep mode segments
+public struct SweepCropInfo: Sendable, Codable {
+    /// GCS URL of the cropped image
+    public let cropUrl: String
+    /// Bounding box [ymin, xmin, ymax, xmax] normalized 0-1000
+    public let boundingBox: [Int]
+    /// Index of the keyframe this crop came from
+    public let frameIndex: Int
+    /// Deduplication group ID (segments of same object grouped together)
+    public let groupId: String
+
+    public init(cropUrl: String, boundingBox: [Int], frameIndex: Int, groupId: String) {
+        self.cropUrl = cropUrl
+        self.boundingBox = boundingBox
+        self.frameIndex = frameIndex
+        self.groupId = groupId
+    }
+}
+
 /// Capture session matching Firestore document structure
 public struct CaptureSession: Identifiable, Sendable {
     public let id: String
@@ -124,6 +145,9 @@ public struct CaptureSession: Identifiable, Sendable {
     /// Error code if failed
     public var errorCode: String?
 
+    /// Sweep mode crop metadata (empty for single/burst modes)
+    public var sweepCrops: [SweepCropInfo]
+
     public init(
         id: String,
         userId: String,
@@ -137,7 +161,8 @@ public struct CaptureSession: Identifiable, Sendable {
         detectedObjects: [ServerDetectedObject] = [],
         reasoning: String? = nil,
         error: String? = nil,
-        errorCode: String? = nil
+        errorCode: String? = nil,
+        sweepCrops: [SweepCropInfo] = []
     ) {
         self.id = id
         self.userId = userId
@@ -152,5 +177,6 @@ public struct CaptureSession: Identifiable, Sendable {
         self.reasoning = reasoning
         self.error = error
         self.errorCode = errorCode
+        self.sweepCrops = sweepCrops
     }
 }
