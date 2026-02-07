@@ -20,7 +20,7 @@ struct PhotoCarouselView: View {
                             case .empty:
                                 ProgressView()
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .background(.gray.opacity(0.1))
+                                    .background(Color.cream.opacity(0.3))
                             case .success(let image):
                                 image
                                     .resizable()
@@ -28,11 +28,11 @@ struct PhotoCarouselView: View {
                                     .clipped()
                             case .failure:
                                 Rectangle()
-                                    .fill(.gray.opacity(0.3))
+                                    .fill(Color.cream.opacity(0.5))
                                     .overlay {
                                         Image(systemName: "photo")
                                             .font(.largeTitle)
-                                            .foregroundStyle(.tertiary)
+                                            .foregroundStyle(Color.deepPlum.opacity(0.3))
                                     }
                             @unknown default:
                                 EmptyView()
@@ -48,7 +48,7 @@ struct PhotoCarouselView: View {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.title2)
                                     .symbolRenderingMode(.palette)
-                                    .foregroundStyle(.white, .black.opacity(0.6))
+                                    .foregroundStyle(.white, Color.deepPlum.opacity(0.8))
                                     .frame(minWidth: 44, minHeight: 44)
                             }
                             .padding(8)
