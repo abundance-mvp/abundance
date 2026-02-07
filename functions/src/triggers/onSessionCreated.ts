@@ -335,7 +335,7 @@ export const onSessionCreated = onDocumentUpdated(
 function determineErrorCode(error: unknown): string {
   if (error instanceof Error) {
     if (error.message.includes('timeout')) return 'TIMEOUT';
-    if (error.message.includes('quota')) return 'QUOTA_EXCEEDED';
+    if (error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED') || error.message.includes('429')) return 'QUOTA_EXCEEDED';
     if (error.message.includes('invalid')) return 'INVALID_INPUT';
     if (error.message.includes('permission')) return 'PERMISSION_DENIED';
     if (error.message.includes('not found')) return 'NOT_FOUND';

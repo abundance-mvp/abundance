@@ -50,6 +50,14 @@ function isRetryableError(error: Error): boolean {
 }
 
 /**
+ * Check if an error is a rate limit (429 / RESOURCE_EXHAUSTED)
+ * These need much longer backoff than transient errors.
+ */
+function isRateLimitError(error: Error): boolean {
+  return error.message.includes('RESOURCE_EXHAUSTED') || error.message.includes('429');
+}
+
+/**
  * Sleep for specified milliseconds
  */
 async function sleep(ms: number): Promise<void> {
@@ -124,12 +132,20 @@ export async function callGeminiFlashWithRetry(
         error: lastError.message
       });
 
-      // Apply exponential backoff with jitter before next retry (except on last attempt)
+      // Apply backoff before next retry (except on last attempt)
+      // Rate limit errors (429) need much longer backoff than transient errors
       if (attempt < maxRetries) {
-        const baseMs = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
+        const isRateLimit = isRateLimitError(lastError);
+        const baseMs = isRateLimit
+          ? 15000 * Math.pow(2, attempt)  // 15s, 30s, 60s for rate limits
+          : 1000 * Math.pow(2, attempt);  // 1s, 2s, 4s for transient errors
         const jitter = Math.random() * baseMs * 0.5; // 0-50% jitter
         const backoffMs = baseMs + jitter;
-        logger.info('Retrying Gemini Flash', { backoffMs: Math.round(backoffMs) });
+        logger.info('Retrying Gemini Flash', {
+          backoffMs: Math.round(backoffMs),
+          isRateLimit,
+          attempt: attempt + 1
+        });
         await sleep(backoffMs);
       }
     }
