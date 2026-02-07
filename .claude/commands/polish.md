@@ -61,61 +61,48 @@ Report which specs need creation or updates.
 
 ### Step 4: Parallel Auditors
 
-Dispatch 4 auditor agents in parallel against changed view/component files:
+Dispatch 4 auditor agents in parallel against changed view/component files.
+
+Each auditor has a detailed prompt in `.claude/commands/auditors/`:
 
 ```
-Task(subagent_type="general-purpose", description="Palette audit")
-Task(subagent_type="general-purpose", description="Accessibility audit")
-Task(subagent_type="general-purpose", description="Liquid Glass audit")
-Task(subagent_type="general-purpose", description="HIG audit")
+# Load auditor prompts, then dispatch 4 parallel Task agents:
+
+Task(
+  subagent_type="general-purpose",
+  description="Palette audit",
+  prompt="<load .claude/commands/auditors/palette-auditor.md>\n\nFiles to audit:\n<file list>"
+)
+
+Task(
+  subagent_type="general-purpose",
+  description="Accessibility audit",
+  prompt="<load .claude/commands/auditors/accessibility-auditor.md>\n\nFiles to audit:\n<file list>"
+)
+
+Task(
+  subagent_type="general-purpose",
+  description="Liquid Glass audit",
+  prompt="<load .claude/commands/auditors/liquid-glass-auditor.md>\n\nFiles to audit:\n<file list>"
+)
+
+Task(
+  subagent_type="general-purpose",
+  description="HIG audit",
+  prompt="<load .claude/commands/auditors/hig-auditor.md>\n\nFiles to audit:\n<file list>"
+)
 ```
 
-Each auditor reads the view file + its view spec and reports violations.
+Each auditor reads the view file + its view spec and reports violations with line numbers, severity, and auto-fix suggestions.
 
-#### Palette Auditor
+#### Auditor Reference
 
-**Violation patterns:**
-- System colors (`.blue`, `.gray`, `.purple`, `.red`, `.green`, `.orange`, etc.)
-- Raw hex colors not from `Color+Brand.swift`
-- `Color(uiColor: ...)` in view files
-- `UIColor.system*` in view files (ADR-010 + palette violation)
-
-**Auto-fix mapping:**
-- `.blue` → `.accentPrimary`
-- `.gray` → `.textPrimary.opacity(0.6)`
-- `.red` → `.errorColor`
-- `.green` → `.successColor`
-- `.orange` → `.accentSecondary`
-- `.purple` → `.accentPrimary`
-
-#### Accessibility Auditor
-
-**Violation patterns:**
-- `Button` without `.accessibilityLabel`
-- `Image` without `.accessibilityLabel` or `.accessibilityHidden(true)`
-- Touch target < 44×44pt (missing `.frame(minWidth: 44, minHeight: 44)`)
-- Missing `.accessibilityAddTraits` on interactive elements
-- Fixed font sizes (`.font(.system(size:))`) instead of Dynamic Type
-- Color contrast below 4.5:1 for body text
-- Missing `.accessibilityElement(children: .combine)` on compound views
-
-#### Liquid Glass Auditor
-
-**Violation patterns:**
-- `.ultraThinMaterial` / `.thinMaterial` / `.thickMaterial` without `adaptiveGlass()` upgrade
-- `.glassEffect()` without pre-iOS 26 availability check
-- Opaque toolbar/tab bar that spec says should be glass
-- Not using `LiquidGlassHelpers.swift` utilities (`adaptiveGlass`, `brandGlass`)
-
-#### HIG Auditor
-
-**Violation patterns:**
-- Custom back button replacing system navigation
-- Tab bar with > 5 items
-- Alert with > 3 actions
-- Missing `.navigationTitle`
-- Missing safe area handling
-- Sheet without `.presentationDetents`
+| Auditor | Prompt File | Focus |
+|---------|-------------|-------|
+| Palette | `auditors/palette-auditor.md` | System colors, raw hex, UIColor, brand token mapping |
+| Accessibility | `auditors/accessibility-auditor.md` | Labels, traits, touch targets, Dynamic Type, contrast |
+| Liquid Glass | `auditors/liquid-glass-auditor.md` | Raw materials, availability checks, adaptiveGlass adoption |
+| HIG | `auditors/hig-auditor.md` | Navigation, sheets, animations, safe areas, brand curves |
 
 ### Step 5: Apply Fixes
 
