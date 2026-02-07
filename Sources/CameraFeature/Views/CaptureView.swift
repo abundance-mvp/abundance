@@ -6,7 +6,7 @@ import Core
 /// Uses server-side Gemini detection - no local YOLO detection
 public struct CaptureView: View {
 
-    @StateObject private var viewModel: CaptureSessionViewModel
+    @State private var viewModel: CaptureSessionViewModel
     @StateObject private var networkMonitor = NetworkMonitor.shared
     private let cameraService: CameraService
     private let onDone: () -> Void
@@ -29,7 +29,7 @@ public struct CaptureView: View {
         cameraService: CameraService = CameraService(),
         onDone: @escaping () -> Void = {}
     ) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        _viewModel = State(initialValue: viewModel)
         self.cameraService = cameraService
         self.onDone = onDone
     }

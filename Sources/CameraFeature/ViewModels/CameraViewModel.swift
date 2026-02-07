@@ -5,13 +5,14 @@ import AVFoundation
 /// ViewModel for camera capture feature (MVVM pattern)
 /// - Note: For server-side detection, use CaptureSessionViewModel instead.
 @MainActor
-public final class CameraViewModel: ObservableObject {
+@Observable
+public final class CameraViewModel {
 
-    // MARK: - Published Properties
+    // MARK: - Observable Properties
 
-    @Published public var sessionState: CameraSessionState = .notStarted
-    @Published public var errorMessage: String?
-    @Published public var authorizationStatus: CameraAuthorizationStatus = .notDetermined
+    public var sessionState: CameraSessionState = .notStarted
+    public var errorMessage: String?
+    public var authorizationStatus: CameraAuthorizationStatus = .notDetermined
 
     // MARK: - Dependencies
 
@@ -26,7 +27,10 @@ public final class CameraViewModel: ObservableObject {
         // Observe session state changes
         cameraService.sessionState
             .receive(on: DispatchQueue.main)
-            .assign(to: &$sessionState)
+            .sink { [weak self] state in
+                self?.sessionState = state
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Public Methods

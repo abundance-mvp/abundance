@@ -101,8 +101,13 @@ public struct DetectionResultsView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(.black.opacity(0.5))
-                .clipShape(Capsule())
+                .background {
+                    if #available(iOS 26.0, macOS 26.0, *) {
+                        Color.clear.glassEffect(in: Capsule())
+                    } else {
+                        Capsule().fill(.black.opacity(0.5))
+                    }
+                }
             }
             .padding(12)
             .accessibilityIdentifier("detection.retakeOverlayButton")
@@ -159,14 +164,27 @@ public struct DetectionResultsView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .background {
-                    if reduceTransparency {
-                        #if os(iOS)
-                        Color(.systemBackground)
-                        #else
-                        Color(nsColor: .windowBackgroundColor)
-                        #endif
+                    if #available(iOS 26.0, macOS 26.0, *) {
+                        if !reduceTransparency {
+                            Color.clear
+                                .glassEffect(in: Rectangle())
+                        } else {
+                            #if os(iOS)
+                            Color(.systemBackground)
+                            #else
+                            Color(nsColor: .windowBackgroundColor)
+                            #endif
+                        }
                     } else {
-                        Rectangle().fill(.ultraThinMaterial)
+                        if reduceTransparency {
+                            #if os(iOS)
+                            Color(.systemBackground)
+                            #else
+                            Color(nsColor: .windowBackgroundColor)
+                            #endif
+                        } else {
+                            Rectangle().fill(.ultraThinMaterial)
+                        }
                     }
                 }
         }

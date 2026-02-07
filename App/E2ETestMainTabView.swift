@@ -53,7 +53,7 @@ struct E2ETestMainTabView: View {
 private struct E2EImageInjectionView: View {
     let onDone: () -> Void
 
-    @StateObject private var viewModel = CaptureSessionViewModel()
+    @State private var viewModel = CaptureSessionViewModel()
     @State private var selectedItems: [PhotosPickerItem] = []
     @State private var isProcessing = false
     @State private var statusMessage = "Select an image to test the capture pipeline"

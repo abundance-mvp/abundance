@@ -60,12 +60,22 @@ struct UploadingOverlay: View {
         }
         .padding(32)
         .background {
-            if reduceTransparency {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.black.opacity(0.85))
+            if #available(iOS 26.0, macOS 26.0, *) {
+                if !reduceTransparency {
+                    Color.clear
+                        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+                } else {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.black.opacity(0.85))
+                }
             } else {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                if reduceTransparency {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.black.opacity(0.85))
+                } else {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(.ultraThinMaterial)
+                }
             }
         }
     }
@@ -113,12 +123,22 @@ struct AnalyzingOverlay: View {
         }
         .padding(32)
         .background {
-            if reduceTransparency {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.black.opacity(0.85))
+            if #available(iOS 26.0, macOS 26.0, *) {
+                if !reduceTransparency {
+                    Color.clear
+                        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+                } else {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.black.opacity(0.85))
+                }
             } else {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                if reduceTransparency {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.black.opacity(0.85))
+                } else {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(.ultraThinMaterial)
+                }
             }
         }
         .onAppear {

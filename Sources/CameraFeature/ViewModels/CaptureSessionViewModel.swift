@@ -24,30 +24,31 @@ public enum CaptureUIState: Equatable, Sendable {
 /// MainActor-bound ViewModel for the new capture flow
 /// Handles double-tap single capture and long-press burst capture
 @MainActor
-public final class CaptureSessionViewModel: ObservableObject {
+@Observable
+public final class CaptureSessionViewModel {
 
-    // MARK: - Published Properties
+    // MARK: - Observable Properties
 
     /// Current UI state
-    @Published public var uiState: CaptureUIState = .idle
+    public var uiState: CaptureUIState = .idle
 
     /// Current capture session (nil when idle)
-    @Published public var currentSession: CaptureSession?
+    public var currentSession: CaptureSession?
 
     /// Detected objects from server
-    @Published public var detectedObjects: [ServerDetectedObject] = []
+    public var detectedObjects: [ServerDetectedObject] = []
 
     /// Burst capture count (during long-press)
-    @Published public var burstCount: Int = 0
+    public var burstCount: Int = 0
 
     /// Whether a capture is in progress
-    @Published public var isCapturing: Bool = false
+    public var isCapturing: Bool = false
 
     /// Last captured photo data (for displaying frozen frame and results)
-    @Published public var lastCapturedPhoto: Data?
+    public var lastCapturedPhoto: Data?
 
     /// Accumulated errors during burst capture
-    @Published public var burstErrors: [CaptureError] = []
+    public var burstErrors: [CaptureError] = []
 
     // MARK: - Configuration
 
@@ -79,10 +80,10 @@ public final class CaptureSessionViewModel: ObservableObject {
     private var capturedPhotos: [Data] = []
 
     /// Tracks which objects are being cataloged
-    @Published public var catalogingObjectIds: Set<String> = []
+    public var catalogingObjectIds: Set<String> = []
 
     /// Tracks which objects have been cataloged successfully
-    @Published public var catalogedObjectIds: Set<String> = []
+    public var catalogedObjectIds: Set<String> = []
 
     /// Track (sessionId, groupId) pairs that have been submitted to prevent duplicates
     /// This prevents rapid double-taps from creating duplicate catalog items

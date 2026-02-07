@@ -4,7 +4,7 @@ import Persistence
 
 /// Manual edit form with all editable fields
 public struct EditItemSheet: View {
-    @Bindable var viewModel: EditItemViewModel
+    var viewModel: EditItemViewModel
     @Environment(\.dismiss) private var dismiss
     @FocusState private var focusedField: EditableField?
 

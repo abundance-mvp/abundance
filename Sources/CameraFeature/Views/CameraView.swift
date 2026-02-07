@@ -6,12 +6,12 @@ import AVFoundation
 @available(*, deprecated, message: "Use CaptureView for server-side detection experience.")
 public struct LegacyCameraView: View {
 
-    @StateObject private var viewModel: CameraViewModel
+    @State private var viewModel: CameraViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var captureSession: AVCaptureSession?
 
     public init(cameraService: CameraServiceProtocol) {
-        _viewModel = StateObject(wrappedValue: CameraViewModel(cameraService: cameraService))
+        _viewModel = State(initialValue: CameraViewModel(cameraService: cameraService))
     }
 
     public var body: some View {
@@ -68,8 +68,3 @@ public struct LegacyCameraView: View {
             .padding()
     }
 }
-
-/// Backward compatibility alias
-/// - Warning: Deprecated. Use CaptureView instead.
-@available(*, deprecated, renamed: "LegacyCameraView", message: "Use CaptureView for server-side detection")
-public typealias CameraView = LegacyCameraView

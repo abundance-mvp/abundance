@@ -4,7 +4,7 @@ import Persistence
 
 /// Before/After comparison sheet showing original vs rescan results
 public struct RescanComparisonSheet: View {
-    @Bindable var viewModel: EditItemViewModel
+    var viewModel: EditItemViewModel
     @Environment(\.dismiss) private var dismiss
 
     public init(viewModel: EditItemViewModel) {
