@@ -2,6 +2,7 @@ import Foundation
 import Vision
 @preconcurrency import CoreVideo
 import CryptoKit
+import simd
 import os.log
 
 /// Actor responsible for detecting and preventing duplicate object detections
@@ -14,6 +15,13 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
     /// Cached fingerprint entry with timestamp
     private struct CacheEntry {
         let fingerprint: VNFeaturePrintObservation?
+        let timestamp: Date
+    }
+
+    /// Cached spatial position entry for 3D deduplication
+    private struct SpatialEntry {
+        let position: SIMD3<Float>
+        let identifier: String
         let timestamp: Date
     }
 
@@ -30,6 +38,9 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
     /// Similarity threshold for considering two objects as duplicates
     /// 0.90 = 90% similar (higher = more strict)
     private let similarityThreshold: Float = 0.90
+
+    /// Cache of recently seen 3D world positions
+    private var spatialCache: [SpatialEntry] = []
 
     // MARK: - Initialization
 
@@ -268,5 +279,47 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
 
         // Clean old entries
         await cleanCache()
+    }
+
+    // MARK: - Spatial Deduplication
+
+    /// Add a 3D world position to the spatial cache
+    /// - Parameters:
+    ///   - position: World position from ARKit raycast
+    ///   - identifier: Unique identifier for the segment
+    public func addSpatialEntry(position: SIMD3<Float>, identifier: String) {
+        cleanSpatialCache()
+        spatialCache.append(SpatialEntry(
+            position: position,
+            identifier: identifier,
+            timestamp: Date()
+        ))
+    }
+
+    /// Check if a position is within threshold distance of any cached position
+    /// - Parameters:
+    ///   - position: World position to check
+    ///   - threshold: Distance threshold in meters (default 0.15 = 15cm)
+    /// - Returns: true if any cached position is within threshold distance
+    public func isSpatialDuplicate(position: SIMD3<Float>, threshold: Float = 0.15) -> Bool {
+        cleanSpatialCache()
+        for entry in spatialCache {
+            let distance = simd_distance(position, entry.position)
+            if distance <= threshold {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Reset spatial cache (call on sweep mode exit)
+    public func clearSpatialCache() {
+        spatialCache.removeAll()
+    }
+
+    /// Remove expired entries from the spatial cache
+    private func cleanSpatialCache() {
+        let now = Date()
+        spatialCache = spatialCache.filter { now.timeIntervalSince($0.timestamp) < cacheTTL }
     }
 }
