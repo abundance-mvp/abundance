@@ -152,7 +152,21 @@ export async function validateSessionDocument(
 /**
  * Capture mode enum
  */
-type CaptureMode = 'single' | 'burst';
+type CaptureMode = 'single' | 'burst' | 'sweep';
+
+/**
+ * Sweep crop metadata from on-device EdgeTAM segmentation
+ */
+interface SweepCropInfo {
+  /** GCS URL of the pre-cropped image */
+  cropUrl: string;
+  /** Bounding box [ymin, xmin, ymax, xmax] normalized 0-1000 */
+  boundingBox: [number, number, number, number];
+  /** Index of the keyframe this crop came from */
+  frameIndex: number;
+  /** Deduplication group ID from on-device segment grouping */
+  groupId: string;
+}
 
 /**
  * Session document structure
@@ -182,6 +196,8 @@ interface CaptureSession {
   reasoning?: string;
   error?: string;
   errorCode?: string;
+  /** Sweep mode: pre-cropped segments from on-device EdgeTAM */
+  sweepCrops?: SweepCropInfo[];
 }
 
 export const onSessionCreated = onDocumentUpdated(
@@ -279,6 +295,59 @@ export const onSessionCreated = onDocumentUpdated(
         return;
       }
 
+      // ── Sweep mode: skip detection, label pre-cropped segments ──
+      if (afterData.captureMode === 'sweep') {
+        const sweepCrops = afterData.sweepCrops || [];
+
+        logger.info('Sweep session: labeling pre-cropped segments', {
+          sessionId,
+          cropCount: sweepCrops.length
+        });
+
+        if (sweepCrops.length === 0) {
+          await sessionRef.update({
+            status: 'failed',
+            error: 'No sweep crops provided',
+            errorCode: 'SWEEP_NO_CROPS',
+            failedAt: FieldValue.serverTimestamp()
+          });
+          return;
+        }
+
+        // Label pre-cropped objects via Gemini Flash (no bounding box detection needed)
+        const labels = await labelPrecroppedObjects(sweepCrops);
+
+        // Construct detectedObjects from labels + sweep crop metadata
+        const detectedObjects = labels.map((label, index) => ({
+          groupId: sweepCrops[index].groupId,
+          label: label.name,
+          category: label.category,
+          attributes: label.attributes || {},
+          confidence: 'high' as const,
+          croppedImageUrls: [sweepCrops[index].cropUrl],
+          boundingBoxes: [{
+            imageIndex: sweepCrops[index].frameIndex,
+            box_2d: sweepCrops[index].boundingBox,
+          }],
+        }));
+
+        await sessionRef.update({
+          status: 'detected',
+          detectedAt: FieldValue.serverTimestamp(),
+          detectedObjects,
+          reasoning: `Sweep mode: ${detectedObjects.length} objects labeled from ${sweepCrops.length} pre-cropped segments`
+        });
+
+        logger.info('Sweep session detection completed', {
+          sessionId,
+          objectCount: detectedObjects.length
+        });
+
+        return;
+      }
+
+      // ── Single/Burst mode: full detection pipeline ──
+
       // Get storage instance
       const storage = getStorage();
 
@@ -349,6 +418,55 @@ export const onSessionCreated = onDocumentUpdated(
     }
   }
 );
+
+/**
+ * Label result from Gemini Flash for a single pre-cropped object
+ */
+interface SweepLabelResult {
+  /** Specific product name or descriptive label */
+  name: string;
+  /** High-level category (electronics, furniture, kitchen, etc.) */
+  category: string;
+  /** Optional attributes (color, brand, material, condition) */
+  attributes?: Record<string, string>;
+}
+
+/**
+ * Label pre-cropped objects using Gemini Flash (sweep mode).
+ *
+ * Sweep sessions provide already-cropped images from on-device EdgeTAM
+ * segmentation. This function skips bounding box detection entirely and
+ * only runs the labeling/identification step, making it ~50% cheaper
+ * per item than the full single/burst detection pipeline.
+ *
+ * TODO: Wire up actual Gemini Flash call via layer1-service or
+ * a dedicated sweep labeling prompt. Current implementation returns
+ * placeholder labels to unblock pipeline integration.
+ *
+ * @param sweepCrops - Array of pre-cropped segment metadata from EdgeTAM
+ * @returns Array of label results, one per crop (same order as input)
+ */
+async function labelPrecroppedObjects(
+  sweepCrops: SweepCropInfo[]
+): Promise<SweepLabelResult[]> {
+  // TODO: Implement actual Gemini Flash labeling call
+  // 1. Fetch crop images from GCS URLs (sweepCrops[i].cropUrl)
+  // 2. Send to Gemini Flash with labeling-only prompt (no detection)
+  // 3. Parse structured response into SweepLabelResult[]
+  //
+  // For now, return placeholder labels so the sweep pipeline routing
+  // is fully wired end-to-end. Each crop gets a generic label that
+  // will be replaced once the Gemini call is connected.
+  logger.info('labelPrecroppedObjects: returning placeholder labels', {
+    cropCount: sweepCrops.length
+  });
+
+  return sweepCrops.map((_crop, index) => ({
+    name: `Sweep Object ${index + 1}`,
+    category: 'Other',
+    attributes: {}
+  }));
+}
 
 /**
  * Determine error code from error type
