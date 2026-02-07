@@ -1,8 +1,17 @@
 #!/bin/bash
 # Claude Code pre-commit hook
-# Validates document references before committing docs changes
+# 1. Brand guard (feature/brand-* branches only)
+# 2. Validates document references before committing docs changes
 
 set -e
+
+# --- Brand Guard ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+BRAND_GUARD="$PROJECT_ROOT/scripts/brand-guard.sh"
+if [[ -f "$BRAND_GUARD" ]]; then
+    bash "$BRAND_GUARD"
+fi
 
 # Check if any docs/ files are staged
 if git diff --cached --name-only | grep -q "^docs/"; then
