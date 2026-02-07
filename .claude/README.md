@@ -10,16 +10,14 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 │   ├── ios-superpowers/       # iOS development orchestrator
 │   ├── backend-superpowers/   # Firebase + GCP unified skill (NEW)
 │   ├── troubleshoot/          # End-to-end troubleshooting pipeline
-│   ├── device-tester.md       # Physical device testing
+│   ├── device-tester/         # Physical device testing
 │   ├── gemini-integration/    # AI pipeline patterns
 │   ├── firebase-superpowers/  # DEPRECATED → use backend-superpowers
 │   └── gcp-superpowers/       # DEPRECATED → use backend-superpowers
 ├── commands/                  # User-invoked via /project:command-name
 │   ├── ios-superpowers.md     # /project:ios-superpowers
-│   ├── ios-debug.md           # /project:ios-debug
 │   ├── device-tester.md       # /project:device-tester
-│   ├── gcp-deploy.md          # /project:gcp-deploy
-│   └── dispatch.md            # /project:dispatch
+│   └── gcp-deploy.md          # /project:gcp-deploy
 ├── hooks/                     # Automatic triggers
 └── settings.json              # Plugin configuration
 ```
@@ -56,9 +54,6 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 /project:ios-superpowers <action> <context>
   Actions: debug | tdd | review | plan | execute | brainstorm | parallel
 
-/project:ios-debug <issue>
-  Quick debug shortcut
-
 /project:device-tester
   Physical device testing workflow
 
@@ -73,12 +68,6 @@ This repo is **Claude Code–ready** with a complete skill and command system.
   Flags: --staging | --production | --verify | --notify
 ```
 
-### Multi-Agent
-
-```bash
-/project:dispatch
-  Dispatch agents to work on triaged issues
-```
 
 ## MCP Integration
 
