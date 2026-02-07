@@ -33,7 +33,7 @@ struct SegmentOverlayView: View {
             // Checkmark badge for selected segments
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 20))
+                    .font(.title3)
                     .foregroundStyle(.white, .blue)
                     .padding(4)
             }

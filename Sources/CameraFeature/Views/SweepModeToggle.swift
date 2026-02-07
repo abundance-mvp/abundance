@@ -36,7 +36,7 @@ struct SweepModeToggle: View {
         } label: {
             VStack(spacing: 2) {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: selectedMode == mode ? .bold : .regular))
+                    .font(.body.weight(selectedMode == mode ? .bold : .regular))
                 Text(label)
                     .font(.caption2.weight(selectedMode == mode ? .bold : .regular))
             }

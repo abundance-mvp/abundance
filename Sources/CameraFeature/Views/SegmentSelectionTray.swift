@@ -35,18 +35,27 @@ struct SegmentSelectionTray: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.blue, lineWidth: 1.5)
                 )
+                .accessibilityLabel(thumbnailLabel(for: segment))
 
-            // Remove button
+            // Remove button — 44x44 touch target per Apple HIG
             Button {
                 onDeselectSegment(segment.id)
             } label: {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 16))
+                    .font(.body)
                     .foregroundStyle(.white, .red)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
-            .offset(x: 4, y: -4)
+            .offset(x: 8, y: -8)
             .accessibilityLabel("Remove from selection")
         }
-        .transition(.scale.combined(with: .opacity))
+        .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+    }
+
+    private func thumbnailLabel(for segment: SegmentedObject) -> String {
+        let index = selectedSegments.firstIndex(where: { $0.id == segment.id })
+            .map { $0 + 1 } ?? 0
+        return "Selected object \(index) of \(selectedSegments.count)"
     }
 }

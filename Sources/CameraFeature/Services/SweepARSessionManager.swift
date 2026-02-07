@@ -30,6 +30,11 @@ public final class SweepARSessionManager: NSObject, ObservableObject {
         isARAvailable = ARWorldTrackingConfiguration.isSupported
     }
 
+    deinit {
+        arSession?.delegate = nil
+        arSession?.pause()
+    }
+
     /// Start AR session for spatial tracking during sweep
     public func startTracking() {
         guard isARAvailable else {
@@ -51,6 +56,7 @@ public final class SweepARSessionManager: NSObject, ObservableObject {
 
     /// Stop AR session (call on sweep mode exit)
     public func stopTracking() {
+        arSession?.delegate = nil
         arSession?.pause()
         arSession = nil
         currentFrame = nil

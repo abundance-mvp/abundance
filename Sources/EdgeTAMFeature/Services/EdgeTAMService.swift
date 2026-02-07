@@ -181,6 +181,9 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
     /// Call this after warmup() to start monitoring
     public func startMemoryMonitoring() {
         #if os(iOS)
+        // Cancel any existing monitor before creating a new one
+        memoryMonitorTask?.cancel()
+
         // Use nonisolated closure to observe notification, then hop to actor
         let taskRef = Task { [weak self] in
             let notifications = NotificationCenter.default.notifications(

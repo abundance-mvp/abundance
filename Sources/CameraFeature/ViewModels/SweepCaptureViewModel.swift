@@ -1,9 +1,12 @@
 import Foundation
-import SwiftUI
 import Combine
 import os.log
 import EdgeTAMFeature
 import Persistence
+
+#if os(iOS)
+import UIKit
+#endif
 
 /// Adaptive UX tier based on measured EdgeTAM inference FPS
 public enum PerformanceTier: Sendable {
@@ -76,15 +79,21 @@ public final class SweepCaptureViewModel: ObservableObject {
 
     // MARK: - Selection Management
 
-    /// Toggle selection state of a segment
+    /// Toggle selection state of a segment with haptic feedback
     /// - Parameter segmentId: ID of the segment to toggle
     public func toggleSelection(_ segmentId: UUID) {
-        if selectedSegmentIds.contains(segmentId) {
+        let wasSelected = selectedSegmentIds.contains(segmentId)
+        if wasSelected {
             selectedSegmentIds.remove(segmentId)
         } else {
             selectedSegmentIds.insert(segmentId)
         }
         canCatalog = !selectedSegmentIds.isEmpty
+
+        #if os(iOS)
+        let style: UIImpactFeedbackGenerator.FeedbackStyle = wasSelected ? .light : .medium
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
+        #endif
     }
 
     /// Clear all selections

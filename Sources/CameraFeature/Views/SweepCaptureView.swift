@@ -18,6 +18,11 @@ public struct SweepCaptureView: View {
     /// Throttle to prevent haptic spam when many segments appear at once
     @State private var lastSegmentHapticTime: Date = .distantPast
 
+    /// Dynamic Type-scaled padding values
+    @ScaledMetric(relativeTo: .body) private var horizontalPadding: CGFloat = 16
+    @ScaledMetric(relativeTo: .body) private var verticalPadding: CGFloat = 8
+    @ScaledMetric(relativeTo: .body) private var bottomPadding: CGFloat = 16
+
     public init(
         viewModel: SweepCaptureViewModel,
         onCatalog: @escaping () -> Void,
@@ -39,11 +44,6 @@ public struct SweepCaptureView: View {
                         geometrySize: geometry.size,
                         onTap: {
                             viewModel.toggleSelection(segment.id)
-                            #if os(iOS)
-                            let style: UIImpactFeedbackGenerator.FeedbackStyle =
-                                viewModel.selectedSegmentIds.contains(segment.id) ? .medium : .light
-                            UIImpactFeedbackGenerator(style: style).impactOccurred()
-                            #endif
                         }
                     )
                 }
@@ -65,7 +65,7 @@ public struct SweepCaptureView: View {
 
                     // Action buttons
                     actionButtons
-                        .padding(.bottom, 16)
+                        .padding(.bottom, bottomPadding)
                 }
             }
         }
@@ -102,8 +102,8 @@ public struct SweepCaptureView: View {
         }
         .font(.subheadline.weight(.medium))
         .foregroundStyle(.white)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, verticalPadding)
         .background {
             if reduceTransparency {
                 Capsule().fill(Color.black.opacity(0.7))
@@ -111,7 +111,7 @@ public struct SweepCaptureView: View {
                 Capsule().adaptiveGlass(in: Capsule())
             }
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, verticalPadding)
         .accessibilityAddTraits(.updatesFrequently)
     }
 
@@ -133,7 +133,7 @@ public struct SweepCaptureView: View {
             .buttonStyle(.borderedProminent)
             .disabled(!viewModel.canCatalog)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, horizontalPadding)
     }
 
     // MARK: - Haptics
