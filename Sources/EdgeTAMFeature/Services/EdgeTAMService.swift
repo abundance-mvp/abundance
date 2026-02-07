@@ -4,6 +4,10 @@ import CoreML
 import QuartzCore
 import os.log
 
+#if os(iOS)
+import UIKit
+#endif
+
 /// Actor-isolated CoreML inference service for EdgeTAM segmentation.
 ///
 /// Wraps 3 CoreML models (image encoder, prompt encoder, mask decoder).
@@ -29,6 +33,9 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
 
     /// Maximum cached features to prevent memory pressure
     private let maxCachedFeatures = 5
+
+    /// Task for monitoring memory pressure notifications
+    private var memoryMonitorTask: Task<Void, Never>?
 
     // MARK: - Initialization
 
@@ -159,10 +166,41 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
     }
 
     public func unload() async {
+        memoryMonitorTask?.cancel()
+        memoryMonitorTask = nil
         imageEncoder = nil
         promptEncoder = nil
         maskDecoder = nil
         featureCache.removeAll()
         logger.info("Models unloaded")
+    }
+
+    // MARK: - Memory Pressure
+
+    /// Register for memory warnings to proactively manage cache
+    /// Call this after warmup() to start monitoring
+    public func startMemoryMonitoring() {
+        #if os(iOS)
+        // Use nonisolated closure to observe notification, then hop to actor
+        let taskRef = Task { [weak self] in
+            let notifications = NotificationCenter.default.notifications(
+                named: UIApplication.didReceiveMemoryWarningNotification
+            )
+            for await _ in notifications {
+                guard let self else { break }
+                await self.handleMemoryWarning()
+            }
+        }
+        // Store task reference to cancel on unload
+        memoryMonitorTask = taskRef
+        #endif
+    }
+
+    /// Handle memory warning by clearing caches
+    private func handleMemoryWarning() {
+        logger.warning("Memory warning received — clearing feature cache (\(self.featureCache.count) entries)")
+        featureCache.removeAll()
+        // Keep models loaded — only clear cache
+        // If a second warning comes, the system will terminate us anyway
     }
 }
