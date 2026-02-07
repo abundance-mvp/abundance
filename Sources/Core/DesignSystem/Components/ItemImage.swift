@@ -1,10 +1,15 @@
 import SwiftUI
 
-/// A reusable image component for displaying item photos with error handling and logging
+/// A reusable image component for displaying item photos with retry and error handling
+///
+/// Firebase Storage download URLs can occasionally fail on first load due to eventual
+/// consistency or network hiccups. This component automatically retries failed loads
+/// before showing a placeholder.
 ///
 /// Features:
+/// - Automatic retry on failure (configurable, default 2 retries with 1s delay)
 /// - Graceful error handling with placeholder
-/// - Automatic logging of image load failures
+/// - Automatic logging of image load failures (after all retries exhausted)
 /// - Configurable placeholder icon and background
 ///
 /// Usage:
@@ -21,7 +26,10 @@ public struct ItemImage: View {
     let context: String
     var placeholderIcon: String = "photo"
     var contentMode: ContentMode = .fill
+    var maxRetries: Int = 2
 
+    @State private var retryCount = 0
+    @State private var loadId = UUID()
     @State private var hasLoggedError = false
 
     public init(
@@ -29,13 +37,15 @@ public struct ItemImage: View {
         itemId: String? = nil,
         context: String,
         placeholderIcon: String = "photo",
-        contentMode: ContentMode = .fill
+        contentMode: ContentMode = .fill,
+        maxRetries: Int = 2
     ) {
         self.url = url
         self.itemId = itemId
         self.context = context
         self.placeholderIcon = placeholderIcon
         self.contentMode = contentMode
+        self.maxRetries = maxRetries
     }
 
     public var body: some View {
@@ -48,14 +58,23 @@ public struct ItemImage: View {
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
             case .failure:
-                errorPlaceholder
-                    .onAppear {
-                        logErrorIfNeeded()
-                    }
+                if retryCount < maxRetries {
+                    // Show loading state while waiting to retry
+                    loadingPlaceholder
+                        .onAppear {
+                            scheduleRetry()
+                        }
+                } else {
+                    errorPlaceholder
+                        .onAppear {
+                            logErrorIfNeeded()
+                        }
+                }
             @unknown default:
                 errorPlaceholder
             }
         }
+        .id(loadId)
     }
 
     // MARK: - Placeholders
@@ -76,6 +95,16 @@ public struct ItemImage: View {
         }
     }
 
+    // MARK: - Retry Logic
+
+    private func scheduleRetry() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            retryCount += 1
+            loadId = UUID()
+        }
+    }
+
     // MARK: - Error Logging
 
     private func logErrorIfNeeded() {
@@ -86,7 +115,7 @@ public struct ItemImage: View {
         AppLogger.log(.imageLoadFailed(
             url: url,
             itemId: itemId,
-            context: context
+            context: "\(context) (after \(maxRetries) retries)"
         ))
     }
 }
@@ -105,6 +134,13 @@ public extension ItemImage {
     func aspectRatio(_ mode: ContentMode) -> ItemImage {
         var view = self
         view.contentMode = mode
+        return view
+    }
+
+    /// Sets the maximum number of retries before showing error placeholder
+    func retries(_ count: Int) -> ItemImage {
+        var view = self
+        view.maxRetries = count
         return view
     }
 }

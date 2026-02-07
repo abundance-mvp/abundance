@@ -185,20 +185,10 @@ public struct EditItemSheet: View {
                             // Existing photos
                             ForEach(Array(viewModel.editableItem.allImageUrls.enumerated()), id: \.offset) { index, urlString in
                                 ZStack(alignment: .topTrailing) {
-                                    AsyncImage(url: URL(string: urlString)) { phase in
-                                        switch phase {
-                                        case .success(let image):
-                                            image
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fill)
-                                        default:
-                                            Rectangle()
-                                                .fill(.gray.opacity(0.2))
-                                                .overlay {
-                                                    ProgressView()
-                                                }
-                                        }
-                                    }
+                                    ItemImage(
+                                        url: urlString,
+                                        context: "EditItemSheet.photo[\(index)]"
+                                    )
                                     .frame(width: 80, height: 80)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
 

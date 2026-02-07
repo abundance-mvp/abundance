@@ -140,32 +140,16 @@ private struct ComparisonCard: View {
                         .fill(isHighlighted ? Color.mutedSage : Color.secondary.opacity(0.2))
                 }
 
-            // Image thumbnail
-            AsyncImage(url: URL(string: imageUrl)) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 100)
-                        .clipped()
-                case .failure:
-                    Rectangle()
-                        .fill(.gray.opacity(0.2))
-                        .frame(height: 100)
-                        .overlay {
-                            Image(systemName: "photo")
-                                .foregroundStyle(.secondary)
-                        }
-                default:
-                    Rectangle()
-                        .fill(.gray.opacity(0.1))
-                        .frame(height: 100)
-                        .overlay { ProgressView() }
-                }
-            }
+            // Image thumbnail (with automatic retry)
+            ItemImage(
+                url: imageUrl,
+                itemId: item.id,
+                context: "RescanComparison.\(title)"
+            )
+            .frame(height: 100)
+            .clipped()
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .accessibilityLabel("\(title) photo of \(item.name ?? "item")")
+            .accessibilityLabel("\(title) photo of \(item.displayName)")
 
             // Key fields
             VStack(alignment: .leading, spacing: 6) {

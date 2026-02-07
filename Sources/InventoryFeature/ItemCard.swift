@@ -66,40 +66,22 @@ struct ItemCard: View {
     private var cardVisual: some View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 12) {
-                // Cropped object image
-                AsyncImage(url: URL(string: item.imageUrl)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                            .frame(height: imageHeight)
-                            .frame(maxWidth: .infinity)
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: imageHeight)
-                            .clipped()
-                    case .failure:
-                        placeholderImage
-                            .onAppear {
-                                AppLogger.log(.imageLoadFailed(
-                                    url: item.imageUrl,
-                                    itemId: item.id,
-                                    context: "ItemCard.thumbnail"
-                                ))
-                            }
-                    @unknown default:
-                        placeholderImage
-                    }
-                }
+                // Cropped object image (with automatic retry on failure)
+                ItemImage(
+                    url: item.imageUrl,
+                    itemId: item.id,
+                    context: "ItemCard.thumbnail"
+                )
+                .frame(maxWidth: .infinity)
+                .frame(height: imageHeight)
+                .clipped()
                 .clipShape(innerShape)
-                .accessibilityLabel("Photo of \(item.name ?? item.category ?? "item")")
+                .accessibilityLabel("Photo of \(item.displayName)")
 
                 // Metadata section
                 VStack(alignment: .leading, spacing: 4) {
-                    // Primary: Item name (fallback to category)
-                    Text(item.name ?? item.category ?? "Unknown Item")
+                    // Primary: Item name with full fallback chain
+                    Text(item.displayName)
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(2)
@@ -189,19 +171,8 @@ struct ItemCard: View {
         RoundedRectangle(cornerRadius: 12)
     }
 
-    private var placeholderImage: some View {
-        ZStack {
-            Color.gray.opacity(0.2)
-            Image(systemName: "photo")
-                .font(.title)
-                .foregroundStyle(.secondary)
-        }
-        .frame(height: imageHeight)
-        .accessibilityLabel("Image not available")
-    }
-
     private var accessibilityDescription: String {
-        var desc = "\(item.name ?? item.category ?? "Unknown item")"
+        var desc = "\(item.displayName)"
         if let brand = item.brand {
             desc += ", \(brand)"
         }

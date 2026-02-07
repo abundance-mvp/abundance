@@ -90,6 +90,14 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
     /// Processing notes from AI (issues, assumptions made)
     public var processingNotes: String?
 
+    // MARK: - Layer 1 Fallback Data
+
+    /// Label from Layer 1 detection (fallback when Layer 2 fails)
+    public var layer1Label: String?
+
+    /// Category from Layer 1 detection (fallback when Layer 2 fails)
+    public var layer1Category: String?
+
     // MARK: - Edit Tracking
 
     /// Fields that user has manually edited (for training data)
@@ -102,6 +110,11 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
 
     /// URLs for additional photos beyond the primary imageUrl
     public var additionalImageUrls: [String]?
+
+    /// Display name with full fallback chain: name → layer1Label → category → layer1Category
+    public var displayName: String {
+        name ?? layer1Label ?? category ?? layer1Category ?? "Unknown Item"
+    }
 
     /// All image URLs: primary + additional
     public var allImageUrls: [String] {
@@ -163,6 +176,8 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         estimatedValue: Double? = nil,
         confidence: ItemConfidence? = nil,
         processingNotes: String? = nil,
+        layer1Label: String? = nil,
+        layer1Category: String? = nil,
         userEditedFields: [String]? = nil,
         lastRescanAt: Date? = nil,
         additionalImageUrls: [String]? = nil,
@@ -193,6 +208,8 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         self.estimatedValue = estimatedValue
         self.confidence = confidence
         self.processingNotes = processingNotes
+        self.layer1Label = layer1Label
+        self.layer1Category = layer1Category
         self.userEditedFields = userEditedFields
         self.lastRescanAt = lastRescanAt
         self.additionalImageUrls = additionalImageUrls

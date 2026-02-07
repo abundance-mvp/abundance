@@ -25,7 +25,8 @@ actor CameraSessionActor {
 
     // MARK: - Session Configuration
 
-    /// Configure the capture session with proper isolation
+    /// Configure the capture session with proper isolation.
+    /// Idempotent: safe to call multiple times (skips inputs/outputs already added).
     func configure() async throws {
         captureSession.beginConfiguration()
         defer { captureSession.commitConfiguration() }
@@ -33,40 +34,48 @@ actor CameraSessionActor {
         // Set session preset from configuration
         captureSession.sessionPreset = configuration.sessionPreset
 
-        // Add video input (camera)
-        guard let camera = AVCaptureDevice.default(
-            configuration.preferredDeviceType,
-            for: .video,
-            position: configuration.preferredCameraPosition
-        ) else {
-            throw CameraError.deviceNotAvailable
+        // Only add video input if not already present
+        if captureSession.inputs.isEmpty {
+            guard let camera = AVCaptureDevice.default(
+                configuration.preferredDeviceType,
+                for: .video,
+                position: configuration.preferredCameraPosition
+            ) else {
+                throw CameraError.deviceNotAvailable
+            }
+
+            let input = try AVCaptureDeviceInput(device: camera)
+
+            guard captureSession.canAddInput(input) else {
+                throw CameraError.cannotAddInput
+            }
+
+            captureSession.addInput(input)
+            videoInput = input
         }
 
-        let input = try AVCaptureDeviceInput(device: camera)
+        // Only add photo output if not already present
+        if !captureSession.outputs.contains(where: { $0 is AVCapturePhotoOutput }) {
+            guard captureSession.canAddOutput(photoOutput) else {
+                throw CameraError.cannotAddOutput
+            }
 
-        guard captureSession.canAddInput(input) else {
-            throw CameraError.cannotAddInput
+            captureSession.addOutput(photoOutput)
         }
 
-        captureSession.addInput(input)
-        videoInput = input
-
-        // Configure photo output
-        guard captureSession.canAddOutput(photoOutput) else {
-            throw CameraError.cannotAddOutput
-        }
-
-        captureSession.addOutput(photoOutput)
-
-        // Configure for photo quality from configuration
+        // Configure photo quality (always apply in case settings changed)
         photoOutput.maxPhotoQualityPrioritization = configuration.photoQualityPrioritization
 
-        // Configure video output for live preview
-        guard captureSession.canAddOutput(videoOutput) else {
-            throw CameraError.cannotAddOutput
+        // Only add video output if not already present
+        if !captureSession.outputs.contains(where: { $0 is AVCaptureVideoDataOutput }) {
+            guard captureSession.canAddOutput(videoOutput) else {
+                throw CameraError.cannotAddOutput
+            }
+
+            captureSession.addOutput(videoOutput)
         }
 
-        captureSession.addOutput(videoOutput)
+        // Configure video output (always apply in case settings changed)
         videoOutput.alwaysDiscardsLateVideoFrames = configuration.alwaysDiscardsLateVideoFrames
         videoOutput.videoSettings = [
             kCVPixelBufferPixelFormatTypeKey as String: Int(configuration.pixelFormat)

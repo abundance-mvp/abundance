@@ -15,29 +15,11 @@ struct PhotoCarouselView: View {
             TabView(selection: $selectedIndex) {
                 ForEach(Array(imageUrls.enumerated()), id: \.offset) { index, urlString in
                     ZStack(alignment: .topTrailing) {
-                        AsyncImage(url: URL(string: urlString)) { phase in
-                            switch phase {
-                            case .empty:
-                                ProgressView()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .background(Color.cream.opacity(0.3))
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .clipped()
-                            case .failure:
-                                Rectangle()
-                                    .fill(Color.cream.opacity(0.5))
-                                    .overlay {
-                                        Image(systemName: "photo")
-                                            .font(.largeTitle)
-                                            .foregroundStyle(Color.deepPlum.opacity(0.3))
-                                    }
-                            @unknown default:
-                                EmptyView()
-                            }
-                        }
+                        ItemImage(
+                            url: urlString,
+                            context: "PhotoCarousel.photo[\(index)]"
+                        )
+                        .clipped()
 
                         // Delete button for non-primary photos
                         if index > 0, onDeletePhoto != nil {

@@ -48,44 +48,19 @@ public struct ItemDetailView: View {
                             onDeletePhoto: onDeletePhoto
                         )
                         .frame(height: outerGeometry.size.height * 0.5)
-                        .accessibilityLabel("Photos of \(item.name ?? "item"), \(item.photoCount) photos")
+                        .accessibilityLabel("Photos of \(item.displayName), \(item.photoCount) photos")
                     } else {
                         GeometryReader { geometry in
-                            AsyncImage(url: URL(string: item.imageUrl)) { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                        .background(Color.cream.opacity(0.3))
-                                case .success(let image):
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(width: geometry.size.width, height: geometry.size.height)
-                                        .offset(y: reduceMotion ? 0 : scrollOffset * 0.5)
-                                        .clipped()
-                                case .failure:
-                                    Rectangle()
-                                        .fill(Color.cream.opacity(0.5))
-                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                        .overlay {
-                                            Image(systemName: "photo")
-                                                .font(.largeTitle)
-                                                .foregroundStyle(Color.deepPlum.opacity(0.3))
-                                        }
-                                        .onAppear {
-                                            AppLogger.log(.imageLoadFailed(
-                                                url: item.imageUrl,
-                                                itemId: item.id,
-                                                context: "ItemDetailView.heroImage"
-                                            ))
-                                        }
-                                @unknown default:
-                                    EmptyView()
-                                }
-                            }
+                            ItemImage(
+                                url: item.imageUrl,
+                                itemId: item.id,
+                                context: "ItemDetailView.heroImage",
+                                placeholderIcon: "photo"
+                            )
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .offset(y: reduceMotion ? 0 : scrollOffset * 0.5)
                             .clipped()
-                            .accessibilityLabel("Detail photo of \(item.name ?? "item")")
+                            .accessibilityLabel("Detail photo of \(item.displayName)")
                         }
                         .frame(height: outerGeometry.size.height * 0.5)
                         .background(
@@ -103,7 +78,7 @@ public struct ItemDetailView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         // Header: Name + Edit
                         HStack {
-                            Text(item.name ?? "Unnamed Item")
+                            Text(item.displayName)
                                 .font(.title.weight(.bold))
                                 .foregroundStyle(.primary)
                                 .accessibilityIdentifier("detail.itemName")
