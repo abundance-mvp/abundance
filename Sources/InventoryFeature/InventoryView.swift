@@ -278,7 +278,7 @@ private struct ErrorView: View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: errorIconSize))
-                .foregroundStyle(.red)
+                .foregroundStyle(Color.errorColor)
             Text("Error Loading Items")
                 .font(.title2)
             Text(message)

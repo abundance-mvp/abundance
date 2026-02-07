@@ -76,16 +76,15 @@
 
 | Trigger | Animation | Haptic | Duration |
 |---------|-----------|--------|----------|
-| Camera error show/hide | `.easeInOut(duration: 0.3)` | None | 300ms |
-| Network status change | `.easeInOut(duration: 0.2)` | None | 200ms |
+| Camera error show/hide | `.brandDefault` (reduce motion: `.brandReducedMotion`) | None | 500ms spring |
+| Network status change | `.brandPress` (reduce motion: `.brandReducedMotion`) | None | 300ms spring |
 | Error recovery overlay | `.scale + .opacity` | None | System |
 | Single capture | — | `.impact(.medium)` | — |
 | Burst end / Done | — | `.impact(.medium)` | — |
 
-**Violations:**
-- Line 79: `.animation(.easeInOut(duration: 0.3))` — should use `brandDefault` or named curve
-- Line 80: `.animation(.easeInOut(duration: 0.2))` — should use `brandReducedMotion` or named curve
-- Lines 193, 355: `UIImpactFeedbackGenerator(style: .medium).impactOccurred()` — consider centralizing haptic calls
+**Notes:**
+- All animations respect `@Environment(\.accessibilityReduceMotion)` with `.brandReducedMotion` fallback
+- Lines 193, 355: `UIImpactFeedbackGenerator(style: .medium).impactOccurred()` — consider centralizing haptic calls in future
 
 ---
 

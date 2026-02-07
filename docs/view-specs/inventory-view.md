@@ -14,12 +14,11 @@
 | View background | (system default) | — | NavigationStack default |
 | Select button tint | `accentPrimary` | `#E8907A` | `.tint(Color.accentPrimary)` |
 | Selection toolbar bg | `cream` | `#F0DCC0` | `.abundanceCardStyle()` |
-| Error icon | `errorColor` | `#E8907A` | Error state icon (currently `.red` — **violation**) |
+| Error icon | `errorColor` | `#E8907A` | Error state icon |
 | Grid item cards | `cream` / `peach` | `#F0DCC0` / `#EDBE9E` | Via `ItemCard` |
 | Empty state card | — | — | Via `EmptyStateCard` component |
 
-**Known violations:**
-- `ErrorView` line 281: `.foregroundStyle(.red)` → should be `.foregroundStyle(.errorColor)`
+**Known violations:** None
 
 ## 2. Accessibility
 
@@ -35,8 +34,8 @@
 | Deselect All button | `inventory.deselectAllButton` | `.isButton` | 44×44pt | Body |
 | Bulk Delete button | `inventory.bulkDeleteButton` | `.isButton` | 44×44pt | Body |
 
-**Known violations:**
-- `ErrorView` error icon uses `@ScaledMetric` (good) but fixed `.font(.system(size:))` pattern — review needed
+**Notes:**
+- `ErrorView` error icon uses `@ScaledMetric(relativeTo: .largeTitle)` with `.font(.system(size:))` — Dynamic Type compliant
 
 ## 3. Liquid Glass
 
@@ -86,5 +85,5 @@
 - "Open Camera" CTA delegates to parent
 
 ### ErrorView (private)
-- `@ScaledMetric` for icon size (good)
-- **Violation:** `.foregroundStyle(.red)` — should use `.errorColor`
+- `@ScaledMetric` for icon size (Dynamic Type compliant)
+- Uses `Color.errorColor` (brand token)

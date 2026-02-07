@@ -11,6 +11,7 @@ public struct CaptureView: View {
     private let cameraService: CameraService
     private let onDone: () -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var frozenFrame: Data?
@@ -76,8 +77,8 @@ public struct CaptureView: View {
                     .transition(.scale.combined(with: .opacity))
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: showingCameraError)
-            .animation(.easeInOut(duration: 0.2), value: networkMonitor.isConnected)
+            .animation(reduceMotion ? .brandReducedMotion : .brandDefault, value: showingCameraError)
+            .animation(reduceMotion ? .brandReducedMotion : .brandPress, value: networkMonitor.isConnected)
             .onAppear {
                 // Restart camera when returning to this tab
                 Task {

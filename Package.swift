@@ -138,6 +138,10 @@ let package: Package = Package(
             name: "CoreTests",
             dependencies: ["Core"]
         ),
+        .testTarget(
+            name: "AXeTests",
+            dependencies: ["Core"]
+        ),
 
         // App
         .executableTarget(
