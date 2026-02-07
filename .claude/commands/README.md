@@ -27,16 +27,6 @@ iOS-aware orchestrator that ensures Apple documentation is fetched via `/axiom:a
 
 ---
 
-#### `/project:ios-debug <issue>`
-
-Debug iOS issues using Axiom skills and Apple documentation.
-
-**Example**: `/project:ios-debug "camera preview freezing"`
-
-**See**: `.claude/commands/ios-debug.md`
-
----
-
 #### `/project:device-tester`
 
 Iterative testing on physical device with crash analysis and screenshot debugging.
