@@ -109,11 +109,19 @@ function withTimeout<T>(
  * @returns Detection response from Gemini
  * @throws Last error if all retries fail or non-retryable error
  */
+/**
+ * Maximum consecutive 429 errors before circuit breaker trips.
+ * After this many consecutive rate limit errors, we fail fast with
+ * RATE_LIMITED instead of continuing to hammer the API.
+ */
+const RATE_LIMIT_CIRCUIT_BREAKER_THRESHOLD = 3;
+
 export async function callGeminiFlashWithRetry(
   imageBase64s: string[],
   maxRetries: number = LAYER1_TIMEOUTS.GEMINI_FLASH_MAX_RETRIES
 ): Promise<Layer1DetectionResponse> {
   let lastError: Error | null = null;
+  let consecutive429Count = 0;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -126,21 +134,41 @@ export async function callGeminiFlashWithRetry(
         throw lastError;
       }
 
+      const isRateLimit = isRateLimitError(lastError);
+
+      // Circuit breaker: after N consecutive 429s, fail fast
+      if (isRateLimit) {
+        consecutive429Count++;
+        if (consecutive429Count >= RATE_LIMIT_CIRCUIT_BREAKER_THRESHOLD) {
+          logger.error('Rate limit circuit breaker tripped', {
+            consecutive429Count,
+            attempt: attempt + 1
+          });
+          throw new Error(
+            `RATE_LIMITED: ${consecutive429Count} consecutive 429 errors. ` +
+            `Circuit breaker tripped to prevent further API hammering.`
+          );
+        }
+      } else {
+        consecutive429Count = 0; // Reset on non-429 errors
+      }
+
       logger.warn('Gemini Flash attempt failed', {
         attempt: attempt + 1,
         maxAttempts: maxRetries + 1,
+        isRateLimit,
+        consecutive429Count,
         error: lastError.message
       });
 
       // Apply backoff before next retry (except on last attempt)
       // Rate limit errors (429) need much longer backoff than transient errors
       if (attempt < maxRetries) {
-        const isRateLimit = isRateLimitError(lastError);
         const baseMs = isRateLimit
-          ? 15000 * Math.pow(2, attempt)  // 15s, 30s, 60s for rate limits
-          : 1000 * Math.pow(2, attempt);  // 1s, 2s, 4s for transient errors
+          ? 15000 * Math.pow(2, attempt)  // 15s, 30s, 60s, 120s for rate limits
+          : 1000 * Math.pow(2, attempt);  // 1s, 2s, 4s, 8s, 16s for transient errors
         const jitter = Math.random() * baseMs * 0.5; // 0-50% jitter
-        const backoffMs = baseMs + jitter;
+        const backoffMs = Math.min(baseMs + jitter, 60000); // Cap at 60s
         logger.info('Retrying Gemini Flash', {
           backoffMs: Math.round(backoffMs),
           isRateLimit,

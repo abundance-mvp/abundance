@@ -483,7 +483,8 @@ public final class ItemService: ItemRepository {
 
         let data: [String: Any] = [
             "imageUrl": item.imageUrl,
-            "status": "pending", // Triggers Cloud Function
+            "status": "pending", // Triggers onItemUpdatedRescan Cloud Function
+            "deepScanRequested": false, // Reset stale deep scan state
             "lastRescanAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp()
         ]

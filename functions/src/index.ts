@@ -10,6 +10,7 @@ import { onItemDeleted } from './triggers/onItemDeleted';
 import { onSessionCreated } from './triggers/onSessionCreated';
 import { onItemFromSession } from './triggers/onItemFromSession';
 import { onItemUpdatedDeepScan } from './triggers/onItemUpdatedDeepScan';
+import { onItemUpdatedRescan } from './triggers/onItemUpdatedRescan';
 
 // Import scheduled jobs
 import { cleanupDeletedItemsScheduled } from './scheduled/cleanupDeletedItems';
@@ -184,6 +185,7 @@ export {
   onItemCreatedGemini3,
   onItemDeleted,
   onItemUpdatedDeepScan,
+  onItemUpdatedRescan,
   onSessionCreated,
   onItemFromSession
 };

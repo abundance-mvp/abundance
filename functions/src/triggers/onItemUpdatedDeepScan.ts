@@ -7,7 +7,7 @@
  * Guards:
  * - deepScanRequested === true
  * - status === 'pending'
- * - before.status !== 'pending' (prevents re-triggering)
+ * - before.deepScanRequested !== true (prevents re-triggering on unrelated updates)
  *
  * Deploy: firebase deploy --only functions:onItemUpdatedDeepScan
  */
@@ -41,7 +41,8 @@ export const onItemUpdatedDeepScan = onDocumentUpdated(
     // Guard: Only process deep scan requests
     if (after.deepScanRequested !== true) return;
     if (after.status !== 'pending') return;
-    if (before.status === 'pending') return; // Already processing
+    // Prevent re-triggering: only process if deepScanRequested just transitioned to true
+    if (before.deepScanRequested === true) return;
 
     const logger = new StructuredLogger({
       itemId,

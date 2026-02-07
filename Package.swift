@@ -142,6 +142,10 @@ let package: Package = Package(
             name: "AXeTests",
             dependencies: ["Core"]
         ),
+        .testTarget(
+            name: "PipelineTests",
+            dependencies: ["Core", "CameraFeature", "Persistence", "InventoryFeature"]
+        ),
 
         // App
         .executableTarget(

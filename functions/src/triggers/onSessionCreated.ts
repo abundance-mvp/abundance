@@ -243,13 +243,34 @@ export const onSessionCreated = onDocumentUpdated(
       // Atomically claim processing to prevent duplicate execution
       // Both Case 1 (uploading→detecting) and Case 2 (all images uploaded) can fire
       // simultaneously for the same session. The transaction ensures only one wins.
+      // Additionally, check processingStartedAt to guard against re-processing
+      // a session that was claimed recently (within 5 minutes).
       const claimed = await db.runTransaction(async (tx) => {
         const snap = await tx.get(sessionRef);
-        const currentStatus = snap.data()?.status;
-        if (currentStatus === 'detecting' || currentStatus === 'detected' || currentStatus === 'failed') {
-          return false; // Already being processed or completed
+        const data = snap.data();
+        const currentStatus = data?.status;
+
+        // Already completed or failed — don't reprocess
+        if (currentStatus === 'detected' || currentStatus === 'failed') {
+          return false;
         }
-        tx.update(sessionRef, { status: 'detecting' });
+
+        // Guard against re-processing: if processingStartedAt is recent,
+        // another function instance already claimed this session
+        const processingStartedAt = data?.processingStartedAt?.toDate?.();
+        if (processingStartedAt) {
+          const ageMs = Date.now() - processingStartedAt.getTime();
+          if (ageMs < 5 * 60 * 1000) {
+            logger.info('Session recently claimed, skipping', { sessionId, ageMs });
+            return false;
+          }
+        }
+
+        // Claim: set processingStartedAt (and ensure status is 'detecting')
+        tx.update(sessionRef, {
+          status: 'detecting',
+          processingStartedAt: FieldValue.serverTimestamp()
+        });
         return true;
       });
 
