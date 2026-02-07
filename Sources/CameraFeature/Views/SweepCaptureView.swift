@@ -15,6 +15,9 @@ public struct SweepCaptureView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
+    /// Throttle to prevent haptic spam when many segments appear at once
+    @State private var lastSegmentHapticTime: Date = .distantPast
+
     public init(
         viewModel: SweepCaptureViewModel,
         onCatalog: @escaping () -> Void,
@@ -131,5 +134,17 @@ public struct SweepCaptureView: View {
             .disabled(!viewModel.canCatalog)
         }
         .padding(.horizontal, 16)
+    }
+
+    // MARK: - Haptics
+
+    /// Trigger throttled haptic for new segment detection (max 1 per 500ms)
+    private func triggerNewSegmentHaptic() {
+        #if os(iOS)
+        let now = Date()
+        guard now.timeIntervalSince(lastSegmentHapticTime) >= 0.5 else { return }
+        lastSegmentHapticTime = now
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        #endif
     }
 }

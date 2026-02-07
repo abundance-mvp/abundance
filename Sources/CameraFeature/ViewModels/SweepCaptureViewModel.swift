@@ -5,6 +5,18 @@ import os.log
 import EdgeTAMFeature
 import Persistence
 
+/// Adaptive UX tier based on measured EdgeTAM inference FPS
+public enum PerformanceTier: Sendable {
+    /// 10+ FPS: Segments update smoothly, real-time overlay
+    case premium
+    /// 4-10 FPS: Slight lag, fully usable
+    case good
+    /// 1-4 FPS: Snapshots every ~1s, delayed overlays
+    case acceptable
+    /// <1 FPS: Fallback to tap-to-scan mode
+    case fallback
+}
+
 /// MainActor-bound ViewModel for sweep capture mode.
 ///
 /// Manages the sweep state machine:
@@ -28,6 +40,19 @@ public final class SweepCaptureViewModel: ObservableObject {
 
     /// Whether the catalog button is enabled
     @Published public var canCatalog: Bool = false
+
+    /// Measured FPS from EdgeTAM inference (updated during scanning)
+    @Published public var measuredFPS: Double = 0
+
+    /// Adaptive UX tier based on measured FPS
+    public var performanceTier: PerformanceTier {
+        switch measuredFPS {
+        case 10...: return .premium
+        case 4..<10: return .good
+        case 1..<4: return .acceptable
+        default: return .fallback
+        }
+    }
 
     // MARK: - Computed Properties
 
@@ -74,6 +99,7 @@ public final class SweepCaptureViewModel: ObservableObject {
         segments = []
         selectedSegmentIds = []
         canCatalog = false
+        measuredFPS = 0
     }
 
     // MARK: - Catalog Flow
