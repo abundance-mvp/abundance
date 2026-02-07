@@ -82,6 +82,7 @@ public struct ItemDetailView: View {
                                 .font(.title.weight(.bold))
                                 .foregroundStyle(.primary)
                                 .accessibilityIdentifier("detail.itemName")
+                                .accessibilityAddTraits(.isHeader)
 
                             Spacer()
 
@@ -223,6 +224,7 @@ public struct ItemDetailView: View {
                                 HStack {
                                     Image(systemName: "sparkles")
                                         .foregroundStyle(Color.softTeal)
+                                        .accessibilityHidden(true)
                                     Text("Deep Scan Details")
                                         .font(.subheadline.weight(.semibold))
                                 }
@@ -476,6 +478,7 @@ private struct CategoryBadge: View {
                 Capsule()
                     .fill(color.opacity(0.2))
             }
+            .accessibilityLabel("Category: \(text)")
     }
 }
 

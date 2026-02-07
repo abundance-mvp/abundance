@@ -40,6 +40,14 @@ public struct CaptureView: View {
                 captureContent(geometry: geometry)
                     .gesture(gesturesEnabled ? doubleTapGesture : nil)
                     .gesture(gesturesEnabled ? longPressGesture : nil)
+                    .accessibilityAction(named: "Capture photo") {
+                        guard gesturesEnabled else { return }
+                        captureAndProcess()
+                    }
+                    .accessibilityAction(named: "Burst capture") {
+                        guard gesturesEnabled else { return }
+                        startBurstCapture()
+                    }
 
                 // Offline mode indicator
                 if !networkMonitor.isConnected {
@@ -221,6 +229,7 @@ public struct CaptureView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .ignoresSafeArea()
+                        .accessibilityHidden(true)
                 }
                 #endif
             }
@@ -350,6 +359,7 @@ public struct CaptureView: View {
                         frozenFrame = nil
                     }
                     .buttonStyle(CaptureButtonStyle(isPrimary: false))
+                    .accessibilityHint("Retakes the photo and returns to camera")
 
                     Button("Done") {
                         #if os(iOS)
@@ -359,6 +369,7 @@ public struct CaptureView: View {
                         onDone()
                     }
                     .buttonStyle(CaptureButtonStyle(isPrimary: true))
+                    .accessibilityHint("Saves results and returns to catalog")
                 }
                 .padding(.bottom, 40)
 
@@ -389,6 +400,11 @@ public struct CaptureView: View {
                     Capsule().fill(.ultraThickMaterial)
                 }
             }
+            .accessibilityLabel(
+                longPressActive
+                    ? "Release to analyze"
+                    : "Use actions menu to capture photo or start burst capture"
+            )
     }
 
     // MARK: - Gestures

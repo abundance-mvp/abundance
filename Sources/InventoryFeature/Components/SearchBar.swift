@@ -22,6 +22,7 @@ public struct SearchBar: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(.body, weight: .medium))
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
 
             TextField(placeholder, text: $text)
                 .font(.system(.body, design: .rounded))

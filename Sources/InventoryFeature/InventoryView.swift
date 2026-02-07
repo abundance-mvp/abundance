@@ -175,6 +175,7 @@ public struct InventoryView: View {
                 selectedItemIds.removeAll()
             } label: {
                 Text("Deselect All")
+                    .frame(minHeight: 44)
             }
             .accessibilityIdentifier("inventory.deselectAllButton")
 
@@ -184,6 +185,7 @@ public struct InventoryView: View {
                 showBulkDeleteConfirmation = true
             } label: {
                 Label("Delete (\(selectedItemIds.count))", systemImage: "trash")
+                    .frame(minHeight: 44)
             }
             .accessibilityIdentifier("inventory.bulkDeleteButton")
             .disabled(selectedItemIds.isEmpty)
@@ -280,6 +282,7 @@ private struct ErrorView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: errorIconSize))
                 .foregroundStyle(Color.errorColor)
+                .accessibilityHidden(true)
             Text("Error Loading Items")
                 .font(.title2)
             Text(message)
@@ -288,6 +291,7 @@ private struct ErrorView: View {
                 .multilineTextAlignment(.center)
             Button("Retry", action: retry)
                 .buttonStyle(.bordered)
+                .controlSize(.large)
                 .accessibilityIdentifier("inventory.retryButton")
         }
         .padding()

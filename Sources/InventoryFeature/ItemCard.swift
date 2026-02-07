@@ -147,6 +147,10 @@ struct ItemCard: View {
             Circle()
                 .fill(isSelected ? Color.accentPrimary : Color.white.opacity(0.8))
                 .frame(width: 44, height: 44)
+                .overlay(
+                    Circle()
+                        .stroke(Color.secondary.opacity(0.4), lineWidth: isSelected ? 0 : 1.5)
+                )
                 .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
 
             if isSelected {
@@ -231,7 +235,7 @@ private struct ConditionBadge: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(conditionColor.opacity(0.3))
-            .foregroundStyle(conditionColor)
+            .foregroundStyle(Color.deepPlum)
             .clipShape(Capsule())
     }
 
@@ -256,7 +260,7 @@ private struct StatusBadge: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 2)
             .background(statusColor.opacity(0.3))
-            .foregroundStyle(statusColor)
+            .foregroundStyle(Color.deepPlum)
             .clipShape(Capsule())
     }
 
