@@ -396,14 +396,30 @@ struct CollectionViewModelTests {
             requiresAuthentication: true
         )
 
-        // Allow observer to initialize
-        try await Task.sleep(for: .milliseconds(50))
-
-        // Then: Initial items should be synced via observer
-        // Note: The observer publishes mockItems immediately via Just()
-        #expect(viewModel.items.count == 1)
+        // Wait for observer to sync items (poll instead of arbitrary sleep)
+        // The observer publishes mockItems immediately via Just(), but delivery
+        // crosses an async boundary so we poll briefly.
+        let synced = await pollUntil(timeout: 2.0) { viewModel.items.count == 1 }
+        #expect(synced, "Observer should sync items within timeout")
         #expect(viewModel.items.first?.name == "Initial Item")
     }
+}
+
+// MARK: - Test Helpers
+
+/// Polls a condition with short intervals, avoiding flaky fixed sleeps.
+@MainActor
+private func pollUntil(
+    timeout: TimeInterval = 2.0,
+    pollingInterval: TimeInterval = 0.01,
+    condition: @escaping () -> Bool
+) async -> Bool {
+    let deadline = Date().addingTimeInterval(timeout)
+    while Date() < deadline {
+        if condition() { return true }
+        try? await Task.sleep(nanoseconds: UInt64(pollingInterval * 1_000_000_000))
+    }
+    return condition()
 }
 
 // Note: MockItemRepository is now in Tests/CollectionFeatureTests/Mocks/MockItemRepository.swift
