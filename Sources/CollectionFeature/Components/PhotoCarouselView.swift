@@ -49,7 +49,7 @@ struct PhotoCarouselView: View {
                 HStack(spacing: 6) {
                     ForEach(0..<imageUrls.count, id: \.self) { index in
                         Circle()
-                            .fill(index == selectedIndex ? Color.white : Color.white.opacity(0.5))
+                            .fill(index == selectedIndex ? Color.accentPrimary : Color.accentPrimary.opacity(0.5))
                             .frame(width: 7, height: 7)
                     }
                 }

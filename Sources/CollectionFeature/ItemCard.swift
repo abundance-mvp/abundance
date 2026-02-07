@@ -129,7 +129,7 @@ struct ItemCard: View {
         }
         .background(Color.cream, in: outerShape)
         .overlay(outerShape.stroke(Color.peach, lineWidth: contrast == .increased ? 2 : 1))
-        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .overlay {
             if isSelected {
@@ -145,7 +145,7 @@ struct ItemCard: View {
     private var selectionIndicator: some View {
         ZStack {
             Circle()
-                .fill(isSelected ? Color.accentPrimary : Color.white.opacity(0.8))
+                .fill(isSelected ? Color.accentPrimary : Color.cream.opacity(0.8))
                 .frame(width: 44, height: 44)
                 .overlay(
                     Circle()
@@ -156,7 +156,7 @@ struct ItemCard: View {
             if isSelected {
                 Image(systemName: "checkmark")
                     .font(.footnote.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.warmWhite)
             }
         }
         .padding(8)

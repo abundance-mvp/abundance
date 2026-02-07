@@ -4,10 +4,6 @@ import os.log
 import EdgeTAMFeature
 import Persistence
 
-#if os(iOS)
-import UIKit
-#endif
-
 /// Adaptive UX tier based on measured EdgeTAM inference FPS
 public enum PerformanceTier: Sendable {
     /// 10+ FPS: Segments update smoothly, real-time overlay
@@ -20,6 +16,17 @@ public enum PerformanceTier: Sendable {
     case fallback
 }
 
+/// Protocol abstracting haptic feedback to avoid UIKit in ViewModels (ADR-010)
+@MainActor
+public protocol HapticFeedbackProviding {
+    func playImpact(style: HapticStyle)
+}
+
+/// Haptic intensity level
+public enum HapticStyle: Sendable {
+    case light, medium, heavy
+}
+
 /// MainActor-bound ViewModel for sweep capture mode.
 ///
 /// Manages the sweep state machine:
@@ -27,25 +34,25 @@ public enum PerformanceTier: Sendable {
 ///
 /// Coordinates between EdgeTAMService (segmentation), ObjectDeduplicator (dedup),
 /// and SessionService (Firestore persistence).
-@MainActor
-public final class SweepCaptureViewModel: ObservableObject {
+@MainActor @Observable
+public final class SweepCaptureViewModel {
 
-    // MARK: - Published Properties
+    // MARK: - Observable Properties
 
     /// Current sweep session state
-    @Published public var sweepState: SweepSessionState = .inactive
+    public var sweepState: SweepSessionState = .inactive
 
     /// All detected segments (including unselected)
-    @Published public var segments: [SegmentedObject] = []
+    public var segments: [SegmentedObject] = []
 
     /// IDs of selected segments
-    @Published public var selectedSegmentIds: Set<UUID> = []
+    public var selectedSegmentIds: Set<UUID> = []
 
     /// Whether the catalog button is enabled
-    @Published public var canCatalog: Bool = false
+    public var canCatalog: Bool = false
 
     /// Measured FPS from EdgeTAM inference (updated during scanning)
-    @Published public var measuredFPS: Double = 0
+    public var measuredFPS: Double = 0
 
     /// Adaptive UX tier based on measured FPS
     public var performanceTier: PerformanceTier {
@@ -72,10 +79,13 @@ public final class SweepCaptureViewModel: ObservableObject {
     // MARK: - Private Properties
 
     private let logger = Logger(subsystem: "com.abundance.camerafeature", category: "SweepCaptureVM")
+    private let haptics: HapticFeedbackProviding?
 
     // MARK: - Initialization
 
-    public init() {}
+    public init(haptics: HapticFeedbackProviding? = nil) {
+        self.haptics = haptics
+    }
 
     // MARK: - Selection Management
 
@@ -90,10 +100,7 @@ public final class SweepCaptureViewModel: ObservableObject {
         }
         canCatalog = !selectedSegmentIds.isEmpty
 
-        #if os(iOS)
-        let style: UIImpactFeedbackGenerator.FeedbackStyle = wasSelected ? .light : .medium
-        UIImpactFeedbackGenerator(style: style).impactOccurred()
-        #endif
+        haptics?.playImpact(style: wasSelected ? .light : .medium)
     }
 
     /// Clear all selections

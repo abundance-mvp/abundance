@@ -32,7 +32,10 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
     private var featureCache: [String: MLMultiArray] = [:]
 
     /// Maximum cached features to prevent memory pressure
-    private let maxCachedFeatures = 5
+    private let maxCachedFeatures = 3
+
+    /// Maximum cache memory budget in bytes (200MB)
+    private let maxCacheMemoryBytes = 200_000_000
 
     /// Task for monitoring memory pressure notifications
     private var memoryMonitorTask: Task<Void, Never>?
@@ -41,6 +44,10 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
 
     public init(configuration: EdgeTAMConfiguration = .default) {
         self.configuration = configuration
+    }
+
+    deinit {
+        memoryMonitorTask?.cancel()
     }
 
     // MARK: - Public API
@@ -81,6 +88,9 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
 
         let loadTime = (CACurrentMediaTime() - startTime) * 1000
         logger.info("Models loaded in \(String(format: "%.0f", loadTime))ms")
+
+        // Start monitoring memory pressure after models are loaded
+        startMemoryMonitoring()
     }
 
     public func encodeFrame(_ pixelBuffer: CVPixelBuffer) async throws -> String {

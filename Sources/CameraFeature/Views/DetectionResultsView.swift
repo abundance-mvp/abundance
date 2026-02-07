@@ -1,6 +1,14 @@
 import SwiftUI
 import Core
 
+#if os(iOS)
+import UIKit
+private typealias PlatformImage = UIImage
+#elseif os(macOS)
+import AppKit
+private typealias PlatformImage = NSImage
+#endif
+
 /// View displaying detection results with bounding boxes and object cards
 public struct DetectionResultsView: View {
     let capturedImage: Data?
@@ -15,6 +23,7 @@ public struct DetectionResultsView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedObjectId: String?
     @State private var selectedObjectIds: Set<String> = []
+    @State private var decodedImage: PlatformImage?
 
     private var uncatalogedObjects: [ServerDetectedObject] {
         detectedObjects.filter { !catalogedObjectIds.contains($0.groupId) && !catalogingObjectIds.contains($0.groupId) }
@@ -67,6 +76,12 @@ public struct DetectionResultsView: View {
                 selectedObjectIds = Set(detectedObjects.map(\.groupId))
             }
         }
+        .task {
+            // Decode image once to avoid repeated UIImage(data:) in body
+            if let imageData = capturedImage {
+                decodedImage = PlatformImage(data: imageData)
+            }
+        }
     }
 
     // MARK: - Image with Bounding Boxes
@@ -105,9 +120,9 @@ public struct DetectionResultsView: View {
             Color.black
 
             // Background image
-            if let imageData = capturedImage {
+            if capturedImage != nil {
                 #if os(iOS)
-                if let uiImage = UIImage(data: imageData) {
+                if let uiImage = decodedImage {
                     Image(uiImage: uiImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)

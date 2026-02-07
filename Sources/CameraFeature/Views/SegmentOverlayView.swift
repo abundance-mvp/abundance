@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 import EdgeTAMFeature
 
 /// Renders segment masks as translucent overlays on the camera preview.
@@ -20,11 +21,11 @@ struct SegmentOverlayView: View {
         ZStack(alignment: .topTrailing) {
             // Segment overlay
             RoundedRectangle(cornerRadius: 8)
-                .fill(isSelected ? Color.blue.opacity(0.3) : Color.white.opacity(0.2))
+                .fill(isSelected ? Color.accentPrimary.opacity(0.3) : Color.white.opacity(0.2))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(
-                            isSelected ? Color.blue : Color.white.opacity(0.6),
+                            isSelected ? Color.accentPrimary : Color.white.opacity(0.6),
                             lineWidth: isSelected ? 2 : 1
                         )
                 )
@@ -34,7 +35,7 @@ struct SegmentOverlayView: View {
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title3)
-                    .foregroundStyle(.white, .blue)
+                    .foregroundStyle(.white, Color.accentPrimary)
                     .padding(4)
             }
         }

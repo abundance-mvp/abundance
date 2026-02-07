@@ -19,8 +19,11 @@ public final class SweepARSessionManager: NSObject, ObservableObject {
     #if os(iOS)
     private var arSession: ARSession?
 
-    /// Current AR frame (updated per AR frame callback)
-    @Published public var currentFrame: ARFrame?
+    /// Camera transform extracted from latest AR frame (avoids retaining full ARFrame ~1-4MB)
+    @Published public var cameraTransform: simd_float4x4?
+
+    /// Camera tracking state extracted from latest AR frame
+    @Published public var trackingState: ARCamera.TrackingState?
 
     /// Whether ARKit world tracking is available on this device
     @Published public var isARAvailable: Bool = false
@@ -59,7 +62,8 @@ public final class SweepARSessionManager: NSObject, ObservableObject {
         arSession?.delegate = nil
         arSession?.pause()
         arSession = nil
-        currentFrame = nil
+        cameraTransform = nil
+        trackingState = nil
         logger.info("AR session stopped")
     }
 
@@ -67,7 +71,8 @@ public final class SweepARSessionManager: NSObject, ObservableObject {
     /// - Parameter normalizedPoint: Point in normalized coordinates (0.0-1.0)
     /// - Returns: 3D world position, or nil if raycast fails
     public func worldPosition(for normalizedPoint: CGPoint) -> SIMD3<Float>? {
-        guard let frame = currentFrame else { return nil }
+        // Access the session's current frame transiently (not retained as a property)
+        guard let frame = arSession?.currentFrame else { return nil }
 
         let imageResolution = frame.camera.imageResolution
         let screenPoint = CGPoint(
@@ -99,11 +104,13 @@ public final class SweepARSessionManager: NSObject, ObservableObject {
 #if os(iOS)
 extension SweepARSessionManager: @preconcurrency ARSessionDelegate {
     nonisolated public func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        // Delegate value capture pattern per axiom-swift-concurrency Pattern 2:
-        // Capture frame value BEFORE Task boundary
-        let updatedFrame = frame
+        // Extract only lightweight primitives BEFORE the Task boundary
+        // Do NOT capture the full ARFrame (~1-4MB) across the isolation boundary
+        let transform = frame.camera.transform
+        let tracking = frame.camera.trackingState
         Task { @MainActor [weak self] in
-            self?.currentFrame = updatedFrame
+            self?.cameraTransform = transform
+            self?.trackingState = tracking
         }
     }
 }

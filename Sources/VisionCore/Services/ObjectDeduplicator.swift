@@ -32,8 +32,11 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
     /// Cache of recently seen fingerprints with timestamps
     private var cache: [String: CacheEntry] = [:]
 
-    /// Time-to-live for cached fingerprints (5 minutes)
-    private let cacheTTL: TimeInterval = 300.0 // 5 minutes in seconds
+    /// Maximum number of fingerprint cache entries
+    private let maxCacheEntries = 50
+
+    /// Time-to-live for cached fingerprints (2 minutes)
+    private let cacheTTL: TimeInterval = 120.0 // 2 minutes in seconds
 
     /// Similarity threshold for considering two objects as duplicates
     /// 0.90 = 90% similar (higher = more strict)
@@ -41,6 +44,9 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
 
     /// Cache of recently seen 3D world positions
     private var spatialCache: [SpatialEntry] = []
+
+    /// Maximum number of spatial cache entries
+    private let maxSpatialEntries = 200
 
     // MARK: - Initialization
 
@@ -252,6 +258,15 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         cache = cache.filter { _, entry in
             now.timeIntervalSince(entry.timestamp) < cacheTTL
         }
+
+        // Size-based eviction: if still over limit, remove oldest entries
+        if cache.count > maxCacheEntries {
+            let sorted = cache.sorted { $0.value.timestamp < $1.value.timestamp }
+            let toRemove = cache.count - maxCacheEntries
+            for (key, _) in sorted.prefix(toRemove) {
+                cache.removeValue(forKey: key)
+            }
+        }
     }
 
     /// Generates a hash string from a feature print observation
@@ -321,5 +336,11 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
     private func cleanSpatialCache() {
         let now = Date()
         spatialCache = spatialCache.filter { now.timeIntervalSince($0.timestamp) < cacheTTL }
+
+        // Size-based eviction: if still over limit, remove oldest entries
+        if spatialCache.count > maxSpatialEntries {
+            spatialCache.sort { $0.timestamp < $1.timestamp }
+            spatialCache = Array(spatialCache.suffix(maxSpatialEntries))
+        }
     }
 }

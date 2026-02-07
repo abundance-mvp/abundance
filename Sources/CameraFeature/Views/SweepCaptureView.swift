@@ -8,15 +8,12 @@ import EdgeTAMFeature
 /// Shows detected segments as tappable overlays, a selection tray at bottom,
 /// and a "Catalog" action button when items are selected.
 public struct SweepCaptureView: View {
-    @ObservedObject var viewModel: SweepCaptureViewModel
+    var viewModel: SweepCaptureViewModel
     let onCatalog: () -> Void
     let onCancel: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
-    /// Throttle to prevent haptic spam when many segments appear at once
-    @State private var lastSegmentHapticTime: Date = .distantPast
 
     /// Dynamic Type-scaled padding values
     @ScaledMetric(relativeTo: .body) private var horizontalPadding: CGFloat = 16
@@ -136,15 +133,4 @@ public struct SweepCaptureView: View {
         .padding(.horizontal, horizontalPadding)
     }
 
-    // MARK: - Haptics
-
-    /// Trigger throttled haptic for new segment detection (max 1 per 500ms)
-    private func triggerNewSegmentHaptic() {
-        #if os(iOS)
-        let now = Date()
-        guard now.timeIntervalSince(lastSegmentHapticTime) >= 0.5 else { return }
-        lastSegmentHapticTime = now
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        #endif
-    }
 }

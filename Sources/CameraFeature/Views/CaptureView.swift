@@ -3,6 +3,14 @@ import AVFoundation
 import Core
 import EdgeTAMFeature
 
+#if os(iOS)
+import UIKit
+private typealias PlatformImage = UIImage
+#elseif os(macOS)
+import AppKit
+private typealias PlatformImage = NSImage
+#endif
+
 /// Main capture view with double-tap and long-press gestures
 /// Uses server-side Gemini detection - no local YOLO detection
 public struct CaptureView: View {
@@ -16,6 +24,7 @@ public struct CaptureView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var frozenFrame: Data?
+    @State private var frozenFrameImage: PlatformImage?
     @State private var longPressActive = false
     @State private var captureSession: AVCaptureSession?
     @State private var isCaptureInProgress = false  // Synchronous guard for race prevention
@@ -197,6 +206,7 @@ public struct CaptureView: View {
                     onRetake: {
                         viewModel.retake()
                         frozenFrame = nil
+                        frozenFrameImage = nil
                     }
                 )
             } else {
@@ -213,6 +223,7 @@ public struct CaptureView: View {
                     onRetake: {
                         viewModel.retake()
                         frozenFrame = nil
+                        frozenFrameImage = nil
                     },
                     onDone: {
                         #if os(iOS)
@@ -239,9 +250,9 @@ public struct CaptureView: View {
             }
 
             // Frozen frame during capture/processing
-            if let frameData = frozenFrame {
+            if frozenFrame != nil {
                 #if os(iOS)
-                if let image = UIImage(data: frameData) {
+                if let image = frozenFrameImage {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -287,6 +298,7 @@ public struct CaptureView: View {
             ErrorOverlay(error: error) {
                 // Clear frozen frame first to unblock preview
                 frozenFrame = nil
+                frozenFrameImage = nil
                 viewModel.dismissError()
                 // Restart camera session to resume live feed
                 Task {
@@ -381,6 +393,7 @@ public struct CaptureView: View {
                     Button("Retake") {
                         viewModel.retake()
                         frozenFrame = nil
+                        frozenFrameImage = nil
                     }
                     .buttonStyle(CaptureButtonStyle(isPrimary: false))
                     .accessibilityHint("Retakes the photo and returns to camera")
@@ -551,8 +564,9 @@ public struct CaptureView: View {
                 // Capture photo
                 let photoData = try await cameraService.capturePhoto()
 
-                // Freeze frame
+                // Freeze frame - decode image once to avoid repeated UIImage(data:) in body
                 frozenFrame = photoData
+                frozenFrameImage = PlatformImage(data: photoData)
 
                 // Haptic feedback
                 #if os(iOS)
@@ -590,6 +604,7 @@ public struct CaptureView: View {
             // Freeze on last captured frame - use lastCapturedPhoto from ViewModel
             if let lastPhoto = viewModel.lastCapturedPhoto {
                 frozenFrame = lastPhoto
+                frozenFrameImage = PlatformImage(data: lastPhoto)
             }
             await viewModel.endBurstCapture()
         }

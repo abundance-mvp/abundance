@@ -34,7 +34,6 @@ struct OrganicBorderShape: Shape {
         }
 
         Self.logger.info("🌀 OrganicBorderShape: Successfully extracted organic contour!")
-        print("🌀 [ABUNDANCE] OrganicBorderShape: Successfully extracted organic contour!")
         return contourPath
     }
 

@@ -29,11 +29,11 @@ struct SegmentSelectionTray: View {
     private func segmentThumbnail(_ segment: SegmentedObject) -> some View {
         ZStack(alignment: .topTrailing) {
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color.blue.opacity(0.2))
+                .fill(Color.accentPrimary.opacity(0.2))
                 .frame(width: 56, height: 56)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.blue, lineWidth: 1.5)
+                        .stroke(Color.accentPrimary, lineWidth: 1.5)
                 )
                 .accessibilityLabel(thumbnailLabel(for: segment))
 
@@ -43,7 +43,7 @@ struct SegmentSelectionTray: View {
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.body)
-                    .foregroundStyle(.white, .red)
+                    .foregroundStyle(.white, Color.errorColor)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
