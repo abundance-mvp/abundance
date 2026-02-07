@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import Core
+import EdgeTAMFeature
 
 /// Main capture view with double-tap and long-press gestures
 /// Uses server-side Gemini detection - no local YOLO detection
@@ -19,6 +20,8 @@ public struct CaptureView: View {
     @State private var captureSession: AVCaptureSession?
     @State private var isCaptureInProgress = false  // Synchronous guard for race prevention
     @State private var teardownTask: Task<Void, Never>?  // Track in-flight teardown for serialization
+    @State private var sweepViewModel = SweepCaptureViewModel()
+    @State private var captureMode: CaptureMode = .single
 
     // Error recovery state
     @State private var cameraError: CameraError?
@@ -131,6 +134,7 @@ public struct CaptureView: View {
 
     /// Only enable gestures in idle state to prevent blocking UI elements
     private var gesturesEnabled: Bool {
+        guard captureMode != .sweep else { return false }
         guard !showingCameraError else { return false }
         guard !isCaptureInProgress else { return false }  // Synchronous race prevention
         if case .idle = viewModel.uiState {
@@ -149,6 +153,20 @@ public struct CaptureView: View {
                 resultsView
             } else {
                 captureLayout(geometry: geometry)
+
+                // Sweep mode overlay (renders on top of camera preview)
+                if captureMode == .sweep {
+                    SweepCaptureView(
+                        viewModel: sweepViewModel,
+                        onCatalog: {
+                            // TODO Phase 4: crop, upload, and trigger pipeline
+                        },
+                        onCancel: {
+                            captureMode = .single
+                            sweepViewModel.reset()
+                        }
+                    )
+                }
             }
         }
     }
@@ -314,7 +332,7 @@ public struct CaptureView: View {
             case .analyzing:
                 return "Analyzing..."
             default:
-                return "Ready"
+                return captureMode == .sweep ? "Sweep" : "Ready"
             }
         }()
 
@@ -347,8 +365,15 @@ public struct CaptureView: View {
 
             switch viewModel.uiState {
             case .idle, .capturing:
-                instructionLabel
-                    .padding(.bottom, 40)
+                if captureMode != .sweep {
+                    instructionLabel
+                }
+
+                SweepModeToggle(
+                    selectedMode: $captureMode,
+                    isSweepAvailable: DeviceEligibility.isSweepModeAvailable
+                )
+                .padding(.bottom, 40)
 
             case .results:
                 // Show results action buttons
