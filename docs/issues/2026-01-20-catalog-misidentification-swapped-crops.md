@@ -1,6 +1,6 @@
 ---
 date: 2026-01-20
-status: Fix-Deployed
+status: Fixed
 priority: P1
 type: bug
 component: backend

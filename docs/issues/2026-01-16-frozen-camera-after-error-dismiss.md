@@ -1,10 +1,22 @@
-# Bug: Camera View Frozen After Error Dismiss
+---
+date: 2026-01-16
+status: Fixed
+priority: P1
+type: bug
+component: ios
+source: manual
+related-files:
+  - Sources/CameraFeature/Views/CaptureView.swift
+  - Sources/CameraFeature/ViewModels/CaptureSessionViewModel.swift
+  - Sources/CameraFeature/Services/CameraService.swift
+screenshots: []
+axiom-agent: axiom:camera-auditor
+branch: null
+design-doc: null
+fix-date: 2026-01-16
+---
 
-**Date:** 2026-01-16
-**Status:** Fixed
-**Priority:** P1
-**Component:** CameraFeature/CaptureView
-**Fixed:** 2026-01-16
+# Bug: Camera View Frozen After Error Dismiss
 
 ## Summary
 

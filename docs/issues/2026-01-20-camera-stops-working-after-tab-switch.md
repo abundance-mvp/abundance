@@ -1,6 +1,6 @@
 ---
 date: 2026-01-20
-status: in-progress
+status: In Progress
 priority: P1
 type: bug
 component: ios

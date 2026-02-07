@@ -1,134 +1,62 @@
 ---
 name: file-issue
-description: |
-  Standardized issue filing for bugs, features, and improvements.
-  Integrates with device-tester, code-review, and dispatch coordinator.
-
-  Invoke manually or programmatically from other skills.
-
-  Arguments:
-  - --source: manual | device-tester | code-review
-  - --context: JSON with pre-populated fields (for programmatic use)
+description: Use when filing a bug, feature request, or improvement - from manual reports, device-tester sessions, or code-review findings
 user-invocable: false
 ---
 
-# File Issue Skill
+# File Issue
 
-File issues with standardized format, guided classification, and smart routing.
+Standardized issue filing with classification, doc-index tracking, and smart routing.
 
-## Entry Points
-
-| Source | Context | Behavior |
-|--------|---------|----------|
-| `manual` | User description | Hybrid: accept inline, ask for missing |
-| `device-tester` | Logs, device info, screenshots | Minimal questions, auto-populate |
-| `code-review` | File, line, finding, severity | Minimal questions, auto-populate |
-
----
+**Args:** `--source manual|device-tester|code-review [--context <json>]`
 
 ## 1. Gather Information
 
-### Manual Source (Hybrid Approach)
+**Manual:** Extract from description. Ask only for gaps (summary, expected/actual, files).
 
-IF user provided description:
-  - Extract: summary, expected/actual behavior
-  - Ask only for missing critical info
+**device-tester:** Auto-populate logs, device (w-16e), iOS version, screenshots from `./screenshots/`. Only ask for summary.
 
-IF no description:
-  - Ask: "What issue are you seeing?"
-  - Then: "What did you expect to happen?"
-  - Then: "Any relevant files or screenshots?"
+**code-review:** Auto-populate file, line, finding, severity from context. Only ask for confirmation.
 
-### device-tester Source
+## 2. Classify
 
-Auto-populate from context:
-- Console logs (last 50 relevant lines)
-- Device: w-16e, iOS version
-- Recent screenshots in `./screenshots/`
-- Current test scenario
+Present classification for confirmation. User can override.
 
-Only ask: "Brief summary of the issue?"
-
-### code-review Source
-
-Auto-populate from context:
-- File and line number
-- Finding description
-- Severity from auditor
-
-Only ask: "Confirm this should be filed as an issue?"
-
----
-
-## 2. Classify (Guided with Defaults)
-
-### Detect Component
+### Component
 
 | Signal | Component |
 |--------|-----------|
-| `.swift` files, SwiftUI, UIKit, AVFoundation, CoreData | `ios` |
-| `.ts` files, Firebase, Firestore, Cloud Functions | `backend` |
-| Gemini, AI pipeline, tool calling | `backend` |
-| GCP, Cloud Logging, deployment | `backend` |
-| **Ambiguous** | `ios` (default) |
+| `.swift`, SwiftUI, Apple frameworks | `ios` |
+| `.ts`, Firebase, Firestore, Functions, Gemini, GCP | `backend` |
+| Both `.swift` AND `.ts`/Firebase involved | `shared` |
+| Ambiguous | `ios` (default) |
 
-### Detect Type
+### Type and Priority
 
-| Signal | Type |
-|--------|------|
-| "crash", "broken", "doesn't work", "error" | `bug` |
-| "used to work", "regression", "broke" | `regression` |
-| "slow", "lag", "memory", "battery" | `performance` |
-| "add", "new", "implement", "create" | `feature` |
-| "improve", "better", "enhance" | `enhancement` |
-| "UI", "design", "layout", "user experience" | `ux` |
-| "refactor", "restructure", "architecture" | `architecture` |
-| "optimize", "faster", "cleaner" | `optimization` |
-| "security", "vulnerability", "credentials" | `security` |
-| "test", "coverage", "flaky" | `test` |
-
-### Detect Priority
-
-| Signal | Priority |
-|--------|----------|
-| "crash", "can't use", "blocking", security issues | `P0` |
-| bugs, regressions, performance issues | `P1` |
-| features, enhancements, ux | `P2` |
-| tests, optimization, architecture | `P3` |
-
-### Present Classification
-
-```
-I'd classify this as:
-- **Type:** bug
-- **Priority:** P1 (high)
-- **Component:** ios
-
-Is this correct? (Enter to confirm, or specify changes)
-```
-
----
+| Type | Signals | Default Priority | Triggers Brainstorm? |
+|------|---------|-----------------|---------------------|
+| `bug` | crash, broken, error, doesn't work | P1 | No |
+| `regression` | used to work, broke | P1 | No |
+| `performance` | slow, lag, memory, battery | P1 | No |
+| `security` | vulnerability, credentials | P0 | No |
+| `test` | flaky, coverage, CI fail | P3 | No |
+| `feature` | add, new, implement | P2 | Yes |
+| `enhancement` | improve, better, enhance | P2 | Yes |
+| `ux` | UI, design, layout | P2 | Yes |
+| `architecture` | refactor, restructure | P3 | Yes |
+| `optimization` | optimize, faster | P3 | Ask |
 
 ## 3. Write Issue File
 
-### Generate Filename
+**Path:** `docs/issues/YYYY-MM-DD-<slug>.md`
+**Slug:** lowercase, hyphens, max 50 chars, drop articles (a/an/the).
 
-```
-docs/issues/YYYY-MM-DD-<slug>.md
-
-Slug rules:
-- Lowercase
-- Hyphens for spaces
-- Max 50 characters
-- Remove articles (a, an, the)
-```
-
-### Issue Template
+### Template
 
 ```markdown
 ---
 date: YYYY-MM-DD
-status: open
+status: Open
 priority: P1
 type: bug
 component: ios
@@ -140,7 +68,6 @@ screenshots:
 axiom-agent: null
 branch: null
 design-doc: null
-implementation-plan: null
 ---
 
 ## Summary
@@ -149,7 +76,7 @@ implementation-plan: null
 
 ## Description
 
-[Detailed verbose description]
+[Detailed description with context]
 
 ## Expected Behavior
 
@@ -161,97 +88,75 @@ implementation-plan: null
 
 ## Technical Context
 
-- Device: [device info if available]
-- iOS: [version if available]
-- Source: [source]
-- Console logs:
-  ```
-  [relevant logs if available]
-  ```
+[Device, iOS version, console logs, source info - whatever is available]
 
-## Proposed Solution (optional)
+## Proposed Solution
 
-[Initial thoughts on fix]
+[Optional initial thoughts]
 ```
 
-### Confirm Filing
+### Status Schema
+
+**CRITICAL:** Use these exact values. Archival depends on them.
+
+| Status | Meaning | Set By |
+|--------|---------|--------|
+| `Open` | New, unassigned | file-issue (creation) |
+| `In Progress` | Assigned, being worked on | dispatch |
+| `Fixed` | Fix merged | developer (archival trigger) |
+| `Closed` | Resolved without code change | developer (archival trigger) |
+| `Won't Fix` | Intentionally not fixing | developer (archival trigger) |
+
+## 4. Update Doc Index
+
+**REQUIRED** - Run immediately after writing the issue file:
+
+```bash
+./scripts/update_doc_index.py add docs/issues/<filename>.md --status Open
+```
+
+Confirm output shows `Added: docs/issues/<filename>.md`. This enables dispatch discovery and archival tracking.
+
+## 5. Confirm and Route
+
+### Confirmation
 
 ```
-Issue filed: docs/issues/2026-01-18-camera-freezes-after-error.md
-
-Type: bug | Priority: P1 | Component: ios
+Issue filed: docs/issues/YYYY-MM-DD-<slug>.md
+Type: bug | Priority: P1 | Component: ios | Indexed: yes
 ```
 
----
+### Routing
 
-## 4. Route Next Action
+**By type:**
+- bug, regression, performance, security, test → "Ready for dispatch. Run `/project:dispatch`."
+- feature, enhancement, ux, architecture → Invoke brainstorming (see below)
+- optimization → Ask: "Code-level fix or architectural redesign?"
 
-### By Issue Type
+**By source:**
+- device-tester → "Continue testing or investigate this issue?"
+- code-review → Return to review, continue with remaining findings
+- manual → Route by type (above)
 
-| Type | Next Action |
-|------|-------------|
-| bug, regression, performance, security, test | "Ready for dispatch. Run `/project:dispatch` when ready." |
-| feature, enhancement, ux, architecture | Invoke brainstorming |
-| optimization | Ask: "Is this a code-level optimization (file directly) or architectural (brainstorm)?" |
+### Brainstorming Flow
 
-### By Source (Smart Continuation)
-
-| Source | After Filing |
-|--------|--------------|
-| device-tester | "Continue testing or stop to investigate?" |
-| code-review | Return to review, continue with other findings |
-| manual + bug type | "Ready for dispatch" |
-| manual + feature type | Invoke brainstorming |
-
----
-
-## 5. Brainstorming Flow
-
-When type triggers brainstorming (feature, enhancement, ux, architecture):
+When type triggers brainstorming:
 
 ```
-1. Detect component (ios/backend)
-
-2. IF component == ios:
-   Skill(skill="ios-superpowers", args="brainstorm <issue-summary>")
-
+1. IF component == ios OR shared:
+   Skill(skill="ios-superpowers", args="brainstorm <summary>")
    IF component == backend:
    Skill(skill="backend-superpowers")
-   → Then invoke superpowers:brainstorming
 
-3. Design doc written to docs/plans/YYYY-MM-DD-<topic>-design.md
+2. Design doc → docs/plans/YYYY-MM-DD-<topic>-design.md
 
-4. Update issue with design-doc field
+3. Update issue frontmatter: design-doc: <path>
 
-5. Ask: "Design complete. Create implementation plan?"
-   - Yes → Skill(skill="superpowers:writing-plans")
-   - No → "Issue ready for future dispatch"
+4. Ask: "Create implementation plan?"
+   Yes → Skill(skill="superpowers:writing-plans")
+   No → "Issue ready for future dispatch"
 ```
 
----
+## Screenshots
 
-## 6. Issue Types Reference
-
-| Type | Triggers Brainstorming | Priority Default |
-|------|----------------------|------------------|
-| `bug` | No | P1 |
-| `regression` | No | P1 |
-| `performance` | No | P1 |
-| `feature` | Yes | P2 |
-| `enhancement` | Yes | P2 |
-| `ux` | Yes | P2 |
-| `architecture` | Yes | P3 |
-| `optimization` | Depends | P3 |
-| `security` | No | P0 |
-| `test` | No | P3 |
-
----
-
-## 7. Screenshots
-
-Screenshots are stored in `./screenshots/` (symlinked to iCloud).
-
-When referencing screenshots:
-- Use just the filename: `screenshots: [IMG_1234.png]`
-- Check for recent screenshots: `ls -lt screenshots/ | head -5`
-- Read screenshot to analyze (Claude is multimodal)
+Stored in `./screenshots/` (iCloud symlink). Reference by filename only. Check recent: `ls -lt screenshots/ | head -5`.

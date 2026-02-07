@@ -213,18 +213,19 @@ Actions:
 
 ## Process
 
-### 1. Read triaged issues
+### 1. Read open issues
 
 ```bash
-ls .debug/issues/triaged/*.json
+ls docs/issues/*.md
 ```
 
-Parse each JSON file to extract:
-- `issue_type`: bug, ux-issue, performance, refinement
-- `title`: Short description
-- `affected_files`: List of files to modify
-- `symptoms`: Error messages, behaviors
-- `severity`: P0, P1, P2
+Parse each markdown file's YAML frontmatter to extract:
+- `type`: bug, regression, performance, feature, etc.
+- `priority`: P0, P1, P2, P3
+- `component`: ios, backend, shared
+- `status`: Only dispatch issues with `status: Open`
+- `related-files`: List of files to modify
+- Summary section for symptoms and description
 
 ### 2. Classify by component and select agent
 
@@ -528,11 +529,12 @@ These commands can be used directly by agents or coordinator:
 
 ## Instructions
 
-1. List all triaged issues (`.debug/issues/triaged/*.json`)
+1. List all open issues (`docs/issues/*.md` with `status: Open`)
 2. Classify each issue using the routing matrix
 3. Create git worktrees for each (in `../abundance-worktrees/`)
 4. Dispatch agents in parallel (ONE Task tool call per issue, all in one message)
-5. Monitor and report progress with Axiom agent + Apple docs summary
+5. Update issue status to `In Progress` and set `branch` field
+6. Monitor and report progress with Axiom agent + Apple docs summary
 
 **Flags:**
 - `--parallel`: Dispatch ALL issues at once

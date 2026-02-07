@@ -1,6 +1,6 @@
 ---
 date: 2026-01-20
-status: Resolved
+status: Fixed
 priority: P1
 type: bug
 component: backend

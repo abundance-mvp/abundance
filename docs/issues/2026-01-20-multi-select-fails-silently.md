@@ -1,6 +1,6 @@
 ---
 date: 2026-01-20
-status: Resolved
+status: Fixed
 priority: P2
 type: bug
 component: ios
@@ -12,7 +12,7 @@ screenshots:
   - Screenshot 2026-01-20 at 8.24.07 PM.png
 axiom-agent: null
 branch: null
-resolution-date: 2026-01-20
+fix-date: 2026-01-20
 ---
 
 ## Summary
