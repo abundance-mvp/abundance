@@ -91,6 +91,10 @@ public protocol ItemWriteRepository: Sendable {
     /// - Parameter id: The item document ID
     func requestDeepScan(id: String) async throws
 
+    /// Trigger re-catalog after adding additional photos
+    /// - Parameter id: The item document ID
+    func recatalogWithPhotos(id: String) async throws
+
     /// Deletes a single item by ID
     /// - Parameter id: The item document ID
     /// - Throws: Error if deletion fails
@@ -358,6 +362,15 @@ public final class ItemService: ItemRepository {
             "updatedAt": FieldValue.serverTimestamp()
         ])
         os_log(.info, log: .default, "Requested deep scan for item id=%{public}@", id)
+    }
+
+    // MARK: - Re-catalog with Photos
+
+    /// Trigger re-catalog after adding photos.
+    /// Delegates to requestDeepScan — the Cloud Function reads additionalImageUrls
+    /// from the document and passes all images to Gemini.
+    public func recatalogWithPhotos(id: String) async throws {
+        try await requestDeepScan(id: id)
     }
 
     // MARK: - Image URL Refresh

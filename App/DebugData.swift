@@ -90,6 +90,14 @@ final class SimulatorItemRepository: @preconcurrency ItemRepository {
         }
     }
 
+    func recatalogWithPhotos(id: String) async throws {
+        if let index = items.firstIndex(where: { $0.id == id }) {
+            items[index].deepScanRequested = true
+            items[index].status = .processing
+            subject.send(items)
+        }
+    }
+
     func deleteItem(id: String) async throws {
         items.removeAll { $0.id == id }
         subject.send(items)

@@ -63,11 +63,17 @@ export const onItemUpdatedDeepScan = onDocumentUpdated(
         throw new Error('Item has no image URL for deep scan');
       }
 
+      // Read additional image URLs if present
+      const additionalImageUrls = Array.isArray(after.additionalImageUrls)
+        ? after.additionalImageUrls as string[]
+        : [];
+
       // Process with Gemini Pro using enhanced deep scan prompt
       const result = await processItemWithGeminiPersistent(
         imageUrl,
         itemId,
-        true // Use context cache
+        true, // Use context cache
+        additionalImageUrls.length > 0 ? additionalImageUrls : undefined
       );
 
       // Extract deep scan fields from result

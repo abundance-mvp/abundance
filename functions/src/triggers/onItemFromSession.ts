@@ -73,7 +73,13 @@ export const onItemFromSession = onDocumentCreated(
 
       // Process with Gemini 3 Pro
       // The imageUrl should point to the cropped object in GCS
-      const result = await processItemWithGemini(itemData.imageUrl);
+      const additionalImageUrls = Array.isArray(itemData.additionalImageUrls)
+        ? itemData.additionalImageUrls as string[]
+        : [];
+      const result = await processItemWithGemini(
+        itemData.imageUrl,
+        additionalImageUrls.length > 0 ? additionalImageUrls : undefined
+      );
 
       // Validate result
       const catalogItems = Array.isArray(result) ? result : [result];

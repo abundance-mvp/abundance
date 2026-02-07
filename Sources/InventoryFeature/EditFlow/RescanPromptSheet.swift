@@ -117,6 +117,7 @@ private final class PreviewItemRepository: ItemRepository, @unchecked Sendable {
     func rescanItem(_ item: Item) async throws {}
     func refreshImageUrl(id: String) async throws -> String? { nil }
     func requestDeepScan(id: String) async throws {}
+    func recatalogWithPhotos(id: String) async throws {}
 }
 // swiftlint:enable line_length
 

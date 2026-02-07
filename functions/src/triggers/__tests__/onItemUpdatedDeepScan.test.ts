@@ -191,7 +191,8 @@ describe('onItemUpdatedDeepScan trigger', () => {
       expect(mockProcessItem).toHaveBeenCalledWith(
         'https://storage.example.com/image.jpg',
         'item5',
-        true
+        true,
+        undefined
       );
 
       expect(mockUpdate).toHaveBeenCalledWith(
@@ -237,6 +238,47 @@ describe('onItemUpdatedDeepScan trigger', () => {
           upcCode: null,
           marketPriceRange: '$30-$50',
           originalRetailPrice: null,
+        })
+      );
+    });
+
+    it('should pass additionalImageUrls to Gemini when present', async () => {
+      mockProcessItem.mockResolvedValueOnce({
+        name: 'Multi-Photo Product',
+        productUrl: null,
+        upcCode: null,
+        marketPriceRange: '$40-$60',
+        originalRetailPrice: null,
+      });
+
+      const event = createMockEvent('item5b',
+        { status: 'complete', deepScanRequested: false },
+        {
+          status: 'pending',
+          deepScanRequested: true,
+          imageUrl: 'https://storage.example.com/primary.jpg',
+          additionalImageUrls: [
+            'https://storage.example.com/angle2.jpg',
+            'https://storage.example.com/angle3.jpg',
+          ],
+          userId: 'user123',
+          name: 'Original Name',
+        }
+      );
+
+      await capturedHandler!(event);
+
+      expect(mockProcessItem).toHaveBeenCalledWith(
+        'https://storage.example.com/primary.jpg',
+        'item5b',
+        true,
+        ['https://storage.example.com/angle2.jpg', 'https://storage.example.com/angle3.jpg']
+      );
+
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'complete',
+          name: 'Multi-Photo Product',
         })
       );
     });
@@ -306,7 +348,8 @@ describe('onItemUpdatedDeepScan trigger', () => {
       expect(mockProcessItem).toHaveBeenCalledWith(
         'https://preferred-url.com/image.jpg',
         'item8',
-        true
+        true,
+        undefined
       );
     });
 
@@ -333,7 +376,8 @@ describe('onItemUpdatedDeepScan trigger', () => {
       expect(mockProcessItem).toHaveBeenCalledWith(
         'users/u1/items/item9.jpg',
         'item9',
-        true
+        true,
+        undefined
       );
     });
 

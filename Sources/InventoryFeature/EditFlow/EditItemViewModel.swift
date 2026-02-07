@@ -64,6 +64,8 @@ public final class EditItemViewModel {
     public var validationErrors: [String: String] = [:]
     public var isUploadingPhoto = false
     public var photoError: String?
+    public var showRecatalogPrompt = false
+    public var isRecataloging = false
 
     // MARK: - Dependencies
 
@@ -156,7 +158,7 @@ public final class EditItemViewModel {
         state = .editing
     }
 
-    /// Save manual edits
+    /// Save manual edits, optionally triggering re-catalog with new photos
     public func saveManualEdits() async throws {
         state = .saving
 
@@ -171,11 +173,36 @@ public final class EditItemViewModel {
                 editableItem,
                 userEditedFields: fieldTracker.asArray
             )
+
+            // If new photos were added, prompt for re-catalog
+            if fieldTracker.editedFields.contains("additionalImageUrls") {
+                showRecatalogPrompt = true
+            }
+
             state = .idle
         } catch {
             state = .error(error.localizedDescription)
             throw error
         }
+    }
+
+    /// Trigger re-catalog with all photos (primary + additional)
+    public func recatalogWithPhotos() async {
+        isRecataloging = true
+        showRecatalogPrompt = false
+
+        do {
+            try await itemRepository.recatalogWithPhotos(id: editableItem.id)
+        } catch {
+            photoError = "Re-catalog failed: \(error.localizedDescription)"
+        }
+
+        isRecataloging = false
+    }
+
+    /// Dismiss the re-catalog prompt without triggering
+    public func dismissRecatalogPrompt() {
+        showRecatalogPrompt = false
     }
 
     // MARK: - Photo Management

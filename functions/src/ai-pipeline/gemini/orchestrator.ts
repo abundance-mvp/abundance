@@ -47,11 +47,17 @@ export async function handleItemCreated(
     // Resolve image URL: prefer imageUrl (full URL from iOS), fall back to imagePath (GCS path)
     const imageUrl = await resolveImageUrl(itemData);
 
+    // Read additional image URLs if present
+    const additionalImageUrls = Array.isArray(itemData.additionalImageUrls)
+      ? itemData.additionalImageUrls as string[]
+      : [];
+
     // Process with Gemini 3 Pro (with session persistence and context caching)
     const result = await processItemWithGeminiPersistent(
       imageUrl,
       itemId,  // Pass itemId for history tracking
-      true     // Use context cache
+      true,    // Use context cache
+      additionalImageUrls.length > 0 ? additionalImageUrls : undefined
     );
 
     // Validate result

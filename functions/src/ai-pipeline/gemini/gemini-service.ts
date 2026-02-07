@@ -33,29 +33,39 @@ import { ToolCallRecord } from './schemas/catalog-history';
  * 4. Returns the final catalog item(s)
  *
  * @param imageUrl - Public URL of the image to process
+ * @param additionalImageUrls - Optional additional image URLs for multi-angle analysis
  * @returns CatalogItem or array of CatalogItems
  * @throws Error if Vertex AI config is missing, image fetch fails, or Gemini returns no response
  */
 export async function processItemWithGemini(
-  imageUrl: string
+  imageUrl: string,
+  additionalImageUrls?: string[]
 ): Promise<CatalogItem | CatalogItem[]> {
-  const imageBase64 = await fetchImageBase64(imageUrl);
+  // Fetch all images in parallel
+  const allImageUrls = [imageUrl, ...(additionalImageUrls || [])];
+  const allImagesBase64 = await Promise.all(allImageUrls.map(url => fetchImageBase64(url)));
 
   // Gemini 3 models require Vertex AI (not API keys)
   const ai = createVertexAIClient();
 
   const toolDeclarations = CATALOG_TOOLS.flatMap(t => t.functionDeclarations || []);
 
+  // Build user prompt based on image count
+  const imageCount = allImagesBase64.length;
+  const userPrompt = imageCount > 1
+    ? `Analyze these ${imageCount} images of the same object from different angles. Use all images to provide the most accurate catalog entry.`
+    : 'Analyze this image and create catalog entry(ies).';
+
+  // Build image parts
+  const imageParts: Part[] = allImagesBase64.map(data => ({
+    inlineData: { mimeType: 'image/jpeg', data }
+  }));
+
   let contents: Content[] = [{
     role: 'user',
     parts: [
-      { text: 'Analyze this image and create catalog entry(ies).' },
-      {
-        inlineData: {
-          mimeType: 'image/jpeg',
-          data: imageBase64
-        }
-      }
+      { text: userPrompt },
+      ...imageParts
     ]
   }];
 
@@ -276,12 +286,14 @@ async function fetchImageFromStorage(url: string): Promise<string> {
  * @param imageUrl - Public URL of the image to process
  * @param itemId - Optional item ID for history lookup (enables persistence)
  * @param useContextCache - Whether to use cached system prompt (default: true)
+ * @param additionalImageUrls - Optional additional image URLs for multi-angle analysis
  * @returns CatalogItem or array of CatalogItems
  */
 export async function processItemWithGeminiPersistent(
   imageUrl: string,
   itemId?: string,
-  useContextCache: boolean = true
+  useContextCache: boolean = true,
+  additionalImageUrls?: string[]
 ): Promise<CatalogItem | CatalogItem[]> {
   const startTime = Date.now();
   const toolCallRecords: ToolCallRecord[] = [];
@@ -294,19 +306,34 @@ export async function processItemWithGeminiPersistent(
     historyContext = formatHistoryForPrompt(history);
   }
 
-  const imageBase64 = await fetchImageBase64(imageUrl);
+  // Fetch all images in parallel
+  const allImageUrls = [imageUrl, ...(additionalImageUrls || [])];
+  const allImagesBase64 = await Promise.all(allImageUrls.map(url => fetchImageBase64(url)));
   const ai = createVertexAIClient();
 
-  // Build user prompt with optional history context
-  const userPrompt = historyContext
-    ? `${historyContext}\n\nAnalyze this NEW image and update/confirm the catalog entry.`
-    : 'Analyze this image and create catalog entry(ies).';
+  // Build user prompt with optional history context and multi-image awareness
+  const imageCount = allImagesBase64.length;
+  let userPrompt: string;
+  if (historyContext) {
+    userPrompt = imageCount > 1
+      ? `${historyContext}\n\nAnalyze these ${imageCount} NEW images of the same object from different angles. Use all images to update/confirm the catalog entry.`
+      : `${historyContext}\n\nAnalyze this NEW image and update/confirm the catalog entry.`;
+  } else {
+    userPrompt = imageCount > 1
+      ? `Analyze these ${imageCount} images of the same object from different angles. Use all images to provide the most accurate catalog entry.`
+      : 'Analyze this image and create catalog entry(ies).';
+  }
+
+  // Build image parts
+  const imageParts: Part[] = allImagesBase64.map(data => ({
+    inlineData: { mimeType: 'image/jpeg', data }
+  }));
 
   let contents: Content[] = [{
     role: 'user',
     parts: [
       { text: userPrompt },
-      { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } }
+      ...imageParts
     ]
   }];
 
@@ -405,7 +432,7 @@ export async function processItemWithGeminiPersistent(
     const resultItem = Array.isArray(catalogResult) ? catalogResult[0] : catalogResult;
     await saveCatalogHistory(itemId, {
       model: GEMINI_MODEL_ID,
-      imageUrls: [imageUrl],
+      imageUrls: allImageUrls,
       toolCalls: toolCallRecords,
       result: catalogItemToSnapshot(resultItem),
       metadata: {
