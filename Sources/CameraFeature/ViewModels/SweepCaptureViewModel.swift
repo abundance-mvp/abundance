@@ -3,6 +3,7 @@ import SwiftUI
 import Combine
 import os.log
 import EdgeTAMFeature
+import Persistence
 
 /// MainActor-bound ViewModel for sweep capture mode.
 ///
@@ -73,5 +74,62 @@ public final class SweepCaptureViewModel: ObservableObject {
         segments = []
         selectedSegmentIds = []
         canCatalog = false
+    }
+
+    // MARK: - Catalog Flow
+
+    /// Crop selected segments, upload to GCS, create sweep session
+    /// - Parameters:
+    ///   - userId: Current user ID
+    ///   - sessionService: Service for creating Firestore session
+    ///   - storageService: Service for uploading images to GCS
+    public func catalogSelectedSegments(
+        userId: String,
+        sessionService: SessionServiceProtocol,
+        storageService: StorageServiceProtocol
+    ) async {
+        let selected = selectedSegments
+        guard !selected.isEmpty else { return }
+
+        sweepState = .uploading(progress: 0)
+
+        do {
+            var crops: [SweepCropInfo] = []
+
+            for (index, segment) in selected.enumerated() {
+                // TODO: Crop pixelBuffer using segment.boundingBox via PixelBufferCropper
+                // TODO: JPEG encode cropped region
+                // TODO: Upload to GCS temp bucket via storageService
+
+                let progress = Double(index + 1) / Double(selected.count)
+                sweepState = .uploading(progress: progress)
+
+                // Placeholder crop info -- replace with actual upload URL after GCS upload
+                crops.append(SweepCropInfo(
+                    cropUrl: "gs://abundance-temp/sweep_crop_\(index).jpg",
+                    boundingBox: [
+                        Int(segment.boundingBox.minY * 1000),
+                        Int(segment.boundingBox.minX * 1000),
+                        Int(segment.boundingBox.maxY * 1000),
+                        Int(segment.boundingBox.maxX * 1000)
+                    ],
+                    frameIndex: segment.frameIndex,
+                    groupId: segment.id.uuidString
+                ))
+            }
+
+            // Create Firestore session with sweep mode
+            let _ = try await sessionService.createSweepSession(
+                userId: userId,
+                sweepCrops: crops,
+                originalFrameUrls: []  // TODO: include keyframe URLs
+            )
+
+            sweepState = .processing
+            // Session listener will update to .complete when server finishes
+
+        } catch {
+            sweepState = .error(.modelLoadFailed(error.localizedDescription))
+        }
     }
 }

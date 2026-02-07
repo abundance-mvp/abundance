@@ -29,6 +29,13 @@ public protocol SessionServiceProtocol: Sendable {
 
     /// Delete a session
     func deleteSession(sessionId: String) async throws
+
+    /// Create a sweep mode session with pre-cropped segments
+    func createSweepSession(
+        userId: String,
+        sweepCrops: [SweepCropInfo],
+        originalFrameUrls: [String]
+    ) async throws -> String
 }
 
 /// Concrete implementation of SessionService for Firestore
@@ -102,6 +109,43 @@ public final class SessionService: SessionServiceProtocol {
         ])
 
         logger.info("Session \(sessionId) marked ready for detection")
+    }
+
+    // MARK: - Sweep Session
+
+    public func createSweepSession(
+        userId: String,
+        sweepCrops: [SweepCropInfo],
+        originalFrameUrls: [String]
+    ) async throws -> String {
+        let sessionRef = db.collection("sessions").document()
+        let sessionId = sessionRef.documentID
+
+        let cropsData: [[String: Any]] = sweepCrops.map { crop in
+            [
+                "cropUrl": crop.cropUrl,
+                "boundingBox": crop.boundingBox,
+                "frameIndex": crop.frameIndex,
+                "groupId": crop.groupId
+            ]
+        }
+
+        let data: [String: Any] = [
+            "id": sessionId,
+            "userId": userId,
+            "captureMode": CaptureMode.sweep.rawValue,
+            "status": CaptureSessionStatus.detecting.rawValue,
+            "createdAt": FieldValue.serverTimestamp(),
+            "originalImageUrls": originalFrameUrls,
+            "sweepCrops": cropsData,
+            "imagesUploaded": sweepCrops.count,
+            "expectedImageCount": sweepCrops.count,
+            "detectedObjects": []
+        ]
+
+        try await sessionRef.setData(data)
+        logger.info("Created sweep session \(sessionId) with \(sweepCrops.count) crops")
+        return sessionId
     }
 
     // MARK: - Observe Session
