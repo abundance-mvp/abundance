@@ -102,7 +102,7 @@ design-doc: null
 | Status | Meaning | Set By |
 |--------|---------|--------|
 | `Open` | New, unassigned | file-issue (creation) |
-| `In Progress` | Assigned, being worked on | dispatch |
+| `In Progress` | Assigned, being worked on | troubleshoot |
 | `Fixed` | Fix merged | developer (archival trigger) |
 | `Closed` | Resolved without code change | developer (archival trigger) |
 | `Won't Fix` | Intentionally not fixing | developer (archival trigger) |
@@ -115,7 +115,7 @@ design-doc: null
 ./scripts/update_doc_index.py add docs/issues/<filename>.md --status Open
 ```
 
-Confirm output shows `Added: docs/issues/<filename>.md`. This enables dispatch discovery and archival tracking.
+Confirm output shows `Added: docs/issues/<filename>.md`. This enables archival tracking.
 
 ## 5. Confirm and Route
 
@@ -129,7 +129,7 @@ Type: bug | Priority: P1 | Component: ios | Indexed: yes
 ### Routing
 
 **By type:**
-- bug, regression, performance, security, test → "Ready for dispatch. Run `/project:dispatch`."
+- bug, regression, performance, security, test → "Ready to fix. Run `/project:troubleshoot <summary>`."
 - feature, enhancement, ux, architecture → Invoke brainstorming (see below)
 - optimization → Ask: "Code-level fix or architectural redesign?"
 
@@ -154,7 +154,7 @@ When type triggers brainstorming:
 
 4. Ask: "Create implementation plan?"
    Yes → Skill(skill="superpowers:writing-plans")
-   No → "Issue ready for future dispatch"
+   No → "Issue filed. Run `/project:troubleshoot <summary>` when ready."
 ```
 
 ## Screenshots

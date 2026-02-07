@@ -24,7 +24,7 @@ Never use `grep` - Use `rg`
 
 # Issue Tracking
 /project:file-issue [description]            # File standardized issue (bug, feature, etc.)
-/project:dispatch                            # Dispatch open issues to agents
+/project:troubleshoot <issue>                # End-to-end debug → verify → test → review
 
 # Backend Operations
 /project:backend-superpowers                 # Firebase + GCP unified skill (59 MCP tools)

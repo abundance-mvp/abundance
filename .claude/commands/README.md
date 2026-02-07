@@ -74,20 +74,6 @@ Deploy Cloud Functions with verification.
 
 ---
 
-### Agent Commands
-
-#### `/project:dispatch`
-
-Dispatch parallel agents for independent tasks.
-
-**Example**: `/project:dispatch`
-
-**Note**: Agents use ios-superpowers which auto-detects iOS context.
-
-**See**: `.claude/commands/dispatch.md`
-
----
-
 ### Apple Documentation
 
 For Apple Developer documentation, use the Axiom skill directly:
