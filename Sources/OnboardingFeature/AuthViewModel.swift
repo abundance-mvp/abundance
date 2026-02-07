@@ -4,10 +4,11 @@ import AuthenticationServices
 import Persistence
 
 @MainActor
-public class AuthViewModel: ObservableObject {
-    @Published public var isAuthenticated: Bool = false
-    @Published public var isLoading: Bool = false
-    @Published public var error: Error?
+@Observable
+public final class AuthViewModel {
+    public var isAuthenticated: Bool = false
+    public var isLoading: Bool = false
+    public var error: Error?
 
     private let keychain: KeychainManager
 

@@ -179,6 +179,14 @@ final class MockItemRepository: ItemRepository, @unchecked Sendable {
         lastDeepScanId = id
     }
 
+    var recatalogWithPhotosCalled = false
+    var lastRecatalogWithPhotosId: String?
+
+    func recatalogWithPhotos(id: String) async throws {
+        recatalogWithPhotosCalled = true
+        lastRecatalogWithPhotosId = id
+    }
+
     func deleteItem(id: String) async throws {
         deleteItemCalled = true
         if let error = deleteError {

@@ -383,6 +383,8 @@ extension MockItemRepository: ItemRepository {
     }
 
     func requestDeepScan(id: String) async throws {}
+
+    func recatalogWithPhotos(id: String) async throws {}
 }
 
 /// Mock AuthService for testing

@@ -5,7 +5,7 @@ import OnboardingFeature
 
 @main
 struct AbundanceApp: App {
-    @StateObject private var authViewModel = AuthViewModel()
+    @State private var authViewModel = AuthViewModel()
 
     init() {
         // Configure Firebase with SPM resource bundle

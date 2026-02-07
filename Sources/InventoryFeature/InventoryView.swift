@@ -7,7 +7,7 @@ public struct InventoryView: View {
     @Bindable var viewModel: InventoryViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isSelectionMode = false
-    @State private var selectedItemIds: Set<String> = []
+    @State private var selectedItemIds: [String: Bool] = [:]
     @State private var itemToDelete: Item?
     @State private var showDeleteConfirmation = false
     @State private var showBulkDeleteConfirmation = false
@@ -127,7 +127,7 @@ public struct InventoryView: View {
                 titleVisibility: .visible
             ) {
                 Button("Delete All", role: .destructive) {
-                    let idsToDelete = selectedItemIds
+                    let idsToDelete = Set(selectedItemIds.keys)
                     // Clear selection state immediately with animation (before async work)
                     withAnimation(reduceMotion ? nil : .brandPress) {
                         isSelectionMode = false
@@ -200,7 +200,7 @@ public struct InventoryView: View {
 private struct ItemGridView: View {
     let items: [Item]
     let isSelectionMode: Bool
-    @Binding var selectedItemIds: Set<String>
+    @Binding var selectedItemIds: [String: Bool]
     let onRecatalog: (Item) -> Void
     let onDeepScan: (Item) -> Void
     let onDeletePhoto: (Item, Int) -> Void
@@ -217,15 +217,15 @@ private struct ItemGridView: View {
                             item: item,
                             onTap: {
                                 withAnimation(reduceMotion ? nil : .brandPress) {
-                                    if selectedItemIds.contains(item.id) {
-                                        selectedItemIds.remove(item.id)
+                                    if selectedItemIds[item.id] == true {
+                                        selectedItemIds[item.id] = nil
                                     } else {
-                                        selectedItemIds.insert(item.id)
+                                        selectedItemIds[item.id] = true
                                     }
                                 }
                             },
                             isSelectionMode: true,
-                            isSelected: selectedItemIds.contains(item.id)
+                            isSelected: selectedItemIds[item.id] == true
                         )
                         .accessibilityIdentifier("inventory.item.\(item.id)")
                     } else {

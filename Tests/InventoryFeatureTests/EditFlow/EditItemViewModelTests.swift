@@ -634,6 +634,8 @@ final class MockEditItemRepository: ItemRepository, @unchecked Sendable {
     }
 
     func requestDeepScan(id: String) async throws {}
+
+    func recatalogWithPhotos(id: String) async throws {}
 }
 
 // MARK: - Mock Storage Service

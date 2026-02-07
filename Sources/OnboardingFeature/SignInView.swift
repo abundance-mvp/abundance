@@ -4,7 +4,7 @@ import Core
 import CameraFeature
 
 public struct SignInView: View {
-    @ObservedObject var viewModel: AuthViewModel
+    var viewModel: AuthViewModel
     @StateObject private var networkMonitor = NetworkMonitor.shared
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
