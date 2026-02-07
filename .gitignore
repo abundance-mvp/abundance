@@ -24,6 +24,14 @@ Generated/
 *.backup
 scratch/
 
+# Environment variables / secrets
+.env
+.env.*
+!.env.template
+!.env.example
+!.env.*.template
+!.env.*.example
+
 # Firebase
 GoogleService-Info.plist
 GoogleService-Info-*.plist
