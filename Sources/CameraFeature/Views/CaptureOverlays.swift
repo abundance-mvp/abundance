@@ -99,7 +99,7 @@ struct AnalyzingOverlay: View {
             }
             .frame(width: 100, height: 100)
             .animation(
-                reduceMotion ? nil : .easeInOut(duration: 1.5).repeatForever(autoreverses: true),
+                reduceMotion ? nil : .brandDefault.repeatForever(autoreverses: true),
                 value: animationPhase
             )
 

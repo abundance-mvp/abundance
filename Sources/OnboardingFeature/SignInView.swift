@@ -7,6 +7,7 @@ public struct SignInView: View {
     @ObservedObject var viewModel: AuthViewModel
     @StateObject private var networkMonitor = NetworkMonitor.shared
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var showingNetworkError = false
@@ -47,7 +48,7 @@ public struct SignInView: View {
                     .padding(.bottom, 32)
             }
             .padding(.horizontal, 24)
-            .animation(.easeInOut(duration: 0.2), value: networkMonitor.isConnected)
+            .animation(reduceMotion ? nil : .brandReducedMotion, value: networkMonitor.isConnected)
         }
     }
 

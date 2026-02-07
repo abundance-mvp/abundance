@@ -12,6 +12,7 @@ public struct DetectionResultsView: View {
     let onDone: () -> Void
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedObjectId: String?
 
     public init(
@@ -82,7 +83,7 @@ public struct DetectionResultsView: View {
                     )
                     .accessibilityAddTraits(.isButton)
                     .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        withAnimation(reduceMotion ? nil : .brandPress) {
                             selectedObjectId = selectedObjectId == object.groupId ? nil : object.groupId
                         }
                     }
@@ -142,7 +143,7 @@ public struct DetectionResultsView: View {
                             .accessibilityHint("Double tap to select this object")
                             .accessibilityAddTraits(.isButton)
                             .onTapGesture {
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(reduceMotion ? nil : .brandPress) {
                                     selectedObjectId = object.groupId
                                 }
                             }
