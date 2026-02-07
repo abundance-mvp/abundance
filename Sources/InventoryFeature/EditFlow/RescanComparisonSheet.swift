@@ -180,7 +180,7 @@ private struct ComparisonCard: View {
                     CompactFieldRow(label: "Brand", value: brand)
                 }
                 if let value = item.estimatedValue {
-                    CompactFieldRow(label: "Value", value: "$\(String(format: "%.2f", value))")
+                    CompactFieldRow(label: "Value", value: formattedValue(value))
                 }
             }
         }
@@ -193,6 +193,10 @@ private struct ComparisonCard: View {
                     .stroke(Color.mutedSage, lineWidth: 2)
             }
         }
+    }
+
+    private func formattedValue(_ value: Double) -> String {
+        value.formatted(.currency(code: "USD"))
     }
 }
 
@@ -235,6 +239,10 @@ private struct FieldChangesSummary: View {
     let original: Item
     let updated: Item
 
+    private func formattedValue(_ value: Double) -> String {
+        value.formatted(.currency(code: "USD"))
+    }
+
     private var changes: [FieldChange] {
         var result: [FieldChange] = []
 
@@ -254,8 +262,8 @@ private struct FieldChangesSummary: View {
             result.append(FieldChange(field: "Color", from: original.color, to: updated.color))
         }
         if original.estimatedValue != updated.estimatedValue {
-            let fromValue = original.estimatedValue.map { "$\(String(format: "%.2f", $0))" }
-            let toValue = updated.estimatedValue.map { "$\(String(format: "%.2f", $0))" }
+            let fromValue = original.estimatedValue.map { formattedValue($0) }
+            let toValue = updated.estimatedValue.map { formattedValue($0) }
             result.append(FieldChange(field: "Est. Value", from: fromValue, to: toValue))
         }
 

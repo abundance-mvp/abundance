@@ -214,12 +214,12 @@ public struct ItemDetailView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                                 Spacer()
-                                Text("$\(value, specifier: "%.2f")")
+                                Text(value, format: .currency(code: "USD"))
                                     .font(.title3.weight(.bold))
                                     .foregroundStyle(.green)
                             }
                             .accessibilityElement(children: .combine)
-                            .accessibilityLabel("Estimated value: $\(value, specifier: "%.2f")")
+                            .accessibilityLabel("Estimated value: \(formattedValue(value))")
                         }
 
                         // Metadata Grid
@@ -469,6 +469,10 @@ public struct ItemDetailView: View {
     }
 
     // MARK: - Computed Properties
+
+    private func formattedValue(_ value: Double) -> String {
+        value.formatted(.currency(code: "USD"))
+    }
 
     private var metadataCardShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: 24)
