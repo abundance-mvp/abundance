@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 
 /// View displaying detection results with bounding boxes and object cards
 public struct DetectionResultsView: View {
@@ -21,6 +22,14 @@ public struct DetectionResultsView: View {
 
     private var selectedCount: Int {
         uncatalogedObjects.filter { selectedObjectIds.contains($0.groupId) }.count
+    }
+
+    private func toggleObjectSelection(_ objectId: String) {
+        if selectedObjectIds.contains(objectId) {
+            selectedObjectIds.remove(objectId)
+        } else {
+            selectedObjectIds.insert(objectId)
+        }
     }
 
     public init(
@@ -97,12 +106,7 @@ public struct DetectionResultsView: View {
                     .onTapGesture {
                         withAnimation(reduceMotion ? nil : .brandPress) {
                             selectedObjectId = selectedObjectId == object.groupId ? nil : object.groupId
-                            // Toggle check state
-                            if selectedObjectIds.contains(object.groupId) {
-                                selectedObjectIds.remove(object.groupId)
-                            } else {
-                                selectedObjectIds.insert(object.groupId)
-                            }
+                            toggleObjectSelection(object.groupId)
                         }
                     }
                 }
@@ -158,11 +162,7 @@ public struct DetectionResultsView: View {
                                 isCataloging: catalogingObjectIds.contains(object.groupId),
                                 isCataloged: catalogedObjectIds.contains(object.groupId),
                                 onToggleCheck: {
-                                    if selectedObjectIds.contains(object.groupId) {
-                                        selectedObjectIds.remove(object.groupId)
-                                    } else {
-                                        selectedObjectIds.insert(object.groupId)
-                                    }
+                                    toggleObjectSelection(object.groupId)
                                 }
                             )
                             .accessibilityIdentifier("detection.object.\(object.groupId)")
@@ -186,30 +186,7 @@ public struct DetectionResultsView: View {
             bottomActions
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background {
-                    if #available(iOS 26.0, macOS 26.0, *) {
-                        if !reduceTransparency {
-                            Color.clear
-                                .glassEffect(in: Rectangle())
-                        } else {
-                            #if os(iOS)
-                            Color(.systemBackground)
-                            #else
-                            Color(nsColor: .windowBackgroundColor)
-                            #endif
-                        }
-                    } else {
-                        if reduceTransparency {
-                            #if os(iOS)
-                            Color(.systemBackground)
-                            #else
-                            Color(nsColor: .windowBackgroundColor)
-                            #endif
-                        } else {
-                            Rectangle().fill(.ultraThinMaterial)
-                        }
-                    }
-                }
+                .adaptiveGlass(in: Rectangle())
         }
         #if os(iOS)
         .background(Color(.systemBackground))
@@ -310,6 +287,7 @@ public struct DetectionResultsView: View {
             }
             .buttonStyle(.borderedProminent)
             .accessibilityIdentifier("detection.doneButton")
+            .accessibilityHint("Saves results and returns to catalog view")
         }
     }
 
