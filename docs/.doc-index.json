@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-06T07:36:03Z",
+  "generated": "2026-02-07T06:33:12Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -282,11 +282,6 @@
         "Deprecated"
       ],
       "docs": {
-        "abundance-brand-bible_090125.md": {
-          "status": "Deprecated",
-          "superseded_by": "abundance-brand-bible-v3-2026-02-06.md",
-          "updated": "2026-01-09"
-        },
         "abundance-brand-bible-v3-2026-02-06.md": {
           "status": "Active",
           "code_refs": [
@@ -465,6 +460,14 @@
         "related_branch": null,
         "merged": "2026-01-18",
         "archived_at": "2026-01-19"
+      }
+    },
+    "brand": {
+      "abundance-brand-bible_090125.md": {
+        "status": "Deprecated",
+        "superseded_by": "abundance-brand-bible-v3-2026-02-06.md",
+        "updated": "2026-01-09",
+        "archived_at": "2026-02-07"
       }
     }
   }
