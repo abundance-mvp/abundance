@@ -20,15 +20,13 @@
 | Estimated value | `mutedSage` | `#9DC4A8` | `.foregroundStyle(Color.mutedSage)` |
 | Metadata card | `cream` / `peach` | — | `.abundanceCardStyle(cornerRadius: 24)` |
 | Card shadow | `black.opacity(0.15)` | — | Drop shadow |
-| Deep scan icon | `.purple` | — | **Violation:** should use brand token |
+| Deep scan icon | `softTeal` | `#8ECAC0` | `Color.softTeal` for deep scan feature |
 | Confidence high | `mutedSage` | `#9DC4A8` | ConfidenceRow |
 | Confidence medium | `peach` | `#EDBE9E` | ConfidenceRow |
 | Confidence low | `salmon` | `#E8907A` | ConfidenceRow |
 | Delete photo icon | `deepPlum.opacity(0.8)` | — | PhotoCarouselView overlay |
 
-**Known violations:**
-- Line 156: `.foregroundStyle(.purple)` on deep scan icon → should use `accentPrimary`
-- Line 262: `.foregroundStyle(.purple)` on deep scan section header → same fix
+**Known violations:** None — `.purple` violations previously fixed to `Color.softTeal`.
 
 ## 2. Accessibility
 
