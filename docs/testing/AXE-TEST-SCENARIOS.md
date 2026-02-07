@@ -320,24 +320,6 @@
 
 ---
 
-### Scenario 12: Catalog Processing States
-
-**Goal:** Items show progressive detail based on AI processing status.
-
-**Steps:**
-1. Navigate to Catalog tab
-2. `axe describe-ui` - find items with different statuses
-3. Look for status badges: "Processing" (blue), "Analyzed" (green), "Complete" (green), "Failed" (red)
-4. Tap into items of each status and compare metadata completeness
-
-**Assertions:**
-- Pending items show "Processing" badge (blue), limited metadata
-- Analyzed items show "Analyzed" badge (green), more metadata
-- Complete items show full metadata + value + confidence
-- Failed items show "Failed" badge (red)
-
-**Skip if:** All items have the same status.
-
 ---
 
 ## Known Limitations
@@ -372,6 +354,7 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 
 | Date | Change |
 |---|---|
+| 2026-02-07 | Removed Scenario 12 (Catalog Processing States) — requires cloud API calls, violates no-network-calls policy. Now 11 scenarios total. |
 | 2026-02-07 | Removed Scenario 12 (Deep Catalog Trigger) — catalog pipeline requires Cloud Functions/network, not suitable for AXe testing. Renumbered Scenario 13 → 12. Now 12 scenarios total. |
 | 2026-02-07 | Fixed 4 AXe issues: search clear button 44x44 touch target, item IDs in selection mode, tab IDs on content views, Scenario 12 rewritten for simulator re-catalog flow. Documented 3 known limitations (tab bar, toolbar buttons, grid container). |
 | 2026-02-06 | Fixed 7 AXe findings: tab IDs, grid ID, recatalog button/context menu, CSV-only export, select button height, known limitations |

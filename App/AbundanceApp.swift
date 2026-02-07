@@ -5,10 +5,18 @@ import OnboardingFeature
 
 @main
 struct AbundanceApp: App {
-    @State private var authViewModel = AuthViewModel()
+    @State private var authViewModel: AuthViewModel
 
     init() {
-        // Configure Firebase with SPM resource bundle
+        // Configure Firebase BEFORE creating AuthViewModel (which calls Auth.auth())
+        Self.configureFirebase()
+        _authViewModel = State(initialValue: AuthViewModel())
+    }
+
+    /// Configure Firebase with SPM resource bundle. Must be called before any Firebase API usage.
+    private static func configureFirebase() {
+        guard FirebaseApp.app() == nil else { return }
+
         #if DEBUG
         print("DEBUG: Looking for Firebase config...")
         print("DEBUG: Main bundle path: \(Bundle.main.bundlePath)")
