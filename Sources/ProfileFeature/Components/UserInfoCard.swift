@@ -48,7 +48,7 @@ public struct UserInfoCard: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity)
-        .adaptiveGlass(cornerRadius: 20, tint: Color.accentPrimary.opacity(0.1))
+        .abundanceCardStyle(cornerRadius: 20)
         .accessibilityIdentifier("profile.userInfoCard")
         .accessibilityElement(children: .combine)
         .accessibilityLabel("User profile: \(displayName), \(email), \(itemCount) items")
@@ -65,7 +65,7 @@ public struct UserInfoCard: View {
             Text(avatarInitials)
                 .font(.title)
                 .fontWeight(.bold)
-                .foregroundStyle(Color.textBrightBlue)
+                .foregroundStyle(Color.salmon)
         }
         .accessibilityHidden(true)
     }
@@ -74,7 +74,7 @@ public struct UserInfoCard: View {
         HStack(spacing: 8) {
             Image(systemName: "tray.full")
                 .font(.body)
-                .foregroundStyle(Color.textBrightBlue)
+                .foregroundStyle(Color.salmon)
 
             Text("\(itemCount) items")
                 .font(.callout)

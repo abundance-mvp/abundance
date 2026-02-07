@@ -3,27 +3,19 @@ import SwiftUI
 public extension Animation {
     // MARK: - Abundance Animation Presets
 
-    /// Snappy animation for quick interactions
+    /// Press animation for quick interactions (button taps, toggles)
     /// - Response: 0.3s (fast)
     /// - Damping: 0.6 (medium bounce)
-    /// - Usage: Button taps, tab switches, immediate feedback
-    static let brandSnappy = Animation.spring(response: 0.3, dampingFraction: 0.6)
+    static let brandPress = Animation.spring(response: 0.3, dampingFraction: 0.6)
 
     /// Default animation for standard transitions
-    /// - Response: 0.4s (balanced)
-    /// - Damping: 0.7 (subtle bounce)
+    /// - Response: 0.5s (balanced)
+    /// - Damping: 0.6 (medium bounce)
     /// - Usage: Screen transitions, card entrance, modal presentation
-    static let brandDefault = Animation.spring(response: 0.4, dampingFraction: 0.7)
+    static let brandDefault = Animation.spring(response: 0.5, dampingFraction: 0.6)
 
-    /// Bouncy animation for celebratory moments
-    /// - Response: 0.5s (slower)
-    /// - Damping: 0.5 (high bounce)
-    /// - Usage: Success animations, scan completion, save confirmation
-    static let brandBouncy = Animation.spring(response: 0.5, dampingFraction: 0.5)
-
-    /// Gentle animation for subtle updates
-    /// - Response: 0.6s (slow)
-    /// - Damping: 0.8 (minimal bounce)
-    /// - Usage: Background updates, Firestore sync, non-critical changes
-    static let brandGentle = Animation.spring(response: 0.6, dampingFraction: 0.8)
+    /// Reduced motion fallback — minimal, non-spring animation
+    /// - Duration: 0.2s ease-in-out
+    /// - Usage: All animations when accessibilityReduceMotion is enabled
+    static let brandReducedMotion = Animation.easeInOut(duration: 0.2)
 }

@@ -79,7 +79,7 @@ public struct InventoryView: View {
                 ToolbarItem(placement: .primaryAction) {
                     if !viewModel.items.isEmpty && !viewModel.isLoading {
                         Button(isSelectionMode ? "Done" : "Select") {
-                            withAnimation(reduceMotion ? nil : .brandSnappy) {
+                            withAnimation(reduceMotion ? nil : .brandPress) {
                                 isSelectionMode.toggle()
                                 if !isSelectionMode {
                                     selectedItemIds.removeAll()
@@ -129,7 +129,7 @@ public struct InventoryView: View {
                 Button("Delete All", role: .destructive) {
                     let idsToDelete = selectedItemIds
                     // Clear selection state immediately with animation (before async work)
-                    withAnimation(reduceMotion ? nil : .brandSnappy) {
+                    withAnimation(reduceMotion ? nil : .brandPress) {
                         isSelectionMode = false
                         selectedItemIds.removeAll()
                     }
@@ -189,7 +189,7 @@ public struct InventoryView: View {
             .disabled(selectedItemIds.isEmpty)
         }
         .padding()
-        .adaptiveGlass(cornerRadius: 16)
+        .abundanceCardStyle()
     }
 }
 
@@ -214,7 +214,7 @@ private struct ItemGridView: View {
                         ItemCard(
                             item: item,
                             onTap: {
-                                withAnimation(reduceMotion ? nil : .brandSnappy) {
+                                withAnimation(reduceMotion ? nil : .brandPress) {
                                     if selectedItemIds.contains(item.id) {
                                         selectedItemIds.remove(item.id)
                                     } else {

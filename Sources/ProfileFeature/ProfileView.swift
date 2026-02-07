@@ -111,7 +111,7 @@ public struct ProfileView: View {
                 )
                 .accessibilityIdentifier("profile.help")
             }
-            .adaptiveGlass(cornerRadius: 16)
+            .abundanceCardStyle()
         }
     }
 
@@ -129,7 +129,7 @@ public struct ProfileView: View {
                 HStack {
                     Image(systemName: "tablecells")
                         .font(.title3)
-                        .foregroundStyle(Color.textBrightBlue)
+                        .foregroundStyle(Color.salmon)
                     Text("Export as CSV")
                         .font(.body.weight(.medium))
                         .foregroundStyle(Color.textPrimary)
@@ -141,7 +141,7 @@ public struct ProfileView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .adaptiveGlass(cornerRadius: 16)
+                .abundanceCardStyle()
             }
             .buttonStyle(.plain)
             .contentShape(Rectangle())
@@ -165,7 +165,7 @@ public struct ProfileView: View {
             .foregroundStyle(Color.errorColor)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .adaptiveGlass(cornerRadius: 16)
+            .abundanceCardStyle()
         }
         .accessibilityIdentifier("profile.signOutButton")
         .accessibilityLabel("Sign out")
@@ -208,7 +208,7 @@ private struct SettingsRow: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.body)
-                    .foregroundStyle(Color.textBrightBlue)
+                    .foregroundStyle(Color.salmon)
                     .frame(width: 24)
 
                 Text(title)

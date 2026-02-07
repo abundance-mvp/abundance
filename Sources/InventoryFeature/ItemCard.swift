@@ -24,8 +24,8 @@ struct ItemCard: View {
 
     var body: some View {
         cardContent
-            .animation(reduceMotion ? nil : .brandSnappy, value: isPressed)
-            .animation(reduceMotion ? nil : .brandSnappy, value: isSelected)
+            .animation(reduceMotion ? nil : .brandPress, value: isPressed)
+            .animation(reduceMotion ? nil : .brandPress, value: isSelected)
             .accessibilityElement(children: .combine)
             .accessibilityLabel(accessibilityDescription)
             .accessibilityAddTraits(.isButton)
@@ -144,7 +144,8 @@ struct ItemCard: View {
                 selectionIndicator
             }
         }
-        .adaptiveGlass(in: outerShape)
+        .background(Color.cream, in: outerShape)
+        .overlay(outerShape.stroke(Color.peach, lineWidth: 1))
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .overlay {
@@ -230,7 +231,7 @@ struct ItemCard: View {
             // Skip animation for Reduce Motion users
             onTap?()
         } else {
-            withAnimation(.brandSnappy) {
+            withAnimation(.brandPress) {
                 isPressed = true
             }
             onTap?()
@@ -239,7 +240,7 @@ struct ItemCard: View {
             pressAnimationTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(150))
                 guard !Task.isCancelled else { return }
-                withAnimation(.brandSnappy) {
+                withAnimation(.brandPress) {
                     isPressed = false
                 }
             }
@@ -264,10 +265,10 @@ private struct ConditionBadge: View {
 
     private var conditionColor: Color {
         switch condition {
-        case .new, .likeNew: return .green
-        case .good: return .blue
-        case .fair: return .orange
-        case .poor: return .red
+        case .new, .likeNew: return .mutedSage
+        case .good: return .softTeal
+        case .fair: return .peach
+        case .poor: return .salmon
         }
     }
 }
@@ -297,9 +298,9 @@ private struct StatusBadge: View {
 
     private var statusColor: Color {
         switch status {
-        case .processing: return .blue
-        case .complete: return .green
-        case .failed: return .red
+        case .processing: return .peach
+        case .complete: return .mutedSage
+        case .failed: return .salmon
         }
     }
 }

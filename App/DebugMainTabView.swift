@@ -1,5 +1,6 @@
 #if DEBUG
 import SwiftUI
+import Core
 import InventoryFeature
 import ProfileFeature
 import Persistence
@@ -59,6 +60,7 @@ struct DebugMainTabView: View {
             .accessibilityIdentifier("tab.profile")
             .tag(Tab.profile)
         }
+        .tint(Color.salmon)
     }
 
     @ScaledMetric(relativeTo: .largeTitle) private var cameraIconSize: CGFloat = 60

@@ -19,7 +19,7 @@ public struct RescanComparisonSheet: View {
                     VStack(spacing: 8) {
                         Image(systemName: "arrow.left.arrow.right")
                             .font(.title)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color.salmon)
 
                         Text("Compare Results")
                             .font(.title2.weight(.bold))
@@ -77,7 +77,7 @@ public struct RescanComparisonSheet: View {
                             .padding(.vertical, 16)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.green)
+                    .tint(Color.mutedSage)
 
                     Button {
                         viewModel.unlockManualEdit()
@@ -91,11 +91,11 @@ public struct RescanComparisonSheet: View {
                         .padding(.vertical, 12)
                     }
                     .buttonStyle(.bordered)
-                    .tint(.orange)
+                    .tint(Color.salmon)
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
-                .adaptiveGlass(cornerRadius: 16)
+                .abundanceCardStyle()
             }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -137,7 +137,7 @@ private struct ComparisonCard: View {
                 .padding(.vertical, 4)
                 .background {
                     Capsule()
-                        .fill(isHighlighted ? Color.green : Color.secondary.opacity(0.2))
+                        .fill(isHighlighted ? Color.mutedSage : Color.secondary.opacity(0.2))
                 }
 
             // Image thumbnail
@@ -179,18 +179,22 @@ private struct ComparisonCard: View {
                     CompactFieldRow(label: "Brand", value: brand)
                 }
                 if let value = item.estimatedValue {
-                    CompactFieldRow(label: "Value", value: "$\(String(format: "%.2f", value))")
+                    CompactFieldRow(label: "Value", value: formattedValue(value))
                 }
             }
         }
         .padding(12)
-        .adaptiveGlass(cornerRadius: 16)
+        .abundanceCardStyle()
         .overlay {
             if isHighlighted {
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.green, lineWidth: 2)
+                    .stroke(Color.mutedSage, lineWidth: 2)
             }
         }
+    }
+
+    private func formattedValue(_ value: Double) -> String {
+        value.formatted(.currency(code: "USD"))
     }
 }
 
@@ -233,6 +237,10 @@ private struct FieldChangesSummary: View {
     let original: Item
     let updated: Item
 
+    private func formattedValue(_ value: Double) -> String {
+        value.formatted(.currency(code: "USD"))
+    }
+
     private var changes: [FieldChange] {
         var result: [FieldChange] = []
 
@@ -252,8 +260,8 @@ private struct FieldChangesSummary: View {
             result.append(FieldChange(field: "Color", from: original.color, to: updated.color))
         }
         if original.estimatedValue != updated.estimatedValue {
-            let fromValue = original.estimatedValue.map { "$\(String(format: "%.2f", $0))" }
-            let toValue = updated.estimatedValue.map { "$\(String(format: "%.2f", $0))" }
+            let fromValue = original.estimatedValue.map { formattedValue($0) }
+            let toValue = updated.estimatedValue.map { formattedValue($0) }
             result.append(FieldChange(field: "Est. Value", from: fromValue, to: toValue))
         }
 
@@ -281,14 +289,14 @@ private struct FieldChangesSummary: View {
                                     .font(.caption2)
                                     .foregroundStyle(.tertiary)
                                 Text(change.to ?? "--")
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(Color.mutedSage)
                             }
                             .font(.caption.weight(.medium))
                         }
                     }
                 }
                 .padding(12)
-                .adaptiveGlass(cornerRadius: 12)
+                .abundanceCardStyle(cornerRadius: 12)
             }
         }
     }

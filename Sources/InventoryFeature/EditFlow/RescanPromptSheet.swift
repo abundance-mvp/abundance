@@ -46,7 +46,7 @@ public struct RescanPromptSheet: View {
                         .padding(.vertical, 16)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.orange)
+                .tint(Color.salmon)
 
                 Button {
                     viewModel.state = .editing
@@ -74,7 +74,7 @@ public struct RescanPromptSheet: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 32)
         }
-        .adaptiveGlass(cornerRadius: 32)
+        .abundanceCardStyle(cornerRadius: 32)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
         .interactiveDismissDisabled(viewModel.state == .processing)

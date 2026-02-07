@@ -11,6 +11,8 @@ public struct SignInView: View {
 
     @State private var showingNetworkError = false
 
+    @ScaledMetric(relativeTo: .largeTitle) private var leafIconSize: CGFloat = 80
+
     public init(viewModel: AuthViewModel) {
         self.viewModel = viewModel
     }
@@ -59,21 +61,21 @@ public struct SignInView: View {
             Text("No internet connection")
                 .font(.subheadline)
         }
-        .foregroundStyle(Color.warningColor)
+        .foregroundStyle(Color.salmon)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background {
             if #available(iOS 26.0, macOS 26.0, *) {
                 if !reduceTransparency {
-                    Color.warningColor.opacity(0.15)
+                    Color.salmon.opacity(0.15)
                         .glassEffect(in: Capsule())
                 } else {
                     Capsule()
-                        .fill(Color.warningColor.opacity(0.15))
+                        .fill(Color.salmon.opacity(0.15))
                 }
             } else {
                 Capsule()
-                    .fill(Color.warningColor.opacity(0.15))
+                    .fill(Color.salmon.opacity(0.15))
             }
         }
         .accessibilityLabel("No internet connection. Sign in requires internet access.")
@@ -88,8 +90,8 @@ public struct SignInView: View {
         } else {
             LinearGradient(
                 colors: [
-                    Color.brandMintGreen.opacity(0.3),
-                    Color.brandBrightBlue.opacity(0.2)
+                    Color.peach.opacity(0.3),
+                    Color.salmon.opacity(0.2)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -101,10 +103,10 @@ public struct SignInView: View {
 
     private var leafIcon: some View {
         Image(systemName: "leaf.fill")
-            .font(.system(size: 80).leading(.tight))
+            .font(.system(size: leafIconSize).leading(.tight))
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
-            .foregroundStyle(Color.brandMintGreen)
-            .shadow(color: Color.brandMintGreen.opacity(0.4), radius: 16, x: 0, y: 8)
+            .foregroundStyle(Color.softTeal)
+            .shadow(color: Color.softTeal.opacity(0.4), radius: 16, x: 0, y: 8)
             .accessibilityHidden(true)
     }
 
@@ -197,7 +199,7 @@ public struct SignInView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .adaptiveGlass(cornerRadius: 12)
+        .abundanceCardStyle(cornerRadius: 12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(error.localizedDescription)")
     }

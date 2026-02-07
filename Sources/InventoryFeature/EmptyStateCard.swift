@@ -10,10 +10,12 @@ struct EmptyStateCard: View {
     let buttonTitle: String
     let action: () -> Void
 
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 64
+
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: iconName)
-                .font(.system(size: 64))
+                .font(.system(size: iconSize))
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
@@ -35,7 +37,7 @@ struct EmptyStateCard: View {
         }
         .padding(32)
         .frame(maxWidth: .infinity)
-        .adaptiveGlass(cornerRadius: 24)
+        .abundanceCardStyle(cornerRadius: 24)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
 }

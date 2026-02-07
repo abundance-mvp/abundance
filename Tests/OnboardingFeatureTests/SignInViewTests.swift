@@ -20,9 +20,9 @@ struct SignInViewTests {
     @Test("SignInView uses brand styling")
     func testSignInViewUsesBrandStyling() async throws {
         // This test documents that SignInView should include:
-        // - Brand gradient background (brandMintGreen.opacity(0.3) to brandBrightBlue.opacity(0.2))
+        // - Brand gradient background (peach.opacity(0.3) to salmon.opacity(0.2))
         // - Rounded design typography throughout
-        // - Leaf icon with brand mint green color
+        // - Leaf icon with soft teal color
         // - Accessibility support via @Environment(\.accessibilityReduceTransparency)
 
         // The test passes if SignInView compiles with these features

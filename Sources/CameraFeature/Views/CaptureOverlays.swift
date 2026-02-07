@@ -8,13 +8,15 @@ struct CaptureOverlay: View {
     let photoCount: Int
     let isLongPress: Bool
 
+    @ScaledMetric(relativeTo: .largeTitle) private var burstCountSize: CGFloat = 48
+
     var body: some View {
         VStack {
             Spacer()
 
             if isLongPress && photoCount > 0 {
                 Text("\(photoCount) photos")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(.system(size: burstCountSize, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .shadow(radius: 4)
             }
@@ -139,6 +141,7 @@ struct ErrorOverlay: View {
     let onDismiss: () -> Void
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @ScaledMetric(relativeTo: .title) private var errorIconSize: CGFloat = 32
     @State private var isRetrying = false
 
     var body: some View {
@@ -186,7 +189,7 @@ struct ErrorOverlay: View {
                 .frame(width: 72, height: 72)
 
             Image(systemName: iconName)
-                .font(.system(size: 32, weight: .medium))
+                .font(.system(size: errorIconSize, weight: .medium))
                 .foregroundStyle(iconColor)
         }
     }
@@ -252,7 +255,7 @@ struct ErrorOverlay: View {
                 }
                 Text(isRetrying ? "Retrying..." : "Try Again")
             }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .font(.system(.body, design: .rounded, weight: .semibold))
             .foregroundStyle(.black)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -267,7 +270,7 @@ struct ErrorOverlay: View {
             onDismiss()
         } label: {
             Text("Dismiss")
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(.body, design: .rounded, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
@@ -299,7 +302,7 @@ struct CaptureButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .font(.system(.body, design: .rounded, weight: .semibold))
             .foregroundStyle(isPrimary ? .black : .white)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)

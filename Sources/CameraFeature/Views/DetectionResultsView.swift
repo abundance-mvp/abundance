@@ -188,16 +188,18 @@ public struct DetectionResultsView: View {
                     onCatalogAll()
                 }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.accentPrimary)
                 .accessibilityIdentifier("detection.catalogAllButton")
             }
         }
     }
 
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
+
     private var noObjectsView: some View {
         VStack(spacing: 16) {
             Image(systemName: "viewfinder")
-                .font(.system(size: 48))
+                .font(.system(size: emptyIconSize))
                 .foregroundStyle(.secondary)
 
             Text("No objects detected")
@@ -271,11 +273,11 @@ struct BoundingBoxOverlay: View {
 
     private var borderColor: Color {
         if isCataloged {
-            return .green
+            return .successColor
         } else if isCataloging {
             return .yellow
         } else if isSelected {
-            return .blue
+            return .accentPrimary
         } else {
             return .white.opacity(0.8)
         }
@@ -285,7 +287,7 @@ struct BoundingBoxOverlay: View {
         HStack(spacing: 4) {
             if isCataloged {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 10))
+                    .font(.caption2)
             } else if isCataloging {
                 ProgressView()
                     .scaleEffect(0.5)
@@ -316,7 +318,7 @@ struct DetectedObjectCard: View {
 
     private var backgroundFillColor: Color {
         if isSelected {
-            return Color.blue.opacity(0.1)
+            return Color.accentPrimary.opacity(0.1)
         } else {
             #if os(iOS)
             return Color(.secondarySystemBackground)
@@ -340,7 +342,7 @@ struct DetectedObjectCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 1)
+                .stroke(isSelected ? Color.accentPrimary : Color.clear, lineWidth: 1)
         )
     }
 
@@ -367,7 +369,7 @@ struct DetectedObjectCard: View {
         }
         .frame(width: 60, height: 60)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(isSelected ? Color.blue : .clear, lineWidth: 2))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(isSelected ? Color.accentPrimary : .clear, lineWidth: 2))
     }
 
     private var thumbnailPlaceholder: some View {
@@ -415,7 +417,7 @@ struct DetectedObjectCard: View {
         if isCataloged {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title2)
-                .foregroundStyle(.green)
+                .foregroundStyle(Color.successColor)
         } else if isCataloging {
             ProgressView()
         } else {
@@ -436,10 +438,12 @@ struct NoObjectsDetectedView: View {
     let reasoning: String?
     let onRetake: () -> Void
 
+    @ScaledMetric(relativeTo: .largeTitle) private var noObjectsIconSize: CGFloat = 64
+
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: "viewfinder.circle")
-                .font(.system(size: 64))
+                .font(.system(size: noObjectsIconSize))
                 .foregroundStyle(.secondary)
 
             Text("No Objects Detected")
@@ -479,7 +483,7 @@ struct NoObjectsDetectedView: View {
     private func tipRow(icon: String, text: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.accentPrimary)
                 .frame(width: 20)
 
             Text(text)

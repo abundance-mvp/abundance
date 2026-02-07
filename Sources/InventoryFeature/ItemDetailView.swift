@@ -56,7 +56,7 @@ public struct ItemDetailView: View {
                                 case .empty:
                                     ProgressView()
                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                        .background(.gray.opacity(0.1))
+                                        .background(Color.cream.opacity(0.3))
                                 case .success(let image):
                                     image
                                         .resizable()
@@ -66,12 +66,12 @@ public struct ItemDetailView: View {
                                         .clipped()
                                 case .failure:
                                     Rectangle()
-                                        .fill(.gray.opacity(0.3))
+                                        .fill(Color.cream.opacity(0.5))
                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                                         .overlay {
                                             Image(systemName: "photo")
                                                 .font(.largeTitle)
-                                                .foregroundStyle(.tertiary)
+                                                .foregroundStyle(Color.deepPlum.opacity(0.3))
                                         }
                                         .onAppear {
                                             AppLogger.log(.imageLoadFailed(
@@ -181,10 +181,10 @@ public struct ItemDetailView: View {
                         // Category Badges
                         HStack(spacing: 8) {
                             if let category = item.category {
-                                CategoryBadge(text: category, color: .orange)
+                                CategoryBadge(text: category, color: .peach)
                             }
                             if let subCategory = item.subCategory {
-                                CategoryBadge(text: subCategory, color: .blue)
+                                CategoryBadge(text: subCategory, color: .softTeal)
                             }
                         }
 
@@ -214,12 +214,12 @@ public struct ItemDetailView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                                 Spacer()
-                                Text("$\(value, specifier: "%.2f")")
+                                Text(value, format: .currency(code: "USD"))
                                     .font(.title3.weight(.bold))
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(Color.mutedSage)
                             }
                             .accessibilityElement(children: .combine)
-                            .accessibilityLabel("Estimated value: $\(value, specifier: "%.2f")")
+                            .accessibilityLabel("Estimated value: \(formattedValue(value))")
                         }
 
                         // Metadata Grid
@@ -302,7 +302,7 @@ public struct ItemDetailView: View {
                         }
                     }
                     .padding(24)
-                    .adaptiveGlass(in: metadataCardShape)
+                    .abundanceCardStyle(cornerRadius: 24)
                     .shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: -8)
                     .padding(.horizontal, 16)
                     .offset(y: -60) // Overlap hero
@@ -469,9 +469,10 @@ public struct ItemDetailView: View {
 
     // MARK: - Computed Properties
 
-    private var metadataCardShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: 24)
+    private func formattedValue(_ value: Double) -> String {
+        value.formatted(.currency(code: "USD"))
     }
+
 }
 
 // MARK: - Scroll Offset Tracking
@@ -551,9 +552,9 @@ private struct ConfidenceRow: View {
 
     private var confidenceColor: Color {
         switch confidence {
-        case .high: return .green
-        case .medium: return .orange
-        case .low: return .red
+        case .high: return .mutedSage
+        case .medium: return .peach
+        case .low: return .salmon
         }
     }
 }

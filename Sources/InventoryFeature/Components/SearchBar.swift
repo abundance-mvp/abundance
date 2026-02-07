@@ -33,7 +33,7 @@ public struct SearchBar: View {
 
             if !text.isEmpty {
                 Button {
-                    withAnimation(reduceMotion ? nil : .brandSnappy) {
+                    withAnimation(reduceMotion ? nil : .brandPress) {
                         text = ""
                     }
                 } label: {
