@@ -145,7 +145,7 @@ public final class SweepCaptureViewModel: ObservableObject {
             }
 
             // Create Firestore session with sweep mode
-            let _ = try await sessionService.createSweepSession(
+            _ = try await sessionService.createSweepSession(
                 userId: userId,
                 sweepCrops: crops,
                 originalFrameUrls: []  // TODO: include keyframe URLs
