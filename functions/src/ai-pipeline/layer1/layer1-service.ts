@@ -238,9 +238,23 @@ export async function detectObjectsInImages(
   userId: string,
   sessionId: string
 ): Promise<Layer1Result> {
-  // Fetch images and convert to base64
-  const imageBase64s = await Promise.all(
+  const sharpLib = await getSharp();
+
+  // Fetch images and normalize EXIF rotation BEFORE sending to Gemini.
+  // This ensures Gemini's bounding box coordinates match the visual orientation
+  // of the image, which is the same orientation used for cropping.
+  // Without this, a portrait photo (landscape sensor + EXIF rotation tag) would
+  // have Gemini return coords in raw sensor space while crops use rotated space.
+  const rawBase64s = await Promise.all(
     imageUrls.map(url => fetchImageFromGCS(url, storage))
+  );
+
+  const imageBase64s = await Promise.all(
+    rawBase64s.map(async (base64) => {
+      const buffer = Buffer.from(base64, 'base64');
+      const rotated = await sharpLib(buffer).rotate().jpeg({ quality: 95 }).toBuffer();
+      return rotated.toString('base64');
+    })
   );
 
   // Call Gemini 3 Flash for detection with retry logic
@@ -423,19 +437,11 @@ async function cropAndUploadObjects(
       }
 
       try {
-        // Get image dimensions AFTER EXIF rotation normalization
-        // Gemini sees the image in its visual orientation (post-EXIF-rotation),
-        // so we need the rotated dimensions for accurate bounding box conversion
+        // Images are already EXIF-normalized in detectObjectsInImages() before
+        // being sent to Gemini, so bbox coords and image dimensions are aligned.
         const imageBuffer = Buffer.from(imageBase64, 'base64');
 
-        // First, apply rotation and get the normalized buffer
-        // .rotate() with no args auto-rotates based on EXIF orientation metadata
-        const rotatedBuffer = await sharpLib(imageBuffer)
-          .rotate()
-          .toBuffer();
-
-        // Now get metadata from the rotated image (correct dimensions)
-        const metadata = await sharpLib(rotatedBuffer).metadata();
+        const metadata = await sharpLib(imageBuffer).metadata();
         if (!metadata.width || !metadata.height) {
           logger.warn('Could not get image dimensions', { label: obj.label });
           continue;
@@ -445,8 +451,8 @@ async function cropAndUploadObjects(
         const absCoords = boxToAbsolute(obj.box_2d, metadata.width, metadata.height);
         const paddedCoords = addPadding(absCoords, 0.05, metadata.width, metadata.height);
 
-        // Crop from the already-rotated image
-        const croppedBuffer = await sharpLib(rotatedBuffer)
+        // Crop from the EXIF-normalized image
+        const croppedBuffer = await sharpLib(imageBuffer)
           .extract({
             left: paddedCoords.x1,
             top: paddedCoords.y1,

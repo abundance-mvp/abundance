@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-07T18:22:30Z",
+  "generated": "2026-02-07T22:58:45Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -271,6 +271,21 @@
         },
         "2026-01-20-thumbnail-orientation-breaks-layout.md": {
           "status": "Fixed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-07-bounding-boxes-misaligned-from-detected-objects.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-07-camera-frozen-after-tab-navigation-post-capture.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-07-catalog-grid-first-row-card-overlap.md": {
+          "status": "Open",
           "related_branch": null,
           "merged": null
         }

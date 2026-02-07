@@ -71,6 +71,34 @@ public struct DetectionResultsView: View {
 
     // MARK: - Image with Bounding Boxes
 
+    /// Calculate the displayed image rect within a container when using .aspectRatio(.fit)
+    private func imageDisplayRect(imageSize: CGSize, containerSize: CGSize) -> CGRect {
+        let imageAspect = imageSize.width / imageSize.height
+        let containerAspect = containerSize.width / containerSize.height
+
+        let displaySize: CGSize
+        if imageAspect > containerAspect {
+            // Image is wider than container — fits to width, letterbox top/bottom
+            displaySize = CGSize(
+                width: containerSize.width,
+                height: containerSize.width / imageAspect
+            )
+        } else {
+            // Image is taller than container — fits to height, letterbox left/right
+            displaySize = CGSize(
+                width: containerSize.height * imageAspect,
+                height: containerSize.height
+            )
+        }
+
+        return CGRect(
+            x: (containerSize.width - displaySize.width) / 2,
+            y: (containerSize.height - displaySize.height) / 2,
+            width: displaySize.width,
+            height: displaySize.height
+        )
+    }
+
     @ViewBuilder
     private func imageWithBoundingBoxes(geometry: GeometryProxy) -> some View {
         ZStack(alignment: .topLeading) {
@@ -83,33 +111,38 @@ public struct DetectionResultsView: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                }
-                #endif
-            }
 
-            // Bounding box overlays
-            GeometryReader { _ in
-                ForEach(detectedObjects) { object in
-                    BoundingBoxOverlay(
-                        object: object,
-                        isSelected: selectedObjectId == object.groupId,
-                        isChecked: selectedObjectIds.contains(object.groupId),
-                        isCataloging: catalogingObjectIds.contains(object.groupId),
-                        isCataloged: catalogedObjectIds.contains(object.groupId)
-                    )
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Detected: \(object.label)")
-                    .accessibilityHint(
-                        selectedObjectIds.contains(object.groupId) ? "Double tap to deselect" : "Double tap to select"
-                    )
-                    .accessibilityAddTraits(.isButton)
-                    .onTapGesture {
-                        withAnimation(reduceMotion ? nil : .brandPress) {
-                            selectedObjectId = selectedObjectId == object.groupId ? nil : object.groupId
-                            toggleObjectSelection(object.groupId)
+                    // Bounding box overlays mapped to the actual displayed image rect
+                    GeometryReader { containerGeometry in
+                        let imgRect = imageDisplayRect(
+                            imageSize: uiImage.size,
+                            containerSize: containerGeometry.size
+                        )
+                        ForEach(detectedObjects) { object in
+                            BoundingBoxOverlay(
+                                object: object,
+                                imageRect: imgRect,
+                                isSelected: selectedObjectId == object.groupId,
+                                isChecked: selectedObjectIds.contains(object.groupId),
+                                isCataloging: catalogingObjectIds.contains(object.groupId),
+                                isCataloged: catalogedObjectIds.contains(object.groupId)
+                            )
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel("Detected: \(object.label)")
+                            .accessibilityHint(
+                                selectedObjectIds.contains(object.groupId) ? "Double tap to deselect" : "Double tap to select"
+                            )
+                            .accessibilityAddTraits(.isButton)
+                            .onTapGesture {
+                                withAnimation(reduceMotion ? nil : .brandPress) {
+                                    selectedObjectId = selectedObjectId == object.groupId ? nil : object.groupId
+                                    toggleObjectSelection(object.groupId)
+                                }
+                            }
                         }
                     }
                 }
+                #endif
             }
 
             // Retake overlay button
@@ -297,35 +330,35 @@ public struct DetectionResultsView: View {
 
 struct BoundingBoxOverlay: View {
     let object: ServerDetectedObject
+    /// The rect within the container where the image is actually displayed (accounting for aspect-fit)
+    let imageRect: CGRect
     let isSelected: Bool
     let isChecked: Bool
     let isCataloging: Bool
     let isCataloged: Bool
 
     var body: some View {
-        GeometryReader { geometry in
-            // Use first bounding box for display
-            if let firstBox = object.boundingBoxes.first {
-                let rect = firstBox.normalizedRect
-                // normalizedRect already uses SwiftUI coordinates (origin top-left)
-                let frame = CGRect(
-                    x: rect.minX * geometry.size.width,
-                    y: rect.minY * geometry.size.height,
-                    width: rect.width * geometry.size.width,
-                    height: rect.height * geometry.size.height
-                )
+        // Use first bounding box for display
+        if let firstBox = object.boundingBoxes.first {
+            let rect = firstBox.normalizedRect
+            // Map normalized coordinates to the actual displayed image rect
+            let frame = CGRect(
+                x: imageRect.minX + rect.minX * imageRect.width,
+                y: imageRect.minY + rect.minY * imageRect.height,
+                width: rect.width * imageRect.width,
+                height: rect.height * imageRect.height
+            )
 
-                ZStack {
-                    // Bounding box
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(borderColor, lineWidth: isSelected ? 3 : 2)
-                        .frame(width: frame.width, height: frame.height)
-                        .position(x: frame.midX, y: frame.midY)
+            ZStack {
+                // Bounding box
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(borderColor, lineWidth: isSelected ? 3 : 2)
+                    .frame(width: frame.width, height: frame.height)
+                    .position(x: frame.midX, y: frame.midY)
 
-                    // Label badge
-                    labelBadge
-                        .position(x: frame.midX, y: frame.minY - 14)
-                }
+                // Label badge
+                labelBadge
+                    .position(x: frame.midX, y: frame.minY - 14)
             }
         }
     }

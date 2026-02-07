@@ -153,8 +153,8 @@ struct PipelineIntegrationTests {
             groupId: "grp-1",
             label: "leather armchair",
             category: "furniture",
-            confidence: "high",
             attributes: ["color": "brown", "material": "leather"],
+            confidence: "high",
             croppedImageUrls: [
                 "https://firebasestorage.googleapis.com/v0/b/bucket/o/path.jpg?alt=media&token=tok"
             ],
