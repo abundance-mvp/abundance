@@ -18,6 +18,8 @@
 8. [Trademark Filing](#8-trademark-filing)
 9. [Telemetry & Observability](#9-telemetry--observability)
 10. [Additional Recommendations](#10-additional-recommendations)
+11. [Post-MVP Architecture Brainstorming: MCP/Skills/Agents Toolkit](#11-post-mvp-architecture-brainstorming-toolkit)
+12. [Legal Agent Stack for Trademark Research & Filing](#12-legal-agent-stack-for-trademark-research--filing)
 
 ---
 
@@ -3631,3 +3633,210 @@ Privacy-first apps benefit enormously from community trust:
 - Security bounty program for the E2EE implementation
 - Transparency reports on data requests
 - Community-driven model training for item recognition (federated learning)
+
+---
+
+## 11. Post-MVP Architecture Brainstorming: MCP/Skills/Agents Toolkit
+
+Tools that can introspect your live MVP (Firestore schema, Cloud Functions, Storage, Swift modules) and feed that context into AI-powered architecture brainstorming.
+
+### Tier 1: Introspect Current State
+
+| Tool | What It Does | Setup |
+|------|-------------|-------|
+| **Official Firebase MCP** | Query Firestore collections, read security rules, list Cloud Functions, view logs | `claude mcp add firebase -- npx -y firebase-tools@latest mcp --dir .` |
+| **SwiftLens** | Semantic Swift analysis via SourceKit-LSP -- maps modules, cross-file dependencies, MVVM structure | [github.com/swiftlens/swiftlens](https://github.com/swiftlens/swiftlens) |
+| **Swift-Selena** | `analyze_imports` maps module dependencies, `get_type_hierarchy` reveals inheritance | [github.com/BlueEventHorizon/Swift-Selena](https://github.com/BlueEventHorizon/Swift-Selena) |
+| **spm-analyzer-mcp** | Parses `Package.swift` -- extracts targets, dependencies | `claude mcp add spm-analyzer-mcp -- npx -y spm-analyzer-mcp` |
+| **dependency-mcp** | Dependency graphs for TypeScript Cloud Functions | [github.com/mkearl/dependency-mcp](https://github.com/mkearl/dependency-mcp) |
+| **Swift SourceKit-LSP MCP** | Architecture pattern detection, POP assessment | [github.com/anhptimx/swift-mcp-server](https://github.com/anhptimx/swift-mcp-server) |
+
+### Tier 2: Visualize Architecture
+
+| Tool | What It Does | Setup |
+|------|-------------|-------|
+| **C4Diagrammer** | Auto-generates C4 architecture diagrams (Context + Container) from codebase | [github.com/jonverrier/C4Diagrammer](https://github.com/jonverrier/C4Diagrammer) |
+| **repo-architecture-mcp** | Dependency graphs, UML class diagrams, data flow diagrams | [github.com/vinit-devops/repo-architecture-mcp](https://github.com/vinit-devops/repo-architecture-mcp) |
+| **mcp-mermaid** | Lightweight Mermaid diagram generation | `npx -y @hustcc/mcp-mermaid` |
+| **Diagram Bridge MCP** | 9+ formats (Mermaid, PlantUML, C4, D2, GraphViz, etc.) via Kroki | [glama.ai/mcp/servers/@tohachan/diagram-bridge-mcp](https://glama.ai/mcp/servers/@tohachan/diagram-bridge-mcp) |
+| **Blueprint MCP** | AI-powered diagram generation (architecture, sequence, flowchart) | [github.com/ArcadeAI/blueprint-mcp](https://github.com/ArcadeAI/blueprint-mcp) |
+
+### Tier 3: Evaluate Migration Targets
+
+| Tool | What It Does | Setup |
+|------|-------------|-------|
+| **Supabase MCP** | Design PostgreSQL tables, generate migrations, prototype Firestore-to-Postgres schema | `claude mcp add supabase -- npx -y @supabase/mcp-server-supabase` |
+| **Postgres MCP Pro** | Performance analysis, index recommendations, slow query detection | [github.com/crystaldba/postgres-mcp](https://github.com/crystaldba/postgres-mcp) |
+| **HashiCorp Terraform MCP** | Browse `google-beta` provider resources (Firebase, Cloud SQL, Cloud Run), plan IaC | `claude mcp add terraform -- npx -y @hashicorp/terraform-mcp-server` |
+| **Google MCP Toolbox for Databases** | Single MCP connecting both Firestore AND PostgreSQL for side-by-side comparison | [googleapis.github.io/genai-toolbox](https://googleapis.github.io/genai-toolbox) |
+
+### Tier 4: Cost & Usage Analysis
+
+| Tool | What It Does | Setup |
+|------|-------------|-------|
+| **GCP Cost MCP** | Estimate costs for Cloud Run, Cloud SQL, AlloyDB via Billing Catalog API | `brew install nozomi-koborinai/tap/gcp-cost-mcp-server` |
+| **krzko/google-cloud-mcp** | Actual GCP spend analysis, billing anomalies, cost recommendations (10 billing tools) | [github.com/krzko/google-cloud-mcp](https://github.com/krzko/google-cloud-mcp) |
+| **BigQuery MCP (Official)** | Query Firebase Analytics exports for usage patterns | [cloud.google.com/bigquery/docs/use-bigquery-mcp](https://cloud.google.com/bigquery/docs/use-bigquery-mcp) |
+| **CTO Advisor Skill** | Architecture decisions, tech debt management, DORA metrics | [mcpmarket.com/tools/skills/cto-strategy-leadership-advisor](https://mcpmarket.com/tools/skills/cto-strategy-leadership-advisor) |
+
+### Recommended Workflow
+
+```
+1. Add Firebase MCP + SwiftLens + spm-analyzer-mcp + dependency-mcp
+2. Ask: "Introspect my Firestore schema, Cloud Functions, and Swift modules.
+   Generate a C4 diagram of the current architecture."
+3. Add Supabase MCP + Terraform MCP + GCP Cost MCP
+4. Ask: "Given this architecture, design a PostgreSQL schema mirroring my Firestore
+   collections. Estimate Cloud SQL costs vs current Firestore. Generate Terraform plan."
+```
+
+### Starter `.mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "firebase": {
+      "command": "npx",
+      "args": ["-y", "firebase-tools@latest", "mcp", "--dir", "/home/user/abundance"]
+    },
+    "terraform": {
+      "command": "npx",
+      "args": ["-y", "@hashicorp/terraform-mcp-server"]
+    },
+    "gcp-cost": {
+      "command": "gcp-cost-mcp-server",
+      "args": []
+    },
+    "spm-analyzer": {
+      "command": "npx",
+      "args": ["-y", "spm-analyzer-mcp"]
+    }
+  }
+}
+```
+
+---
+
+## 12. Legal Agent Stack for Trademark Research & Filing
+
+### Layer 1: Trademark-Specific MCP Servers
+
+| MCP Server | What It Does | Setup |
+|------------|-------------|-------|
+| **jordanburke/trademark-mcp-server** | Queries USPTO TSDR -- serial number search, registration lookup, status, images, documents | `npx trademark-mcp-server` (free USPTO API key required) |
+| **riemannzeta/patent_mcp_server** | 51 tools across 6 USPTO data sources including IP litigation (74K+ cases) | `pip install patent-mcp-server` |
+| **YobieBen/uspto-crawler-mcp** | Combined patent + trademark search with TESS access | Node.js + Python |
+| **john-walkoe/uspto_fpd_mcp** | USPTO Final Petition Decisions with context reduction | [github.com/john-walkoe/uspto_fpd_mcp](https://github.com/john-walkoe/uspto_fpd_mcp) |
+
+**Setup:**
+```json
+{
+  "mcpServers": {
+    "trademark": {
+      "command": "npx",
+      "args": ["trademark-mcp-server"],
+      "env": { "USPTO_API_KEY": "your_key_here" }
+    },
+    "patents": {
+      "command": "uv",
+      "args": ["--directory", "/path/to/patent_mcp_server", "run", "patent-mcp-server"]
+    }
+  }
+}
+```
+
+Get a free API key at [developer.uspto.gov](https://developer.uspto.gov/api-catalog/tsdr-data-api).
+
+### Layer 2: Anthropic Official Legal Plugin
+
+**Repo:** [github.com/anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) (Apache 2.0)
+
+```bash
+claude plugins add knowledge-work-plugins/legal
+```
+
+**Ships with:**
+- 5 slash commands: `/review-contract`, `/triage-nda`, `/vendor-check`, `/brief`, `/respond`
+- 6 skills: contract-review, nda-triage, compliance (GDPR/CCPA), legal-risk-assessment, meeting-briefing, canned-responses
+- Customizable via `.claude/legal.local.md` playbook
+
+**Gap:** No built-in trademark clearance or filing workflow -- must be built as custom skills.
+
+### Layer 3: Trademark Search APIs
+
+| API | Coverage | Pricing |
+|-----|----------|---------|
+| **Markify API** | 240 databases globally, ML similarity (99% of confusing marks) | $89-$169/report |
+| **MarkerAPI** | US USPTO, 5 endpoints (serial, name, description, owner, expiration) | Subscription |
+| **WIPO Global Brand Database** | International marks (Madrid System) | Free API access |
+| **CourtListener API** | 10M+ opinions, trademark litigation case law | Free, 5K queries/hr |
+| **Corsearch** | AI trademark screening + LogoCheck (image similarity) | Enterprise |
+| **Trademarkia AI** | World's largest visual trademark search engine | Free search, paid filing |
+
+**Python/Node wrappers:**
+- MarkerAPI Python: `pip install trademark-marker` ([github.com/null-none/trademark-marker](https://github.com/null-none/trademark-marker))
+- MarkerAPI Node: [github.com/tushararora/node-trademark](https://github.com/tushararora/node-trademark)
+
+### Layer 4: Commercial Legal AI (Enterprise)
+
+| Tool | Trademark Relevance | Access |
+|------|-------------------|--------|
+| **CoCounsel** (Thomson Reuters) | Westlaw-grounded, TTAB decisions, trademark case law | Enterprise |
+| **Lex Machina** (LexisNexis) | Trademark litigation analytics, outcome prediction | Enterprise |
+| **Harvey AI** | $760M raised, multi-model (Claude + GPT), document analysis | Enterprise |
+| **Legora** | $266M raised, agentic legal workflows, iManage integration | Enterprise |
+
+### Layer 5: Open-Source Legal Research
+
+| Tool | Coverage | Link |
+|------|----------|------|
+| **CourtListener / Free Law Project** | 10M+ opinions, PACER dockets, oral arguments | [courtlistener.com](https://www.courtlistener.com/) |
+| **Juriscraper** | Python court data scraper | [github.com/freelawproject/juriscraper](https://github.com/freelawproject/juriscraper) |
+| **UniCourt API** | 140M+ court records across 4,000+ courts | $49-$299/mo, API at ~$2,250/mo |
+| **Free Legal Prompts** | LLM prompt templates for legal tasks | [github.com/anthonyloeff/Free-Legal-Prompts](https://github.com/anthonyloeff/Free-Legal-Prompts) |
+
+### Custom Trademark Skill Architecture
+
+Since no off-the-shelf tool covers the full workflow, build custom skills:
+
+```
+.claude/skills/trademark-research/
+└── SKILL.md    # Encodes: DuPont factors, Nice Classification,
+                # likelihood-of-confusion analysis, filing checklist
+
+.claude/commands/
+├── trademark-clearance.md   # /project:trademark-clearance <mark-name>
+└── trademark-filing-prep.md # /project:trademark-filing-prep <mark-name>
+```
+
+**Clearance workflow:**
+1. Query trademark-mcp-server (USPTO TSDR)
+2. Call MarkerAPI (US exact + wildcard search)
+3. Call Markify API (global similarity, 240 databases)
+4. Query CourtListener (trademark litigation)
+5. Search Nice Classes 9 + 42 for conflicts
+6. Generate clearance report with risk assessment
+
+**Filing prep workflow:**
+1. Read clearance report
+2. Recommend filing basis (1(a) vs 1(b) ITU)
+3. Draft goods/services description (USPTO ID Manual terms)
+4. Generate specimen recommendations
+5. Create filing checklist for TEAS web portal
+6. Estimate costs (per-class breakdown)
+
+### Critical Limitation
+
+**Filing is always manual.** Neither USPTO (TEAS/Trademark Center) nor WIPO (eMadrid) offer programmatic filing APIs. The agent prepares everything; a human submits through the web portal.
+
+### USPTO API Reference
+
+| Endpoint | URL Pattern |
+|----------|-------------|
+| Case Status (JSON) | `tsdrapi.uspto.gov/ts/cd/casestatus/sn{SERIAL}/info.json` |
+| Case Status (HTML) | `tsdrapi.uspto.gov/ts/cd/casestatus/sn{SERIAL}/content.html` |
+| Case Status (PDF) | `tsdrapi.uspto.gov/ts/cd/casestatus/sn{SERIAL}/download.pdf` |
+| Raw Image | `tsdrapi.uspto.gov/ts/cd/rawImage/{SERIAL}` |
+| All Documents | `tsdrapi.uspto.gov/ts/cd/casedocs/bundle.pdf?sn={SERIAL}` |
+
+Rate limits: 60 requests/min general, 4 PDF downloads/min.
