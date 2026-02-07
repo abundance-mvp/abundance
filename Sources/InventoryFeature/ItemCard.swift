@@ -19,6 +19,7 @@ struct ItemCard: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
     @State private var isPressed: Bool = false
     @State private var pressAnimationTask: Task<Void, Never>?
 
@@ -127,13 +128,13 @@ struct ItemCard: View {
             }
         }
         .background(Color.cream, in: outerShape)
-        .overlay(outerShape.stroke(Color.peach, lineWidth: 1))
+        .overlay(outerShape.stroke(Color.peach, lineWidth: contrast == .increased ? 2 : 1))
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .overlay {
             if isSelected {
                 outerShape
-                    .stroke(Color.accentColor, lineWidth: 3)
+                    .stroke(Color.accentPrimary, lineWidth: 3)
             }
         }
     }
@@ -144,7 +145,7 @@ struct ItemCard: View {
     private var selectionIndicator: some View {
         ZStack {
             Circle()
-                .fill(isSelected ? Color.accentColor : Color.white.opacity(0.8))
+                .fill(isSelected ? Color.accentPrimary : Color.white.opacity(0.8))
                 .frame(width: 44, height: 44)
                 .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
 
@@ -164,11 +165,11 @@ struct ItemCard: View {
     }
 
     private var outerShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
     }
 
     private var innerShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: 12)
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
     }
 
     private var accessibilityDescription: String {

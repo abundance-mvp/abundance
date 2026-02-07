@@ -117,7 +117,7 @@ public struct ItemDetailView: View {
                                         }
                                     }
                                     .font(.title3)
-                                    .foregroundStyle(isDeepScanning ? Color.secondary : Color.purple)
+                                    .foregroundStyle(isDeepScanning ? .secondary : Color.softTeal)
                                     .frame(minWidth: 44, minHeight: 44)
                                 }
                                 .disabled(isDeepScanning || item.deepScanCompletedAt != nil)
@@ -175,7 +175,7 @@ public struct ItemDetailView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            .background(Color.cream.opacity(0.8), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                             .transition(.opacity.combined(with: .move(edge: .top)))
                             .accessibilityIdentifier("detail.processingBanner")
                         }
@@ -222,7 +222,7 @@ public struct ItemDetailView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     Image(systemName: "sparkles")
-                                        .foregroundStyle(.purple)
+                                        .foregroundStyle(Color.softTeal)
                                     Text("Deep Scan Details")
                                         .font(.subheadline.weight(.semibold))
                                 }
@@ -469,7 +469,7 @@ private struct CategoryBadge: View {
     var body: some View {
         Text(text)
             .font(.caption.weight(.medium))
-            .foregroundStyle(.primary)
+            .foregroundStyle(Color.deepPlum)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background {
