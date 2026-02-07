@@ -42,6 +42,8 @@ public struct SearchBar: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Circle())
                 .accessibilityIdentifier("inventory.searchClearButton")
                 .accessibilityLabel("Clear search")
             }

@@ -225,6 +225,7 @@ private struct ItemGridView: View {
                             isSelectionMode: true,
                             isSelected: selectedItemIds.contains(item.id)
                         )
+                        .accessibilityIdentifier("inventory.item.\(item.id)")
                     } else {
                         // Normal mode with navigation
                         NavigationLink {
@@ -247,8 +248,8 @@ private struct ItemGridView: View {
                 }
             }
             .padding()
+            .accessibilityIdentifier("inventory.grid")
         }
-        .accessibilityIdentifier("inventory.grid")
     }
 }
 

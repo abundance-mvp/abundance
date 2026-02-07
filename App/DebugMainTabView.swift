@@ -40,24 +40,24 @@ struct DebugMainTabView: View {
                 viewModel: inventoryViewModel,
                 onOpenCamera: { selectedTab = .camera }
             )
+            .accessibilityIdentifier("tab.catalog")
             .tabItem {
                 Label("Catalog", systemImage: "square.grid.2x2.fill")
             }
-            .accessibilityIdentifier("tab.catalog")
             .tag(Tab.catalog)
 
             cameraPlaceholder
+                .accessibilityIdentifier("tab.camera")
                 .tabItem {
                     Label("Camera", systemImage: "camera.fill")
                 }
-                .accessibilityIdentifier("tab.camera")
                 .tag(Tab.camera)
 
             ProfileView(viewModel: profileViewModel)
+            .accessibilityIdentifier("tab.profile")
             .tabItem {
                 Label("Profile", systemImage: "person.fill")
             }
-            .accessibilityIdentifier("tab.profile")
             .tag(Tab.profile)
         }
         .tint(Color.salmon)

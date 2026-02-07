@@ -19,26 +19,26 @@ public struct MainTabView: View {
             InventoryView(onOpenCamera: {
                 selectedTab = .camera
             })
+                .accessibilityIdentifier("tab.catalog")
                 .tabItem {
                     Label("Catalog", systemImage: "square.grid.2x2.fill")
                 }
-                .accessibilityIdentifier("tab.catalog")
                 .tag(Tab.catalog)
 
             CameraTabView(onNavigateToCatalog: {
                 selectedTab = .catalog
             })
+                .accessibilityIdentifier("tab.camera")
                 .tabItem {
                     Label("Camera", systemImage: "camera.fill")
                 }
-                .accessibilityIdentifier("tab.camera")
                 .tag(Tab.camera)
 
             ProfileView()
+                .accessibilityIdentifier("tab.profile")
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }
-                .accessibilityIdentifier("tab.profile")
                 .tag(Tab.profile)
         }
         .tint(Color.salmon)

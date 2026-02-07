@@ -81,18 +81,22 @@
 **Goal:** All 3 tabs are reachable and show correct content.
 
 **Steps:**
-1. `axe describe-ui` - verify tab identifiers present
-2. `axe tap --id "tab.catalog"` - tap Catalog tab
+1. `axe describe-ui` - verify "Tab Bar" group present
+2. Tap Catalog tab by coordinate (x=100, y=850)
 3. `axe describe-ui` - verify "Inventory" navigation title
-4. `axe tap --id "tab.camera"` - tap Capture tab
-5. `axe describe-ui` - verify camera content
-6. `axe tap --id "tab.profile"` - tap Profile tab
+4. Tap Camera tab by coordinate (x=200, y=850)
+5. `axe describe-ui` - verify camera content ("Camera" heading or `camera.simulatorPlaceholder`)
+6. Tap Profile tab by coordinate (x=300, y=850)
 7. `axe describe-ui` - verify "Profile" navigation title
 
 **Assertions:**
-- All three tab identifiers (`tab.catalog`, `tab.camera`, `tab.profile`) are in the tree
+- "Tab Bar" group exists in the AX tree
 - Each tab shows its expected navigation title or content
-- Tab selection indicator updates correctly
+- Catalog tab shows "Inventory" heading
+- Camera tab shows "Camera" heading (simulator: `camera.simulatorPlaceholder`)
+- Profile tab shows "Profile" heading
+
+**Note:** Tab bar button identifiers (`tab.catalog`, `tab.camera`, `tab.profile`) are set on content views in code but not traversable by `snapshot_ui`/AXe due to SwiftUI TabView platform limitation (see Known Limitations). Use coordinate-based tapping.
 
 **Skip if:** N/A - tabs always exist.
 
@@ -320,9 +324,23 @@
 
 **Goal:** Verify "Catalog All" / individual "Catalog" button triggers Layer 2 deep cataloging with Gemini 3 Pro, and the UI reflects the full processing lifecycle.
 
-**Precondition:** Must be on DetectionResultsView with detected objects (requires a capture session - works on device with real camera, or on simulator if session is already active).
+**Precondition:** Items exist in inventory (any status). Layer 2 uses the same image already processed by Layer 1 Flash — no camera or capture session required.
 
-**Steps:**
+**Steps (Simulator — primary flow):**
+1. Navigate to Catalog tab
+2. Long-press any item card → tap "Re-catalog" in context menu
+   - OR: tap into detail view → tap re-catalog button (`detail.recatalogButton`)
+3. Confirm in the dialog → item status resets to "pending"
+4. `axe describe-ui` - verify item shows "Processing" status badge
+5. Wait ~5-15 seconds for Gemini 3 Pro processing, then re-inspect
+6. Tap into detail view and verify Layer 2 metadata:
+   - `detail.itemName` shows specific product name (not just Layer 1 label)
+   - Brand + Model visible (Gemini 3 Pro identifies these)
+   - Category + Sub-Category badges present
+   - Estimated value visible (from web_search tool)
+   - AI Confidence section shows High/Medium/Low
+
+**Steps (Device — capture flow):**
 1. Verify detection results screen shows objects: `detection.object.*` identifiers present
 2. Verify "Catalog All" button visible: `detection.catalogAllButton` present
 3. `axe tap --id "detection.catalogButton.<groupId>"` - tap individual Catalog button
@@ -336,26 +354,17 @@
    - "Catalog" button gone, replaced by `checkmark.circle.fill`
 6. `axe tap --id "detection.catalogAllButton"` - catalog remaining objects, verify same progression
 7. `axe tap --id "detection.doneButton"` - return to inventory
-8. Navigate to inventory tab and find newly cataloged item(s)
-9. Tap into detail view and verify Layer 2 metadata:
-   - `detail.itemName` shows specific product name (not just Layer 1 label)
-   - Brand + Model visible (Gemini 3 Pro identifies these)
-   - Category + Sub-Category badges present
-   - Estimated value visible (from web_search tool)
-   - AI Confidence section shows High/Medium/Low
-   - Processing notes may be present
 
 **Assertions:**
-- UI state machine: uncataloged (button) -> cataloging (spinner/yellow) -> cataloged (checkmark/green)
+- Re-catalog uses existing stored `imageUrl` — no camera dependency
+- UI state machine: pending (Processing badge) -> processing -> complete (Complete badge)
 - Layer 2 data present in item detail: name, brand, model, value, confidence
-- Catalog triggered via Firestore write -> onItemFromSession -> Gemini 3 Pro
+- Re-catalog triggered via Firestore `status="pending"` write → `onItemCreatedGemini3` Cloud Function
+- Deep scan triggered via `deepScanRequested=true` + `status="pending"` → `onItemUpdatedDeepScan` Cloud Function
 
-**Alternative (Simulator):** Re-catalog can be triggered from inventory without a camera:
-1. Long-press any item card → tap "Re-catalog" in context menu
-2. Or tap into detail view → tap re-catalog button (`detail.recatalogButton`)
-3. Confirm in the dialog → item status resets to "pending" → Cloud Function re-triggers
+**Architecture note:** Layer 2 is fully decoupled from the capture flow. `ItemService.rescanItem()` writes `status: "pending"` with the existing `imageUrl`. `ItemService.requestDeepScan()` writes `deepScanRequested: true`. Both use the image already stored in Firestore — never the camera.
 
-**Note:** This is an end-to-end test. On device, the full capture flow is testable. On simulator, use the re-catalog flow (context menu or detail view) to trigger the AI pipeline for existing items. E2E test mode (`--e2e-test-mode` launch arg) enables image injection via PHPicker for full pipeline testing on simulator.
+**Skip if:** No network connectivity (Cloud Functions required for Gemini processing).
 
 ---
 
@@ -384,7 +393,8 @@
 | Issue | Workaround |
 |---|---|
 | SwiftUI toolbar buttons (`edit.cancelButton`, `edit.saveButton`) not exposed as children in the AX tree | Identifiers are correctly applied in code; this is a SwiftUI accessibility limitation. Assert by label text ("Cancel", "Save") instead. |
-| Tab bar identifiers require `.accessibilityIdentifier()` on the tab content view, not on the `Label` inside `.tabItem {}` | Fixed in code — identifiers moved to content view level (matching `MainTabView.swift` pattern). |
+| SwiftUI `TabView` tab bar buttons not traversable by `snapshot_ui`/AXe | Identifiers (`tab.catalog`, `tab.camera`, `tab.profile`) are correctly set on content views in code. `UITabBarButton` elements are not exposed through the AXe accessibility hierarchy. Use coordinate-based tapping: Catalog (100,850), Camera (200,850), Profile (300,850). Works correctly in XCUITest via `tabBars.buttons["Catalog"]`. |
+| `inventory.grid` identifier on `LazyVGrid` not exposed as a separate AX element | Grid items appear as direct children of the Application. The `LazyVGrid` container is not represented as a distinct element in the AX tree. Verify grid by checking for multiple `inventory.item.*` identifiers instead. |
 
 ---
 
@@ -410,6 +420,7 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 
 | Date | Change |
 |---|---|
+| 2026-02-07 | Fixed 4 AXe issues: search clear button 44x44 touch target, item IDs in selection mode, tab IDs on content views, Scenario 12 rewritten for simulator re-catalog flow. Documented 3 known limitations (tab bar, toolbar buttons, grid container). |
 | 2026-02-06 | Fixed 7 AXe findings: tab IDs, grid ID, recatalog button/context menu, CSV-only export, select button height, known limitations |
 | 2026-02-05 | Added re-catalog identifiers, updated Scenario 8 & 12 for re-catalog flow |
 | 2026-02-05 | Initial creation with 13 scenarios |
