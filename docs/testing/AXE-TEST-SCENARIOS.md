@@ -320,55 +320,7 @@
 
 ---
 
-### Scenario 12: Deep Catalog Trigger (Gemini 3 Pro)
-
-**Goal:** Verify "Catalog All" / individual "Catalog" button triggers Layer 2 deep cataloging with Gemini 3 Pro, and the UI reflects the full processing lifecycle.
-
-**Precondition:** Items exist in inventory (any status). Layer 2 uses the same image already processed by Layer 1 Flash — no camera or capture session required.
-
-**Steps (Simulator — primary flow):**
-1. Navigate to Catalog tab
-2. Long-press any item card → tap "Re-catalog" in context menu
-   - OR: tap into detail view → tap re-catalog button (`detail.recatalogButton`)
-3. Confirm in the dialog → item status resets to "pending"
-4. `axe describe-ui` - verify item shows "Processing" status badge
-5. Wait ~5-15 seconds for Gemini 3 Pro processing, then re-inspect
-6. Tap into detail view and verify Layer 2 metadata:
-   - `detail.itemName` shows specific product name (not just Layer 1 label)
-   - Brand + Model visible (Gemini 3 Pro identifies these)
-   - Category + Sub-Category badges present
-   - Estimated value visible (from web_search tool)
-   - AI Confidence section shows High/Medium/Low
-
-**Steps (Device — capture flow):**
-1. Verify detection results screen shows objects: `detection.object.*` identifiers present
-2. Verify "Catalog All" button visible: `detection.catalogAllButton` present
-3. `axe tap --id "detection.catalogButton.<groupId>"` - tap individual Catalog button
-4. Immediately `axe describe-ui` - verify:
-   - That object's card shows ProgressView spinner (cataloging state)
-   - Bounding box border turns yellow (cataloging color)
-   - "Catalog" button is replaced by spinner
-5. Wait ~5-15 seconds for Gemini 3 Pro processing, then re-inspect:
-   - Object card shows green checkmark (cataloged state)
-   - Bounding box border turns green
-   - "Catalog" button gone, replaced by `checkmark.circle.fill`
-6. `axe tap --id "detection.catalogAllButton"` - catalog remaining objects, verify same progression
-7. `axe tap --id "detection.doneButton"` - return to inventory
-
-**Assertions:**
-- Re-catalog uses existing stored `imageUrl` — no camera dependency
-- UI state machine: pending (Processing badge) -> processing -> complete (Complete badge)
-- Layer 2 data present in item detail: name, brand, model, value, confidence
-- Re-catalog triggered via Firestore `status="pending"` write → `onItemCreatedGemini3` Cloud Function
-- Deep scan triggered via `deepScanRequested=true` + `status="pending"` → `onItemUpdatedDeepScan` Cloud Function
-
-**Architecture note:** Layer 2 is fully decoupled from the capture flow. `ItemService.rescanItem()` writes `status: "pending"` with the existing `imageUrl`. `ItemService.requestDeepScan()` writes `deepScanRequested: true`. Both use the image already stored in Firestore — never the camera.
-
-**Skip if:** No network connectivity (Cloud Functions required for Gemini processing).
-
----
-
-### Scenario 13: Catalog Processing States
+### Scenario 12: Catalog Processing States
 
 **Goal:** Items show progressive detail based on AI processing status.
 
@@ -420,6 +372,7 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 
 | Date | Change |
 |---|---|
+| 2026-02-07 | Removed Scenario 12 (Deep Catalog Trigger) — catalog pipeline requires Cloud Functions/network, not suitable for AXe testing. Renumbered Scenario 13 → 12. Now 12 scenarios total. |
 | 2026-02-07 | Fixed 4 AXe issues: search clear button 44x44 touch target, item IDs in selection mode, tab IDs on content views, Scenario 12 rewritten for simulator re-catalog flow. Documented 3 known limitations (tab bar, toolbar buttons, grid container). |
 | 2026-02-06 | Fixed 7 AXe findings: tab IDs, grid ID, recatalog button/context menu, CSV-only export, select button height, known limitations |
 | 2026-02-05 | Added re-catalog identifiers, updated Scenario 8 & 12 for re-catalog flow |

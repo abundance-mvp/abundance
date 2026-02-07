@@ -1,16 +1,16 @@
 ---
 name: sim-test
-description: Build on simulator and run all 13 AXe test scenarios from AXE-TEST-SCENARIOS.md
+description: Build on simulator and run all 12 AXe test scenarios from AXE-TEST-SCENARIOS.md
 ---
 
 # Simulator AXe Test Runner
 
-Builds the app on an iOS Simulator, launches it, and runs all 13 interactive AXe test scenarios defined in `docs/testing/AXE-TEST-SCENARIOS.md`.
+Builds the app on an iOS Simulator, launches it, and runs all 12 interactive AXe test scenarios defined in `docs/testing/AXE-TEST-SCENARIOS.md`.
 
 ## Usage
 
 ```
-/sim-test              # Run all 13 scenarios
+/sim-test              # Run all 12 scenarios
 /sim-test 1-5          # Run scenarios 1 through 5 only
 /sim-test 6            # Run a single scenario
 ```
@@ -38,8 +38,7 @@ Builds the app on an iOS Simulator, launches it, and runs all 13 interactive AXe
 | 9 | Profile View | User info, settings, export, sign out |
 | 10 | Layout Correctness | No zero-sized or off-screen interactive elements |
 | 11 | Accessibility ID Audit | All expected identifiers present |
-| 12 | Deep Catalog Trigger | Catalog button triggers Gemini processing (device only) |
-| 13 | Catalog Processing States | Items show progressive AI status |
+| 12 | Catalog Processing States | Items show progressive AI status |
 
 ## Execution Rules
 
