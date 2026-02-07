@@ -197,7 +197,7 @@ public struct EditItemSheet: View {
                                             .font(.caption2.weight(.semibold))
                                             .padding(.horizontal, 4)
                                             .padding(.vertical, 2)
-                                            .background(.ultraThinMaterial, in: Capsule())
+                                            .adaptiveGlass(in: Capsule())
                                             .padding(4)
                                     } else {
                                         Button {

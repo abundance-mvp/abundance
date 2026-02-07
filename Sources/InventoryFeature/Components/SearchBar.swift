@@ -8,7 +8,6 @@ public struct SearchBar: View {
     @Binding var text: String
     var placeholder: String = "Search items..."
 
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var isFocused: Bool
 
@@ -52,18 +51,8 @@ public struct SearchBar: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background {
-            if #available(iOS 26.0, macOS 26.0, *) {
-                if !reduceTransparency {
-                    Color.clear
-                        .glassEffect(in: Capsule())
-                } else {
-                    Color.backgroundDefault
-                        .clipShape(Capsule())
-                }
-            } else {
-                Capsule()
-                    .fill(.thickMaterial)
-            }
+            Color.clear
+                .adaptiveGlass(in: Capsule())
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("inventory.searchBar")
