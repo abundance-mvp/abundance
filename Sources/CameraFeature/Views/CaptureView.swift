@@ -183,14 +183,9 @@ public struct CaptureView: View {
                     detectedObjects: viewModel.detectedObjects,
                     catalogingObjectIds: viewModel.catalogingObjectIds,
                     catalogedObjectIds: viewModel.catalogedObjectIds,
-                    onCatalogObject: { object in
+                    onCatalogSelected: { selectedIds in
                         Task {
-                            await viewModel.catalogObject(object)
-                        }
-                    },
-                    onCatalogAll: {
-                        Task {
-                            await viewModel.catalogAllObjects()
+                            await viewModel.catalogSelectedObjects(selectedIds)
                         }
                     },
                     onRetake: {

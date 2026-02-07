@@ -6,22 +6,29 @@ public struct DetectionResultsView: View {
     let detectedObjects: [ServerDetectedObject]
     let catalogingObjectIds: Set<String>
     let catalogedObjectIds: Set<String>
-    let onCatalogObject: (ServerDetectedObject) -> Void
-    let onCatalogAll: () -> Void
+    let onCatalogSelected: (Set<String>) -> Void
     let onRetake: () -> Void
     let onDone: () -> Void
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedObjectId: String?
+    @State private var selectedObjectIds: Set<String> = []
+
+    private var uncatalogedObjects: [ServerDetectedObject] {
+        detectedObjects.filter { !catalogedObjectIds.contains($0.groupId) && !catalogingObjectIds.contains($0.groupId) }
+    }
+
+    private var selectedCount: Int {
+        uncatalogedObjects.filter { selectedObjectIds.contains($0.groupId) }.count
+    }
 
     public init(
         capturedImage: Data?,
         detectedObjects: [ServerDetectedObject],
         catalogingObjectIds: Set<String>,
         catalogedObjectIds: Set<String>,
-        onCatalogObject: @escaping (ServerDetectedObject) -> Void,
-        onCatalogAll: @escaping () -> Void,
+        onCatalogSelected: @escaping (Set<String>) -> Void,
         onRetake: @escaping () -> Void,
         onDone: @escaping () -> Void
     ) {
@@ -29,8 +36,7 @@ public struct DetectionResultsView: View {
         self.detectedObjects = detectedObjects
         self.catalogingObjectIds = catalogingObjectIds
         self.catalogedObjectIds = catalogedObjectIds
-        self.onCatalogObject = onCatalogObject
-        self.onCatalogAll = onCatalogAll
+        self.onCatalogSelected = onCatalogSelected
         self.onRetake = onRetake
         self.onDone = onDone
     }
@@ -45,6 +51,11 @@ public struct DetectionResultsView: View {
                 // Object list
                 objectList
                     .frame(maxHeight: geometry.size.height * 0.45)
+            }
+        }
+        .onAppear {
+            if selectedObjectIds.isEmpty {
+                selectedObjectIds = Set(detectedObjects.map(\.groupId))
             }
         }
     }
@@ -73,18 +84,25 @@ public struct DetectionResultsView: View {
                     BoundingBoxOverlay(
                         object: object,
                         isSelected: selectedObjectId == object.groupId,
+                        isChecked: selectedObjectIds.contains(object.groupId),
                         isCataloging: catalogingObjectIds.contains(object.groupId),
                         isCataloged: catalogedObjectIds.contains(object.groupId)
                     )
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel("Detected: \(object.label)")
                     .accessibilityHint(
-                        selectedObjectId == object.groupId ? "Double tap to deselect" : "Double tap to select"
+                        selectedObjectIds.contains(object.groupId) ? "Double tap to deselect" : "Double tap to select"
                     )
                     .accessibilityAddTraits(.isButton)
                     .onTapGesture {
                         withAnimation(reduceMotion ? nil : .brandPress) {
                             selectedObjectId = selectedObjectId == object.groupId ? nil : object.groupId
+                            // Toggle check state
+                            if selectedObjectIds.contains(object.groupId) {
+                                selectedObjectIds.remove(object.groupId)
+                            } else {
+                                selectedObjectIds.insert(object.groupId)
+                            }
                         }
                     }
                 }
@@ -136,10 +154,15 @@ public struct DetectionResultsView: View {
                             DetectedObjectCard(
                                 object: object,
                                 isSelected: selectedObjectId == object.groupId,
+                                isChecked: selectedObjectIds.contains(object.groupId),
                                 isCataloging: catalogingObjectIds.contains(object.groupId),
                                 isCataloged: catalogedObjectIds.contains(object.groupId),
-                                onCatalog: {
-                                    onCatalogObject(object)
+                                onToggleCheck: {
+                                    if selectedObjectIds.contains(object.groupId) {
+                                        selectedObjectIds.remove(object.groupId)
+                                    } else {
+                                        selectedObjectIds.insert(object.groupId)
+                                    }
                                 }
                             )
                             .accessibilityIdentifier("detection.object.\(object.groupId)")
@@ -202,13 +225,22 @@ public struct DetectionResultsView: View {
 
             Spacer()
 
-            if !detectedObjects.isEmpty && catalogedObjectIds.count < detectedObjects.count {
-                Button("Catalog All") {
-                    onCatalogAll()
+            if !detectedObjects.isEmpty {
+                let allSelected = uncatalogedObjects.allSatisfy { selectedObjectIds.contains($0.groupId) }
+                Button(allSelected ? "Deselect All" : "Select All") {
+                    if allSelected {
+                        for obj in uncatalogedObjects {
+                            selectedObjectIds.remove(obj.groupId)
+                        }
+                    } else {
+                        for obj in uncatalogedObjects {
+                            selectedObjectIds.insert(obj.groupId)
+                        }
+                    }
                 }
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Color.accentPrimary)
-                .accessibilityIdentifier("detection.catalogAllButton")
+                .accessibilityIdentifier("detection.selectAllButton")
             }
         }
     }
@@ -233,6 +265,7 @@ public struct DetectionResultsView: View {
         .padding()
     }
 
+    @ViewBuilder
     private var bottomActions: some View {
         HStack(spacing: 16) {
             Button(action: onRetake) {
@@ -242,6 +275,34 @@ public struct DetectionResultsView: View {
             .accessibilityIdentifier("detection.retakeButton")
 
             Spacer()
+
+            if #available(iOS 26.0, macOS 26.0, *) {
+                Button {
+                    onCatalogSelected(selectedObjectIds)
+                } label: {
+                    Label("Catalog", systemImage: "plus.circle.fill")
+                        .font(.body.weight(.semibold))
+                }
+                .buttonStyle(.borderedProminent)
+                .glassEffect(.regular.interactive())
+                .disabled(selectedCount == 0)
+                .opacity(selectedCount == 0 ? 0.5 : 1.0)
+                .accessibilityIdentifier("detection.catalogSelectedButton")
+                .accessibilityLabel("Catalog \(selectedCount) items")
+                .accessibilityHint(selectedCount == 0 ? "No items selected" : "Double tap to catalog selected items")
+            } else {
+                Button {
+                    onCatalogSelected(selectedObjectIds)
+                } label: {
+                    Label("Catalog", systemImage: "plus.circle.fill")
+                        .font(.body.weight(.semibold))
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(selectedCount == 0)
+                .opacity(selectedCount == 0 ? 0.5 : 1.0)
+                .accessibilityIdentifier("detection.catalogSelectedButton")
+                .accessibilityLabel("Catalog \(selectedCount) items")
+            }
 
             Button(action: onDone) {
                 Text("Done")
@@ -259,6 +320,7 @@ public struct DetectionResultsView: View {
 struct BoundingBoxOverlay: View {
     let object: ServerDetectedObject
     let isSelected: Bool
+    let isChecked: Bool
     let isCataloging: Bool
     let isCataloged: Bool
 
@@ -297,6 +359,8 @@ struct BoundingBoxOverlay: View {
             return .cream
         } else if isSelected {
             return .accentPrimary
+        } else if !isChecked {
+            return .white.opacity(0.3)
         } else {
             return .white.opacity(0.8)
         }
@@ -310,6 +374,9 @@ struct BoundingBoxOverlay: View {
             } else if isCataloging {
                 ProgressView()
                     .scaleEffect(0.5)
+            } else {
+                Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
+                    .font(.caption2)
             }
 
             Text(object.label)
@@ -331,9 +398,10 @@ struct BoundingBoxOverlay: View {
 struct DetectedObjectCard: View {
     let object: ServerDetectedObject
     let isSelected: Bool
+    let isChecked: Bool
     let isCataloging: Bool
     let isCataloged: Bool
-    let onCatalog: () -> Void
+    let onToggleCheck: () -> Void
 
     private var backgroundFillColor: Color {
         if isSelected {
@@ -437,16 +505,19 @@ struct DetectedObjectCard: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title2)
                 .foregroundStyle(Color.successColor)
+                .accessibilityLabel("Cataloged")
         } else if isCataloging {
             ProgressView()
+                .accessibilityLabel("Cataloging in progress")
         } else {
-            Button(action: onCatalog) {
-                Text("Catalog")
-                    .font(.caption.weight(.semibold))
+            Button(action: onToggleCheck) {
+                Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(isChecked ? Color.accentPrimary : .secondary)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .accessibilityIdentifier("detection.catalogButton.\(object.groupId)")
+            .accessibilityLabel(isChecked ? "Selected for cataloging" : "Not selected")
+            .accessibilityHint("Double tap to \(isChecked ? "deselect" : "select") this item")
+            .accessibilityIdentifier("detection.toggleCheck.\(object.groupId)")
         }
     }
 }
@@ -526,7 +597,8 @@ struct NoObjectsDetectedView: View {
                 boundingBoxes: [BoundingBoxInfo(imageIndex: 0, box2d: [500, 100, 700, 300])])
         ],
         catalogingObjectIds: [], catalogedObjectIds: [],
-        onCatalogObject: { _ in }, onCatalogAll: { }, onRetake: { }, onDone: { })
+        onCatalogSelected: { ids in print("Catalog: \(ids)") },
+        onRetake: { }, onDone: { })
 }
 
 #Preview("No Objects") {

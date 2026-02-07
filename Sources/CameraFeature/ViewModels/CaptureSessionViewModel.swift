@@ -482,6 +482,18 @@ public final class CaptureSessionViewModel {
         }
     }
 
+    /// Catalog only the selected detected objects
+    /// - Parameter selectedIds: Set of groupId strings for objects to catalog
+    public func catalogSelectedObjects(_ selectedIds: Set<String>) async {
+        for object in detectedObjects {
+            if selectedIds.contains(object.groupId) &&
+               !catalogingObjectIds.contains(object.groupId) &&
+               !catalogedObjectIds.contains(object.groupId) {
+                await catalogObject(object)
+            }
+        }
+    }
+
     private func observeItemCataloging(itemId: String, groupId: String) {
         let observer = catalogService.observeItem(itemId: itemId)
             .receive(on: DispatchQueue.main)
