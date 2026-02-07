@@ -121,7 +121,7 @@ public struct DetectionResultsView: View {
                 .padding(.vertical, 6)
                 .background {
                     if #available(iOS 26.0, macOS 26.0, *) {
-                        Color.clear.glassEffect(in: Capsule())
+                        Color.clear.glassEffect(.regular.interactive(), in: Capsule())
                     } else {
                         Capsule().fill(.black.opacity(0.5))
                     }
@@ -360,7 +360,7 @@ struct BoundingBoxOverlay: View {
         } else if isSelected {
             return .accentPrimary
         } else if !isChecked {
-            return .white.opacity(0.3)
+            return .white.opacity(0.6)
         } else {
             return .white.opacity(0.8)
         }
