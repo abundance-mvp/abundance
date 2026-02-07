@@ -47,6 +47,7 @@ public struct RescanPromptSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Color.salmon)
+                .accessibilityIdentifier("edit.takeNewPhotoButton")
 
                 Button {
                     viewModel.state = .editing
@@ -70,6 +71,7 @@ public struct RescanPromptSheet: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
+                .accessibilityIdentifier("edit.cancelButton")
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 32)

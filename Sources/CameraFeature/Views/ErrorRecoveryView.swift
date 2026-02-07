@@ -36,15 +36,15 @@ public enum ErrorCategory: Sendable {
     var iconColor: Color {
         switch self {
         case .camera:
-            return .yellow
+            return .cream
         case .network:
-            return .orange
+            return .accentSecondary
         case .authentication:
-            return .blue
+            return .accentPrimary
         case .server:
-            return .red
+            return .errorColor
         case .unknown:
-            return .yellow
+            return .cream
         }
     }
 }
@@ -415,15 +415,15 @@ public struct OfflineModeIndicator: View {
         .background {
             if #available(iOS 26.0, macOS 26.0, *) {
                 if !reduceTransparency {
-                    Color.orange.opacity(0.8)
+                    Color.accentSecondary.opacity(0.8)
                         .glassEffect(in: Capsule())
                 } else {
                     Capsule()
-                        .fill(Color.orange)
+                        .fill(Color.accentSecondary)
                 }
             } else {
                 Capsule()
-                    .fill(Color.orange)
+                    .fill(Color.accentSecondary)
             }
         }
         .accessibilityLabel("Offline mode active")

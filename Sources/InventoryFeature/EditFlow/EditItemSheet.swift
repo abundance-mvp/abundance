@@ -206,7 +206,7 @@ public struct EditItemSheet: View {
                                             Image(systemName: "xmark.circle.fill")
                                                 .font(.callout)
                                                 .symbolRenderingMode(.palette)
-                                                .foregroundStyle(.white, .red)
+                                                .foregroundStyle(.white, Color.errorColor)
                                         }
                                         .padding(4)
                                         .accessibilityLabel("Remove photo \(index + 1)")
@@ -225,7 +225,7 @@ public struct EditItemSheet: View {
                                         .font(.caption2)
                                 }
                                 .frame(width: 80, height: 80)
-                                .background(.gray.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+                                .background(Color.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
                             }
                             .disabled(viewModel.isUploadingPhoto)
                             .accessibilityIdentifier("edit.addPhotoButton")
@@ -245,7 +245,7 @@ public struct EditItemSheet: View {
                     if let photoError = viewModel.photoError {
                         Text(photoError)
                             .font(.caption)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Color.errorColor)
                     }
                 } header: {
                     Text("Photos")
@@ -313,9 +313,9 @@ public struct EditItemSheet: View {
 
     private func confidenceColor(_ confidence: ItemConfidence) -> Color {
         switch confidence {
-        case .high: return .green
-        case .medium: return .orange
-        case .low: return .red
+        case .high: return .successColor
+        case .medium: return .accentSecondary
+        case .low: return .errorColor
         }
     }
 }
@@ -341,7 +341,7 @@ private struct EditableTextField: View {
             if let error = error {
                 Text(error)
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color.errorColor)
             }
         }
     }
@@ -359,7 +359,7 @@ private struct EditableNumberField: View {
             if let error = error {
                 Text(error)
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color.errorColor)
             }
         }
     }
@@ -402,7 +402,7 @@ private struct EditableCurrencyField: View {
             if let error = error {
                 Text(error)
                     .font(.caption)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color.errorColor)
             }
         }
     }

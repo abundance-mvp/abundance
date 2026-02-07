@@ -32,6 +32,8 @@ struct AddPhotoCameraView: View {
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(.white)
                     .padding(16)
+                    .accessibilityLabel("Cancel photo capture")
+                    .accessibilityIdentifier("addPhoto.cancelButton")
 
                     Spacer()
                 }
@@ -39,7 +41,7 @@ struct AddPhotoCameraView: View {
                 Spacer()
 
                 Text("Add another photo")
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(.body, design: .rounded, weight: .medium))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
@@ -65,6 +67,8 @@ struct AddPhotoCameraView: View {
                 .opacity(isCapturing || viewModel.isUploadingPhoto ? 0.5 : 1.0)
                 .padding(.top, 24)
                 .padding(.bottom, 48)
+                .accessibilityLabel("Take photo")
+                .accessibilityIdentifier("addPhoto.captureButton")
             }
 
             // Upload overlay
@@ -80,7 +84,7 @@ struct AddPhotoCameraView: View {
                             .tint(.white)
 
                         Text("Uploading photo...")
-                            .font(.system(size: 17, weight: .medium, design: .rounded))
+                            .font(.system(.body, design: .rounded, weight: .medium))
                             .foregroundStyle(.white)
                     }
                     .padding(32)

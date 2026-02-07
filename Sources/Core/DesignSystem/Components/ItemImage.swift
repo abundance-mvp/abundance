@@ -81,14 +81,14 @@ public struct ItemImage: View {
 
     private var loadingPlaceholder: some View {
         ZStack {
-            Color.gray.opacity(0.1)
+            Color.secondary.opacity(0.1)
             ProgressView()
         }
     }
 
     private var errorPlaceholder: some View {
         ZStack {
-            Color.gray.opacity(0.2)
+            Color.secondary.opacity(0.2)
             Image(systemName: placeholderIcon)
                 .font(.title)
                 .foregroundStyle(.secondary)

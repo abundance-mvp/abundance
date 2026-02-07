@@ -39,6 +39,8 @@ public struct RescanCameraView: View {
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(.white)
                     .padding(16)
+                    .accessibilityLabel("Cancel rescan")
+                    .accessibilityIdentifier("rescan.cancelButton")
 
                     Spacer()
                 }
@@ -73,6 +75,8 @@ public struct RescanCameraView: View {
                 .opacity(isCapturing || viewModel.state == .processing ? 0.5 : 1.0)
                 .padding(.top, 24)
                 .padding(.bottom, 48)
+                .accessibilityLabel("Take photo")
+                .accessibilityIdentifier("rescan.captureButton")
             }
 
             // Processing overlay

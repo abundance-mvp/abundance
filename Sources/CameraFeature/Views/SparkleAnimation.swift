@@ -22,7 +22,7 @@ public struct SparkleAnimation: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color(red: 0.7, green: 1.0, blue: 0.85), // Mint green
+                                Color.softTeal, // Brand teal
                                 Color.white
                             ],
                             startPoint: .center,

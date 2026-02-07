@@ -210,13 +210,13 @@ struct ErrorOverlay: View {
     private var iconColor: Color {
         switch error {
         case .networkTimeout, .uploadFailed:
-            return .orange
+            return .accentSecondary
         case .notAuthenticated, .authenticationExpired:
-            return .blue
+            return .accentPrimary
         case .detectionTimeout, .detectionFailed, .invalidResponse:
-            return .red
+            return .errorColor
         default:
-            return .yellow
+            return .cream
         }
     }
 

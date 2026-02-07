@@ -276,7 +276,7 @@ struct BoundingBoxOverlay: View {
         if isCataloged {
             return .successColor
         } else if isCataloging {
-            return .yellow
+            return .cream
         } else if isSelected {
             return .accentPrimary
         } else {

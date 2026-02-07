@@ -78,6 +78,8 @@ public struct RescanComparisonSheet: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color.mutedSage)
+                    .accessibilityLabel("Accept rescan results")
+                    .accessibilityIdentifier("comparison.acceptButton")
 
                     Button {
                         viewModel.unlockManualEdit()
@@ -92,6 +94,7 @@ public struct RescanComparisonSheet: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(Color.salmon)
+                    .accessibilityIdentifier("comparison.editButton")
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
@@ -106,6 +109,7 @@ public struct RescanComparisonSheet: View {
                         viewModel.cancelFlow()
                         dismiss()
                     }
+                    .accessibilityIdentifier("comparison.cancelButton")
                 }
             }
         }
