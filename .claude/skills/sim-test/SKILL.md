@@ -37,11 +37,13 @@ session-set-defaults(project: "Abundance.xcodeproj", scheme: "Abundance")
 
 ### Step 2: Build & Launch
 
-1. `build_sim` — build for iOS Simulator
-2. `boot_sim` — ensure simulator is booted
-3. `build_run_sim` — install and launch the app
+1. `build_sim` — build for iOS Simulator (XcodeBuildMCP)
+2. `boot_sim` — ensure simulator is booted (XcodeBuildMCP)
+3. `build_run_sim` — install and launch the app (XcodeBuildMCP)
 
-If build fails, stop and report the build error. Do not proceed to scenarios.
+If build fails:
+- IF mcpbridge available: `mcp__xcode__GetBuildLog(severity: "error")` for detailed diagnostics
+- Report the build error with full context. Do not proceed to scenarios.
 
 ### Step 3: Load Scenarios
 

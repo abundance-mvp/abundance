@@ -174,7 +174,9 @@ mcp__XcodeBuildMCP__session-set-defaults
 mcp__XcodeBuildMCP__build_device
 ```
 
-If build fails, route to `build-fixer` agent and **STOP**.
+If build fails:
+1. IF mcpbridge available: `mcp__xcode__GetBuildLog(severity: "error")` for structured diagnostics
+2. Route to `build-fixer` agent with the diagnostic output and **STOP**.
 
 ### 4.4 Install on Device
 

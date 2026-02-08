@@ -52,9 +52,14 @@ Gather domain-appropriate logs and artifacts before debugging. This phase is rea
 
 ### iOS Context
 
-```bash
-# Build output (always)
-swift build 2>&1 | tail -50
+```
+# Build diagnostics (prefer mcpbridge when Xcode is open)
+IF mcpbridge available:
+  mcp__xcode__XcodeListNavigatorIssues          # All current issues from Issue Navigator
+  mcp__xcode__XcodeRefreshCodeIssuesInFile      # Live diagnostics for specific file
+  mcp__xcode__GetBuildLog(severity: "error")    # Filtered build log
+ELSE:
+  swift build 2>&1 | tail -50
 
 # Latest screenshots (if UI issue)
 ls -lt screenshots/ | head -5
@@ -149,7 +154,7 @@ After a fix is applied, verify it works. This is a bounded retry loop.
 
 | Domain | Verify Build | Verify Tests | Verify Runtime |
 |--------|-------------|-------------|----------------|
-| iOS | `swift build` | `swift test` | Optional: `Skill(skill="sim-test")` or `Skill(skill="device-tester")` |
+| iOS | `mcp__xcode__BuildProject` or `swift build` | `mcp__xcode__RunAllTests` or `swift test` | Optional: `Skill(skill="sim-test")` or `Skill(skill="device-tester")` |
 | Backend | `cd functions && npx tsc --noEmit` | `cd functions && npm test` | Optional: deploy + `functions_get_logs` |
 | Gemini | Same as Backend | Same as Backend | Optional: test with sample input |
 
@@ -312,7 +317,7 @@ If review reveals additional issues beyond the original fix, offer to file them:
 |---------|---------|
 | "I'll route to specific Axiom agents myself" | Delegate to `ios-superpowers debug`. It handles agent selection for 28 domains. |
 | "Skip the health check, the user described the issue" | Health check catches environmental issues that masquerade as code bugs. Always run it. |
-| "Fix looks good, skip verification" | The verify loop is the whole point. `swift build && swift test` minimum. |
+| "Fix looks good, skip verification" | The verify loop is the whole point. `BuildProject` + `RunAllTests` (or `swift build && swift test`) minimum. |
 | "No test needed, it's a simple fix" | Simple fixes regress. Write the test unless skip conditions apply. |
 | "Skip review, I already reviewed while fixing" | Fresh review catches what tunnel vision misses. Run it. |
 | "Retry a 4th time, I'm close" | 3 attempts max. File the issue. Fresh eyes will solve it faster. |

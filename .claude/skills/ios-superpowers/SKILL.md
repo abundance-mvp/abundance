@@ -7,6 +7,19 @@ description: Deterministic iOS orchestrator that routes to Axiom agents and skil
 
 **CRITICAL:** Use this instead of raw superpowers skills for ALL iOS/Swift work.
 
+## 0. MCP Server Availability
+
+Two MCP servers provide build and documentation tools. Check availability at session start.
+
+| Server | Tool Prefix | Requires | Use For |
+|--------|-------------|----------|---------|
+| **Xcode Native Bridge** (`xcode`) | `mcp__xcode__*` | Xcode running with project open, macOS 26 | Builds, previews, diagnostics, Apple docs, project-aware file ops |
+| **XcodeBuildMCP** (`XcodeBuildMCP`) | `mcp__XcodeBuildMCP__*` | None (headless) | Simulators, devices, UI automation, debugging |
+
+**Availability check:** At session start, try `mcp__xcode__XcodeListWindows`. If it fails, mcpbridge is unavailable — fall back to `swift build` and `axiom-apple-docs-research` for all operations. Log: "mcpbridge unavailable — using CLI fallback."
+
+---
+
 ## Arguments
 
 ```
@@ -223,7 +236,11 @@ When code review finds critical issues (P0/P1 severity):
 2. route = ROUTING_MATRIX[plan][domain]
 3. IF route.axiom_agent:
    Task(subagent_type=route.axiom_agent, prompt=context)
-4. Skill(skill=route.axiom_skill OR "axiom-apple-docs-research")
+4. APPLE_DOCS(context):
+   IF mcpbridge available:
+     mcp__xcode__DocumentationSearch(query=context)
+   ELSE:
+     Skill(skill=route.axiom_skill OR "axiom-apple-docs-research")
 5. Skill(skill="superpowers:writing-plans")
 6. VERIFY()
 ```
@@ -246,7 +263,11 @@ When code review finds critical issues (P0/P1 severity):
    Skill(skill="axiom-hig")
    Skill(skill="axiom-swiftui-architecture")
 3. ELSE:
-   Skill(skill="axiom-apple-docs-research", args=context)
+   APPLE_DOCS(context):
+     IF mcpbridge available:
+       mcp__xcode__DocumentationSearch(query=context)
+     ELSE:
+       Skill(skill="axiom-apple-docs-research", args=context)
 4. Skill(skill="superpowers:brainstorming")
 ```
 
@@ -268,10 +289,11 @@ When code review finds critical issues (P0/P1 severity):
 
 After every execution, verify:
 
-- [ ] No deprecated APIs introduced (check via `axiom-apple-docs-research`)
+- [ ] No deprecated APIs introduced (check via `mcp__xcode__DocumentationSearch` or `axiom-apple-docs-research`)
 - [ ] Swift 6 concurrency satisfied (actor isolation, Sendable)
 - [ ] API signatures match Apple documentation
-- [ ] Tests pass (if applicable): `swift test`
+- [ ] Build passes: `mcp__xcode__BuildProject` (preferred) or `swift build` (fallback)
+- [ ] Tests pass (if applicable): `mcp__xcode__RunAllTests` (preferred) or `swift test` (fallback)
 - [ ] If backend changes deployed: verify via `backend-superpowers`
 
 ### Backend Verification (when applicable)

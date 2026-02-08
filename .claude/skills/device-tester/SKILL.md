@@ -118,6 +118,41 @@ ls -lt screenshots/ | head -5    # Check for iCloud-synced screenshots
 
 Workflow: User screenshots on device → syncs to `./screenshots/` → Claude reads image → suggest fixes → repeat.
 
+### SwiftUI Preview Rendering (mcpbridge)
+
+When Xcode is open and mcpbridge is available, render SwiftUI previews directly:
+
+```
+mcp__xcode__RenderPreview(file: "Sources/InventoryFeature/ItemCard.swift")
+```
+
+Returns a snapshot image of the SwiftUI preview. Use this to:
+- Verify UI changes without deploying to device
+- Check layout in preview before building
+- Compare before/after for visual regressions
+
+**When to use RenderPreview vs device screenshots:**
+| Scenario | Use |
+|----------|-----|
+| Quick layout check during iteration | `RenderPreview` |
+| Testing with real data / auth state | Device screenshot |
+| Verifying animations or gestures | Device (previews are static) |
+| Checking dark mode / accessibility sizes | `RenderPreview` (configure preview) |
+
+### Swift REPL (mcpbridge)
+
+Execute Swift snippets in the context of the project (when mcpbridge available):
+
+```
+mcp__xcode__ExecuteSnippet(code: "print(Bundle.main.bundleIdentifier ?? \"unknown\")")
+```
+
+Useful for quick validation of:
+- Computed property logic
+- Date formatting
+- Codable round-trips
+- Expression evaluation during debugging
+
 ## Testing
 
 **XcodeBuildMCP:** `test_device` or `test_sim` (scheme: `AbundanceUITests`)

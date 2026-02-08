@@ -127,8 +127,13 @@ Sort by: file → line number.
 
 ### Step 6: Build Verify
 
-```bash
-swift build
+```
+IF mcpbridge available:
+  mcp__xcode__BuildProject
+  IF failure:
+    mcp__xcode__GetBuildLog(severity: "error")    # Structured error details
+ELSE:
+  swift build
 ```
 
 - **Success:** proceed to report
