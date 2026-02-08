@@ -10,6 +10,9 @@ struct PhotoCarouselView: View {
     @State private var showDeleteConfirmation = false
     @State private var deleteIndex: Int?
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedIndex) {
@@ -28,13 +31,14 @@ struct PhotoCarouselView: View {
                                 showDeleteConfirmation = true
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
-                                    .font(.title2)
+                                    .font(.system(.title2, design: .rounded))
                                     .symbolRenderingMode(.palette)
                                     .foregroundStyle(.white, Color.deepPlum.opacity(0.8))
                                     .frame(minWidth: 44, minHeight: 44)
                             }
                             .padding(8)
                             .accessibilityLabel("Delete photo \(index + 1)")
+                            .accessibilityHint("Double tap to delete this photo")
                         }
                     }
                     .tag(index)
@@ -49,14 +53,22 @@ struct PhotoCarouselView: View {
                 HStack(spacing: 6) {
                     ForEach(0..<imageUrls.count, id: \.self) { index in
                         Circle()
-                            .fill(index == selectedIndex ? Color.accentPrimary : Color.accentPrimary.opacity(0.5))
+                            .fill(index == selectedIndex ? Color.salmon : Color.salmon.opacity(0.4))
                             .frame(width: 7, height: 7)
+                            .animation(reduceMotion ? .brandReducedMotion : .brandPress, value: selectedIndex)
                     }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .adaptiveGlass(in: Capsule())
+                .background {
+                    if reduceTransparency {
+                        Capsule().fill(Color.black.opacity(0.5))
+                    } else {
+                        Capsule().adaptiveGlass(in: Capsule())
+                    }
+                }
                 .padding(.bottom, 12)
+                .accessibilityHidden(true)
             }
         }
         .confirmationDialog(

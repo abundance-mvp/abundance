@@ -6,7 +6,7 @@ import EdgeTAMFeature
 ///
 /// Visual states per SPEC-PIPE-004-A Section 4:
 /// - Unselected: translucent white (20% opacity), thin white border, subtle pulse
-/// - Selected: translucent blue (30% opacity), solid blue border, checkmark badge
+/// - Selected: translucent salmon (30% opacity), solid salmon border, checkmark badge
 struct SegmentOverlayView: View {
     let segment: SegmentedObject
     let isSelected: Bool
@@ -14,18 +14,19 @@ struct SegmentOverlayView: View {
     let onTap: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
         let frame = segmentFrame(in: geometrySize)
 
         ZStack(alignment: .topTrailing) {
             // Segment overlay
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isSelected ? Color.accentPrimary.opacity(0.3) : Color.white.opacity(0.2))
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(overlayFill)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(
-                            isSelected ? Color.accentPrimary : Color.white.opacity(0.6),
+                            isSelected ? Color.salmon : Color.white.opacity(0.6),
                             lineWidth: isSelected ? 2 : 1
                         )
                 )
@@ -34,8 +35,8 @@ struct SegmentOverlayView: View {
             // Checkmark badge for selected segments
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(.white, Color.accentPrimary)
+                    .font(.system(.title3, design: .rounded))
+                    .foregroundStyle(.white, Color.salmon)
                     .padding(4)
             }
         }
@@ -46,6 +47,15 @@ struct SegmentOverlayView: View {
         .accessibilityLabel(isSelected ? "Selected object" : "Detected object")
         .accessibilityHint(isSelected ? "Double tap to deselect" : "Double tap to select for cataloging")
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// Overlay fill, adjusted for Reduce Transparency
+    private var overlayFill: Color {
+        if reduceTransparency {
+            return isSelected ? Color.salmon.opacity(0.5) : Color.white.opacity(0.4)
+        } else {
+            return isSelected ? Color.salmon.opacity(0.3) : Color.white.opacity(0.2)
+        }
     }
 
     /// Convert normalized bounding box to pixel coordinates

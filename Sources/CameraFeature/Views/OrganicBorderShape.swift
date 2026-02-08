@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 @preconcurrency import Vision
 import CoreImage
 import os.log
@@ -210,7 +211,7 @@ struct OrganicBorderShape: Shape {
         Color.black.ignoresSafeArea()
 
         OrganicBorderShape(mask: nil)
-            .stroke(Color.mint, lineWidth: 3)
+            .stroke(Color.salmon, lineWidth: 3)
             .frame(width: 200, height: 250)
     }
 }

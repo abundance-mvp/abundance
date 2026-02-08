@@ -85,6 +85,7 @@ public struct SweepCaptureView: View {
                 HStack {
                     ProgressView(value: progress)
                         .frame(width: 100)
+                        .tint(Color.salmon)
                     Text("Uploading...")
                 }
             case .processing:
@@ -97,7 +98,7 @@ public struct SweepCaptureView: View {
                 Text("Pan across items to detect")
             }
         }
-        .font(.subheadline.weight(.medium))
+        .font(.system(.subheadline, design: .rounded, weight: .medium))
         .foregroundStyle(.white)
         .padding(.horizontal, horizontalPadding)
         .padding(.vertical, verticalPadding)
@@ -110,6 +111,23 @@ public struct SweepCaptureView: View {
         }
         .padding(.bottom, verticalPadding)
         .accessibilityAddTraits(.updatesFrequently)
+        .accessibilityLabel(sweepStatusAccessibilityLabel)
+    }
+
+    /// Accessibility label for the sweep status bar
+    private var sweepStatusAccessibilityLabel: String {
+        switch viewModel.sweepState {
+        case .scanning(let count):
+            return "Scanning, \(count) objects found"
+        case .reviewing(let selected, let total):
+            return "Reviewing, \(selected) of \(total) selected"
+        case .uploading(let progress):
+            return "Uploading, \(Int(progress * 100)) percent complete"
+        case .processing:
+            return "Analyzing items"
+        default:
+            return "Pan across items to detect"
+        }
     }
 
     // MARK: - Action Buttons
@@ -119,16 +137,23 @@ public struct SweepCaptureView: View {
             Button("Cancel") {
                 onCancel()
             }
+            .font(.system(.body, design: .rounded, weight: .medium))
             .buttonStyle(.bordered)
             .tint(.white)
+            .accessibilityLabel("Cancel sweep")
+            .accessibilityHint("Double tap to cancel and return to camera")
 
             Button {
                 onCatalog()
             } label: {
                 Label("Catalog \(viewModel.selectedSegments.count)", systemImage: "checkmark.circle")
+                    .font(.system(.body, design: .rounded, weight: .semibold))
             }
             .buttonStyle(.borderedProminent)
+            .tint(Color.salmon)
             .disabled(!viewModel.canCatalog)
+            .accessibilityLabel("Catalog \(viewModel.selectedSegments.count) items")
+            .accessibilityHint(viewModel.canCatalog ? "Double tap to catalog selected items" : "Select items first")
         }
         .padding(.horizontal, horizontalPadding)
     }

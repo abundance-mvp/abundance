@@ -9,6 +9,9 @@ struct SweepModeToggle: View {
     @Binding var selectedMode: CaptureMode
     let isSweepAvailable: Bool
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     var body: some View {
         HStack(spacing: 24) {
             modeButton(.single, label: "Photo", icon: "camera")
@@ -21,28 +24,36 @@ struct SweepModeToggle: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background {
-            Capsule()
-                .adaptiveGlass(in: Capsule())
+            if reduceTransparency {
+                Capsule().fill(Color.black.opacity(0.7))
+            } else {
+                Capsule().adaptiveGlass(in: Capsule())
+            }
         }
     }
 
     @ViewBuilder
     private func modeButton(_ mode: CaptureMode, label: String, icon: String) -> some View {
         Button {
-            selectedMode = mode
+            withAnimation(reduceMotion ? .brandReducedMotion : .brandPress) {
+                selectedMode = mode
+            }
             #if os(iOS)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             #endif
         } label: {
             VStack(spacing: 2) {
                 Image(systemName: icon)
-                    .font(.body.weight(selectedMode == mode ? .bold : .regular))
+                    .font(.system(.body, design: .rounded, weight: selectedMode == mode ? .bold : .regular))
                 Text(label)
-                    .font(.caption2.weight(selectedMode == mode ? .bold : .regular))
+                    .font(.system(.caption2, design: .rounded, weight: selectedMode == mode ? .bold : .regular))
             }
-            .foregroundStyle(selectedMode == mode ? .blue : .white)
+            .foregroundStyle(selectedMode == mode ? Color.salmon : .white)
+            .scaleEffect(selectedMode == mode ? 1.0 : 0.95)
+            .animation(reduceMotion ? .brandReducedMotion : .brandPress, value: selectedMode)
         }
         .accessibilityLabel("\(label) mode")
+        .accessibilityHint(selectedMode == mode ? "Currently selected" : "Double tap to switch to \(label) mode")
         .accessibilityAddTraits(selectedMode == mode ? .isSelected : [])
     }
 }

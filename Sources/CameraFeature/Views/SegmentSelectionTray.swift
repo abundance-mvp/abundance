@@ -11,6 +11,7 @@ struct SegmentSelectionTray: View {
     let onDeselectSegment: (UUID) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -23,34 +24,45 @@ struct SegmentSelectionTray: View {
         }
         .frame(height: selectedSegments.isEmpty ? 0 : 72)
         .animation(reduceMotion ? .brandReducedMotion : .brandDefault, value: selectedSegments.count)
+        .accessibilityLabel("\(selectedSegments.count) items selected")
     }
 
     @ViewBuilder
     private func segmentThumbnail(_ segment: SegmentedObject) -> some View {
         ZStack(alignment: .topTrailing) {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.accentPrimary.opacity(0.2))
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(thumbnailFill)
                 .frame(width: 56, height: 56)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.accentPrimary, lineWidth: 1.5)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(Color.salmon, lineWidth: 1.5)
                 )
                 .accessibilityLabel(thumbnailLabel(for: segment))
 
-            // Remove button — 44x44 touch target per Apple HIG
+            // Remove button -- 44x44 touch target per Apple HIG
             Button {
                 onDeselectSegment(segment.id)
             } label: {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.body)
+                    .font(.system(.body, design: .rounded))
                     .foregroundStyle(.white, Color.errorColor)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .offset(x: 8, y: -8)
             .accessibilityLabel("Remove from selection")
+            .accessibilityHint("Double tap to deselect this item")
         }
         .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+    }
+
+    /// Thumbnail fill, adjusted for Reduce Transparency
+    private var thumbnailFill: Color {
+        if reduceTransparency {
+            return Color.salmon.opacity(0.35)
+        } else {
+            return Color.salmon.opacity(0.2)
+        }
     }
 
     private func thumbnailLabel(for segment: SegmentedObject) -> String {
