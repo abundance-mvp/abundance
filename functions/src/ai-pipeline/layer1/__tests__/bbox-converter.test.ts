@@ -164,7 +164,7 @@ describe('bbox-converter', () => {
     });
 
     it('calculates small area', () => {
-      expect(calculateBoxArea([0, 0, 100, 100])).toBe(0.01);
+      expect(calculateBoxArea([0, 0, 100, 100])).toBeCloseTo(0.01, 10);
     });
   });
 

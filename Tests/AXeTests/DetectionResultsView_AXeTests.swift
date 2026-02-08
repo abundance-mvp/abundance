@@ -30,10 +30,10 @@ struct DetectionResultsView_AXeTests {
                 "Retake overlay button must have .accessibilityIdentifier(\"detection.retakeOverlayButton\")")
     }
 
-    @Test("Catalog All button has accessibility identifier")
-    func catalogAllA11y() {
-        #expect(source.containsPattern(#"detection\.catalogAllButton"#),
-                "Catalog All button must have .accessibilityIdentifier(\"detection.catalogAllButton\")")
+    @Test("Catalog Selected button has accessibility identifier")
+    func catalogSelectedA11y() {
+        #expect(source.containsPattern(#"detection\.catalogSelectedButton"#),
+                "Catalog Selected button must have .accessibilityIdentifier(\"detection.catalogSelectedButton\")")
     }
 
     @Test("Object cards have accessibility identifiers")
@@ -42,10 +42,10 @@ struct DetectionResultsView_AXeTests {
                 "Object cards must have .accessibilityIdentifier(\"detection.object.{groupId}\")")
     }
 
-    @Test("Catalog buttons have accessibility identifiers")
-    func catalogButtonA11y() {
-        #expect(source.containsPattern(#"detection\.catalogButton\."#),
-                "Catalog buttons must have .accessibilityIdentifier(\"detection.catalogButton.{groupId}\")")
+    @Test("Toggle check buttons have accessibility identifiers")
+    func toggleCheckA11y() {
+        #expect(source.containsPattern(#"detection\.toggleCheck\."#),
+                "Toggle check buttons must have .accessibilityIdentifier(\"detection.toggleCheck.{groupId}\")")
     }
 
     @Test("Retake bottom button has accessibility identifier")

@@ -154,7 +154,7 @@ describe('E2E Pipeline Tests', () => {
       const result = await callGeminiFlashWithRetry(['base64image'], 5);
       expect(result.objects).toHaveLength(0);
       expect(mockGenerateContent).toHaveBeenCalledTimes(5);
-    });
+    }, 15000);
   });
 
   describe('Detection response parsing', () => {

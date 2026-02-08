@@ -11,6 +11,9 @@
  * 4. Image URL resolution (imageUrl vs imagePath fallback)
  */
 
+// Ensure this file is treated as a module to avoid TS2451 scope collisions
+export {};
+
 // Mock firebase-admin
 const mockUpdate = jest.fn();
 const mockServerTimestamp = jest.fn(() => 'SERVER_TIMESTAMP');

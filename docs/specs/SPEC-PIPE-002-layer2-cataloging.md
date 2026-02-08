@@ -991,7 +991,7 @@ Based on COST-MODEL-001:
 
 **With Session Persistence:**
 
-When using `processItemWithGeminiPersistent()`, subsequent catalogs of the same item achieve significant cost savings through context caching and tool call deduplication. See [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md#cost-savings-analysis) for detailed analysis.
+When using `processItemWithGeminiPersistent()`, subsequent catalogs of the same item achieve significant cost savings through context caching and tool call deduplication. See [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md) for detailed cost savings analysis.
 
 ### Cost Logging
 
