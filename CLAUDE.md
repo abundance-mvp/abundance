@@ -22,6 +22,13 @@ Never use `grep` - Use `rg`
 /project:device-tester                       # Iterative testing on physical device w-16e
 /axiom:apple-docs-research                   # Fetch Apple Developer documentation
 
+# Xcode MCP Bridge (requires Xcode running + macOS 26)
+mcp__xcode__BuildProject                     # Build via Xcode (structured errors)
+mcp__xcode__RenderPreview                    # Render SwiftUI preview snapshot
+mcp__xcode__DocumentationSearch              # Search Apple docs + WWDC transcripts
+mcp__xcode__XcodeListNavigatorIssues         # Mirror Xcode Issue Navigator
+mcp__xcode__ExecuteSnippet                   # Swift REPL in project context
+
 # Issue Tracking
 /project:file-issue [description]            # File standardized issue (bug, feature, etc.)
 /project:troubleshoot <issue>                # End-to-end debug → verify → test → review
@@ -187,6 +194,19 @@ swiftlint              # Zero warnings required
 
 **Required checks:** ios-build-check, backend-validation, security-pr-review
 **Debug:** Comment `@claude` in PR
+
+## MCP Servers
+
+| Server | Transport | Tools | Requires | Purpose |
+|--------|-----------|-------|----------|---------|
+| `xcode` (mcpbridge) | stdio | 20 | Xcode running, macOS 26 | Builds, previews, diagnostics, Apple docs, project-aware file ops |
+| `XcodeBuildMCP` | stdio | 60+ | None (headless) | Simulators, devices, UI automation, debugging |
+| Firebase | plugin | 29 | Firebase project | Firestore, Functions, Auth, FCM, etc. |
+| Observability | plugin | 13 | GCP project | Logging, metrics, tracing |
+
+**Both Xcode servers run simultaneously.** Skills route to the right server:
+- Builds/diagnostics/previews/docs → mcpbridge (when available)
+- Simulator/device/UI automation → XcodeBuildMCP (always)
 
 ## Common Tasks
 

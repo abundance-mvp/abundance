@@ -71,15 +71,19 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 
 ## MCP Integration
 
-This project uses official MCP servers for backend operations:
+This project uses MCP servers for iOS development and backend operations:
 
-| MCP Server | Tools | Purpose |
-|------------|-------|---------|
-| Firebase | 29 | Firestore, Functions, Auth, FCM, RemoteConfig, RTDB |
-| Observability | 13 | Logging, Metrics, Tracing, Alerts, Errors |
-| Storage | 17 | GCS buckets, objects, IAM |
-| GCloud | 1 | General gcloud CLI |
-| Sosumi | 2 | Apple Developer documentation |
+| MCP Server | Tools | Requires | Purpose |
+|------------|-------|----------|---------|
+| **Xcode Native Bridge** (`xcode`) | 20 | Xcode running, macOS 26 | Builds, SwiftUI previews, diagnostics, Apple docs, project-aware file ops |
+| **XcodeBuildMCP** | 60+ | None (headless) | Simulators, devices, UI automation, debugging, project scaffolding |
+| Firebase | 29 | Firebase project | Firestore, Functions, Auth, FCM, RemoteConfig, RTDB |
+| Observability | 13 | GCP project | Logging, Metrics, Tracing, Alerts, Errors |
+| Storage | 17 | GCS project | GCS buckets, objects, IAM |
+| GCloud | 1 | GCP project | General gcloud CLI |
+| Sosumi | 2 | None | Apple Developer documentation |
+
+**Xcode Native Bridge vs XcodeBuildMCP:** Both run simultaneously. mcpbridge requires Xcode GUI open (not usable in CI). XcodeBuildMCP works headless. Skills automatically route to the appropriate server.
 
 See `backend-superpowers` skill for complete MCP tool inventory.
 
