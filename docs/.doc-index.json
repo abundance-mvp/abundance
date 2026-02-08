@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-07T22:58:45Z",
+  "generated": "2026-02-08T09:02:41Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -244,33 +244,8 @@
           "related_branch": null,
           "merged": null
         },
-        "2026-01-16-frozen-camera-after-error-dismiss.md": {
-          "status": "Fixed",
-          "related_branch": null,
-          "merged": null
-        },
-        "2026-01-20-multi-select-fails-silently.md": {
-          "status": "Fixed",
-          "related_branch": null,
-          "merged": null
-        },
-        "2026-01-20-item-images-missing-for-some-items.md": {
-          "status": "Fixed",
-          "related_branch": "fix/missing-item-images",
-          "merged": null
-        },
-        "2026-01-20-catalog-misidentification-swapped-crops.md": {
-          "status": "Fixed",
-          "related_branch": null,
-          "merged": null
-        },
         "2026-01-20-camera-stops-working-after-tab-switch.md": {
           "status": "In Progress",
-          "related_branch": null,
-          "merged": null
-        },
-        "2026-01-20-thumbnail-orientation-breaks-layout.md": {
-          "status": "Fixed",
           "related_branch": null,
           "merged": null
         },
@@ -475,6 +450,36 @@
         "related_branch": null,
         "merged": "2026-01-18",
         "archived_at": "2026-01-19"
+      },
+      "2026-01-16-frozen-camera-after-error-dismiss.md": {
+        "status": "Fixed",
+        "related_branch": null,
+        "merged": null,
+        "archived_at": "2026-02-08"
+      },
+      "2026-01-20-multi-select-fails-silently.md": {
+        "status": "Fixed",
+        "related_branch": null,
+        "merged": null,
+        "archived_at": "2026-02-08"
+      },
+      "2026-01-20-item-images-missing-for-some-items.md": {
+        "status": "Fixed",
+        "related_branch": "fix/missing-item-images",
+        "merged": null,
+        "archived_at": "2026-02-08"
+      },
+      "2026-01-20-catalog-misidentification-swapped-crops.md": {
+        "status": "Fixed",
+        "related_branch": null,
+        "merged": null,
+        "archived_at": "2026-02-08"
+      },
+      "2026-01-20-thumbnail-orientation-breaks-layout.md": {
+        "status": "Fixed",
+        "related_branch": null,
+        "merged": null,
+        "archived_at": "2026-02-08"
       }
     },
     "brand": {
