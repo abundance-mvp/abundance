@@ -18,6 +18,7 @@ Never use `grep` - Use `rg`
 ```bash
 # iOS Development
 /project:ios-superpowers <action> <context>  # Axiom-powered iOS workflows
+/project:fresh-deploy                        # Wipe data + deploy functions + build device
 /project:device-tester                       # Iterative testing on physical device w-16e
 /axiom:apple-docs-research                   # Fetch Apple Developer documentation
 
