@@ -35,8 +35,7 @@ struct SweepCaptureViewModelTests {
         let vm = SweepCaptureViewModel()
         let segment = SegmentedObject(
             boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.2, height: 0.2),
-            iouScore: 0.8,
-            isSelected: true
+            iouScore: 0.8
         )
         vm.segments = [segment]
         vm.selectedSegmentIds.insert(segment.id)

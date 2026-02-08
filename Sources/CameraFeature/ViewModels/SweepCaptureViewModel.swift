@@ -171,7 +171,7 @@ public final class SweepCaptureViewModel {
             // Session listener will update to .complete when server finishes
 
         } catch {
-            sweepState = .error(.modelLoadFailed(error.localizedDescription))
+            sweepState = .error(.catalogFailed(error.localizedDescription))
         }
     }
 }

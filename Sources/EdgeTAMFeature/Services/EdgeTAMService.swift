@@ -34,9 +34,6 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
     /// Maximum cached features to prevent memory pressure
     private let maxCachedFeatures = 3
 
-    /// Maximum cache memory budget in bytes (200MB)
-    private let maxCacheMemoryBytes = 200_000_000
-
     /// Task for monitoring memory pressure notifications
     private var memoryMonitorTask: Task<Void, Never>?
 
@@ -108,7 +105,7 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
         // Placeholder — replace with actual inference after model export
         let featureToken = UUID().uuidString
 
-        // Evict oldest entry if cache is full (FIFO)
+        // Evict arbitrary entry if cache is full
         if featureCache.count >= maxCachedFeatures {
             if let oldestKey = featureCache.keys.first {
                 featureCache.removeValue(forKey: oldestKey)
@@ -143,8 +140,7 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
                 width: min(0.2, 1.0 - max(0, point.x - 0.1)),
                 height: min(0.2, 1.0 - max(0, point.y - 0.1))
             ),
-            iouScore: 0.0,
-            isSelected: false
+            iouScore: 0.0
         )
     }
 

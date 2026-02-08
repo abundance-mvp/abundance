@@ -133,7 +133,7 @@ let package: Package = Package(
             name: "EdgeTAMFeature",
             dependencies: ["VisionCore"],
             resources: [
-                .process("Resources")
+                .copy("Resources")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")

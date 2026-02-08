@@ -11,8 +11,10 @@ import ARKit
 /// If ARKit is unavailable or fails, sweep mode continues with VNFeaturePrint-only dedup.
 ///
 /// Thread Safety: @MainActor-isolated. ARSession delegate callbacks dispatched to MainActor.
+///
+/// - Note: Phase 3 infrastructure — not yet instantiated. Awaiting integration with SweepCaptureViewModel.
 @MainActor
-public final class SweepARSessionManager: NSObject, ObservableObject {
+public final class SweepARSessionManager: NSObject {
 
     private let logger = Logger(subsystem: "com.abundance.camerafeature", category: "SweepARSession")
 
@@ -20,13 +22,13 @@ public final class SweepARSessionManager: NSObject, ObservableObject {
     private var arSession: ARSession?
 
     /// Camera transform extracted from latest AR frame (avoids retaining full ARFrame ~1-4MB)
-    @Published public var cameraTransform: simd_float4x4?
+    public var cameraTransform: simd_float4x4?
 
     /// Camera tracking state extracted from latest AR frame
-    @Published public var trackingState: ARCamera.TrackingState?
+    public var trackingState: ARCamera.TrackingState?
 
     /// Whether ARKit world tracking is available on this device
-    @Published public var isARAvailable: Bool = false
+    public var isARAvailable: Bool = false
 
     public override init() {
         super.init()
@@ -34,8 +36,8 @@ public final class SweepARSessionManager: NSObject, ObservableObject {
     }
 
     deinit {
-        arSession?.delegate = nil
-        arSession?.pause()
+        // Cleanup handled by stopTracking() — called explicitly before deallocation.
+        // Cannot access @MainActor-isolated arSession from nonisolated deinit (Swift 6).
     }
 
     /// Start AR session for spatial tracking during sweep

@@ -109,7 +109,7 @@ Capture sessions for multi-image object detection (Layer 1).
 |-------|------|----------|-------------|
 | `id` | string | Yes | Session document ID |
 | `userId` | string | Yes | Owner's Firebase Auth UID |
-| `captureMode` | string | Yes | `"single"` or `"burst"` |
+| `captureMode` | string | Yes | `"single"`, `"burst"`, or `"sweep"` |
 | `status` | string | Yes | Session processing status |
 | `originalImageUrls` | array | Yes | GCS URLs to original images |
 | `imagesUploaded` | number | No | Count of uploaded images |
@@ -118,6 +118,9 @@ Capture sessions for multi-image object detection (Layer 1).
 | `reasoning` | string | No | AI reasoning for detection results |
 | `error` | string | No | Error message if failed |
 | `errorCode` | string | No | Error code for categorization |
+| `sweepCrops` | array | No | Pre-cropped segments from on-device EdgeTAM (sweep mode only) |
+| `failedAt` | timestamp | No | Failure timestamp |
+| `processingStartedAt` | timestamp | No | Processing claim timestamp (idempotency) |
 | `createdAt` | timestamp | Yes | Session creation timestamp |
 | `detectedAt` | timestamp | No | Detection completion timestamp |
 
@@ -134,7 +137,7 @@ Capture sessions for multi-image object detection (Layer 1).
 
 ```typescript
 type SessionStatus = 'uploading' | 'detecting' | 'detected' | 'failed';
-type CaptureMode = 'single' | 'burst';
+type CaptureMode = 'single' | 'burst' | 'sweep';
 
 interface CaptureSession {
   id: string;
@@ -150,6 +153,22 @@ interface CaptureSession {
   reasoning?: string;
   error?: string;
   errorCode?: string;
+  /** Sweep mode: pre-cropped segments from on-device EdgeTAM */
+  sweepCrops?: SweepCropInfo[];
+  failedAt?: FirebaseFirestore.Timestamp;
+  processingStartedAt?: FirebaseFirestore.Timestamp;
+}
+
+/** Sweep crop metadata from on-device EdgeTAM segmentation */
+interface SweepCropInfo {
+  /** GCS URL of the pre-cropped image */
+  cropUrl: string;
+  /** Bounding box [ymin, xmin, ymax, xmax] normalized 0-1000 */
+  boundingBox: [number, number, number, number];
+  /** Index of the keyframe this crop came from */
+  frameIndex: number;
+  /** Deduplication group ID from on-device segment grouping */
+  groupId: string;
 }
 
 interface DetectedObject {
@@ -200,6 +219,23 @@ interface DetectedObject {
   "detectedAt": "2026-01-18T10:00:15Z"
 }
 ```
+
+#### Sweep Mode
+
+When `captureMode` is `"sweep"`, the session uses on-device EdgeTAM segmentation instead of server-side bounding box detection:
+
+1. Client captures keyframes during camera sweep
+2. EdgeTAM segments objects on-device, producing pre-cropped images
+3. Client uploads crops to GCS and creates session with `sweepCrops` array
+4. Cloud Function skips detection, labels pre-cropped segments via Gemini Flash
+5. Results stored in `detectedObjects` (same schema as single/burst)
+
+**Sweep-specific error codes:**
+| Code | Description |
+|------|-------------|
+| `SWEEP_NO_CROPS` | Session has no sweep crops |
+| `SWEEP_TOO_MANY_CROPS` | Exceeds 50 crop limit |
+| `UNAUTHORIZED_BUCKET` | Crop URL from disallowed bucket |
 
 ---
 

@@ -7,6 +7,10 @@ import Foundation
 /// - iPhone 15 Pro Max (iPhone16,2)
 /// - iPhone 16 Pro family (iPhone17,x)
 /// - Future Pro models (iPhone18+)
+///
+/// Note: A18 chip in standard iPhone 16 (iPhone17,5+) is excluded intentionally.
+/// While it has 16 Neural Engine cores, EdgeTAM requires the A17 Pro's higher
+/// memory bandwidth and throughput for real-time inference at acceptable FPS.
 public enum DeviceEligibility: Sendable {
 
     /// Check if sweep mode is available on the current device.

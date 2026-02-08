@@ -314,12 +314,43 @@ export const onSessionCreated = onDocumentUpdated(
           return;
         }
 
+        // Cap sweep crops at 50 to prevent abuse and timeout
+        const MAX_SWEEP_CROPS = 50;
+        if (sweepCrops.length > MAX_SWEEP_CROPS) {
+          await sessionRef.update({
+            status: 'failed',
+            error: `Too many sweep crops: ${sweepCrops.length} exceeds limit of ${MAX_SWEEP_CROPS}`,
+            errorCode: 'SWEEP_TOO_MANY_CROPS',
+            failedAt: FieldValue.serverTimestamp()
+          });
+          return;
+        }
+
+        // Validate all sweep crop URLs are from allowed buckets (SSRF prevention)
+        for (const crop of sweepCrops) {
+          const bucketName = extractBucketFromUrl(crop.cropUrl);
+          if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
+            logger.error('Sweep crop URL from unauthorized bucket', {
+              sessionId,
+              cropUrl: crop.cropUrl,
+              bucketName
+            });
+            await sessionRef.update({
+              status: 'failed',
+              error: 'Unauthorized storage bucket in sweep crop',
+              errorCode: 'UNAUTHORIZED_BUCKET',
+              failedAt: FieldValue.serverTimestamp()
+            });
+            return;
+          }
+        }
+
         // Label pre-cropped objects via Gemini Flash (no bounding box detection needed)
         const labels = await labelPrecroppedObjects(sweepCrops);
 
         // Construct detectedObjects from labels + sweep crop metadata
         const detectedObjects = labels.map((label, index) => ({
-          groupId: sweepCrops[index].groupId,
+          groupId: sweepCrops[index].groupId || `sweep-${sessionId}-${index}`,
           label: label.name,
           category: label.category,
           attributes: label.attributes || {},
@@ -413,7 +444,8 @@ export const onSessionCreated = onDocumentUpdated(
       await sessionRef.update({
         status: 'failed',
         error: errorMessage,
-        errorCode
+        errorCode,
+        failedAt: FieldValue.serverTimestamp()
       });
     }
   }

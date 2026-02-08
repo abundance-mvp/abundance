@@ -21,6 +21,7 @@ public enum SweepError: Equatable, Sendable, LocalizedError {
     case noSegmentsDetected
     case deviceNotSupported
     case memoryPressure
+    case catalogFailed(String)
 
     public var errorDescription: String? {
         switch self {
@@ -36,6 +37,8 @@ public enum SweepError: Equatable, Sendable, LocalizedError {
             return "Sweep mode requires iPhone 15 Pro or later"
         case .memoryPressure:
             return "Low memory. Try selecting fewer items."
+        case .catalogFailed(let detail):
+            return "Failed to catalog items: \(detail)"
         }
     }
 }

@@ -8,7 +8,7 @@ import EdgeTAMFeature
 /// Shows detected segments as tappable overlays, a selection tray at bottom,
 /// and a "Catalog" action button when items are selected.
 public struct SweepCaptureView: View {
-    var viewModel: SweepCaptureViewModel
+    @Bindable var viewModel: SweepCaptureViewModel
     let onCatalog: () -> Void
     let onCancel: () -> Void
 

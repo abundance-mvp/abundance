@@ -30,6 +30,7 @@ struct SweepModeToggle: View {
                 Capsule().adaptiveGlass(in: Capsule())
             }
         }
+        .sensoryFeedback(.impact(flexibility: .solid, intensity: 0.5), trigger: selectedMode)
     }
 
     @ViewBuilder
@@ -38,9 +39,6 @@ struct SweepModeToggle: View {
             withAnimation(reduceMotion ? .brandReducedMotion : .brandPress) {
                 selectedMode = mode
             }
-            #if os(iOS)
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            #endif
         } label: {
             VStack(spacing: 2) {
                 Image(systemName: icon)
