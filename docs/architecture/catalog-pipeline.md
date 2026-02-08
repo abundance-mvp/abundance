@@ -8,6 +8,7 @@
 
 1. [Executive Summary](#1-executive-summary)
 2. [System Architecture](#2-system-architecture)
+   - 2.5 [On-Device Pre-Processing (Sweep Mode)](#25-on-device-pre-processing-sweep-mode)
 3. [Photo Capture & Upload](#3-photo-capture--upload)
 4. [Layer 1: Object Detection](#4-layer-1-object-detection)
 5. [Catalog Button Action](#5-catalog-button-action)
@@ -47,6 +48,7 @@ The system consists of five component groups:
 
 ### iOS App
 - **Camera Capture** — AVFoundation-based capture with single (double-tap) and burst (long-press) modes
+- **EdgeTAMFeature** — On-device CoreML segmentation module for sweep capture mode (A17 Pro+ devices). Runs EdgeTAM image encoder on keyframes, prompt encoder + mask decoder on user taps for real-time segment selection.
 - **Detection Results View** — Displays bounding boxes over photos, allows object selection for cataloging
 - **Inventory Grid** — LazyVGrid display of cataloged items with status indicators
 - **Item Detail View** — Full item detail with re-catalog and deep scan actions
@@ -61,7 +63,7 @@ The system consists of five component groups:
 ### Cloud Functions
 | Function | Trigger | Purpose |
 |----------|---------|---------|
-| `onSessionCreated` | `sessions/{id}` updated, status=detecting | Layer 1 detection pipeline |
+| `onSessionCreated` | `sessions/{id}` updated, status=detecting | Layer 1 detection pipeline (sweep branch: skips detection, labeling only) |
 | `onItemFromSession` | `items/{id}` created, fromDetection=true | Layer 2 cataloging pipeline |
 | `onItemUpdatedRescan` | `items/{id}` updated, status→pending | Re-catalog with history context |
 | `onItemUpdatedDeepScan` | `items/{id}` updated, deepScanRequested=true | Extended catalog with all tools |
@@ -78,6 +80,142 @@ The system consists of five component groups:
 
 ---
 
+## 2.5 On-Device Pre-Processing (Sweep Mode)
+
+Sweep mode adds an on-device segmentation step that runs **before** the cloud pipeline. The user points their camera at a shelf and pans across it. EdgeTAM, a CoreML port of Meta's segment-anything model, runs per-frame segmentation and shows real-time object contours. The user taps segments to select items, and the selected crops flow through the existing Layer 1 (Flash) and Layer 2 (Pro) pipeline.
+
+### Pipeline Position
+
+```
+                        ON-DEVICE                          CLOUD (existing)
+                    +---------------------+          +---------------------+
+                    |   Sweep Mode        |          |   Layer 1           |
+Camera frames ----> |   EdgeTAM CoreML    |--crops-->|   Gemini 3 Flash    |
+  (30 FPS)          |   (1-16 FPS)        |          |   (labeling only)   |
+                    +---------------------+          +---------------------+
+                              |                                |
+                        User taps to                     +---------------------+
+                        select segments                  |   Layer 2           |
+                                                         |   Gemini 3 Pro      |
+                                                         |   (cataloging)      |
+                                                         +---------------------+
+```
+
+When `captureMode === "sweep"`, the `onSessionCreated` Cloud Function skips Layer 1 bounding box detection (crops are pre-provided by EdgeTAM) and runs Gemini Flash for **labeling only**, reducing Layer 1 cost by ~50%.
+
+### EdgeTAM CoreML Architecture
+
+EdgeTAM uses three CoreML models (~20 MB total), loaded lazily on sweep mode entry:
+
+| Component | Input | Output | Size | Latency |
+|-----------|-------|--------|------|---------|
+| Image Encoder | 1024x1024 RGB image | 256-channel feature map (64x64) | ~10 MB | 60-900ms (bottleneck) |
+| Prompt Encoder | Up to 4 points + 1 box + 1 mask | Sparse + dense embeddings | ~2 MB | <5ms |
+| Mask Decoder | Encoder features + prompt embeddings | Segmentation mask + IoU score | ~8 MB | 5-15ms |
+
+The key optimization is **encode-once/decode-on-tap**: the image encoder runs on keyframes only (~every 0.5s), while prompt encoder + mask decoder run per user tap (~15ms total, feels instant).
+
+All models load with `computeUnits = .all` to leverage CPU + GPU + Neural Engine. The `EdgeTAMService` actor serializes all model access for thread safety.
+
+### Device Eligibility
+
+Sweep mode requires A17 Pro Neural Engine (35 TOPS) or later. `DeviceEligibility.isSweepModeAvailable` checks the hardware identifier:
+
+| Device | Machine ID | Eligible |
+|--------|-----------|----------|
+| iPhone 15 Pro | iPhone16,1 | Yes |
+| iPhone 15 Pro Max | iPhone16,2 | Yes |
+| iPhone 16 Pro | iPhone17,1 / iPhone17,3 | Yes |
+| iPhone 16 Pro Max | iPhone17,2 / iPhone17,4 | Yes |
+| Future iPhone 18+ | iPhone18,x+ | Yes (future-proofed) |
+| Non-Pro iPhones | any other | No |
+| Simulator | any | Yes (for testing) |
+
+The `SweepModeToggle` view only shows the sweep option on eligible devices.
+
+### Frame Scheduling
+
+`FrameScheduler` is an actor that decides which camera frames get encoded. At 30 FPS, running the image encoder every frame is impossible. Instead:
+
+1. **First frame** is always a keyframe (encoded immediately).
+2. **Subsequent frames** are encoded only if `keyframeInterval` (default 0.5s) has elapsed since the last keyframe.
+3. Between keyframes, cached features from the most recent `encodeFrame()` call are reused for mask decoding.
+4. The scheduler tracks a `currentFrameIndex` for associating segments with their source keyframe.
+
+The feature cache in `EdgeTAMService` is capped at 3 entries (FIFO eviction).
+
+### Sweep State Machine
+
+`SweepCaptureViewModel` (`@MainActor @Observable`) manages the sweep lifecycle:
+
+```
+inactive -> loading -> scanning -> reviewing -> uploading -> processing -> complete
+                                                                       -> error
+```
+
+| State | Description |
+|-------|-------------|
+| `inactive` | Sweep mode not active |
+| `loading` | EdgeTAM models loading (~200ms) |
+| `scanning` | Camera feed active, segments appearing as user pans |
+| `reviewing` | User tapping segments to select/deselect |
+| `uploading(progress)` | Cropping and uploading selected segments to GCS |
+| `processing` | Firestore session created, waiting for cloud pipeline |
+| `complete` | All items cataloged |
+| `error` | Model load or upload failure |
+
+Selection management provides haptic feedback: `.medium` impact on select, `.light` on deselect. The `canCatalog` flag enables the catalog button when at least one segment is selected.
+
+### Spatial Deduplication
+
+When the user pans across a shelf and back, the same object may appear in multiple frames. `ObjectDeduplicator` (actor-isolated) prevents double-selection with two tiers:
+
+**Tier 1 -- VNFeaturePrint (visual similarity):**
+- Uses `VNGenerateImageFeaturePrintRequest` (iOS 17+) to generate perceptual hashes.
+- Compares fingerprints using `computeDistance()`. Objects within 10% distance (i.e., `similarityThreshold = 0.90`) are considered duplicates.
+- Cache: Up to 50 entries, 2-minute TTL, automatic FIFO eviction.
+
+**Tier 2 -- ARKit spatial position (3D world coordinates):**
+- If `SweepARSessionManager` is active, each segment center is projected to a 3D world position via `ARSession.raycast()`.
+- Segments within 15cm (`threshold = 0.15` meters) in world space are the same object regardless of visual appearance.
+- Spatial cache: Up to 200 entries, same 2-minute TTL.
+
+If ARKit is unavailable, the system falls back gracefully to visual-only deduplication.
+
+### ARKit Session
+
+`SweepARSessionManager` (`@MainActor`, `ARSessionDelegate`) manages an optional `ARWorldTrackingConfiguration` during sweep mode:
+
+- Starts tracking on sweep mode entry with horizontal + vertical plane detection.
+- Publishes `cameraTransform` (6DOF pose) and `trackingState` via `@Published` properties.
+- Provides `worldPosition(for:)` to project normalized 2D points to 3D world coordinates using raycasting against estimated planes.
+- Extracts only lightweight primitives (`simd_float4x4`, tracking state enum) from `ARFrame` delegate callbacks -- never retains the full `ARFrame` (~1-4 MB) across isolation boundaries.
+- Stops and releases the AR session on sweep mode exit.
+
+### Performance-Adaptive UX
+
+The sweep UI degrades gracefully based on measured EdgeTAM inference FPS:
+
+| Measured FPS | Tier | Experience |
+|-------------|------|------------|
+| 10+ FPS | `premium` | Segments update smoothly, real-time AR-like overlay |
+| 4-10 FPS | `good` | Slight lag, fully usable |
+| 1-4 FPS | `acceptable` | Segments appear in snapshots every ~1s; camera preview stays smooth at 30 FPS |
+| <1 FPS | `fallback` | Auto-switch to tap-to-scan mode (user taps a region, EdgeTAM processes that single frame) |
+
+`SweepCaptureViewModel.performanceTier` is a computed property derived from `measuredFPS`.
+
+### Memory Pressure Handling
+
+`EdgeTAMService` monitors `UIApplication.didReceiveMemoryWarningNotification` via an async notification stream:
+
+- **On memory warning:** Clears the feature cache (up to 3 entries) but keeps models loaded. This releases cached `MLMultiArray` data while preserving the ability to encode new frames.
+- **Feature cache budget:** 3 entries maximum, 200 MB memory cap.
+- **On sweep mode exit:** `unload()` releases all three models and clears the cache entirely.
+- **On `deinit`:** The memory monitoring task is cancelled.
+
+---
+
 ## 3. Photo Capture & Upload
 
 ![Capture & Upload Flow](diagrams/02-capture-upload-flow.png)
@@ -88,6 +226,7 @@ The system consists of five component groups:
 |------|---------|----------|
 | Single | Double-tap | Captures one photo |
 | Burst | Long-press | Captures up to 8 photos at 0.5s intervals, 4s timeout |
+| Sweep | Toggle sweep mode | Real-time on-device segmentation, user taps segments to select |
 
 ### Upload Pipeline
 
@@ -97,11 +236,19 @@ The system consists of five component groups:
    ```json
    {
      "userId": "string",
-     "captureMode": "single|burst",
+     "captureMode": "single|burst|sweep",
      "status": "uploading",
      "expectedImageCount": 1-8,
      "imagesUploaded": 0,
      "originalImageUrls": [],
+     "sweepCrops": [
+       {
+         "cropUrl": "string",
+         "boundingBox": [0, 0, 0, 0],
+         "frameIndex": 0,
+         "groupId": "string"
+       }
+     ],
      "createdAt": "timestamp"
    }
    ```
@@ -127,6 +274,7 @@ The system consists of five component groups:
 ### Cloud Function: `onSessionCreated`
 - **Runtime:** 1GiB memory, 120s timeout
 - **Trigger:** `sessions/{id}` document updated with `status: "detecting"`
+- **Sweep branch:** When `captureMode === "sweep"`, crops are pre-provided via `sweepCrops`. The function skips bounding box detection and runs Gemini Flash for labeling only, reducing Layer 1 cost by ~50%.
 
 ### Model Configuration
 ```
@@ -564,12 +712,13 @@ Deep scan is a one-time operation per item. After completion:
 |-------|------|-------------|
 | `id` | string | Auto-generated document ID |
 | `userId` | string | Owner's UID |
-| `captureMode` | string | `single` or `burst` |
+| `captureMode` | string | `single`, `burst`, or `sweep` |
 | `status` | string | `uploading`, `detecting`, `detected`, `failed` |
 | `originalImageUrls` | array[string] | Download URLs for original photos |
 | `imagesUploaded` | int | Upload progress counter |
 | `expectedImageCount` | int | Total photos to upload |
 | `detectedObjects` | array[object] | Detection results (see Layer 1 output) |
+| `sweepCrops` | array[object]? | Sweep mode crop metadata: `{cropUrl, boundingBox, frameIndex, groupId}` |
 | `reasoning` | string | Gemini's detection reasoning |
 | `createdAt` | timestamp | Session creation time |
 | `detectedAt` | timestamp | Detection completion time |
@@ -770,3 +919,12 @@ Deep scan is a one-time operation per item. After completion:
 | Rescan trigger | `functions/src/onItemUpdatedRescan.ts` |
 | Deep scan trigger | `functions/src/onItemUpdatedDeepScan.ts` |
 | Vertex AI config | `functions/src/vertexai-config.ts` |
+| EdgeTAM service | `Sources/EdgeTAMFeature/Services/EdgeTAMService.swift` |
+| EdgeTAM config | `Sources/EdgeTAMFeature/Models/EdgeTAMConfiguration.swift` |
+| Frame scheduler | `Sources/EdgeTAMFeature/Services/FrameScheduler.swift` |
+| Device eligibility | `Sources/EdgeTAMFeature/Utilities/DeviceEligibility.swift` |
+| Sweep view model | `Sources/CameraFeature/ViewModels/SweepCaptureViewModel.swift` |
+| Sweep capture view | `Sources/CameraFeature/Views/SweepCaptureView.swift` |
+| Sweep mode toggle | `Sources/CameraFeature/Views/SweepModeToggle.swift` |
+| Object deduplicator | `Sources/VisionCore/Services/ObjectDeduplicator.swift` |
+| Sweep AR session | `Sources/CameraFeature/Services/SweepARSessionManager.swift` |
