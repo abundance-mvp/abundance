@@ -101,14 +101,6 @@ public final class CaptureSessionViewModel {
         self.catalogService = catalogService
     }
 
-    deinit {
-        // Task is Sendable-safe to cancel from nonisolated deinit
-        burstTask?.cancel()
-        // AnyCancellable cleanup happens automatically via ARC deallocation.
-        // Explicit cancel in nonisolated deinit is forbidden by Swift 6 strict concurrency
-        // since AnyCancellable is not Sendable.
-    }
-
     // MARK: - Single Photo Capture (Double-Tap)
 
     /// Handle double-tap gesture for single photo capture
