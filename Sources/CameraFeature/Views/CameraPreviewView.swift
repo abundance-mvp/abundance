@@ -51,7 +51,10 @@ public struct CameraPreviewView: UIViewRepresentable {
     }
 
     public func updateUIView(_ uiView: UIView, context: Context) {
-        // Layout is handled by CameraPreviewUIView.layoutSubviews()
+        // Force a layout pass so the preview layer frame matches current bounds.
+        // After a session stop/restart cycle the layer may retain stale geometry
+        // (zoomed-in/offset) if no layout invalidation occurred.
+        uiView.setNeedsLayout()
     }
 }
 

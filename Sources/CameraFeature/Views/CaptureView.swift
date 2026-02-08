@@ -18,6 +18,7 @@ public struct CaptureView: View {
     @State private var longPressActive = false
     @State private var captureSession: AVCaptureSession?
     @State private var isCaptureInProgress = false  // Synchronous guard for race prevention
+    @State private var teardownTask: Task<Void, Never>?  // Track in-flight teardown for serialization
 
     // Error recovery state
     @State private var cameraError: CameraError?
@@ -88,6 +89,8 @@ public struct CaptureView: View {
             .animation(reduceMotion ? .brandReducedMotion : .brandDefault, value: showingCameraError)
             .animation(reduceMotion ? .brandReducedMotion : .brandPress, value: networkMonitor.isConnected)
             .onAppear {
+                // Clear frozen frame so live preview is visible on return
+                frozenFrame = nil
                 // Restart camera when returning to this tab
                 Task {
                     await restartCameraIfNeeded()
@@ -104,7 +107,8 @@ public struct CaptureView: View {
                 Task {
                     switch newPhase {
                     case .active:
-                        // App returning to foreground - restart camera if authorized
+                        // App returning to foreground - clear stale frozen frame and restart
+                        frozenFrame = nil
                         if authorizationStatus == .authorized {
                             await restartCameraIfNeeded()
                         }
@@ -475,6 +479,14 @@ public struct CaptureView: View {
         // Only restart if we're authorized
         guard authorizationStatus == .authorized else { return }
 
+        // Wait for any in-flight teardown to complete before checking session state.
+        // Without this, isRunning may still be true (stopSession hasn't executed yet),
+        // causing us to skip the restart. Then teardown finishes and the session stays stopped.
+        if let teardown = teardownTask {
+            await teardown.value
+            teardownTask = nil
+        }
+
         // Get the CURRENT session from the service, not cached @State
         let currentSession = await cameraService.getCaptureSession()
 
@@ -490,7 +502,7 @@ public struct CaptureView: View {
 
     private func teardownCamera() {
         let service = cameraService  // Capture reference before Task
-        Task {
+        teardownTask = Task {
             await service.stopSession()
         }
     }

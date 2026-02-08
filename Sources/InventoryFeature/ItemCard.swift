@@ -129,7 +129,7 @@ struct ItemCard: View {
         }
         .background(Color.cream, in: outerShape)
         .overlay(outerShape.stroke(Color.peach, lineWidth: contrast == .increased ? 2 : 1))
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .overlay {
             if isSelected {
