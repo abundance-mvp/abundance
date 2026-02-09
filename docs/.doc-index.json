@@ -281,6 +281,22 @@
         }
       }
     },
+    "glossary": {
+      "path": "docs/",
+      "archive_on": [],
+      "docs": {
+        "GLOSSARY.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/InventoryFeature/",
+            "Sources/CameraFeature/",
+            "App/"
+          ],
+          "updated": "2026-02-08",
+          "related_adr": "ADR-027-terminology-standardization.md"
+        }
+      }
+    },
     "dev-workflow": {
       "path": "docs/dev-workflow/",
       "archive_on": [
@@ -291,6 +307,262 @@
           "status": "Active",
           "code_refs": [],
           "updated": "2026-01-18"
+        }
+      }
+    },
+    "adr": {
+      "path": "docs/adr/",
+      "archive_on": [
+        "Deprecated",
+        "Superseded"
+      ],
+      "docs": {
+        "ADR-001-strategic-positioning.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-002-platform-strategy.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-003-mvp-scope-phasing.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-005-authentication-strategy.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/Core/Services/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-006-database-selection.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-007-api-architecture.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-008-image-storage-architecture.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-009-ios-deployment-cicd.md": {
+          "status": "Approved",
+          "code_refs": [
+            ".github/workflows/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-014-cloud-ai-provider-selection.md": {
+          "status": "Superseded",
+          "code_refs": [
+            "functions/src/ai-pipeline/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-015-ai-reasoning-layer-architecture.md": {
+          "status": "Superseded",
+          "code_refs": [
+            "functions/src/ai-pipeline/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-016-image-hosting-strategy.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-017-llm-parsing-architecture.md": {
+          "status": "Superseded",
+          "code_refs": [
+            "functions/src/ai-pipeline/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-018-barcode-product-lookup-strategy.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/CameraFeature/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-019-firestore-data-model-rationale.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-020-cloud-functions-organization.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-021-data-encryption-approach.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/Core/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-022-photo-privacy-protection.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/CameraFeature/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-023-authentication-authorization-strategy.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/OnboardingFeature/"
+          ],
+          "updated": "2026-01-14"
+        },
+        "ADR-024-observability-stack.md": {
+          "status": "Approved",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-026-payment-strategy.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-027-terminology-standardization.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-02-08"
+        }
+      }
+    },
+    "architecture": {
+      "path": "docs/architecture/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "catalog-pipeline.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CameraFeature/",
+            "functions/src/ai-pipeline/",
+            "functions/src/"
+          ],
+          "updated": "2026-02-07"
+        }
+      }
+    },
+    "view-specs": {
+      "path": "docs/view-specs/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "capture-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CameraFeature/Views/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "detection-results-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CameraFeature/Views/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "edit-item-sheet.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/InventoryFeature/Views/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "inventory-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/InventoryFeature/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "item-card.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/InventoryFeature/Components/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "item-detail-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/InventoryFeature/Views/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "photo-carousel-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/InventoryFeature/Components/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "profile-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/ProfileFeature/"
+          ],
+          "updated": "2026-01-18"
+        },
+        "sign-in-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/OnboardingFeature/"
+          ],
+          "updated": "2026-01-18"
+        }
+      }
+    },
+    "testing": {
+      "path": "docs/testing/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "SIMULATOR-INTERACTION.md": {
+          "status": "Active",
+          "code_refs": [
+            "scripts/"
+          ],
+          "updated": "2026-01-20"
+        },
+        "AXE-TEST-SCENARIOS.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/InventoryFeature/Views/",
+            "Sources/ProfileFeature/",
+            "Sources/CameraFeature/Views/"
+          ],
+          "updated": "2026-01-20"
         }
       }
     }

@@ -117,6 +117,7 @@ Skill(skill="backend-superpowers")
 
 - **iOS Superpowers:** Use `/project:ios-superpowers` for ALL iOS work - **P0 requirement** (ensures Apple docs grounding)
 - **ADR-010:** SwiftUI-only - `import UIKit` in Views/ViewModels is **P0 violation** (infrastructure OK)
+- **ADR-027 Terminology:** See [`docs/GLOSSARY.md`](docs/GLOSSARY.md) — "Collection" (not inventory/catalog), "Scan" (not camera), "Refresh" (not deep scan/re-catalog)
 - **Apple Docs:** iOS code changes require `axiom:` verification (auto-invoked by ios-superpowers)
 - **Branch naming:** `feature/`, `fix/`, `docs/`, `chore/`, `test/`, `refactor/` only
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
