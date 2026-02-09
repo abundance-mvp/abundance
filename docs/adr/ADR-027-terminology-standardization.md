@@ -52,16 +52,16 @@ Machine Domain terms (Layer 1, Layer 2, EdgeTAM, etc.) MUST NOT appear in UI str
 
 Align module and type names to match user terms where practical:
 
-| Current | New | Priority |
-|---------|-----|----------|
-| `InventoryFeature` | `CollectionFeature` | High — module rename |
-| `InventoryView` | `CollectionView` | High — follows module |
-| `InventoryViewModel` | `CollectionViewModel` | High — follows module |
-| `requestDeepScan()` | `refreshItem()` | High — term change |
-| `deepScanRequested` | `refreshRequested` | High — follows method |
-| `recatalogItem()` | `refreshItem()` | High — merge into single "refresh" action |
-| Camera tab label "Camera" | "Scan" | Medium — string change |
-| Catalog tab label "Catalog" | "Collection" | Medium — string change |
+| Current | New | Priority | Status |
+|---------|-----|----------|--------|
+| `InventoryFeature` | `CollectionFeature` | High — module rename | **DONE** (Sources/CollectionFeature/) |
+| `InventoryView` | `CollectionView` | High — follows module | **DONE** |
+| `InventoryViewModel` | `CollectionViewModel` | High — follows module | **DONE** |
+| `requestDeepScan()` | `refreshItem()` | High — term change | **DONE** (code uses `refreshItem()`, Firestore field `deepScanRequested` preserved for backward compat) |
+| `deepScanRequested` | `refreshRequested` | High — follows method | **DONE** (code property is `refreshRequested`, Firestore field name preserved as `deepScanRequested`) |
+| `recatalogItem()` | `refreshItem()` | High — merge into single "refresh" action | **DONE** |
+| Camera tab label "Camera" | "Scan" | Medium — string change | Pending |
+| Catalog tab label "Catalog" | "Collection" | Medium — string change | Pending |
 
 **Keep as-is** (Machine Domain, no user exposure):
 - `CatalogService` — internal AI pipeline service
@@ -97,9 +97,9 @@ These terms MUST NOT be used in any new code, docs, or UI:
 - "Catalog" overload eliminated — Collection (noun) vs. Cataloging (internal verb)
 
 ### Negative
-- Module rename (`InventoryFeature` → `CollectionFeature`) requires updating imports across the codebase
-- Existing documentation references need updating
-- Firestore field names (`deepScanRequested`) will diverge from code names until migration
+- ~~Module rename (`InventoryFeature` → `CollectionFeature`) requires updating imports across the codebase~~ **DONE** -- `Sources/CollectionFeature/` exists with all renamed types
+- Existing documentation references need updating (some ADRs still reference old names)
+- Firestore field names (`deepScanRequested`) diverge from code names (`refreshRequested`) -- code-level aliases are in place, migration deferred
 
 ### Risks
 - Firestore schema fields cannot be renamed without migration — code-level aliases needed

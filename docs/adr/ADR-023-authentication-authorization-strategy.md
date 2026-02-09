@@ -52,6 +52,8 @@ import AuthenticationServices
 import FirebaseAuth
 
 /// Manager for Apple Sign-In authentication flow
+/// Note: Production code uses @Observable (iOS 17+), shown here with ObservableObject for
+/// illustrative purposes. The actual auth flow logic is the same regardless of observation pattern.
 class AppleSignInManager: NSObject, ObservableObject {
 
     @Published var isAuthenticated = false
@@ -157,7 +159,10 @@ extension AppleSignInManager: ASAuthorizationControllerDelegate {
 
 extension AppleSignInManager: ASAuthorizationControllerPresentationContextProviding {
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        guard let window = UIApplication.shared.windows.first else {
+        // Note: UIApplication.shared.windows is deprecated in iOS 15+.
+        // In production, use UIApplication.shared.connectedScenes to find the key window:
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = scene.windows.first else {
             fatalError("No window available")
         }
         return window
@@ -183,61 +188,35 @@ extension AppleSignInManager: ASAuthorizationControllerPresentationContextProvid
 
 #### Firestore Security Rules (SECURITY-RULES-001)
 
+The actual deployed rules (see `firestore.rules`) use a simpler pattern:
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function isPremium() {
-      return isSignedIn() && request.auth.token.premium == true;
-    }
-
-    // Users collection: users can only access their own profile
+    // Users can only read/write their own data
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Items collection: users can only access their own items
+    // Items belong to users (row-level security)
     match /items/{itemId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-
-      allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'processing'
-        && request.resource.data.deletedAt == null;
-
-      allow update: if isSignedIn()
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.userId == resource.data.userId; // Can't change ownership
-
-      allow delete: if false; // Soft delete only (via update)
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
-    // Premium features: require custom claim
-    match /premium_templates/{templateId} {
-      allow read: if isPremium();
-      allow write: if false; // Admin-only
-    }
-
-    // Admin operations: require admin custom claim
-    match /admin/{document=**} {
-      allow read, write: if request.auth.token.admin == true;
+    // Capture sessions belong to users (row-level security)
+    match /sessions/{sessionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
   }
 }
 ```
+
+**Note**: The `premium_templates` and `admin` collections shown in earlier drafts of this ADR are not currently deployed. Premium feature gating is handled via Firebase Auth custom claims checked in client code and Cloud Functions, not via Firestore rules on dedicated collections.
 
 #### Rule Validation Test
 
@@ -299,25 +278,19 @@ describe('Firestore Authorization', () => {
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+    // Users can upload to their items folder (original images from iOS app)
+    // Matches both flat files and nested paths
+    match /users/{userId}/items/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024  // 10MB limit
+                   && request.resource.contentType.matches('image/.*|video/.*');
     }
 
-    // User-uploaded cropped objects: users/{userId}/items/{itemId}/objects/*.jpg
-    match /users/{userId}/items/{itemId}/objects/{fileName} {
-      allow read: if isOwner(userId);
-
-      allow write: if isOwner(userId)
-        && request.resource.size < 10 * 1024 * 1024 // 10MB limit
-        && request.resource.contentType.matches('image/.*'); // Images only
-
-      allow delete: if isOwner(userId);
-    }
-
-    // Block all other paths
-    match /{allPaths=**} {
-      allow read, write: if false;
+    // Session crops (written by Cloud Functions, read by users)
+    match /users/{userId}/sessions/{sessionId}/crops/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
@@ -714,3 +687,4 @@ enum PremiumError: Error, LocalizedError {
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-09 | 1.0 | Initial authentication & authorization strategy | Privacy & Security Architect |
+| 2026-02-08 | 1.1 | Update Firestore rules to match actual deployed rules (remove premium/admin collections), note @Observable migration, fix deprecated UIApplication.shared.windows | Documentation Update |

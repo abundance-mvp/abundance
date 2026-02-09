@@ -1,6 +1,6 @@
 # ADR-001: Strategic Positioning - iOS-First, Privacy-First, Metro-by-Metro Launch
 
-**Status**: Proposed
+**Status**: Approved
 **Date**: 2025-10-23
 **Decision Makers**: Executive Team / Product Owner
 **Consulted**: Business Strategy Analyst (Stage 1.1)
@@ -481,8 +481,8 @@ This decision will be re-evaluated at Month 6 based on the following metrics:
 ## Related Decisions
 
 **ADR-002: Platform Strategy (Come for Tool, Stay for Network)** - Defines user acquisition sequencing and value prop evolution
-**ADR-003: Monetization Strategy** (To Be Written) - Defines revenue model and pricing
-**ADR-004: Trust & Safety Framework** (To Be Written) - Defines marketplace moderation, dispute resolution
+**ADR-003: MVP Scope and Phasing** - Defines phasing strategy for inventory-first, marketplace Phase 2
+**ADR-004: iOS 26 Only Launch** (Archived: `docs/archive/adr/ADR-004-ios-26-only-launch.md`) - iOS 26 platform requirement
 
 ---
 
@@ -529,7 +529,7 @@ This makes Android follow-on CRITICAL within 6-9 months. Delaying to 18-24 month
 
 ---
 
-**Status**: Proposed, Awaiting Executive Approval
+**Status**: Approved
 **Next Review**: Month 6 checkpoint (2026-04-23)
 **Owner**: CEO / Product Owner
 **Prepared By**: Business Strategy Analyst (Stage 1.1)

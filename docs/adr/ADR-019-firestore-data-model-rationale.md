@@ -4,14 +4,14 @@
 **Date**: 2025-11-08
 **Decision Makers**: Cloud Backend Architect
 **Related Documents**:
-- docs/tech-stack/DATA-MODEL-001-firestore-schema.md
+- docs/specs/SPEC-DATA-001-firestore-schema.md
 - docs/adr/ADR-006-database-selection.md
 
 ---
 
 ## Context
 
-The backend needs a data storage solution for catalog items, user profiles, and subscriptions. Stage 2.1 selected Firestore (ADR-006), but specific data model decisions remain:
+The backend needs a data storage solution for catalog items, user profiles, and capture sessions. Stage 2.1 selected Firestore (ADR-006), but specific data model decisions remain:
 - Collection structure (top-level vs nested)
 - Index strategy
 - NoSQL vs SQL trade-offs
@@ -24,8 +24,8 @@ Use **top-level Firestore collections** with **composite indexes** for common qu
 
 **Collections**:
 - `users/{userId}` - User profiles
-- `items/{itemId}` - Catalog items
-- `subscriptions/{subscriptionId}` - Stripe subscriptions
+- `items/{itemId}` - Catalog items (with `userId` field for ownership)
+- `sessions/{sessionId}` - Capture sessions (multi-item capture workflows, with `userId` field for ownership)
 
 **Indexes**:
 - `userId` + `createdAt` (list items by date)
@@ -127,3 +127,4 @@ Use **top-level Firestore collections** with **composite indexes** for common qu
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial ADR, Firestore data model rationale | Cloud Backend Architect |
+| 2026-02-08 | 1.1 | Replace `subscriptions` with `sessions` collection, fix spec reference path | Documentation Update |

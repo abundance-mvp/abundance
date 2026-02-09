@@ -86,7 +86,7 @@ Used when `colorSchemeContrast == .increased` to ensure stronger visual definiti
 | **SalmonHighContrast** | `#C0705A` | Salmon (interactive elements) |
 | **DeepPlumHighContrast** | `#1A1218` | DeepPlum (text) |
 
-> **Current Implementation Status:** `Sources/Core/DesignSystem/Extensions/Color+Brand.swift` uses a different color palette from a prior design iteration (blue-based: `#4381DF`, `#FF9A6F`, etc.). Migration to the brand bible palette is tracked in SPEC-UI-003 Section 2.
+> **Implementation Status:** `Sources/Core/DesignSystem/Extensions/Color+Brand.swift` implements this exact palette with hex initializers. All colors listed above are defined as static `Color` properties with matching semantic aliases (e.g., `Color.accentPrimary = Color.salmon`, `Color.textPrimary = Color.deepPlum`, `Color.backgroundDefault = Color.warmWhite`).
 
 ### 1.3 Material Language
 
@@ -154,7 +154,7 @@ The Two-Layer Strategy is the architectural principle governing where glass and 
 
 **Why:** The warm opaque content creates the rich background that makes the glass navigation layer look beautiful. Glass on glass creates visual noise. Opaque content ensures legibility without accessibility workarounds.
 
-> **Current Implementation Note:** The codebase currently uses glass effects on content-layer elements (cards use `.adaptiveGlass()`, buttons use glass with blue glow). SPEC-UI-003 defines the migration to opaque content-layer fills. SPEC-UI-004 defines the Liquid Glass navigation adoption.
+> **Implementation Status:** Content-layer components have been migrated to opaque brand fills. `AbundanceCard` uses `Color.cream` background with `Color.peach` border. `PrimaryButton` uses opaque `Color.salmon` capsule. Glass effects (`adaptiveGlass()`, `brandGlass()`) remain available in `LiquidGlassHelpers.swift` for navigation-layer elements. SPEC-UI-004 defines the Liquid Glass navigation adoption.
 
 ---
 
@@ -225,7 +225,7 @@ Abundance uses the system font (San Francisco) with rounded design for a friendl
 | | Active tab | — | `Color.salmon` tint | — | System |
 | **Navigation Bar** | — | Liquid Glass (system) | System vibrancy | — | System |
 
-> **Current State:** The codebase uses glass backgrounds and blue accents for PrimaryButton and ItemCard. See SPEC-UI-003 for the migration plan for each component.
+> **Implementation Status:** `PrimaryButton` uses opaque `Color.salmon` capsule with `Color.deepPlum` text, scale(0.97) press animation using `.brandPress` spring. `SecondaryButton` uses `Color.salmon` stroke outline with clear fill. `AbundanceCard` uses `Color.cream` background with `Color.peach` 1px border (2px in Increase Contrast). These match the specifications above.
 
 ### 2.5 Mandatory Accessibility Fallback States
 
@@ -302,7 +302,7 @@ The app uses a standard iOS tab bar with the following structure:
 - Each tab contains a `NavigationStack` for push navigation
 - Navigation bars use system Liquid Glass (no custom backgrounds)
 
-> **Current State:** The app has 3 tabs (Inventory, Camera, Profile) in `DebugMainTabView.swift`. The brand bible target is Catalog, Scan, Profile — labels may be updated when feature naming is finalized. Share and Trade tabs are future features.
+> **Implementation Status:** The app has 3 tabs matching the target: Catalog, Scan, Profile. The `CollectionFeature` module (renamed from InventoryFeature per ADR-027) provides the Catalog tab. Share and Trade tabs are future features.
 
 ### 3.4 Scanner
 
@@ -380,13 +380,13 @@ AbundanceCard {
     }
 }
 ```
-**Status:** `AbundanceCard` component needs to be created. See SPEC-UI-003 Section 3.4.
+**Status:** Implemented at `Sources/Core/DesignSystem/Components/AbundanceCard.swift`. Also available as a `.abundanceCardStyle()` view modifier. Supports Increase Contrast (2px border when `colorSchemeContrast == .increased`).
 
 #### Primary Button (Content Layer)
 ```swift
 PrimaryButton(title: "Get Started", action: { })
 ```
-**Status:** Exists but needs restyling from glass+blue to opaque Salmon. See SPEC-UI-003 Section 3.1.
+**Status:** Implemented at `Sources/Core/DesignSystem/Components/PrimaryButton.swift`. Uses opaque `Color.salmon` capsule, `Color.deepPlum` text, `.brandPress` animation, sensory feedback, and Reduce Motion fallback via `.brandReducedMotion`.
 
 #### Tab Bar (Navigation Layer)
 ```swift
@@ -400,7 +400,7 @@ TabView {
 }
 .tint(Color.salmon)
 ```
-**Status:** Tab bar implementation needs Salmon tint. See SPEC-UI-004 Section 2.
+**Status:** Tab bar Salmon tint tracked in SPEC-UI-004 Section 2.
 
 ### 4.3 Asset Catalog Setup
 
@@ -471,4 +471,4 @@ All three platforms share the same color palette, typography scale, component li
 | Reduce Transparency fallback? | `Color.cream` opaque background |
 | Increase Contrast? | Darken colors, thicken borders (2px) |
 | Dark mode? | Deferred — requires design validation |
-| Asset catalog? | Deferred — hex values in Color+Brand.swift for MVP |
+| Asset catalog? | Deferred — hex values in `Color+Brand.swift` for MVP (all brand colors implemented) |

@@ -23,18 +23,23 @@ This spec defines the adoption of iOS 26 Liquid Glass for navigation-layer eleme
 
 ### 2.1 Current State
 
-`App/DebugMainTabView.swift` uses a basic `TabView` with 3 tabs and a custom `FloatingTabBar` component in `Sources/CollectionFeature/Components/FloatingTabBar.swift`.
+`App/DebugMainTabView.swift` uses a standard `TabView` with 3 tabs and `.tint(Color.salmon)`. Tab labels follow ADR-027 terminology: "Collection" (not "Catalog"), "Scan" (not "Camera"), "Profile".
 
-### 2.2 Target State
+The custom `FloatingTabBar` component still exists in `Sources/CollectionFeature/Components/FloatingTabBar.swift` but is not used in the main app tab bar. It may be used in other contexts.
+
+### 2.2 Implemented State
 
 ```swift
-TabView {
-    CollectionView()
-        .tabItem { Label("Catalog", systemImage: "square.grid.2x2") }
-    CameraView()
-        .tabItem { Label("Scan", systemImage: "camera") }
-    ProfileView()
-        .tabItem { Label("Profile", systemImage: "person") }
+TabView(selection: $selectedTab) {
+    CollectionView(viewModel: collectionViewModel, onOpenCamera: { selectedTab = .scan })
+        .tabItem { Label("Collection", systemImage: "square.grid.2x2.fill") }
+        .tag(Tab.collection)
+    // Camera / Placeholder
+        .tabItem { Label("Scan", systemImage: "camera.fill") }
+        .tag(Tab.scan)
+    ProfileView(viewModel: profileViewModel)
+        .tabItem { Label("Profile", systemImage: "person.fill") }
+        .tag(Tab.profile)
 }
 .tint(Color.salmon)
 ```
@@ -43,19 +48,15 @@ TabView {
 - Tab bar automatically adopts Liquid Glass (`.glassEffect(.regular)`)
 - Active tab icon tinted Salmon via `.tint(Color.salmon)`
 - Inactive icons use `.secondary` vibrancy (system default)
-- Tab bar minimizes on scroll (add `.tabBarMinimizeBehavior(.onScrollDown)`)
+- Tab icons use `.fill` variants for visual weight
 
 **Reduce Transparency fallback:**
 - System automatically makes glass frostier
 - No custom code needed for standard TabView
 
-### 2.3 FloatingTabBar Decision
+### 2.3 FloatingTabBar Status
 
-The custom `FloatingTabBar.swift` should be evaluated:
-- If it duplicates standard TabView behavior → remove it, use system TabView
-- If it provides custom functionality → audit for Liquid Glass compatibility
-
-**Recommendation:** Remove `FloatingTabBar.swift` and use standard TabView. iOS 26 tab bars are already floating capsule-shaped. Custom implementation adds maintenance burden and may conflict with system Liquid Glass behavior.
+The main app tab bar now uses the standard `TabView` with `.tint(Color.salmon)`. The custom `FloatingTabBar.swift` component still exists in `Sources/CollectionFeature/Components/FloatingTabBar.swift` and uses `.adaptiveGlass(in: Capsule())` for its styling. It is not used for the primary app navigation but may serve other UI contexts. It can be removed when confirmed unused.
 
 ---
 
@@ -71,16 +72,9 @@ All `NavigationStack` instances automatically get Liquid Glass navigation bars w
 - Back button: System default
 - Toolbar items: System Liquid Glass treatment
 
-### 3.2 Audit Items
+### 3.2 Audit Status
 
-Remove any custom navigation bar backgrounds:
-```swift
-// REMOVE if found
-.toolbarBackground(.visible, for: .navigationBar)
-.toolbarBackground(Color.someColor, for: .navigationBar)
-```
-
-These will interfere with Liquid Glass.
+No custom `.toolbarBackground()` calls exist in the codebase. Navigation bars use system defaults, which enables Liquid Glass behavior automatically on iOS 26.
 
 ---
 
@@ -146,16 +140,9 @@ Add scroll edge effects for content scrolling under navigation:
 }
 ```
 
-### 5.3 Cleanup
+### 5.3 Cleanup Status
 
-Remove any custom sheet backgrounds:
-```swift
-// REMOVE
-.presentationBackground(.ultraThinMaterial)
-.presentationBackground(Color.someColor)
-```
-
-Let system handle sheet appearance.
+No custom `.presentationBackground()` calls exist in the codebase. Sheets use system defaults, enabling automatic Liquid Glass behavior on iOS 26.
 
 ---
 
@@ -179,10 +166,32 @@ Context menus use system Liquid Glass automatically. Ensure:
 
 ---
 
-## 7. GlassEffectContainer for Custom Glass
+## 7. Current Glass Effect Usage
 
-If any custom floating UI elements need glass (e.g., floating action buttons, custom overlays), wrap them in `GlassEffectContainer` for performance:
+The following source files use glass effects (via `.glassEffect()` or `.adaptiveGlass()`):
 
+**Camera Feature (direct `.glassEffect()`):**
+- `CaptureView.swift` - Mode indicator and instruction label capsules
+- `CaptureOverlays.swift` - Capture, uploading overlays (with `.ultraThinMaterial` fallback)
+- `DetectionResultsView.swift` - Catalog buttons, bottom bar
+- `ErrorRecoveryView.swift` - Error card, OfflineModeIndicator
+
+**Camera Feature (`.adaptiveGlass()`):**
+- `SweepCaptureView.swift` - Sweep UI controls
+- `SweepModeToggle.swift` - Mode selector pill
+
+**Collection Feature (`.adaptiveGlass()`):**
+- `SearchBar.swift` - Search capsule
+- `FloatingTabBar.swift` - Tab bar and tab items
+- `PhotoCarouselView.swift` - Photo counter
+- `EditItemSheet.swift` - Primary photo label
+- `RescanCameraView.swift` - Camera UI
+- `AddPhotoCameraView.swift` - Camera UI
+
+**Onboarding Feature (direct `.glassEffect()`):**
+- `SignInView.swift` - Sign-in button
+
+**Note:** For custom floating UI with multiple glass elements, use `GlassEffectContainer` for performance:
 ```swift
 GlassEffectContainer {
     HStack {
@@ -194,15 +203,17 @@ GlassEffectContainer {
 
 ---
 
-## 8. Implementation Order
+## 8. Implementation Status
 
-1. **Tab bar** — Switch to standard TabView with `.tint(.salmon)`
-2. **Remove FloatingTabBar** — Use system tab bar
-3. **Navigation bars** — Remove custom backgrounds, let system manage
-4. **Search** — Evaluate `.searchable()` vs custom SearchBar
-5. **Sheets** — Remove custom backgrounds, add `Button(role: .close)`
-6. **Scroll edge effects** — Add `.scrollEdgeEffectStyle(.soft, for:)`
-7. **Context menus** — Ensure consistent menu items
+| Step | Item | Status |
+|------|------|--------|
+| 1 | **Tab bar** — Standard TabView with `.tint(.salmon)` | Completed |
+| 2 | **FloatingTabBar** — Evaluate removal | Pending (component exists but not used for main tab bar) |
+| 3 | **Navigation bars** — No custom backgrounds | Completed (none found) |
+| 4 | **Search** — Custom SearchBar with `.adaptiveGlass()` | In use (`.searchable()` migration pending evaluation) |
+| 5 | **Sheets** — No custom backgrounds | Completed (none found) |
+| 6 | **Scroll edge effects** — `.scrollEdgeEffectStyle(.soft)` | Not yet implemented |
+| 7 | **Context menus** — Consistent menu items | Completed (Edit, Refresh, Delete via `SelectionModeContextMenuModifier`) |
 
 ---
 

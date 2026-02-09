@@ -8,12 +8,13 @@
 
 ## 1. Overview
 
-The Camera Capture Flow is the primary entry point for adding items to the Abundance inventory. It provides a streamlined SwiftUI-based interface for capturing photos of household objects, which are then uploaded to Google Cloud Storage and analyzed server-side using Gemini 3 Flash for object detection.
+The Camera Capture Flow is the primary entry point for adding items to the user's Collection. It provides a streamlined SwiftUI-based interface for capturing photos of household objects, which are then uploaded to Google Cloud Storage and analyzed server-side using Gemini 3 Flash for object detection.
 
 ### Key Features
 
 - **Double-tap single capture**: Quick single photo capture for simple scenes
 - **Long-press burst capture**: Multi-photo burst mode for complex scenes or multiple angles
+- **Triple-tap sweep mode**: On-device EdgeTAM segmentation for camera sweep capture (device-eligible only)
 - **Server-side detection**: All object detection runs on Firebase Cloud Functions using Gemini 3 Flash
 - **Real-time feedback**: Visual overlays showing capture progress, upload status, and analysis state
 - **Error recovery**: Comprehensive error handling with user-friendly recovery options
@@ -27,6 +28,16 @@ The Camera Capture Flow is the primary entry point for adding items to the Abund
 ---
 
 ## 2. Capture Modes
+
+The capture flow supports three modes, defined by the `CaptureMode` enum:
+
+```swift
+public enum CaptureMode: String, Sendable, Codable {
+    case single  // Single photo from double-tap
+    case burst   // Multiple photos from long-press burst
+    case sweep   // Camera sweep with EdgeTAM on-device segmentation
+}
+```
 
 ### 2.1 Single Capture (Double-Tap)
 
@@ -64,8 +75,8 @@ Burst capture mode is triggered by pressing and holding on the camera preview fo
 3. Burst capture loop starts immediately
 4. Photos captured at 0.5s intervals with haptic pulse
 5. User releases to end capture
-6. If held < 1.0s or < 2 photos, shows `burstCaptureTooShort` error
-7. Photos uploaded and processed as a batch
+6. If 0 photos captured, shows `burstCaptureTooShort` error
+7. If 1+ photos captured (even short holds), photos are uploaded and processed
 
 **Implementation:**
 
@@ -85,6 +96,40 @@ private var longPressGesture: some Gesture {
         )
 }
 ```
+
+### 2.3 Sweep Capture (Triple-Tap)
+
+Sweep capture mode is activated by triple-tapping the camera preview (when device-eligible) or via the `SweepModeToggle` pill at the bottom of the capture view.
+
+**Prerequisites:**
+- Device must pass `DeviceEligibility.isSweepModeAvailable` check
+- Must be in `.idle` state and not in sweep mode already
+
+**Flow:**
+1. User triple-taps or selects "Sweep" from the mode toggle
+2. `captureMode` switches from `.single` to `.sweep`
+3. `SweepCaptureView` overlay appears on top of the camera preview
+4. User sweeps camera; on-device EdgeTAM segmentation detects objects
+5. User confirms or cancels (returning to `.single` mode)
+
+**Implementation:**
+
+```swift
+private var tripleTapGesture: some Gesture {
+    TapGesture(count: 3)
+        .onEnded {
+            guard case .idle = viewModel.uiState else { return }
+            captureMode = .sweep
+        }
+}
+```
+
+**Components:**
+- `SweepCaptureView` (Views/SweepCaptureView.swift) - Full overlay for sweep interaction
+- `SweepModeToggle` (Views/SweepModeToggle.swift) - Pill selector at bottom of capture view
+- `SweepCaptureViewModel` (ViewModels/SweepCaptureViewModel.swift) - State management for sweep
+
+**Note:** Sweep mode is currently Phase 4 (crop/upload/pipeline integration is TODO).
 
 ---
 
@@ -161,7 +206,7 @@ public enum CaptureUIState: Equatable, Sendable {
 
 | State | Description | Visual Indicator |
 |-------|-------------|------------------|
-| `idle` | Camera preview active, gestures enabled | "Ready" badge, instruction label |
+| `idle` | Camera preview active, gestures enabled | "Ready" (or "Sweep") badge, instruction label: "Double-tap to scan - Hold for burst" |
 | `capturing(count)` | Photo(s) being captured | Photo count overlay (burst only) |
 | `uploading(progress)` | Uploading to Cloud Storage | Circular progress indicator + percentage |
 | `analyzing` | Server-side Gemini detection | Animated scan lines + "Analyzing..." |
@@ -194,7 +239,7 @@ public enum CaptureUIState: Equatable, Sendable {
 └────────┬─────────┘            │          ▼                             │
          │                      │ ┌──────────────────┐                   │
          │ release gesture      │ │    analyzing     │                   │
-         │ (< min duration)     │ └────────┬─────────┘                   │
+         │ (0 photos captured)  │ └────────┬─────────┘                   │
          │                      │          │                             │
          ▼                      │          │ detection complete          │
 ┌──────────────────┐            │          │                             │
@@ -220,8 +265,8 @@ Legend:
 | `idle` | double-tap | `capturing(1)` | Network connected, not capturing |
 | `idle` | long-press start | `capturing(0)` | Network connected, not capturing |
 | `capturing(n)` | photo captured | `capturing(n+1)` | n < 8 |
-| `capturing(n)` | release (burst) | `uploading(0)` | duration >= 1.0s && count >= 2 |
-| `capturing(n)` | release (burst) | `error(burstTooShort)` | duration < 1.0s \|\| count < 2 |
+| `capturing(n)` | release (burst) | `uploading(0)` | count >= 1 |
+| `capturing(0)` | release (burst) | `error(burstTooShort)` | 0 photos captured |
 | `capturing(n)` | 3 errors | `endBurstCapture()` | Error accumulation threshold |
 | `uploading(p)` | upload progress | `uploading(p')` | p' > p |
 | `uploading(1.0)` | all uploaded | `analyzing` | Ready for detection |
@@ -241,18 +286,24 @@ Legend:
 
 The main ViewModel managing all capture state, business logic, and service coordination.
 
-#### Published Properties
+#### Observable Properties
+
+The ViewModel uses `@Observable` (iOS 17+ Observation framework), not `ObservableObject`/`@Published`:
 
 ```swift
-@Published public var uiState: CaptureUIState = .idle
-@Published public var currentSession: CaptureSession?
-@Published public var detectedObjects: [ServerDetectedObject] = []
-@Published public var burstCount: Int = 0
-@Published public var isCapturing: Bool = false
-@Published public var lastCapturedPhoto: Data?
-@Published public var burstErrors: [CaptureError] = []
-@Published public var catalogingObjectIds: Set<String> = []
-@Published public var catalogedObjectIds: Set<String> = []
+@MainActor
+@Observable
+public final class CaptureSessionViewModel {
+    public var uiState: CaptureUIState = .idle
+    public var currentSession: CaptureSession?
+    public var detectedObjects: [ServerDetectedObject] = []
+    public var burstCount: Int = 0
+    public var isCapturing: Bool = false
+    public var lastCapturedPhoto: Data?
+    public var burstErrors: [CaptureError] = []
+    public var catalogingObjectIds: Set<String> = []
+    public var catalogedObjectIds: Set<String> = []
+}
 ```
 
 #### Key Methods
@@ -267,6 +318,7 @@ The main ViewModel managing all capture state, business logic, and service coord
 | `dismissError()` | Clear error and return to idle |
 | `catalogObject(_:)` | Catalog single detected object |
 | `catalogAllObjects()` | Catalog all detected objects |
+| `catalogSelectedObjects(_:)` | Catalog only selected detected objects |
 
 #### Private Methods
 
@@ -459,7 +511,7 @@ Handles image upload to Google Cloud Storage.
 
 **Protocol:** `CatalogServiceProtocol`
 
-Creates inventory items from detected objects.
+Creates collection items from detected objects.
 
 | Method | Purpose |
 |--------|---------|
@@ -483,7 +535,7 @@ pending → processing → complete/failed
 |------|------|---------|
 | `CaptureView` | Views/CaptureView.swift | Main capture interface |
 | `CameraPreviewView` | Views/CameraPreviewView.swift | AVCaptureSession preview |
-| `DetectionResultsView` | Views/DetectionResultsView.swift | Results with bounding boxes |
+| `DetectionResultsView` | Views/DetectionResultsView.swift | Results with object selection |
 | `ErrorRecoveryView` | Views/ErrorRecoveryView.swift | Error recovery modal |
 
 ### 10.2 Overlay Views
@@ -495,13 +547,18 @@ pending → processing → complete/failed
 | `AnalyzingOverlay` | Views/CaptureOverlays.swift | Analysis animation |
 | `ErrorOverlay` | Views/CaptureOverlays.swift | Inline error display |
 
-### 10.3 Supporting Views
+### 10.3 Sweep Mode Views
 
 | View | File | Purpose |
 |------|------|---------|
-| `BoundingBoxOverlay` | Views/DetectionResultsView.swift | Object bounding boxes |
-| `DetectedObjectCard` | Views/DetectionResultsView.swift | Object list cards |
-| `NoObjectsDetectedView` | Views/DetectionResultsView.swift | Empty state with tips |
+| `SweepCaptureView` | Views/SweepCaptureView.swift | Sweep mode overlay on camera |
+| `SweepModeToggle` | Views/SweepModeToggle.swift | Single/Sweep mode pill selector |
+
+### 10.4 Supporting Views
+
+| View | File | Purpose |
+|------|------|---------|
+| `NoObjectsDetectedView` | Views/DetectionResultsView.swift | Empty results with reasoning |
 | `OfflineModeIndicator` | Views/ErrorRecoveryView.swift | Network status badge |
 
 ---

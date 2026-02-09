@@ -1,4 +1,4 @@
-# SPEC-UI-002: Catalog Inventory Flow
+# SPEC-UI-002: Collection Flow
 
 **Created:** 2026-01-18
 **Status:** Active
@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-The Catalog Inventory Flow provides users with a comprehensive interface to browse, view, and edit their cataloged household items. This feature is the primary destination for users after capturing items through the camera, displaying all processed items with their AI-extracted metadata.
+The Collection Flow provides users with a comprehensive interface to browse, view, and edit their cataloged household items. This feature is the primary destination for users after capturing items through the camera, displaying all processed items with their AI-extracted metadata.
 
 ### 1.1 Key Capabilities
 
@@ -32,12 +32,14 @@ Sources/CollectionFeature/
   Components/
     SearchBar.swift            # Search input component
     FloatingTabBar.swift       # Tab navigation component
+    PhotoCarouselView.swift    # Multi-photo horizontal carousel
   EditFlow/
     EditItemViewModel.swift    # Edit flow state machine
     EditItemSheet.swift        # Manual field editor
     RescanPromptSheet.swift    # Rescan prompt bottom sheet
     RescanCameraView.swift     # Full-screen camera for rescan
     RescanComparisonSheet.swift # Before/after comparison
+    AddPhotoCameraView.swift   # Camera for adding additional photos
 ```
 
 ---
@@ -120,34 +122,32 @@ The ItemCard is a reusable component that displays item thumbnails in the collec
 
 ### 3.3 Status Badge
 
-The StatusBadge component displays the processing state of each item:
+The StatusBadge component displays the processing state of each item using brand colors:
 
-| Status | Display Text | Color |
-|--------|--------------|-------|
-| `pending` | "Processing" | Blue |
-| `layer2aComplete` | "Analyzed" | Green |
-| `complete` | "Complete" | Green |
-| `failed` / `failedLayer2a` / `failedLayer2b` | "Failed" | Red |
-| Other | Raw value | Gray |
+| Status | Display Text | Badge Color |
+|--------|--------------|-------------|
+| `processing` | "Processing" | Peach (`.peach`) |
+| `complete` | "Complete" | MutedSage (`.mutedSage`) |
+| `failed` | "Failed" | Salmon (`.salmon`) |
 
 ### 3.4 Condition Badge
 
-The ConditionBadge shows the physical condition assessment:
+The ConditionBadge shows the physical condition assessment using brand colors:
 
-| Condition | Display | Color |
-|-----------|---------|-------|
-| `new` | "New" | Green |
-| `likeNew` | "Like New" | Green |
-| `good` | "Good" | Blue |
-| `fair` | "Fair" | Orange |
-| `poor` | "Poor" | Red |
+| Condition | Display | Badge Color |
+|-----------|---------|-------------|
+| `new` | "New" | MutedSage (`.mutedSage`) |
+| `likeNew` | "Like New" | MutedSage (`.mutedSage`) |
+| `good` | "Good" | SoftTeal (`.softTeal`) |
+| `fair` | "Fair" | Peach (`.peach`) |
+| `poor` | "Poor" | Salmon (`.salmon`) |
 
 ### 3.5 Selection Mode
 
 In multi-select mode, cards display a selection indicator:
-- Unselected: White circle with 80% opacity
-- Selected: Accent color circle with white checkmark
-- Selected cards have an accent-colored border stroke
+- Unselected: Cream circle with 80% opacity (`.cream.opacity(0.8)`)
+- Selected: Accent primary circle (`.accentPrimary`) with warmWhite checkmark
+- Selected cards have an accent-colored border stroke (3pt `Color.accentPrimary`)
 
 ### 3.6 Interactions
 
@@ -211,8 +211,8 @@ Full-screen detail view with hero image and expanded metadata.
 | `name` | String? | Title (fallback: "Unnamed Item") |
 | `brand` | String? | Subheadline |
 | `model` | String? | Tertiary text |
-| `category` | String? | Orange capsule badge |
-| `subCategory` | String? | Blue capsule badge |
+| `category` | String? | Peach capsule badge (`.peach`) |
+| `subCategory` | String? | SoftTeal capsule badge (`.softTeal`) |
 | `color` | String? | Metadata grid cell |
 | `material` | String? | Metadata grid cell |
 | `condition` | ItemCondition? | Metadata grid cell (display name) |
@@ -226,16 +226,19 @@ Full-screen detail view with hero image and expanded metadata.
 
 | Level | Icon | Color |
 |-------|------|-------|
-| `high` | checkmark.circle.fill | Green |
-| `medium` | exclamationmark.triangle.fill | Orange |
-| `low` | questionmark.circle.fill | Red |
+| `high` | checkmark.circle.fill | MutedSage (`.mutedSage`) |
+| `medium` | exclamationmark.triangle.fill | Peach (`.peach`) |
+| `low` | questionmark.circle.fill | Salmon (`.salmon`) |
 
 ### 4.4 Visual Effects
 
 - **Parallax scrolling:** Hero image offset = scrollOffset * 0.5 (respects Reduce Motion)
-- **Liquid Glass:** Metadata card uses `adaptiveGlass` modifier
+- **Photo carousel:** Multi-photo items use `PhotoCarouselView` instead of single parallax hero
+- **Card styling:** Metadata card uses `.abundanceCardStyle(cornerRadius: 24)` (cream background, peach border)
 - **Card overlap:** -60pt offset to overlap hero image
 - **Shadow:** Black 15% opacity, 16pt radius, -8pt y-offset
+- **Refresh button:** Arrow icon with processing state (ProgressView when refreshing)
+- **Estimated value:** Displayed in MutedSage (`.mutedSage`) color
 
 ---
 
@@ -256,6 +259,7 @@ public enum EditFlowState: Equatable {
     case comparing(newItem: Item)  // Showing before/after comparison
     case editing           // Manual edit form open
     case saving            // Saving changes
+    case addingPhoto       // Add-photo camera active
     case error(String)     // Error state with message
 }
 ```
@@ -349,6 +353,7 @@ public enum EditFlowState: Equatable {
   - Categorization: Category, Sub-Category
   - Physical Properties: Color, Material, Dimensions, Condition (picker)
   - Value: Quantity (stepper), Estimated Value (currency input)
+  - Photos: Horizontal scroll of thumbnails with add/delete (primary photo protected)
   - AI Metadata: Confidence, Processing Notes (read-only)
 - **Validation:**
   - Name: max 100 characters
@@ -364,16 +369,13 @@ public enum EditFlowState: Equatable {
 
 **File:** `Sources/Persistence/Models/Item.swift`
 
+The status enum has been simplified to 3 states. Legacy Firestore values are mapped on decode:
+
 ```swift
 public enum ItemStatus: String, Codable, Sendable {
-    case pending = "pending"           // Waiting for Layer 2a
-    case layer2aComplete = "layer2a_complete"  // Layer 2a done
-    case layer2bScheduled = "layer2b_scheduled" // Scheduled for Layer 2b
-    case layer2bComplete = "layer2b_complete"   // Layer 2b done
-    case complete = "complete"         // Fully cataloged
-    case failed = "failed"             // General failure
-    case failedLayer2a = "failed_layer2a"  // Layer 2a failure
-    case failedLayer2b = "failed_layer2b"  // Layer 2b failure
+    case processing = "processing"  // AI analyzing (maps from: pending, layer2a_complete, layer2b_scheduled, layer2b_complete)
+    case complete = "complete"      // Fully cataloged
+    case failed = "failed"          // Failure (maps from: failed, failed_layer2a, failed_layer2b)
 }
 ```
 
@@ -383,21 +385,19 @@ public enum ItemStatus: String, Codable, Sendable {
 [New Item Created]
       |
       v
-  pending -----> layer2a_complete -----> complete
-      |               |
-      v               v
- failed_layer2a   failed_layer2b
+  processing -----> complete
+      |
+      v
+    failed
 ```
 
 ### 6.3 UI Display Mapping
 
-| Status | Badge Text | Color | User Meaning |
-|--------|------------|-------|--------------|
-| pending | "Processing" | Blue | AI analyzing |
-| layer2aComplete | "Analyzed" | Green | Initial analysis done |
-| layer2bComplete | "Analyzed" | Green | Full analysis done |
-| complete | "Complete" | Green | Ready for use |
-| failed* | "Failed" | Red | Requires manual review |
+| Status | Badge Text | Badge Color | User Meaning |
+|--------|------------|-------------|--------------|
+| processing | "Processing" | Peach (`.peach`) | AI analyzing |
+| complete | "Complete" | MutedSage (`.mutedSage`) | Ready for use |
+| failed | "Failed" | Salmon (`.salmon`) | Requires manual review |
 
 ---
 
@@ -454,9 +454,14 @@ public final class CollectionViewModel {
     public var isLoading: Bool = false
     public var error: String?
     public var deleteError: String?
+    public var refreshError: String?
+    public var searchText: String = ""
+
+    public var filteredItems: [Item] { /* search filter */ }
 
     private let itemRepository: ItemRepository
-    private var cancellables: Set<AnyCancellable> = Set()
+    private let userId: String?
+    private var cancellables: Set<AnyCancellable> = Set<AnyCancellable>()
 }
 ```
 
@@ -469,7 +474,6 @@ private func observeItems() {
     guard let userId = userId else { return }
 
     itemRepository.observeItems(userId: userId)
-        .receive(on: DispatchQueue.main)
         .sink { [weak self] items in
             self?.items = items
         }
@@ -499,10 +503,11 @@ Delete operations use optimistic updates with rollback:
 ```swift
 public func deleteItem(_ item: Item) async {
     // Store for rollback
-    let itemIndex = items.firstIndex(where: { $0.id == item.id })
+    let itemIndex: Int? = items.firstIndex(where: { $0.id == item.id })
 
     // Optimistic removal
     items.removeAll { $0.id == item.id }
+    deleteError = nil
 
     do {
         try await itemRepository.deleteItem(id: item.id)
@@ -517,6 +522,14 @@ public func deleteItem(_ item: Item) async {
     }
 }
 ```
+
+**Additional Methods:**
+
+| Method | Purpose |
+|--------|---------|
+| `deleteItems(ids:)` | Bulk delete with optimistic update and full rollback |
+| `refreshItem(_:)` | Re-run AI analysis on existing images |
+| `deletePhoto(from:at:)` | Delete additional photo from item (primary photo protected) |
 
 ---
 
@@ -624,23 +637,28 @@ Uses system `ContentUnavailableView.search(text:)` component.
 
 ## 12. Design System Integration
 
-### 12.1 Liquid Glass
+### 12.1 Card Styling
 
-All cards and sheets use `adaptiveGlass` modifier which:
-- Uses `.glassEffect()` on iOS 26+ when reduce transparency is off
-- Falls back to `.thickMaterial` on older systems
-- Respects `accessibilityReduceTransparency`
+Content-layer components use opaque brand fills via `.abundanceCardStyle()` modifier (cream background, peach border), not glass effects. Glass effects (`adaptiveGlass`) are reserved for navigation-layer elements only (search bar, floating tab bar).
+
+The `AbundanceCard` and `AbundanceCardModifier` provide:
+- Background: `Color.cream` in `RoundedRectangle(cornerRadius: 16, style: .continuous)`
+- Border: `Color.peach` 1px stroke (2px when `colorSchemeContrast == .increased`)
 
 ### 12.2 Brand Animations
 
-- `.brandSnappy` for press/selection animations
-- `.brandDefault` for tab selection transitions
+- `.brandPress` for press/selection animations (0.3s response, 0.6 damping)
+- `.brandDefault` for standard transitions (0.5s response, 0.6 damping)
+- `.brandReducedMotion` for accessibility fallback (0.2s easeInOut)
 
 ### 12.3 Brand Colors
 
-- `Color.accentPrimary` for primary actions
-- `Color.successColor` for save confirmation
-- Semantic system colors for status indicators
+- `Color.accentPrimary` (`.salmon`) for primary actions and selection borders
+- `Color.successColor` (`.mutedSage`) for save confirmation button tint
+- `Color.errorColor` (`.salmon`) for error text and delete photo buttons
+- `Color.deepPlum` for badge text and category badges
+- `Color.cream` for card backgrounds
+- `Color.peach` for card borders and category badge backgrounds
 
 ---
 
@@ -676,13 +694,10 @@ The following features are referenced in code comments but not yet fully impleme
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Edit from context menu | TODO | Comment: "Stage 3.3 - wire to rescan edit flow" |
-| Layer 2b status display | Partial | Status exists but UI doesn't distinguish from Layer 2a |
 | Batch edit | Not Implemented | Only batch delete is available |
 | Sort options | Not Implemented | Items sorted by createdAt (descending) only |
 | Filter by status | Not Implemented | Search doesn't filter by processing status |
 | Category filter chips | Not Implemented | Only text search available |
-| Image gallery | Not Implemented | Detail view shows single image only |
 | Undo delete | Not Implemented | Confirmation dialog only, no post-delete undo |
 
 ---

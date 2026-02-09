@@ -18,53 +18,35 @@ This spec defines the concrete codebase changes required to align the Abundance 
 
 ## 2. Color Palette Migration
 
-### 2.1 Current State
+### 2.1 Current State (Completed)
 
-`Sources/Core/DesignSystem/Extensions/Color+Brand.swift` defines colors from a prior design iteration that do not match the brand bible:
+`Sources/Core/DesignSystem/Extensions/Color+Brand.swift` has been migrated to match the brand bible. The old color names (`brandBrightBlue`, `brandCoralOrange`, `brandSalmonPink`, `brandCreamYellow`, `brandMintGreen`, `textBrightBlue`, `textCoralOrange`, `textMintGreen`) have been removed and replaced with the brand palette.
 
-| Current Name | Current Hex | Brand Bible Name | Brand Bible Hex |
-|-------------|-------------|-----------------|----------------|
-| `brandBrightBlue` | `#4381DF` | *(no equivalent — remove)* | — |
-| `brandCoralOrange` | `#FF9A6F` | *(no equivalent — remove)* | — |
-| `brandSalmonPink` | `#FFC4B4` | *(similar but wrong)* | Salmon `#E8907A` |
-| `brandCreamYellow` | `#FFEDB9` | *(no equivalent — remove)* | — |
-| `brandMintGreen` | `#B3FFE1` | MutedSage `#9DC4A8` | different |
-| `textBrightBlue` | `#2D5FA3` | *(remove)* | — |
-| `textCoralOrange` | `#CC5D3A` | *(remove)* | — |
-| `textMintGreen` | `#008057` | *(remove)* | — |
-| `textPrimary` | `#3B2E3A` | DeepPlum `#3B2E3A` | **Match** |
-| `backgroundDefault` | `#FCFCFF` | WarmWhite `#FAF6F0` | close but wrong |
-
-### 2.2 Target State
-
-Replace `Color+Brand.swift` with brand bible-compliant colors:
+### 2.2 Implemented Colors
 
 ```swift
 // Sources/Core/DesignSystem/Extensions/Color+Brand.swift
-
 import SwiftUI
 
 public extension Color {
     // MARK: - Hex Initializer
-    init(hex: String) {
-        // [keep existing hex initializer unchanged]
-    }
+    init(hex: String) { /* hex parsing implementation */ }
 
     // MARK: - Primary Brand Colors
-    static let salmon = Color(hex: "E8907A")
-    static let peach = Color(hex: "EDBE9E")
-    static let cream = Color(hex: "F0DCC0")
-    static let softTeal = Color(hex: "8ECAC0")
-    static let mutedSage = Color(hex: "9DC4A8")
+    static let salmon = Color(hex: "E8907A")       // Primary accent, CTA buttons, active states
+    static let peach = Color(hex: "EDBE9E")         // Secondary accent, borders, card strokes
+    static let cream = Color(hex: "F0DCC0")         // Card backgrounds, content surfaces
+    static let softTeal = Color(hex: "8ECAC0")      // Decorative accent, leaf icon
+    static let mutedSage = Color(hex: "9DC4A8")     // Success states, positive feedback
 
     // MARK: - Text Colors
-    static let deepPlum = Color(hex: "3B2E3A")
-    static let darkPlum = Color(hex: "2D2226")
-    static let ultraDarkPlum = Color(hex: "1A1218")
+    static let deepPlum = Color(hex: "3B2E3A")      // Primary body text
+    static let darkPlum = Color(hex: "2D2226")       // High-emphasis text
+    static let ultraDarkPlum = Color(hex: "1A1218")  // Maximum contrast text
 
     // MARK: - Background Colors
-    static let backgroundTeal = Color(hex: "5BB8C9")
-    static let warmWhite = Color(hex: "FAF6F0")
+    static let backgroundTeal = Color(hex: "5BB8C9") // Decorative background accent
+    static let warmWhite = Color(hex: "FAF6F0")      // Default screen background
 
     // MARK: - Behind-Glass Pre-Saturated Variants
     static let salmonBehindGlass = Color(hex: "E87A60")
@@ -85,43 +67,38 @@ public extension Color {
 }
 ```
 
-### 2.3 Migration Checklist
+### 2.3 Migration Status
 
-Every file using the old color names must be updated:
+The color palette migration is **complete**. All old color names have been removed from the codebase. The following files now use brand colors:
 
-| File | Old Reference | New Reference |
-|------|--------------|---------------|
-| `Sources/Core/DesignSystem/Components/PrimaryButton.swift` | `brandBrightBlue` (glow, stroke) | Remove glow; use `.salmon` fill |
-| `Sources/CollectionFeature/ItemCard.swift` | `.adaptiveGlass()` background | `.cream` opaque fill, `.peach` stroke |
-| `Sources/CollectionFeature/SearchBar.swift` | Check for blue references | `.salmon` cursor, glass search styling |
-| `Sources/CollectionFeature/EmptyStateCard.swift` | Check color usage | `.salmon` CTA, `.deepPlum` text |
-| `Sources/CollectionFeature/ItemDetailView.swift` | Check color usage | `.deepPlum` text, `.cream` metadata bg |
-| `Sources/CameraFeature/Views/DetectionResultsView.swift` | `.blue` on catalog button | `.salmon` accent |
-| `Sources/CameraFeature/Views/CaptureOverlays.swift` | `.white` text | Keep (camera is dark context) |
-| `Sources/ProfileFeature/ProfileView.swift` | Check color usage | `.deepPlum` text, `.warmWhite` bg |
-| `Sources/ProfileFeature/Components/UserInfoCard.swift` | Check color usage | `.cream` card, `.peach` border |
-| `App/DebugMainTabView.swift` | Check tab styling | `.salmon` tint |
-
-**Rule:** Search codebase for all instances of: `brandBrightBlue`, `brandCoralOrange`, `brandSalmonPink`, `brandCreamYellow`, `brandMintGreen`, `textBrightBlue`, `textCoralOrange`, `textMintGreen`, `accentPrimary`, `accentSecondary`, `successColor`, `warningColor`, `errorColor`, `backgroundDefault`, `successGlow`, `textLink`. Each must be remapped to the new palette.
+| File | Brand Colors Used |
+|------|-------------------|
+| `PrimaryButton.swift` | `.salmon` fill, `.deepPlum` text |
+| `SecondaryButton.swift` | `.salmon` stroke and text |
+| `ItemCard.swift` | `.cream` background, `.peach` border, `.deepPlum` badge text |
+| `ItemDetailView.swift` | `.peach`/`.softTeal` category badges, `.mutedSage` value, `.deepPlum` badge text |
+| `EditItemSheet.swift` | `.successColor` save tint, `.errorColor` validation |
+| `CollectionView.swift` | `.accentPrimary` select button, `.errorColor` error icon |
+| `SearchBar.swift` | `.adaptiveGlass` styling |
+| `CaptureOverlays.swift` | White text (camera dark context) |
 
 ---
 
 ## 3. Component Restyling
 
-### 3.1 PrimaryButton
+### 3.1 PrimaryButton (Completed)
 
 **File:** `Sources/Core/DesignSystem/Components/PrimaryButton.swift`
 
-**Current:** Glass capsule with blue glow and blue stroke
-**Target:** Opaque Salmon capsule, DeepPlum text, no glow, press scale 0.97
+**Implementation:** Opaque Salmon capsule, DeepPlum text, no glow, press scale 0.97
 
 ```swift
 public var body: some View {
     Button(action: handleTap) {
         ZStack {
             Text(title)
-                .font(.headline)
-                .foregroundColor(Color.deepPlum)
+                .font(.system(.body, design: .rounded, weight: .semibold))
+                .foregroundStyle(Color.deepPlum)
                 .opacity(isLoading ? 0 : 1)
 
             if isLoading {
@@ -130,137 +107,113 @@ public var body: some View {
                     .tint(Color.deepPlum)
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
+        .padding(.horizontal, 32)
+        .padding(.vertical, 16)
+        .frame(minHeight: 44) // Accessibility tap target
+        .background(Color.salmon.opacity(isEnabled ? 1.0 : 0.4), in: Capsule())
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .opacity(isEnabled ? 1.0 : 0.5)
     }
-    .background(
-        Color.salmon.opacity(isEnabled ? 1.0 : 0.4),
-        in: Capsule()
-    )
-    .foregroundColor(
-        Color.deepPlum.opacity(isEnabled ? 1.0 : 0.5)
-    )
-    .scaleEffect(isPressed ? 0.97 : 1.0)
-    .animation(
-        reduceMotion
-            ? .easeInOut(duration: 0.1)
-            : .spring(response: 0.3, dampingFraction: 0.6),
-        value: isPressed
-    )
     .disabled(!isEnabled || isLoading)
     .sensoryFeedback(.impact(weight: .medium), trigger: isPressed)
+    .animation(reduceMotion ? .brandReducedMotion : .brandPress, value: isPressed)
+    .accessibilityLabel(title)
+    .accessibilityAddTraits(.isButton)
+    .accessibilityRemoveTraits(isEnabled ? [] : .isButton)
+    .accessibilityAddTraits(isEnabled ? [] : .isStaticText)
+}
+```
+
+**Implemented features:**
+- Opaque Salmon capsule background (no glass)
+- DeepPlum text with rounded font design
+- 0.97 scale press effect
+- `.brandPress` / `.brandReducedMotion` animation presets
+- `.sensoryFeedback` for haptics
+- Accessibility traits for disabled state
+
+### 3.2 SecondaryButton (Completed)
+
+**File:** `Sources/Core/DesignSystem/Components/SecondaryButton.swift`
+
+Salmon stroke outline, clear fill, Salmon text.
+
+```swift
+public var body: some View {
+    Button(action: handleTap) {
+        Text(title)
+            .font(.system(.body, design: .rounded, weight: .semibold))
+            .foregroundStyle(Color.salmon)
+            .padding(.horizontal, 32)
+            .padding(.vertical, 16)
+            .frame(minHeight: 44)
+            .background(isPressed ? Color.salmon.opacity(0.15) : Color.clear, in: Capsule())
+            .overlay {
+                Capsule()
+                    .stroke(Color.salmon, lineWidth: 1.5)
+            }
+            .scaleEffect(isPressed ? 0.97 : 1.0)
+            .opacity(isEnabled ? 1.0 : 0.5)
+    }
+    .disabled(!isEnabled)
+    .sensoryFeedback(.impact(weight: .light), trigger: isPressed)
+    .animation(reduceMotion ? .brandReducedMotion : .brandPress, value: isPressed)
     .accessibilityLabel(title)
     .accessibilityAddTraits(.isButton)
 }
 ```
 
-**Key changes:**
-- Remove `.adaptiveGlass(in: Capsule())` — buttons are content layer (opaque)
-- Remove `.shadow(color: .brandBrightBlue...)` — no glow in brand bible
-- Remove `.overlay { Capsule().stroke(.brandBrightBlue...) }` — no blue stroke
-- Add `Color.salmon` background in Capsule
-- Add `Color.deepPlum` foreground
-- Add `@Environment(\.accessibilityReduceMotion)` check
-- Scale: 0.97 (not 0.96)
-
-### 3.2 SecondaryButton (NEW)
-
-**File:** Create `Sources/Core/DesignSystem/Components/SecondaryButton.swift`
-
-Brand bible defines a secondary button: Salmon stroke outline, clear fill, Salmon text.
-
-```swift
-public struct SecondaryButton: View {
-    let title: String
-    let action: () -> Void
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isPressed = false
-
-    public init(title: String, action: @escaping () -> Void) {
-        self.title = title
-        self.action = action
-    }
-
-    public var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.headline)
-                .foregroundColor(Color.salmon)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-        }
-        .background(
-            isPressed ? Color.salmon.opacity(0.15) : Color.clear,
-            in: Capsule()
-        )
-        .overlay(Capsule().stroke(Color.salmon, lineWidth: 1))
-        .scaleEffect(isPressed ? 0.97 : 1.0)
-        .animation(
-            reduceMotion
-                ? .easeInOut(duration: 0.1)
-                : .spring(response: 0.3, dampingFraction: 0.6),
-            value: isPressed
-        )
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(.isButton)
-    }
-}
-```
-
-### 3.3 ItemCard Restyling
+### 3.3 ItemCard Restyling (Completed)
 
 **File:** `Sources/CollectionFeature/ItemCard.swift`
 
-**Current:** Uses `.adaptiveGlass()` (glass material background)
-**Target:** Opaque Cream background, Peach 1px border, DeepPlum text
+**Implementation:** Opaque Cream background, Peach border, brand colors throughout.
 
-The card must follow the Content Layer rules:
+The card follows Content Layer rules:
 - Background: `Color.cream` in `RoundedRectangle(cornerRadius: 16, style: .continuous)`
-- Border: `Color.peach` 1px stroke
-- Title: `.headline` weight, `Color.deepPlum`
-- Description: `.subheadline`, `Color.deepPlum.opacity(0.6)`
-- Price: `.headline`, `Color.salmon`
-- Pressed state: Background becomes `Color.peach`, `scaleEffect(0.98)`
+- Border: `Color.peach` 1px stroke (2px with increased contrast via `colorSchemeContrast`)
+- Shadow: Black 8% opacity, 4pt radius, 2pt y-offset
+- Title: `.body` weight with `.rounded` design, `.primary` foreground
+- Brand/Color: `.footnote` with `.rounded` design, `.secondary` foreground
+- Pressed state: `scaleEffect(0.98)` with `.brandPress` animation
+- Selection: `Color.accentPrimary` 3pt border, `.cream.opacity(0.8)` unselected indicator
+- Condition badge: Brand color backgrounds (`.mutedSage`, `.softTeal`, `.peach`, `.salmon`) with `.deepPlum` text
+- Status badge: Brand color backgrounds (`.peach` processing, `.mutedSage` complete, `.salmon` failed) with `.deepPlum` text
 
-### 3.4 AbundanceCard Container (NEW)
+### 3.4 AbundanceCard Container (Completed)
 
-**File:** Create `Sources/Core/DesignSystem/Components/AbundanceCard.swift`
+**File:** `Sources/Core/DesignSystem/Components/AbundanceCard.swift`
 
-Reusable card container matching brand bible Section 4.2:
+Reusable card container and modifier matching brand bible Section 4.2:
 
 ```swift
 public struct AbundanceCard<Content: View>: View {
-    let content: Content
-    var cornerRadius: CGFloat = 16
-
+    let cornerRadius: CGFloat
+    @ViewBuilder let content: () -> Content
     @Environment(\.colorSchemeContrast) private var contrast
 
-    public init(
-        cornerRadius: CGFloat = 16,
-        @ViewBuilder content: () -> Content
-    ) {
-        self.cornerRadius = cornerRadius
-        self.content = content()
-    }
-
     public var body: some View {
-        content
-            .padding(12)
+        content()
             .background(
                 Color.cream,
                 in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(
-                        Color.peach,
-                        lineWidth: contrast == .increased ? 2 : 1
-                    )
+                    .stroke(Color.peach, lineWidth: contrast == .increased ? 2 : 1)
             )
     }
 }
 ```
+
+Also provides a `View.abundanceCardStyle(cornerRadius:)` modifier for convenience:
+
+```swift
+view.abundanceCardStyle()            // Default 16pt radius
+view.abundanceCardStyle(cornerRadius: 24)  // Custom radius
+```
+
+**Usage in codebase:** ItemDetailView metadata card, CollectionView selection toolbar, EditItemSheet saving overlay.
 
 ### 3.5 Toast/Snackbar Styles
 
@@ -274,36 +227,25 @@ These don't exist in the codebase yet. Create when toast functionality is needed
 
 ## 4. Animation Alignment
 
-### 4.1 Current State
+### 4.1 Current State (Completed)
 
-`Sources/Core/DesignSystem/Extensions/Animation+Brand.swift` defines:
+`Sources/Core/DesignSystem/Extensions/Animation+Brand.swift` has been updated to match the brand bible:
 
-| Current | Response | Damping | Brand Bible Equivalent |
-|---------|----------|---------|----------------------|
-| `brandSnappy` | 0.3 | 0.6 | Button press (matches) |
-| `brandDefault` | 0.4 | 0.7 | *(no equivalent)* |
-| `brandBouncy` | 0.5 | 0.5 | *(close to success: 0.5/0.6)* |
-| `brandGentle` | 0.6 | 0.8 | *(no equivalent)* |
-
-### 4.2 Target State
+| Name | Response | Damping | Usage |
+|------|----------|---------|-------|
+| `brandPress` | 0.3 | 0.6 | Button taps, toggles, press effects |
+| `brandDefault` | 0.5 | 0.6 | Screen transitions, card entrance, modal presentation |
+| `brandReducedMotion` | 0.2s easeInOut | N/A | Fallback when `accessibilityReduceMotion` is enabled |
 
 ```swift
 public extension Animation {
-    /// Default brand animation (most transitions)
-    /// Brand Bible: .spring(response: 0.5, dampingFraction: 0.6)
-    static let brandDefault = Animation.spring(response: 0.5, dampingFraction: 0.6)
-
-    /// Button press animation
-    /// Brand Bible: .spring(response: 0.3, dampingFraction: 0.6)
     static let brandPress = Animation.spring(response: 0.3, dampingFraction: 0.6)
-
-    /// Reduce Motion fallback
-    /// Brand Bible: .easeInOut(duration: 0.2)
+    static let brandDefault = Animation.spring(response: 0.5, dampingFraction: 0.6)
     static let brandReducedMotion = Animation.easeInOut(duration: 0.2)
 }
 ```
 
-**Changes:** Rename `brandSnappy` to `brandPress`, update `brandDefault` to match brand bible values (0.5/0.6 instead of 0.4/0.7), remove `brandBouncy` and `brandGentle` (YAGNI — not specified in brand bible).
+Old presets (`brandSnappy`, `brandBouncy`, `brandGentle`) have been removed.
 
 ---
 
@@ -311,10 +253,10 @@ public extension Animation {
 
 ### 5.1 Current State
 
-- `reduceTransparency` is checked in: DetectionResultsView, CaptureOverlays, LiquidGlassHelpers (AdaptiveGlassModifier)
-- `reduceMotion` is checked in: CaptureOverlays (AnalyzingOverlay)
-- `colorSchemeContrast` is NOT checked anywhere
-- `dynamicTypeSize` is NOT checked for layout reflow
+- `reduceTransparency` is checked in: CaptureView (mode indicator, instruction label), CaptureOverlays, ErrorRecoveryView, LiquidGlassHelpers (AdaptiveGlassModifier)
+- `reduceMotion` is checked in: CaptureView, CaptureOverlays, CollectionView, ItemCard, ItemDetailView, PrimaryButton, SecondaryButton
+- `colorSchemeContrast` is checked in: ItemCard (border width), AbundanceCard/AbundanceCardModifier (border width)
+- `dynamicTypeSize` is checked in: ItemCard (image height: 160px normal, 120px at xxxLarge)
 
 ### 5.2 Required Changes
 
@@ -353,17 +295,30 @@ The brand bible specifies 15+ color sets in an xcassets catalog with light/dark 
 
 ## 7. LiquidGlassHelpers.swift Updates
 
-### 7.1 Changes
+### 7.1 Current State
 
-The `AdaptiveGlassModifier` currently falls back to `Color.backgroundDefault` (wrong hex `#FCFCFF`) for Reduce Transparency. After the color migration in Section 2, `backgroundDefault` will map to `Color.warmWhite` (`#FAF6F0`), fixing this automatically.
+The `AdaptiveGlassModifier` now correctly falls back to `Color.backgroundDefault` (which maps to `Color.warmWhite` at `#FAF6F0`) for Reduce Transparency.
 
-For navigation glass Reduce Transparency fallback: use `Color.cream` (brand bible Section 2.5).
+The modifier provides three convenience methods:
+- `adaptiveGlass(cornerRadius:tint:)` - Rounded rectangle shape
+- `adaptiveGlass(in:tint:)` - Custom shape (e.g., Capsule)
+- `adaptiveGlass(radius:tint:)` - Design token enum (`GlassCornerRadius`)
 
-### 7.2 Cleanup
+Additionally, iOS 26+ specific `brandGlass()` methods provide direct glass effect access without the fallback layer.
 
-After content-layer elements are migrated to opaque fills, `AdaptiveGlassModifier` is only needed for navigation-layer elements. Content components should NOT use `.adaptiveGlass()` — they should use `AbundanceCard` or direct opaque fills.
+### 7.2 Usage Audit
 
-Remove any `.adaptiveGlass()` calls on content-layer views (cards, buttons, text fields) during the component migration.
+`adaptiveGlass` is currently used in navigation-layer elements only:
+- `SearchBar.swift` - Search capsule
+- `FloatingTabBar.swift` - Tab bar background and tab items
+- `PhotoCarouselView.swift` - Photo counter capsule
+- `EditItemSheet.swift` - Primary photo label
+- `RescanCameraView.swift` - Camera UI elements
+- `AddPhotoCameraView.swift` - Camera UI elements
+- `SweepCaptureView.swift` - Sweep UI controls
+- `SweepModeToggle.swift` - Mode selector
+
+Content-layer components (ItemCard, AbundanceCard, ItemDetailView) use opaque brand fills (`Color.cream` background, `Color.peach` borders) via `AbundanceCard`/`.abundanceCardStyle()`, not glass effects.
 
 ---
 
@@ -394,14 +349,16 @@ Add snapshot tests for PrimaryButton, SecondaryButton, and AbundanceCard in all 
 
 ---
 
-## 9. Implementation Order
+## 9. Implementation Status
 
-1. **Color+Brand.swift** — Replace palette (everything depends on this)
-2. **Animation+Brand.swift** — Update presets
-3. **PrimaryButton.swift** — Restyle to opaque Salmon
-4. **Create SecondaryButton.swift** — New component
-5. **Create AbundanceCard.swift** — New container
-6. **ItemCard.swift** — Migrate from glass to opaque Cream/Peach
-7. **Remaining views** — Update color references across all features
-8. **Accessibility** — Add Increase Contrast support
-9. **LiquidGlassHelpers.swift** — Clean up, update fallback colors
+| Step | Item | Status |
+|------|------|--------|
+| 1 | **Color+Brand.swift** — Brand palette | Completed |
+| 2 | **Animation+Brand.swift** — Updated presets | Completed |
+| 3 | **PrimaryButton.swift** — Opaque Salmon | Completed |
+| 4 | **SecondaryButton.swift** — New component | Completed |
+| 5 | **AbundanceCard.swift** — New container + modifier | Completed |
+| 6 | **ItemCard.swift** — Opaque Cream/Peach | Completed |
+| 7 | **Remaining views** — Color references | Completed |
+| 8 | **Accessibility** — Increase Contrast support | Partial (ItemCard, AbundanceCard have contrast checks; not all views) |
+| 9 | **LiquidGlassHelpers.swift** — Fallback colors | Completed |
