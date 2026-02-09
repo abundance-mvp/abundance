@@ -163,7 +163,7 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
 
                 do {
                     let segment = try await decodeMask(at: point, featureToken: featureToken)
-                    if segment.iouScore > 0.5 {
+                    if segment.iouScore >= configuration.similarityThreshold {
                         segments.append(segment)
                     }
                 } catch {
@@ -188,8 +188,7 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
     // MARK: - Memory Pressure
 
     /// Register for memory warnings to proactively manage cache
-    /// Call this after warmup() to start monitoring
-    public func startMemoryMonitoring() {
+    private func startMemoryMonitoring() {
         #if os(iOS)
         // Cancel any existing monitor before creating a new one
         memoryMonitorTask?.cancel()

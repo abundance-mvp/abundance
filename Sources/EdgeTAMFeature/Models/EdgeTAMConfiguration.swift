@@ -24,13 +24,4 @@ public struct EdgeTAMConfiguration: Sendable {
         similarityThreshold: 0.90
     )
 
-    /// Returns true when all three EdgeTAM CoreML model bundles are present.
-    /// Convenience accessor matching DeviceEligibility.areModelsAvailable.
-    public static var areModelsAvailable: Bool {
-        let config = EdgeTAMConfiguration.default
-        let names = [config.imageEncoderName, config.promptEncoderName, config.maskDecoderName]
-        return names.allSatisfy { name in
-            Bundle.module.url(forResource: name, withExtension: "mlmodelc") != nil
-        }
-    }
 }

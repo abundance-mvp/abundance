@@ -103,7 +103,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
     /// - Note: For the primary perceptual similarity API, use `isSimilarToRecent()` which caches observations automatically
     public func isDuplicate(_ fingerprint: String) async -> Bool {
         // Clean expired entries first
-        await cleanCache()
+        cleanCacheSync()
 
         // Fast path: Check for exact match
         guard let queryEntry = cache[fingerprint] else {
@@ -143,11 +143,12 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
                     continue
                 }
             }
+
+            // Had observation data but no perceptual match found
+            return false
         }
 
-        // Exact match found (entry exists in cache)
-        // If we had an observation, we already did similarity comparison above
-        // If we don't have an observation, this is still a valid exact string match
+        // No observation data — exact string key match counts as duplicate
         return true
     }
 
@@ -173,7 +174,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         }
 
         // Clean old entries
-        await cleanCache()
+        cleanCacheSync()
     }
 
     /// Checks if a new fingerprint is similar to any cached fingerprints
@@ -247,12 +248,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         return false
     }
 
-    /// Removes expired entries from the cache
-    private func cleanCache() async {
-        cleanCacheSync()
-    }
-
-    /// Synchronous cache cleaning (for use in nonisolated contexts)
+    /// Removes expired entries from the cache and evicts oldest if over limit
     private func cleanCacheSync() {
         let now = Date()
         cache = cache.filter { _, entry in
@@ -293,7 +289,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         cache[identifier] = entry
 
         // Clean old entries
-        await cleanCache()
+        cleanCacheSync()
     }
 
     // MARK: - Spatial Deduplication

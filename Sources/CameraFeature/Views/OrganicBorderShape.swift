@@ -24,17 +24,14 @@ struct OrganicBorderShape: Shape {
     func path(in rect: CGRect) -> Path {
         // If no mask, return rounded rectangle as fallback
         guard let mask = mask else {
-            Self.logger.debug("OrganicBorderShape: No mask provided, using fallback rectangle")
             return Path(roundedRect: rect, cornerRadius: fallbackCornerRadius)
         }
 
-        // Extract contour from mask
+        // Extract contour from mask; fall back to rounded rectangle on failure
         guard let contourPath = extractContour(from: mask, in: rect) else {
-            Self.logger.warning("OrganicBorderShape: Contour extraction failed, using fallback rectangle")
             return Path(roundedRect: rect, cornerRadius: fallbackCornerRadius)
         }
 
-        Self.logger.info("OrganicBorderShape: Successfully extracted organic contour")
         return contourPath
     }
 

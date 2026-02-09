@@ -126,6 +126,14 @@ public struct SweepCaptureView: View {
     private var sweepStatusBar: some View {
         Group {
             switch viewModel.sweepState {
+            case .loading:
+                HStack {
+                    ProgressView()
+                        .tint(.white)
+                    Text("Loading...")
+                }
+            case .ready:
+                Text("Sweep Ready")
             case .scanning(let count):
                 HStack {
                     ProgressView()
@@ -147,8 +155,8 @@ public struct SweepCaptureView: View {
                         .tint(.white)
                     Text("Analyzing...")
                 }
-            case .ready:
-                Text("Sweep Ready")
+            case .complete(let count):
+                Label("\(count) items cataloged", systemImage: "checkmark.circle")
             default:
                 EmptyView()
             }
@@ -172,6 +180,10 @@ public struct SweepCaptureView: View {
     /// Accessibility label for the sweep status bar
     private var sweepStatusAccessibilityLabel: String {
         switch viewModel.sweepState {
+        case .loading:
+            return "Loading sweep mode"
+        case .ready:
+            return "Sweep ready"
         case .scanning(let count):
             return "Scanning, \(count) objects found"
         case .reviewing(let selected, let total):
@@ -180,8 +192,8 @@ public struct SweepCaptureView: View {
             return "Uploading, \(Int(progress * 100)) percent complete"
         case .processing:
             return "Analyzing items"
-        case .ready:
-            return "Sweep ready"
+        case .complete(let count):
+            return "\(count) items cataloged"
         default:
             return "Sweep mode"
         }
