@@ -86,6 +86,25 @@ Task(
 )
 ```
 
+### Step 4.5: Documentation Freshness Check
+
+After code review agents return, check if changed files affect documentation:
+
+1. Run `uv run scripts/check_doc_freshness.py --format json` to get stale docs.
+2. Map changed files to doc scopes using the same domain classification from Step 2.
+3. If stale docs found, add to the synthesis in Step 5:
+
+```markdown
+### Documentation (N stale docs)
+| Document | Changed Code Refs | Last Verified |
+|----------|-------------------|---------------|
+| `docs/specs/SPEC-UI-001...` | `Sources/CameraFeature/` | 2026-01-18 |
+
+**Action:** Run `/doc-superpowers review-pr` for detailed analysis.
+```
+
+4. If no stale docs: add `### Documentation — All fresh` to synthesis.
+
 ### Step 5: Synthesize Results
 
 After all agents return, produce a unified summary:

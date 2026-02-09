@@ -396,6 +396,16 @@ Use firebase_validate_security_rules before deploying
 
 ---
 
+## Post-Operation: Documentation Check
+
+After backend operations that modify code:
+
+1. Run: `uv run scripts/check_doc_freshness.py --quiet`
+2. If exit code 1:
+   - Print: "Documentation may need updating. Run `/doc-superpowers review-pr backend`"
+
+---
+
 ## When NOT to Use This Skill
 
 - iOS/Swift development → use `ios-superpowers`

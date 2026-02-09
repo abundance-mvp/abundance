@@ -49,16 +49,10 @@ struct ItemDetailView_AXeTests {
                 "Item name must have .accessibilityIdentifier(\"detail.itemName\")")
     }
 
-    @Test("Re-catalog button has accessibility label")
-    func recatalogButtonA11y() {
-        #expect(source.containsPattern(#"Re-catalog item"#),
-                "Re-catalog button must have .accessibilityLabel(\"Re-catalog item\")")
-    }
-
-    @Test("Deep scan button has accessibility label")
-    func deepScanButtonA11y() {
-        #expect(source.containsPattern(#"Deep scan item"#),
-                "Deep scan button must have .accessibilityLabel(\"Deep scan item\")")
+    @Test("Refresh button has accessibility label")
+    func refreshButtonA11y() {
+        #expect(source.containsPattern(#"Refresh item"#),
+                "Refresh button must have .accessibilityLabel(\"Refresh item\")")
     }
 
     @Test("Edit button has accessibility label")

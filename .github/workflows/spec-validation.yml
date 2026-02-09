@@ -30,6 +30,11 @@ jobs:
               exit 1
             done
 
+      - name: Check doc freshness
+        continue-on-error: true
+        run: |
+          python3 scripts/check_doc_freshness.py || echo "Stale docs detected (non-blocking)"
+
       - name: Check DESIGN doc cross-references
         run: |
           # Ensure all DESIGN docs reference at least one ADR (excluding docs/archive/)

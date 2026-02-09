@@ -520,7 +520,19 @@ Execution:
 
 ---
 
-## 8. Token Budget
+## 8. Post-Review: Documentation Check
+
+After the `review` action completes:
+
+1. Run: `uv run scripts/check_doc_freshness.py --quiet`
+2. If exit code 1 (stale docs):
+   - Print: "Documentation may need updating. Stale docs detected for iOS scope."
+   - Print: "Run `/doc-superpowers review-pr ios` for details."
+3. If exit code 0: no action needed.
+
+---
+
+## 9. Token Budget
 
 | Component | Budget |
 |-----------|--------|

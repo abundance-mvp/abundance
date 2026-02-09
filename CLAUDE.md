@@ -36,6 +36,13 @@ mcp__xcode__ExecuteSnippet                   # Swift REPL in project context
 # Backend Operations
 /project:backend-superpowers                 # Firebase + GCP unified skill (59 MCP tools)
 /project:gcp-deploy <fn>                     # Deploy Cloud Function with verification
+
+# Documentation Health
+/project:doc-superpowers audit [scope]       # Audit docs for staleness across scopes
+/project:doc-superpowers review-pr           # Check if PR makes docs stale
+/project:doc-superpowers update              # Execute doc updates from audit
+/project:doc-superpowers diagram             # Regenerate architecture diagrams
+/project:doc-superpowers sync                # Sync doc-index + freshness check
 ```
 
 ---
@@ -275,8 +282,24 @@ uv run scripts/validate_docs.py
 ./scripts/update_doc_index.py sync          # Sync with filesystem
 ```
 
+### Freshness Checking
+
+```bash
+# Check which docs are stale (code changed since last verification)
+uv run scripts/check_doc_freshness.py
+
+# Initialize hash baselines (run once or after major refactor)
+uv run scripts/check_doc_freshness.py --init
+
+# Mark a doc as verified after review
+uv run scripts/check_doc_freshness.py --update docs/specs/SPEC-UI-001-camera-capture-flow.md
+```
+
 **Pre-push hook blocks if:**
 - Docs have archival-ready status but aren't archived
 - Markdown links are broken
 - Code refs in specs point to deleted paths
+
+**Pre-push hook warns (non-blocking) if:**
+- Code referenced by docs has changed since last verification
 

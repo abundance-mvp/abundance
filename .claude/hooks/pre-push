@@ -45,4 +45,21 @@ elif [[ $result -eq 1 ]]; then
     exit 1
 fi
 
+# Check documentation freshness (warning only, non-blocking)
+echo ""
+echo "Checking documentation freshness..."
+freshness_result=0
+uv run scripts/check_doc_freshness.py --quiet || freshness_result=$?
+
+if [[ $freshness_result -eq 1 ]]; then
+    echo ""
+    echo "⚠️  Some documentation may be stale (code changed since last verification)."
+    echo "  Run: uv run scripts/check_doc_freshness.py"
+    echo "  To review and update: uv run scripts/check_doc_freshness.py --update <doc>"
+    echo ""
+    # Non-blocking — push continues
+elif [[ $freshness_result -eq 2 ]]; then
+    echo "  ℹ️  No freshness baselines stored. Run: uv run scripts/check_doc_freshness.py --init"
+fi
+
 exit 0
