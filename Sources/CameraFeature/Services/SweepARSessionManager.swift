@@ -83,11 +83,11 @@ public final class SweepARSessionManager: NSObject {
         )
 
         // Use raycast to find 3D position
-        guard let query = frame.raycastQuery(
+        let query = frame.raycastQuery(
             from: screenPoint,
             allowing: .estimatedPlane,
             alignment: .any
-        ) else { return nil }
+        )
 
         let results = arSession?.raycast(query) ?? []
         guard let firstResult = results.first else { return nil }

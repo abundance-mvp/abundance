@@ -43,6 +43,7 @@ let package: Package = Package(
         .target(
             name: "CameraFeature",
             dependencies: [
+                "Core",
                 "Persistence",
                 "VisionCore",
                 "EdgeTAMFeature",
@@ -133,7 +134,7 @@ let package: Package = Package(
             name: "EdgeTAMFeature",
             dependencies: ["VisionCore"],
             resources: [
-                .copy("Resources")
+                .process("Resources")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")
