@@ -79,13 +79,13 @@ struct ItemCard: View {
                 .clipShape(innerShape)
                 .accessibilityLabel("Photo of \(item.displayName)")
 
-                // Metadata section
+                // Metadata section - fixed height to ensure uniform card sizes
                 VStack(alignment: .leading, spacing: 4) {
                     // Primary: Item name with full fallback chain
                     Text(item.displayName)
                         .font(.system(.body, design: .rounded, weight: .semibold))
                         .foregroundStyle(.primary)
-                        .lineLimit(2)
+                        .lineLimit(1)
 
                     // Secondary: Brand + Color
                     if let brand = item.brand {
@@ -107,12 +107,24 @@ struct ItemCard: View {
                             .font(.system(.footnote, design: .rounded))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                    } else {
+                        // Reserve space when no brand/color so all cards have same metadata height
+                        Text(" ")
+                            .font(.system(.footnote, design: .rounded))
+                            .lineLimit(1)
                     }
 
                     HStack {
                         // Condition badge (if available)
                         if let condition = item.condition {
                             ConditionBadge(condition: condition)
+                        } else {
+                            // Reserve space when no condition badge
+                            Text(" ")
+                                .font(.caption2)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .hidden()
                         }
                         Spacer()
                         StatusBadge(status: item.status)
@@ -137,6 +149,9 @@ struct ItemCard: View {
                     .stroke(Color.accentPrimary, lineWidth: 3)
             }
         }
+        // Pad inward so shadow renders within the grid cell's allocated space,
+        // preventing bleed into the adjacent column's card
+        .padding(4)
     }
 
     // MARK: - Selection Indicator

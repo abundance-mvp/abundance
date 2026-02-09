@@ -68,6 +68,7 @@ let package: Package = Package(
                 "Core",
                 "CameraFeature",
                 "Persistence",
+                "VisionCore",
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             swiftSettings: [

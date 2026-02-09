@@ -179,8 +179,11 @@ public final class CaptureSessionViewModel {
         burstTask = nil
 
         guard let startTime = burstStartTime else {
-            isCapturing = false
-            uiState = .idle
+            // Already ended (double-call guard) — only reset if not already processing
+            if case .capturing = uiState {
+                isCapturing = false
+                uiState = .idle
+            }
             return
         }
 
@@ -192,14 +195,18 @@ public final class CaptureSessionViewModel {
             logger.warning("Burst completed with \(self.burstErrors.count) capture errors")
         }
 
-        // Check minimum duration
-        if duration < minBurstDuration || capturedPhotos.count < 2 {
+        // If we captured at least one usable photo, process it (single or burst).
+        // Only show "too short" error when NO photos were captured at all.
+        if capturedPhotos.isEmpty {
             isCapturing = false
             uiState = .error(.burstCaptureTooShort)
-            capturedPhotos = []
             burstCount = 0
             return
         }
+
+        // If only 1 photo captured (short hold), still process as burst with 1 image
+        // rather than erroring — the server handles any image count.
+        logger.info("Burst ended: \(self.capturedPhotos.count) photos in \(duration, format: .fixed(precision: 1))s")
 
         guard let userId = Auth.auth().currentUser?.uid else {
             isCapturing = false

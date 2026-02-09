@@ -80,6 +80,10 @@ actor CameraSessionActor {
         videoOutput.videoSettings = [
             kCVPixelBufferPixelFormatTypeKey as String: Int(configuration.pixelFormat)
         ]
+
+        // Set photo output connection to portrait orientation so captured photos
+        // match the preview layer's display (fixes photo shifting right of center)
+        configurePhotoOutputRotation()
     }
 
     // MARK: - Session Control
@@ -135,6 +139,17 @@ actor CameraSessionActor {
     }
 
     // MARK: - Photo Capture Settings
+
+    /// Ensure the photo output connection rotation matches portrait orientation.
+    /// Without this, the captured photo uses the sensor's native landscape orientation,
+    /// causing a mismatch with the preview layer which auto-rotates to portrait.
+    func configurePhotoOutputRotation() {
+        guard let connection = photoOutput.connection(with: .video) else { return }
+        // 90° = portrait orientation on iOS (sensor is natively landscape-right)
+        if connection.isVideoRotationAngleSupported(90) {
+            connection.videoRotationAngle = 90
+        }
+    }
 
     /// Create photo settings for capture
     func createPhotoSettings() -> AVCapturePhotoSettings {

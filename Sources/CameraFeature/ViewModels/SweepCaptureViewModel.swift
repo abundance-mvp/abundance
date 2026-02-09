@@ -118,6 +118,27 @@ public final class SweepCaptureViewModel {
         measuredFPS = 0
     }
 
+    // MARK: - Lifecycle
+
+    /// Start sweep mode: check prerequisites and transition to ready/error state.
+    /// Call when the user enters sweep mode (captureMode -> .sweep).
+    public func start() {
+        guard sweepState == .inactive else { return }
+
+        sweepState = .loading
+
+        // Check if EdgeTAM models are bundled
+        guard EdgeTAMConfiguration.areModelsAvailable else {
+            logger.error("Sweep mode unavailable: EdgeTAM models not bundled")
+            sweepState = .error(.deviceNotSupported)
+            return
+        }
+
+        // Models available — transition to ready state
+        sweepState = .ready
+        logger.info("Sweep mode ready")
+    }
+
     // MARK: - Catalog Flow
 
     /// Crop selected segments, upload to GCS, create sweep session

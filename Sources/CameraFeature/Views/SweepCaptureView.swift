@@ -33,24 +33,39 @@ public struct SweepCaptureView: View {
     public var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Segment overlays
-                ForEach(viewModel.segments) { segment in
-                    SegmentOverlayView(
-                        segment: segment,
-                        isSelected: viewModel.selectedSegmentIds.contains(segment.id),
-                        geometrySize: geometry.size,
-                        onTap: {
-                            viewModel.toggleSelection(segment.id)
-                        }
-                    )
+                // Error state overlay
+                if case .error(let error) = viewModel.sweepState {
+                    sweepErrorOverlay(error: error)
+                } else {
+                    // Segment overlays
+                    ForEach(viewModel.segments) { segment in
+                        SegmentOverlayView(
+                            segment: segment,
+                            isSelected: viewModel.selectedSegmentIds.contains(segment.id),
+                            geometrySize: geometry.size,
+                            onTap: {
+                                viewModel.toggleSelection(segment.id)
+                            }
+                        )
+                    }
                 }
+
+                // Top center: status indicator (reduced opacity)
+                VStack {
+                    if case .error = viewModel.sweepState {
+                        EmptyView()
+                    } else {
+                        sweepStatusBar
+                            .opacity(0.75)
+                            .padding(.top, 60)
+                    }
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
 
                 // Bottom panel: selection tray + actions
                 VStack(spacing: 0) {
                     Spacer()
-
-                    // Status indicator
-                    sweepStatusBar
 
                     // Selection tray
                     SegmentSelectionTray(
@@ -66,6 +81,29 @@ public struct SweepCaptureView: View {
                 }
             }
         }
+        .onAppear {
+            viewModel.start()
+        }
+    }
+
+    // MARK: - Error Overlay
+
+    private func sweepErrorOverlay(error: SweepError) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+
+            Text(error.errorDescription ?? "Sweep mode unavailable")
+                .font(.system(.headline, design: .rounded))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+
+            Text("Use Photo or Burst mode instead")
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(.secondary)
+        }
+        .padding(32)
     }
 
     // MARK: - Status Bar
@@ -94,8 +132,10 @@ public struct SweepCaptureView: View {
                         .tint(.white)
                     Text("Analyzing...")
                 }
+            case .ready:
+                Text("Sweep Ready")
             default:
-                Text("Pan across items to detect")
+                EmptyView()
             }
         }
         .font(.system(.subheadline, design: .rounded, weight: .medium))
@@ -125,8 +165,10 @@ public struct SweepCaptureView: View {
             return "Uploading, \(Int(progress * 100)) percent complete"
         case .processing:
             return "Analyzing items"
+        case .ready:
+            return "Sweep ready"
         default:
-            return "Pan across items to detect"
+            return "Sweep mode"
         }
     }
 

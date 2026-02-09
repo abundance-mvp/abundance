@@ -2,6 +2,8 @@ import Foundation
 import Observation
 import Combine
 import Persistence
+import VisionCore
+import os.log
 
 /// State machine for the rescan edit flow
 public enum EditFlowState: Equatable {
@@ -71,6 +73,7 @@ public final class EditItemViewModel {
 
     private let itemRepository: ItemRepository
     private let storageService: StorageServiceProtocol
+    private let logger = Logger(subsystem: "com.abundance.collectionfeature", category: "EditItemViewModel")
 
     // MARK: - Initialization
 
@@ -107,17 +110,34 @@ public final class EditItemViewModel {
     }
 
     /// Called when camera captures a new image
+    ///
+    /// Crops the image to the primary subject using Vision saliency detection before uploading.
+    /// This ensures the retake photo is focused on the individual item, matching the initial
+    /// capture flow's server-side cropping behavior. Addresses privacy (surrounding items visible)
+    /// and accuracy (full scene sent to AI pipeline) concerns.
     public func handleCapturedImage(_ image: PlatformImage) async {
         state = .processing
 
         do {
-            // Upload new image to Firebase Storage
+            // Crop to subject using Vision saliency detection
+            // Falls back to center crop if saliency detection is inconclusive
+            let croppedImage: PlatformImage
+            do {
+                croppedImage = try ImageSubjectCropper.cropToSubject(image)
+                logger.info("Retake image cropped to subject via saliency detection")
+            } catch {
+                // If cropping fails entirely, use the original image rather than blocking the flow
+                logger.warning("Subject cropping failed (\(error.localizedDescription)), using original image")
+                croppedImage = image
+            }
+
+            // Upload cropped image to Firebase Storage
             guard let userId = editableItem.userId.nilIfEmpty else {
                 throw EditFlowError.missingUserId
             }
 
             let newImageUrl = try await storageService.uploadCroppedObject(
-                image,
+                croppedImage,
                 itemId: editableItem.id + "-rescan-\(Int(Date().timeIntervalSince1970))",
                 userId: userId
             )

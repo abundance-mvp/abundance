@@ -111,7 +111,7 @@ public struct DetectionResultsView: View {
 
     @ViewBuilder
     private func imageWithBoundingBoxes(geometry: GeometryProxy) -> some View {
-        ZStack(alignment: .topLeading) {
+        ZStack {
             Color.black
 
             // Background image
@@ -152,8 +152,9 @@ public struct DetectionResultsView: View {
                     }
                 }
             }
-
-            // Retake overlay button
+        }
+        .overlay(alignment: .topLeading) {
+            // Retake overlay button (positioned via overlay to avoid affecting image centering)
             Button(action: onRetake) {
                 HStack(spacing: 4) {
                     Image(systemName: "camera")

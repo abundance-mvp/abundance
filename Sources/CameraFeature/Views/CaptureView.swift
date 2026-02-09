@@ -43,6 +43,7 @@ public struct CaptureView: View {
         GeometryReader { geometry in
             ZStack {
                 captureContent(geometry: geometry)
+                    .gesture(tripleTapEnabled ? tripleTapGesture : nil)
                     .gesture(gesturesEnabled ? doubleTapGesture : nil)
                     .gesture(gesturesEnabled ? longPressGesture : nil)
                     .accessibilityAction(named: "Capture photo") {
@@ -52,6 +53,10 @@ public struct CaptureView: View {
                     .accessibilityAction(named: "Burst capture") {
                         guard gesturesEnabled else { return }
                         startBurstCapture()
+                    }
+                    .accessibilityAction(named: "Enter sweep mode") {
+                        guard tripleTapEnabled else { return }
+                        captureMode = .sweep
                     }
 
                 // Offline mode indicator
@@ -255,12 +260,15 @@ public struct CaptureView: View {
     }
 
     private var shouldShowPreview: Bool {
-        switch viewModel.uiState {
-        case .idle, .capturing:
-            return frozenFrame == nil
-        default:
-            return false
+        // Show live preview when there's no valid frozen frame to display.
+        // Previously, non-idle states (uploading/analyzing) hid the preview even
+        // without a frozen frame, causing a black screen during burst processing.
+        if frozenFrameImage != nil {
+            return false // We have a frozen frame to show instead
         }
+        // No frozen frame — keep preview visible regardless of state
+        // to avoid black background during burst capture/processing
+        return true
     }
 
     // MARK: - Overlays
@@ -368,7 +376,15 @@ public struct CaptureView: View {
             switch viewModel.uiState {
             case .idle, .capturing:
                 if captureMode != .sweep {
-                    instructionLabel
+                    VStack(spacing: 4) {
+                        instructionLabel
+
+                        if DeviceEligibility.isSweepModeAvailable {
+                            Text("triple tap to enter sweep mode")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary.opacity(0.7))
+                        }
+                    }
                 }
 
                 SweepModeToggle(
@@ -434,7 +450,27 @@ public struct CaptureView: View {
             )
     }
 
+    /// Whether triple-tap to enter sweep mode is enabled
+    private var tripleTapEnabled: Bool {
+        guard DeviceEligibility.isSweepModeAvailable else { return false }
+        guard captureMode != .sweep else { return false }
+        guard !showingCameraError else { return false }
+        guard !isCaptureInProgress else { return false }
+        if case .idle = viewModel.uiState {
+            return true
+        }
+        return false
+    }
+
     // MARK: - Gestures
+
+    private var tripleTapGesture: some Gesture {
+        TapGesture(count: 3)
+            .onEnded {
+                guard case .idle = viewModel.uiState else { return }
+                captureMode = .sweep
+            }
+    }
 
     private var doubleTapGesture: some Gesture {
         TapGesture(count: 2)
