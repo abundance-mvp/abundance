@@ -396,6 +396,48 @@ Use firebase_validate_security_rules before deploying
 
 ---
 
+## Verification (`superpowers:verification-before-completion`)
+
+**REQUIRED:** After any operation that modifies code or deploys changes, run the gate function before claiming success.
+
+### Gate Function
+
+```
+1. IDENTIFY: What command proves the operation succeeded?
+2. RUN: Execute the FULL command (fresh, not cached):
+   - TypeScript compile: `cd functions && npx tsc --noEmit`
+   - Tests: `cd functions && npm test`
+   - Deploy verify: `functions_list_functions` + `functions_get_logs`
+3. READ: Full output — exit code, error count, deployment status
+4. VERIFY: Does output confirm the claim?
+   - If NO: State actual status with evidence. Do NOT claim success.
+   - If YES: State claim WITH evidence (exit code, test results, deploy log)
+5. ONLY THEN: Claim completion
+
+Skip any step = unverified claim. Do not proceed.
+```
+
+### Dispatched Agent Verification
+
+When dispatching Task agents (including via `troubleshoot` multi-domain), include this instruction in every agent prompt:
+
+```
+VERIFICATION REQUIRED: Before claiming work is complete, you MUST run build/test
+commands, read full output, and report results WITH evidence (exit codes, test
+counts). No 'should work' or 'looks good' claims. Evidence before claims, always.
+```
+
+### Common Verification Failures
+
+| Claim | Requires | Not Sufficient |
+|-------|----------|----------------|
+| Deploy succeeded | `functions_list_functions` showing new version | `firebase deploy` exiting 0 (could be partial) |
+| No errors | `functions_get_logs` with min_severity WARNING showing 0 entries | Absence of crash |
+| Tests pass | `npm test` output: 0 failures, N passed | "Should pass now" |
+| Rules valid | `firebase_validate_security_rules` returning valid | Reading the rules file |
+
+---
+
 ## Post-Operation: Documentation Check
 
 After backend operations that modify code:

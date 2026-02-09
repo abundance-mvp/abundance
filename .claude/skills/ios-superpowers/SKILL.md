@@ -369,16 +369,31 @@ When code review finds critical issues (P0/P1 severity):
 
 ---
 
-## 4. Verification Checklist
+## 4. Verification (`superpowers:verification-before-completion`)
 
-After every execution, verify:
+**REQUIRED:** Every execution sequence ends with `VERIFY()`. This is the gate function from `superpowers:verification-before-completion`. No completion claims without fresh evidence.
+
+### Gate Function (VERIFY)
+
+```
+1. IDENTIFY: What commands prove the work is correct?
+2. RUN: Execute FULL commands (fresh, not cached):
+   - Build: `mcp__xcode__BuildProject` (preferred) or `swift build` (fallback)
+   - Tests: `mcp__xcode__RunAllTests` (preferred) or `swift test` (fallback)
+3. READ: Full output — exit code, test counts, error messages
+4. VERIFY: Does output confirm the claim?
+   - If NO: State actual status with evidence. Do NOT claim success.
+   - If YES: State claim WITH evidence (exit code, N/N tests passed)
+5. ONLY THEN: Claim completion
+
+Skip any step = unverified claim. Do not proceed.
+```
+
+### Additional Checks (after build/test pass)
 
 - [ ] No deprecated APIs introduced (check via `mcp__xcode__DocumentationSearch` or `axiom-apple-docs-research`)
 - [ ] Swift 6 concurrency satisfied (actor isolation, Sendable)
 - [ ] API signatures match Apple documentation
-- [ ] Build passes: `mcp__xcode__BuildProject` (preferred) or `swift build` (fallback)
-- [ ] Tests pass (if applicable): `mcp__xcode__RunAllTests` (preferred) or `swift test` (fallback)
-- [ ] If backend changes deployed: verify via `backend-superpowers`
 
 ### Backend Verification (when applicable)
 
@@ -397,6 +412,18 @@ If iOS changes involve backend communication:
 3. Verify Firestore operations work:
    mcp__plugin_firebase_firebase__firestore_list_collections
 ```
+
+### Dispatched Agent Verification
+
+When dispatching Task agents (debug, review, tdd, parallel), include this instruction in every agent prompt:
+
+```
+VERIFICATION REQUIRED: Before claiming work is complete, you MUST run build/test
+commands, read full output, and report results WITH evidence (exit codes, test
+counts). No 'should work' or 'looks good' claims. Evidence before claims, always.
+```
+
+Agent reports without evidence are unverified — treat as unconfirmed and re-verify independently.
 
 ---
 
@@ -453,13 +480,18 @@ Cannot proceed without domain classification.
 ### Verification Failed
 
 ```
-ERROR: Post-execution verification failed.
+ERROR: Post-execution verification failed (superpowers:verification-before-completion).
+
+Evidence:
+- Command: {command_run}
+- Exit code: {exit_code}
+- Output: {relevant_output}
 
 Issues found:
 - [ ] {verification_issue_1}
 - [ ] {verification_issue_2}
 
-Fix these issues before proceeding.
+Fix these issues before proceeding. Do NOT claim success.
 ```
 
 ---

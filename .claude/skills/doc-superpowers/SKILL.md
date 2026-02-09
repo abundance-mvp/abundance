@@ -221,7 +221,42 @@ Report any discrepancies with exact line references.
 
 ---
 
-## 4. Integration with Other Skills
+## 4. Verification (`superpowers:verification-before-completion`)
+
+**REQUIRED:** After the `update` action writes changes, verify before claiming docs are updated.
+
+### Gate Function
+
+```
+1. IDENTIFY: What proves the doc update is correct?
+2. RUN:
+   - `uv run scripts/check_doc_freshness.py --format json` (confirm doc is now fresh)
+   - `git diff` on updated doc (confirm changes are coherent)
+   - Read updated doc + its code_refs (confirm alignment)
+3. READ: Full output — hash status, diff content
+4. VERIFY: Does output confirm the claim?
+   - If NO: State what's still stale or misaligned
+   - If YES: State claim WITH evidence (N docs updated, freshness check passing)
+5. ONLY THEN: Claim docs are updated
+
+Skip any step = unverified claim.
+```
+
+### Dispatched Agent Verification
+
+When dispatching domain doc agents via Task, include this instruction in every agent prompt:
+
+```
+VERIFICATION REQUIRED: After reviewing docs, you MUST verify your findings by
+reading both the doc AND its code_refs. Report findings WITH evidence (exact
+quotes from doc vs code). No 'looks stale' without specific discrepancies.
+```
+
+Agent reports without specific evidence (exact doc text vs exact code text) are unverified.
+
+---
+
+## 5. Integration with Other Skills
 
 ### Called BY other skills (callback pattern):
 
@@ -254,7 +289,7 @@ Already integrated in Task 3. The hook runs the hash check and warns about stale
 
 ---
 
-## 5. Output Formats
+## 6. Output Formats
 
 ### Audit Report (terminal)
 
@@ -283,7 +318,7 @@ Already integrated in Task 3. The hook runs the hash check and warns about stale
 
 ---
 
-## 6. Error Handling
+## 7. Error Handling
 
 - **No code_refs on doc**: Skip hash check, agent does full-text comparison only
 - **Missing code_ref path**: Flag as P0 ("referenced code deleted")
@@ -291,7 +326,7 @@ Already integrated in Task 3. The hook runs the hash check and warns about stale
 - **Mermaid MCP unavailable**: Output Mermaid source text instead of PNG
 - **No stale docs**: Report "All documentation is fresh" and exit
 
-## 7. Common Mistakes
+## 8. Common Mistakes
 
 | Mistake | Fix |
 |---------|-----|

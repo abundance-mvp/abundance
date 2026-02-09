@@ -134,21 +134,43 @@ Dispatch one Task agent per domain, running in parallel:
 Task(
   subagent_type="general-purpose",
   description="Troubleshoot iOS: <summary>",
-  prompt="Load Skill ios-superpowers with args 'debug <issue>'. Context: <ios-context>"
+  prompt="Load Skill ios-superpowers with args 'debug <issue>'. Context: <ios-context>.
+    VERIFICATION REQUIRED: Before claiming the fix is complete, you MUST run the verification
+    gate function — execute build/test commands, read full output, and report results WITH
+    evidence (exit codes, test counts). No 'should work' or 'looks good' claims."
 )
 
 Task(
   subagent_type="general-purpose",
   description="Troubleshoot backend: <summary>",
-  prompt="Load Skill backend-superpowers. Issue: <issue>. Context: <backend-context>"
+  prompt="Load Skill backend-superpowers. Issue: <issue>. Context: <backend-context>.
+    VERIFICATION REQUIRED: Before claiming the fix is complete, you MUST run the verification
+    gate function — execute build/test commands, read full output, and report results WITH
+    evidence (exit codes, test counts). No 'should work' or 'looks good' claims."
 )
 ```
 
 **CRITICAL:** Multi-domain agents must run in a SINGLE message with parallel Task calls.
+**CRITICAL:** Every dispatched agent MUST include the verification instruction in its prompt. Agents that report success without evidence are unverified — treat their results as unconfirmed.
 
 ## Phase 4: VERIFY
 
 After a fix is applied, verify it works. This is a bounded retry loop.
+
+**REQUIRED:** Follow the `superpowers:verification-before-completion` gate function. No completion claims without fresh verification evidence.
+
+### Gate Function (applied at each attempt)
+
+```
+1. IDENTIFY: What command proves the fix works?
+2. RUN: Execute the FULL command (fresh, not cached)
+3. READ: Full output, check exit code, count failures
+4. VERIFY: Does output confirm the fix?
+   - If NO: Feed failure back to Phase 3 (do NOT claim progress)
+   - If YES: State result WITH evidence (exit code, test count, build log)
+
+Skip any step = unverified claim. Do not proceed.
+```
 
 ### Verification Commands
 
@@ -163,8 +185,8 @@ After a fix is applied, verify it works. This is a bounded retry loop.
 ```
 attempt = 1
 while attempt <= 3:
-  run verification commands
-  if ALL pass:
+  run verification commands (gate function: RUN → READ → VERIFY)
+  if ALL pass (with evidence — exit codes, test counts):
     → proceed to Phase 5
   else:
     feed failure output back to Phase 3 (debug)
@@ -270,10 +292,10 @@ Generate a structured report summarizing all phases.
 ### Fix Applied
 <files changed and what was done>
 
-### Verification
-- Build: PASS/FAIL
-- Tests: PASS/FAIL (N tests)
-- Runtime: PASS/FAIL/SKIPPED
+### Verification (evidence required — `superpowers:verification-before-completion`)
+- Build: PASS/FAIL — exit code, command used
+- Tests: PASS/FAIL — N/N passed, command used
+- Runtime: PASS/FAIL/SKIPPED — observation details
 - Attempts: N/3
 
 ### Regression Test
@@ -320,6 +342,8 @@ If review reveals additional issues beyond the original fix, offer to file them:
 | "Fix looks good, skip verification" | The verify loop is the whole point. `BuildProject` + `RunAllTests` (or `swift build && swift test`) minimum. |
 | "No test needed, it's a simple fix" | Simple fixes regress. Write the test unless skip conditions apply. |
 | "Skip review, I already reviewed while fixing" | Fresh review catches what tunnel vision misses. Run it. |
+| "Fix looks good, should work now" | "Should" is not evidence. Run the command. Read the output. THEN claim it works. |
+| "Agent reported success" | Agent reports are unverified claims. Check the VCS diff. Run build/test yourself. |
 | "Retry a 4th time, I'm close" | 3 attempts max. File the issue. Fresh eyes will solve it faster. |
 | "I'll investigate all domains sequentially" | Multi-domain issues get parallel agents. One message, multiple Task calls. |
 | "Backend issue, no need for Apple docs" | Correct — only iOS issues need Apple docs. But iOS issues ALWAYS go through `ios-superpowers` which handles that. |
