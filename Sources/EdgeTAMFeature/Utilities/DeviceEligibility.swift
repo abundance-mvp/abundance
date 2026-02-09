@@ -11,14 +11,26 @@ import Foundation
 public enum DeviceEligibility: Sendable {
 
     /// Check if sweep mode is available on the current device.
-    /// Always returns true in Simulator for testing.
+    /// Requires both eligible hardware AND bundled CoreML models.
+    /// Always returns true for hardware in Simulator; model check still applies.
     public static var isSweepModeAvailable: Bool {
+        let hardwareOK: Bool
         #if targetEnvironment(simulator)
-        return true
+        hardwareOK = true
         #else
-        let machine = currentMachine()
-        return isEligible(machine: machine)
+        hardwareOK = isEligible(machine: currentMachine())
         #endif
+        return hardwareOK && areModelsAvailable
+    }
+
+    /// Returns true only when all three EdgeTAM CoreML model bundles are present.
+    /// This gates the UI until models are actually shipped.
+    public static var areModelsAvailable: Bool {
+        let config = EdgeTAMConfiguration.default
+        let names = [config.imageEncoderName, config.promptEncoderName, config.maskDecoderName]
+        return names.allSatisfy { name in
+            Bundle.module.url(forResource: name, withExtension: "mlmodelc") != nil
+        }
     }
 
     /// Testable eligibility check (takes machine string as parameter)

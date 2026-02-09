@@ -1,14 +1,6 @@
 import SwiftUI
 import Core
 
-#if os(iOS)
-import UIKit
-private typealias PlatformImage = UIImage
-#elseif os(macOS)
-import AppKit
-private typealias PlatformImage = NSImage
-#endif
-
 /// View displaying detection results with bounding boxes and object cards
 public struct DetectionResultsView: View {
     let capturedImage: Data?
@@ -23,7 +15,8 @@ public struct DetectionResultsView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedObjectId: String?
     @State private var selectedObjectIds: Set<String> = []
-    @State private var decodedImage: PlatformImage?
+    @State private var decodedImage: Image?
+    @State private var decodedImageSize: CGSize?
 
     private var uncatalogedObjects: [ServerDetectedObject] {
         detectedObjects.filter { !catalogedObjectIds.contains($0.groupId) && !catalogingObjectIds.contains($0.groupId) }
@@ -77,9 +70,11 @@ public struct DetectionResultsView: View {
             }
         }
         .task {
-            // Decode image once to avoid repeated UIImage(data:) in body
-            if let imageData = capturedImage {
-                decodedImage = PlatformImage(data: imageData)
+            // Decode image once to avoid repeated decoding in body
+            if let imageData = capturedImage,
+               let decoded = ImageDecoding.decodeWithSize(imageData) {
+                decodedImage = decoded.image
+                decodedImageSize = decoded.size
             }
         }
     }
@@ -121,16 +116,15 @@ public struct DetectionResultsView: View {
 
             // Background image
             if capturedImage != nil {
-                #if os(iOS)
-                if let uiImage = decodedImage {
-                    Image(uiImage: uiImage)
+                if let image = decodedImage {
+                    image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
 
                     // Bounding box overlays mapped to the actual displayed image rect
                     GeometryReader { containerGeometry in
                         let imgRect = imageDisplayRect(
-                            imageSize: uiImage.size,
+                            imageSize: decodedImageSize ?? containerGeometry.size,
                             containerSize: containerGeometry.size
                         )
                         ForEach(detectedObjects) { object in
@@ -157,7 +151,6 @@ public struct DetectionResultsView: View {
                         }
                     }
                 }
-                #endif
             }
 
             // Retake overlay button

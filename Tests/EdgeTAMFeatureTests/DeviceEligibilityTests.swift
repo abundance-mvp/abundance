@@ -59,10 +59,17 @@ struct DeviceEligibilityTests {
         #expect(!DeviceEligibility.isEligible(machine: "iPad14,1"))
     }
 
+    @Test("Models not available when .mlmodelc not bundled")
+    func modelsNotAvailableWithoutBundle() {
+        // Until real CoreML models are shipped, areModelsAvailable should be false
+        #expect(!DeviceEligibility.areModelsAvailable)
+    }
+
     #if targetEnvironment(simulator)
-    @Test("Simulator is always eligible for testing")
-    func simulatorEligible() {
-        #expect(DeviceEligibility.isSweepModeAvailable)
+    @Test("Simulator hardware eligible but gated by model availability")
+    func simulatorGatedByModels() {
+        // Hardware check passes in simulator, but models aren't bundled yet
+        #expect(!DeviceEligibility.isSweepModeAvailable)
     }
     #endif
 }

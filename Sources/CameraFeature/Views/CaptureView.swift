@@ -3,14 +3,6 @@ import AVFoundation
 import Core
 import EdgeTAMFeature
 
-#if os(iOS)
-import UIKit
-private typealias PlatformImage = UIImage
-#elseif os(macOS)
-import AppKit
-private typealias PlatformImage = NSImage
-#endif
-
 /// Main capture view with double-tap and long-press gestures
 /// Uses server-side Gemini detection - no local YOLO detection
 public struct CaptureView: View {
@@ -24,7 +16,7 @@ public struct CaptureView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var frozenFrame: Data?
-    @State private var frozenFrameImage: PlatformImage?
+    @State private var frozenFrameImage: Image?
     @State private var longPressActive = false
     @State private var captureSession: AVCaptureSession?
     @State private var isCaptureInProgress = false  // Synchronous guard for race prevention
@@ -251,15 +243,13 @@ public struct CaptureView: View {
 
             // Frozen frame during capture/processing
             if frozenFrame != nil {
-                #if os(iOS)
                 if let image = frozenFrameImage {
-                    Image(uiImage: image)
+                    image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .ignoresSafeArea()
                         .accessibilityHidden(true)
                 }
-                #endif
             }
         }
     }
@@ -564,9 +554,9 @@ public struct CaptureView: View {
                 // Capture photo
                 let photoData = try await cameraService.capturePhoto()
 
-                // Freeze frame - decode image once to avoid repeated UIImage(data:) in body
+                // Freeze frame - decode image once to avoid repeated decoding in body
                 frozenFrame = photoData
-                frozenFrameImage = PlatformImage(data: photoData)
+                frozenFrameImage = ImageDecoding.decodeToSwiftUIImage(photoData)
 
                 // Haptic feedback
                 #if os(iOS)
@@ -604,7 +594,7 @@ public struct CaptureView: View {
             // Freeze on last captured frame - use lastCapturedPhoto from ViewModel
             if let lastPhoto = viewModel.lastCapturedPhoto {
                 frozenFrame = lastPhoto
-                frozenFrameImage = PlatformImage(data: lastPhoto)
+                frozenFrameImage = ImageDecoding.decodeToSwiftUIImage(lastPhoto)
             }
             await viewModel.endBurstCapture()
         }

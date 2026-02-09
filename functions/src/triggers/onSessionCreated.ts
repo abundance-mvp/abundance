@@ -90,12 +90,41 @@ function extractBucketFromUrl(url: string): string | null {
 }
 
 /**
+ * Validate a single sweep crop entry from Firestore.
+ *
+ * Since Firestore is schemaless, crop fields could be any type.
+ * Returns an error message if invalid, or null if valid.
+ */
+function validateSweepCrop(crop: unknown, index: number): string | null {
+  if (typeof crop !== 'object' || crop === null) {
+    return `sweepCrops[${index}] is not an object`;
+  }
+  const c = crop as Record<string, unknown>;
+
+  if (typeof c.cropUrl !== 'string' || c.cropUrl.trim() === '') {
+    return `sweepCrops[${index}].cropUrl must be a non-empty string`;
+  }
+  if (!Array.isArray(c.boundingBox) || c.boundingBox.length !== 4 ||
+      !c.boundingBox.every((v: unknown) => typeof v === 'number' && isFinite(v as number))) {
+    return `sweepCrops[${index}].boundingBox must be a 4-element array of finite numbers`;
+  }
+  if (typeof c.frameIndex !== 'number' || !Number.isInteger(c.frameIndex) || c.frameIndex < 0) {
+    return `sweepCrops[${index}].frameIndex must be a non-negative integer`;
+  }
+  if (typeof c.groupId !== 'string' || c.groupId.trim() === '') {
+    return `sweepCrops[${index}].groupId must be a non-empty string`;
+  }
+  return null;
+}
+
+/**
  * Validate session document before processing
  *
  * Checks:
  * 1. userId is a non-empty string
- * 2. originalImageUrls is a non-empty array
- * 3. All URLs are from allowed storage buckets
+ * 2. For sweep mode: sweepCrops is a non-empty array with valid structure
+ * 3. For single/burst mode: originalImageUrls is a non-empty array
+ * 4. All URLs are from allowed storage buckets (SSRF prevention)
  *
  * @param sessionData - The session document data
  * @param sessionRef - Reference to the session document for updating on failure
@@ -117,32 +146,79 @@ export async function validateSessionDocument(
     return { valid: false, errorCode: 'INVALID_DOCUMENT', errorMessage: 'Missing userId' };
   }
 
-  // Validate originalImageUrls is a non-empty array
-  if (!Array.isArray(sessionData.originalImageUrls) || sessionData.originalImageUrls.length === 0) {
-    logger.error('Session validation failed', { reason: 'No images provided' });
-    await sessionRef.update({
-      status: 'failed',
-      error: 'No images provided',
-      errorCode: 'NO_IMAGES',
-      failedAt: FieldValue.serverTimestamp()
-    });
-    return { valid: false, errorCode: 'NO_IMAGES', errorMessage: 'No images provided' };
-  }
+  const captureMode = sessionData.captureMode as string | undefined;
 
-  // Validate all URLs are from allowed buckets
-  // SECURITY: Use exact match to prevent bucket name spoofing
-  // (e.g., "evil-abundance-mvp.firebasestorage.app" must NOT pass)
-  for (const url of sessionData.originalImageUrls as string[]) {
-    const bucketName = extractBucketFromUrl(url);
-    if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
-      logger.error('Session validation failed', { reason: 'Unauthorized bucket', url, bucketName });
+  if (captureMode === 'sweep') {
+    // Sweep mode: validate sweepCrops instead of originalImageUrls
+    if (!Array.isArray(sessionData.sweepCrops) || sessionData.sweepCrops.length === 0) {
+      logger.error('Session validation failed', { reason: 'No sweep crops provided' });
       await sessionRef.update({
         status: 'failed',
-        error: 'Unauthorized storage bucket',
-        errorCode: 'UNAUTHORIZED_BUCKET',
+        error: 'No sweep crops provided',
+        errorCode: 'SWEEP_NO_CROPS',
         failedAt: FieldValue.serverTimestamp()
       });
-      return { valid: false, errorCode: 'UNAUTHORIZED_BUCKET', errorMessage: 'Unauthorized bucket' };
+      return { valid: false, errorCode: 'SWEEP_NO_CROPS', errorMessage: 'No sweep crops provided' };
+    }
+
+    // Structural validation of each crop (Firestore is schemaless)
+    for (let i = 0; i < (sessionData.sweepCrops as unknown[]).length; i++) {
+      const crop = (sessionData.sweepCrops as unknown[])[i];
+      const cropError = validateSweepCrop(crop, i);
+      if (cropError) {
+        logger.error('Sweep crop validation failed', { reason: cropError, index: i });
+        await sessionRef.update({
+          status: 'failed',
+          error: cropError,
+          errorCode: 'INVALID_SWEEP_CROP',
+          failedAt: FieldValue.serverTimestamp()
+        });
+        return { valid: false, errorCode: 'INVALID_SWEEP_CROP', errorMessage: cropError };
+      }
+    }
+
+    // Validate all sweep crop URLs are from allowed buckets
+    for (const crop of sessionData.sweepCrops as SweepCropInfo[]) {
+      const bucketName = extractBucketFromUrl(crop.cropUrl);
+      if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
+        logger.error('Session validation failed', { reason: 'Unauthorized bucket in sweep crop', cropUrl: crop.cropUrl, bucketName });
+        await sessionRef.update({
+          status: 'failed',
+          error: 'Unauthorized storage bucket in sweep crop',
+          errorCode: 'UNAUTHORIZED_BUCKET',
+          failedAt: FieldValue.serverTimestamp()
+        });
+        return { valid: false, errorCode: 'UNAUTHORIZED_BUCKET', errorMessage: 'Unauthorized bucket' };
+      }
+    }
+  } else {
+    // Single/Burst mode: validate originalImageUrls
+    if (!Array.isArray(sessionData.originalImageUrls) || sessionData.originalImageUrls.length === 0) {
+      logger.error('Session validation failed', { reason: 'No images provided' });
+      await sessionRef.update({
+        status: 'failed',
+        error: 'No images provided',
+        errorCode: 'NO_IMAGES',
+        failedAt: FieldValue.serverTimestamp()
+      });
+      return { valid: false, errorCode: 'NO_IMAGES', errorMessage: 'No images provided' };
+    }
+
+    // Validate all URLs are from allowed buckets
+    // SECURITY: Use exact match to prevent bucket name spoofing
+    // (e.g., "evil-abundance-mvp.firebasestorage.app" must NOT pass)
+    for (const url of sessionData.originalImageUrls as string[]) {
+      const bucketName = extractBucketFromUrl(url);
+      if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
+        logger.error('Session validation failed', { reason: 'Unauthorized bucket', url, bucketName });
+        await sessionRef.update({
+          status: 'failed',
+          error: 'Unauthorized storage bucket',
+          errorCode: 'UNAUTHORIZED_BUCKET',
+          failedAt: FieldValue.serverTimestamp()
+        });
+        return { valid: false, errorCode: 'UNAUTHORIZED_BUCKET', errorMessage: 'Unauthorized bucket' };
+      }
     }
   }
 
@@ -296,23 +372,15 @@ export const onSessionCreated = onDocumentUpdated(
       }
 
       // ── Sweep mode: skip detection, label pre-cropped segments ──
+      // Note: sweepCrops structure, types, and bucket URLs are validated
+      // by validateSessionDocument above.
       if (afterData.captureMode === 'sweep') {
-        const sweepCrops = afterData.sweepCrops || [];
+        const sweepCrops = afterData.sweepCrops!;
 
         logger.info('Sweep session: labeling pre-cropped segments', {
           sessionId,
           cropCount: sweepCrops.length
         });
-
-        if (sweepCrops.length === 0) {
-          await sessionRef.update({
-            status: 'failed',
-            error: 'No sweep crops provided',
-            errorCode: 'SWEEP_NO_CROPS',
-            failedAt: FieldValue.serverTimestamp()
-          });
-          return;
-        }
 
         // Cap sweep crops at 50 to prevent abuse and timeout
         const MAX_SWEEP_CROPS = 50;
@@ -326,31 +394,12 @@ export const onSessionCreated = onDocumentUpdated(
           return;
         }
 
-        // Validate all sweep crop URLs are from allowed buckets (SSRF prevention)
-        for (const crop of sweepCrops) {
-          const bucketName = extractBucketFromUrl(crop.cropUrl);
-          if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
-            logger.error('Sweep crop URL from unauthorized bucket', {
-              sessionId,
-              cropUrl: crop.cropUrl,
-              bucketName
-            });
-            await sessionRef.update({
-              status: 'failed',
-              error: 'Unauthorized storage bucket in sweep crop',
-              errorCode: 'UNAUTHORIZED_BUCKET',
-              failedAt: FieldValue.serverTimestamp()
-            });
-            return;
-          }
-        }
-
         // Label pre-cropped objects via Gemini Flash (no bounding box detection needed)
         const labels = await labelPrecroppedObjects(sweepCrops);
 
         // Construct detectedObjects from labels + sweep crop metadata
         const detectedObjects = labels.map((label, index) => ({
-          groupId: sweepCrops[index].groupId || `sweep-${sessionId}-${index}`,
+          groupId: sweepCrops[index].groupId,
           label: label.name,
           category: label.category,
           attributes: label.attributes || {},
