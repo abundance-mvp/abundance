@@ -7,7 +7,7 @@ let package: Package = Package(
     products: [
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
         .library(name: "CameraFeature", targets: ["CameraFeature"]),
-        .library(name: "InventoryFeature", targets: ["InventoryFeature"]),
+        .library(name: "CollectionFeature", targets: ["CollectionFeature"]),
         .library(name: "ProfileFeature", targets: ["ProfileFeature"]),
         .library(name: "Persistence", targets: ["Persistence"]),
         .library(name: "VisionCore", targets: ["VisionCore"]),
@@ -60,7 +60,7 @@ let package: Package = Package(
             ]
         ),
         .target(
-            name: "InventoryFeature",
+            name: "CollectionFeature",
             dependencies: [
                 "Core",
                 "CameraFeature",
@@ -72,9 +72,9 @@ let package: Package = Package(
             ]
         ),
         .testTarget(
-            name: "InventoryFeatureTests",
+            name: "CollectionFeatureTests",
             dependencies: [
-                "InventoryFeature",
+                "CollectionFeature",
                 "Persistence",
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
             ]
@@ -144,7 +144,7 @@ let package: Package = Package(
         ),
         .testTarget(
             name: "PipelineTests",
-            dependencies: ["Core", "CameraFeature", "Persistence", "InventoryFeature"]
+            dependencies: ["Core", "CameraFeature", "Persistence", "CollectionFeature"]
         ),
 
         // App
@@ -153,7 +153,7 @@ let package: Package = Package(
             dependencies: [
                 "OnboardingFeature",
                 "CameraFeature",
-                "InventoryFeature",
+                "CollectionFeature",
                 "ProfileFeature",
                 "Persistence",
                 "VisionCore",
