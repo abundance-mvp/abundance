@@ -2,15 +2,12 @@ import Foundation
 
 /// Checks if the current device supports EdgeTAM sweep mode.
 ///
-/// Requires A17 Pro Neural Engine (35 TOPS) or later:
+/// Requires A17 Pro / A18 Neural Engine (35 TOPS, 8GB RAM) or later:
 /// - iPhone 15 Pro (iPhone16,1)
 /// - iPhone 15 Pro Max (iPhone16,2)
-/// - iPhone 16 Pro family (iPhone17,x)
-/// - Future Pro models (iPhone18+)
-///
-/// Note: A18 chip in standard iPhone 16 (iPhone17,5+) is excluded intentionally.
-/// While it has 16 Neural Engine cores, EdgeTAM requires the A17 Pro's higher
-/// memory bandwidth and throughput for real-time inference at acceptable FPS.
+/// - iPhone 16 Pro family (iPhone17,1–4)
+/// - iPhone 16e (iPhone17,5) — A18, 8GB RAM, same Neural Engine throughput
+/// - Future models (iPhone18+)
 public enum DeviceEligibility: Sendable {
 
     /// Check if sweep mode is available on the current device.
@@ -26,16 +23,17 @@ public enum DeviceEligibility: Sendable {
 
     /// Testable eligibility check (takes machine string as parameter)
     public static func isEligible(machine: String) -> Bool {
-        let proModels: Set<String> = [
+        let eligibleModels: Set<String> = [
             "iPhone16,1",  // iPhone 15 Pro
             "iPhone16,2",  // iPhone 15 Pro Max
             "iPhone17,1",  // iPhone 16 Pro
             "iPhone17,2",  // iPhone 16 Pro Max
             "iPhone17,3",  // iPhone 16 Pro (variant)
             "iPhone17,4",  // iPhone 16 Pro Max (variant)
+            "iPhone17,5",  // iPhone 16e (A18, 8GB)
         ]
 
-        if proModels.contains(machine) {
+        if eligibleModels.contains(machine) {
             return true
         }
 

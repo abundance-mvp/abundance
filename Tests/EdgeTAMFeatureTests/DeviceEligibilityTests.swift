@@ -22,6 +22,11 @@ struct DeviceEligibilityTests {
         #expect(DeviceEligibility.isEligible(machine: "iPhone17,4"))
     }
 
+    @Test("iPhone 16e is eligible (A18, 8GB)")
+    func iphone16eEligible() {
+        #expect(DeviceEligibility.isEligible(machine: "iPhone17,5"))
+    }
+
     @Test("Future iPhone 18+ models are eligible")
     func futureModelsEligible() {
         #expect(DeviceEligibility.isEligible(machine: "iPhone18,1"))
