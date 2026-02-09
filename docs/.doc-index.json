@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-08T00:00:00Z",
+  "generated": "2026-02-09T04:05:33Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -15,7 +15,7 @@
             "functions/"
           ],
           "code_ref_hashes": {
-            "Sources/": "224a99abb69380fe",
+            "Sources/": "6ce2eb2fcf482a90",
             "functions/": "aaabb45e9d5683ae"
           },
           "last_verified": "2026-02-08",
@@ -79,7 +79,7 @@
           ],
           "code_ref_hashes": {
             "functions/src/": "ccd5741e8e2030d1",
-            "Sources/": "224a99abb69380fe"
+            "Sources/": "6ce2eb2fcf482a90"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -136,7 +136,7 @@
             "Sources/CollectionFeature/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/": "MISSING"
+            "Sources/CollectionFeature/": "4bffc70f33e5e836"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -151,7 +151,7 @@
           ],
           "code_ref_hashes": {
             "Sources/Core/DesignSystem/": "d2fbae0ada6944f7",
-            "Sources/CollectionFeature/": "MISSING",
+            "Sources/CollectionFeature/": "4bffc70f33e5e836",
             "Sources/CameraFeature/": "32eb7c3cdfe96aa7",
             "Sources/ProfileFeature/": "7a0a468f4b163e79"
           },
@@ -166,9 +166,9 @@
             "Sources/CollectionFeature/Components/"
           ],
           "code_ref_hashes": {
-            "App/": "e9cbf8c6c18b0a72",
+            "App/": "9716378f78128986",
             "Sources/Core/DesignSystem/": "d2fbae0ada6944f7",
-            "Sources/CollectionFeature/Components/": "MISSING"
+            "Sources/CollectionFeature/Components/": "f6f7a676073089c0"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-02-06"
@@ -179,7 +179,7 @@
             ".github/workflows/"
           ],
           "code_ref_hashes": {
-            ".github/workflows/": "03364397af0908ac"
+            ".github/workflows/": "c59d65528e5c75a3"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -192,7 +192,7 @@
           ],
           "code_ref_hashes": {
             "scripts/": "7404f3783a159d98",
-            ".claude/": "a71f2fb1036b00b0"
+            ".claude/": "5b401005cfec49db"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -295,6 +295,11 @@
           "status": "Active",
           "related_branch": "feature/brand-design-system",
           "merged": null
+        },
+        "2026-02-08-doc-freshness-system.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
         }
       }
     },
@@ -369,9 +374,9 @@
             "App/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/": "MISSING",
+            "Sources/CollectionFeature/": "4bffc70f33e5e836",
             "Sources/CameraFeature/": "32eb7c3cdfe96aa7",
-            "App/": "e9cbf8c6c18b0a72"
+            "App/": "9716378f78128986"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-02-08",
@@ -464,7 +469,7 @@
             ".github/workflows/"
           ],
           "code_ref_hashes": {
-            ".github/workflows/": "03364397af0908ac"
+            ".github/workflows/": "c59d65528e5c75a3"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-14"
@@ -664,7 +669,7 @@
             "Sources/CollectionFeature/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/": "MISSING"
+            "Sources/CollectionFeature/": "4bffc70f33e5e836"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -675,7 +680,7 @@
             "Sources/CollectionFeature/Components/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/Components/": "MISSING"
+            "Sources/CollectionFeature/Components/": "f6f7a676073089c0"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -697,7 +702,7 @@
             "Sources/CollectionFeature/Components/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/Components/": "MISSING"
+            "Sources/CollectionFeature/Components/": "f6f7a676073089c0"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
