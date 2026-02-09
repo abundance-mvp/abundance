@@ -179,6 +179,14 @@ public struct CaptureView: View {
                             sweepViewModel.reset()
                         }
                     )
+                    .task {
+                        // Wire EdgeTAM scanning to camera frame publisher
+                        let edgeTAMService = EdgeTAMService()
+                        sweepViewModel.startScanning(
+                            framePublisher: cameraService.framePublisher,
+                            edgeTAMService: edgeTAMService
+                        )
+                    }
                 }
             }
         }

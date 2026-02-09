@@ -59,17 +59,27 @@ struct DeviceEligibilityTests {
         #expect(!DeviceEligibility.isEligible(machine: "iPad14,1"))
     }
 
-    @Test("Models not available when .mlmodelc not bundled")
-    func modelsNotAvailableWithoutBundle() {
-        // Until real CoreML models are shipped, areModelsAvailable should be false
+    @Test("Models availability reflects DEBUG bypass")
+    func modelsAvailabilityReflectsDebugBypass() {
+        #if DEBUG
+        // DEBUG builds bypass model check so sweep UI is testable
+        #expect(DeviceEligibility.areModelsAvailable)
+        #else
+        // Release builds require actual .mlmodelc bundles
         #expect(!DeviceEligibility.areModelsAvailable)
+        #endif
     }
 
     #if targetEnvironment(simulator)
-    @Test("Simulator hardware eligible but gated by model availability")
-    func simulatorGatedByModels() {
-        // Hardware check passes in simulator, but models aren't bundled yet
+    @Test("Simulator sweep mode available in DEBUG")
+    func simulatorSweepAvailableInDebug() {
+        #if DEBUG
+        // Both hardware (simulator bypass) and models (DEBUG bypass) pass
+        #expect(DeviceEligibility.isSweepModeAvailable)
+        #else
+        // Hardware passes but models aren't bundled
         #expect(!DeviceEligibility.isSweepModeAvailable)
+        #endif
     }
     #endif
 }

@@ -21,6 +21,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import * as logger from 'firebase-functions/logger';
 import { detectObjectsInImages, getEmptyResultReasoning } from '../ai-pipeline/layer1/layer1-service';
 import { LAYER1_TIMEOUTS } from '../ai-pipeline/layer1/prompts';
+import { labelPrecroppedObjects as labelPrecroppedObjectsImpl } from '../ai-pipeline/layer1/sweep-labeling';
 
 /**
  * Session status enum
@@ -537,23 +538,11 @@ interface SweepLabelResult {
 async function labelPrecroppedObjects(
   sweepCrops: SweepCropInfo[]
 ): Promise<SweepLabelResult[]> {
-  // TODO: Implement actual Gemini Flash labeling call
-  // 1. Fetch crop images from GCS URLs (sweepCrops[i].cropUrl)
-  // 2. Send to Gemini Flash with labeling-only prompt (no detection)
-  // 3. Parse structured response into SweepLabelResult[]
-  //
-  // For now, return placeholder labels so the sweep pipeline routing
-  // is fully wired end-to-end. Each crop gets a generic label that
-  // will be replaced once the Gemini call is connected.
-  logger.info('labelPrecroppedObjects: returning placeholder labels', {
-    cropCount: sweepCrops.length
+  logger.info('labelPrecroppedObjects: labeling via Gemini Flash', {
+    cropCount: sweepCrops.length,
   });
 
-  return sweepCrops.map((_crop, index) => ({
-    name: `Sweep Object ${index + 1}`,
-    category: 'Other',
-    attributes: {}
-  }));
+  return labelPrecroppedObjectsImpl(sweepCrops);
 }
 
 /**

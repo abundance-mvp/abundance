@@ -42,12 +42,29 @@ public struct SweepCaptureView: View {
                         SegmentOverlayView(
                             segment: segment,
                             isSelected: viewModel.selectedSegmentIds.contains(segment.id),
+                            isDuplicate: viewModel.duplicateSegmentIds.contains(segment.id),
                             geometrySize: geometry.size,
                             onTap: {
                                 viewModel.toggleSelection(segment.id)
                             }
                         )
                     }
+                }
+
+                // Tap-to-scan fallback for low-FPS devices
+                if viewModel.performanceTier == .fallback,
+                   case .scanning = viewModel.sweepState {
+                    VStack {
+                        Spacer()
+                        Text("Tap to scan")
+                            .font(.system(.headline, design: .rounded))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(Capsule().fill(.ultraThinMaterial))
+                        Spacer()
+                    }
+                    .allowsHitTesting(false)
                 }
 
                 // Top center: status indicator (reduced opacity)

@@ -9,7 +9,7 @@ public struct SegmentedObject: Identifiable, Sendable, Equatable {
     public let maskWidth: Int
     public let maskHeight: Int
     public let iouScore: Float
-    public let frameIndex: Int
+    public var frameIndex: Int
     public let timestamp: Date
 
     public init(

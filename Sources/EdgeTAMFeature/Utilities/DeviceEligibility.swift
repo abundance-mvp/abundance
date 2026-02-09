@@ -35,12 +35,17 @@ public enum DeviceEligibility: Sendable {
 
     /// Returns true only when all three EdgeTAM CoreML model bundles are present.
     /// This gates the UI until models are actually shipped.
+    /// In DEBUG builds, returns true so the sweep UI can be tested with placeholder data.
     public static var areModelsAvailable: Bool {
+        #if DEBUG
+        return true
+        #else
         let config = EdgeTAMConfiguration.default
         let names = [config.imageEncoderName, config.promptEncoderName, config.maskDecoderName]
         return names.allSatisfy { name in
             Bundle.module.url(forResource: name, withExtension: "mlmodelc") != nil
         }
+        #endif
     }
 
     /// Testable eligibility check (takes machine string as parameter)
