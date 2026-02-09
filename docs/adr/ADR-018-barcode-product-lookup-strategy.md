@@ -773,7 +773,7 @@ _[Pending approval]_
 **Related Documents**:
 - RESEARCH-BARCODE-API-2025-11-06: Barcode API Comparison (NEW - comprehensive research)
 - ADR-025: Vision Framework Strategy (document not yet created)
-- [ADR-015-ai-reasoning-layer-architecture](ADR-015-ai-reasoning-layer-architecture.md): AI Reasoning Layer Architecture (UPDATED with barcode validation tasks)
+- [ADR-015-ai-reasoning-layer-architecture](../archive/adr/ADR-015-ai-reasoning-layer-architecture.md): AI Reasoning Layer Architecture (Superseded; UPDATED with barcode validation tasks)
 - DESIGN-004: Computer Vision Pipeline (document not yet created)
 - SCHEMA-001: Enriched Item Metadata (UPDATED with barcode fields)
 - PLAN-SUMMARY-barcode-scanning-feature: Implementation Roadmap
