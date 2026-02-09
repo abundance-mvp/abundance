@@ -14,12 +14,12 @@ struct DeviceEligibilityTests {
         #expect(DeviceEligibility.isEligible(machine: "iPhone16,2"))
     }
 
-    @Test("iPhone 16 Pro variants are eligible")
-    func iphone16ProEligible() {
-        #expect(DeviceEligibility.isEligible(machine: "iPhone17,1"))
-        #expect(DeviceEligibility.isEligible(machine: "iPhone17,2"))
-        #expect(DeviceEligibility.isEligible(machine: "iPhone17,3"))
-        #expect(DeviceEligibility.isEligible(machine: "iPhone17,4"))
+    @Test("iPhone 16 family is eligible")
+    func iphone16FamilyEligible() {
+        #expect(DeviceEligibility.isEligible(machine: "iPhone17,1"))  // iPhone 16
+        #expect(DeviceEligibility.isEligible(machine: "iPhone17,2"))  // iPhone 16 Plus
+        #expect(DeviceEligibility.isEligible(machine: "iPhone17,3"))  // iPhone 16 Pro
+        #expect(DeviceEligibility.isEligible(machine: "iPhone17,4"))  // iPhone 16 Pro Max
     }
 
     @Test("iPhone 16e is eligible (A18, 8GB)")

@@ -177,6 +177,19 @@ export async function validateSessionDocument(
       }
     }
 
+    // Cap sweep crops to prevent abuse and timeout
+    const MAX_SWEEP_CROPS = 50;
+    if ((sessionData.sweepCrops as unknown[]).length > MAX_SWEEP_CROPS) {
+      logger.error('Session validation failed', { reason: 'Too many sweep crops', count: (sessionData.sweepCrops as unknown[]).length, limit: MAX_SWEEP_CROPS });
+      await sessionRef.update({
+        status: 'failed',
+        error: `Too many sweep crops: ${(sessionData.sweepCrops as unknown[]).length} exceeds limit of ${MAX_SWEEP_CROPS}`,
+        errorCode: 'SWEEP_TOO_MANY_CROPS',
+        failedAt: FieldValue.serverTimestamp()
+      });
+      return { valid: false, errorCode: 'SWEEP_TOO_MANY_CROPS', errorMessage: 'Too many sweep crops' };
+    }
+
     // Validate all sweep crop URLs are from allowed buckets
     for (const crop of sessionData.sweepCrops as SweepCropInfo[]) {
       const bucketName = extractBucketFromUrl(crop.cropUrl);
@@ -242,6 +255,8 @@ interface SweepCropInfo {
   frameIndex: number;
   /** Deduplication group ID from on-device segment grouping */
   groupId: string;
+  /** Optional 3D world position from ARKit, if available */
+  worldPosition?: [number, number, number];
 }
 
 /**
@@ -254,7 +269,8 @@ interface CaptureSession {
   status: SessionStatus;
   createdAt: FirebaseFirestore.Timestamp;
   detectedAt?: FirebaseFirestore.Timestamp;
-  originalImageUrls: string[];
+  /** Image URLs — required for single/burst, absent for sweep mode */
+  originalImageUrls?: string[];
   imagesUploaded?: number;
   expectedImageCount?: number;
   detectedObjects?: Array<{
@@ -272,6 +288,8 @@ interface CaptureSession {
   reasoning?: string;
   error?: string;
   errorCode?: string;
+  failedAt?: FirebaseFirestore.Timestamp;
+  processingStartedAt?: FirebaseFirestore.Timestamp;
   /** Sweep mode: pre-cropped segments from on-device EdgeTAM */
   sweepCrops?: SweepCropInfo[];
 }
@@ -314,7 +332,8 @@ export const onSessionCreated = onDocumentUpdated(
     logger.info('Processing session', {
       sessionId,
       captureMode: afterData.captureMode,
-      imageCount: afterData.originalImageUrls.length
+      imageCount: afterData.originalImageUrls?.length ?? 0,
+      sweepCropCount: afterData.sweepCrops?.length ?? 0
     });
 
     try {
@@ -372,8 +391,8 @@ export const onSessionCreated = onDocumentUpdated(
       }
 
       // ── Sweep mode: skip detection, label pre-cropped segments ──
-      // Note: sweepCrops structure, types, and bucket URLs are validated
-      // by validateSessionDocument above.
+      // Note: sweepCrops structure, types, bucket URLs, and count limit are
+      // validated by validateSessionDocument above.
       if (afterData.captureMode === 'sweep') {
         const sweepCrops = afterData.sweepCrops!;
 
@@ -381,18 +400,6 @@ export const onSessionCreated = onDocumentUpdated(
           sessionId,
           cropCount: sweepCrops.length
         });
-
-        // Cap sweep crops at 50 to prevent abuse and timeout
-        const MAX_SWEEP_CROPS = 50;
-        if (sweepCrops.length > MAX_SWEEP_CROPS) {
-          await sessionRef.update({
-            status: 'failed',
-            error: `Too many sweep crops: ${sweepCrops.length} exceeds limit of ${MAX_SWEEP_CROPS}`,
-            errorCode: 'SWEEP_TOO_MANY_CROPS',
-            failedAt: FieldValue.serverTimestamp()
-          });
-          return;
-        }
 
         // Label pre-cropped objects via Gemini Flash (no bounding box detection needed)
         const labels = await labelPrecroppedObjects(sweepCrops);
@@ -431,9 +438,9 @@ export const onSessionCreated = onDocumentUpdated(
       // Get storage instance
       const storage = getStorage();
 
-      // Run Layer 1 detection
+      // Run Layer 1 detection (originalImageUrls validated as non-empty above)
       const result = await detectObjectsInImages(
-        afterData.originalImageUrls,
+        afterData.originalImageUrls!,
         storage,
         afterData.userId,
         sessionId

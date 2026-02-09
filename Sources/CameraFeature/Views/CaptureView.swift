@@ -44,6 +44,9 @@ public struct CaptureView: View {
         GeometryReader { geometry in
             ZStack {
                 captureContent(geometry: geometry)
+                    // Triple-tap declared first so SwiftUI disambiguates from double-tap.
+                    // This adds ~300ms latency to double-tap as the system waits for a possible
+                    // third tap. Acceptable since SweepModeToggle provides a non-gesture alternative.
                     .gesture(tripleTapEnabled ? tripleTapGesture : nil)
                     .gesture(gesturesEnabled ? doubleTapGesture : nil)
                     .gesture(gesturesEnabled ? longPressGesture : nil)

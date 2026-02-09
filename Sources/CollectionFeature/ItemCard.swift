@@ -108,10 +108,13 @@ struct ItemCard: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     } else {
-                        // Reserve space when no brand/color so all cards have same metadata height
-                        Text(" ")
+                        // Reserve space when no brand/color so all cards have same metadata height.
+                        // Uses a hidden Text to match the exact Dynamic Type metrics of the
+                        // footnote font used in the brand/color labels above.
+                        Text("\u{200B}")
                             .font(.system(.footnote, design: .rounded))
                             .lineLimit(1)
+                            .hidden()
                     }
 
                     HStack {

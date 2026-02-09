@@ -11,6 +11,12 @@ public enum SweepSessionState: Equatable, Sendable {
     case processing
     case complete(itemCount: Int)
     case error(SweepError)
+
+    /// Whether this state is an error state (used for retry logic)
+    public var isError: Bool {
+        if case .error = self { return true }
+        return false
+    }
 }
 
 /// Sweep-specific errors

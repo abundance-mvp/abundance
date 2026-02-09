@@ -6,7 +6,7 @@ import UIKit
 /// Lives in the Services layer (infrastructure), where UIKit is permitted per ADR-010.
 /// ViewModels inject this via the `HapticFeedbackProviding` protocol to avoid
 /// direct UIKit dependencies.
-public final class HapticService: HapticFeedbackProviding, @unchecked Sendable {
+public final class HapticService: HapticFeedbackProviding, Sendable {
 
     public init() {}
 

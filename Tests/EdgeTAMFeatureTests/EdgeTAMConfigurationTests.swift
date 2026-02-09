@@ -31,3 +31,22 @@ struct EdgeTAMConfigurationTests {
         #expect(config.gridPromptCount == 16)
     }
 }
+
+@Suite("Sweep Session State")
+struct SweepSessionStateTests {
+    @Test("isError returns true for error states")
+    func isErrorForErrorState() {
+        let state = SweepSessionState.error(.deviceNotSupported)
+        #expect(state.isError)
+    }
+
+    @Test("isError returns false for non-error states")
+    func isErrorForNonErrorStates() {
+        #expect(!SweepSessionState.inactive.isError)
+        #expect(!SweepSessionState.loading.isError)
+        #expect(!SweepSessionState.ready.isError)
+        #expect(!SweepSessionState.scanning(segmentCount: 5).isError)
+        #expect(!SweepSessionState.processing.isError)
+        #expect(!SweepSessionState.complete(itemCount: 3).isError)
+    }
+}

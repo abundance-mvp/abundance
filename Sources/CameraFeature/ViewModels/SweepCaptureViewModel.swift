@@ -122,7 +122,7 @@ public final class SweepCaptureViewModel {
     /// Start sweep mode: check prerequisites and transition to ready/error state.
     /// Call when the user enters sweep mode (captureMode -> .sweep).
     public func start() {
-        guard sweepState == .inactive else { return }
+        guard sweepState == .inactive || sweepState.isError else { return }
 
         sweepState = .loading
 
@@ -173,7 +173,8 @@ public final class SweepCaptureViewModel {
                 let progress = Double(index + 1) / Double(selected.count)
                 sweepState = .uploading(progress: progress)
 
-                // Placeholder crop info -- replace with actual upload URL after GCS upload
+                // Placeholder crop info — replace with actual upload URL after GCS upload
+                #warning("Replace placeholder GCS URLs with actual upload before shipping")
                 crops.append(SweepCropInfo(
                     cropUrl: "gs://abundance-temp/sweep_crop_\(index).jpg",
                     boundingBox: [

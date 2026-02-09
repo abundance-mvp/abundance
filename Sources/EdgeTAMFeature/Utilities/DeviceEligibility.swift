@@ -48,10 +48,10 @@ public enum DeviceEligibility: Sendable {
         let eligibleModels: Set<String> = [
             "iPhone16,1",  // iPhone 15 Pro
             "iPhone16,2",  // iPhone 15 Pro Max
-            "iPhone17,1",  // iPhone 16 Pro
-            "iPhone17,2",  // iPhone 16 Pro Max
-            "iPhone17,3",  // iPhone 16 Pro (variant)
-            "iPhone17,4",  // iPhone 16 Pro Max (variant)
+            "iPhone17,1",  // iPhone 16
+            "iPhone17,2",  // iPhone 16 Plus
+            "iPhone17,3",  // iPhone 16 Pro
+            "iPhone17,4",  // iPhone 16 Pro Max
             "iPhone17,5",  // iPhone 16e (A18, 8GB)
         ]
 

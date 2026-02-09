@@ -40,9 +40,13 @@ public protocol SessionServiceProtocol: Sendable {
 
 /// Concrete implementation of SessionService for Firestore
 ///
-/// @unchecked Sendable: Relies on Firestore's documented thread-safety guarantees
+/// Thread Safety: `db` is marked `nonisolated(unsafe)` because `Firestore` is
+/// documented as thread-safe but does not conform to `Sendable`. All other stored
+/// properties (`logger`) are themselves `Sendable`. Per-property annotation is
+/// preferred over class-wide `@unchecked Sendable` so the compiler still checks
+/// any new properties added in the future.
 public final class SessionService: SessionServiceProtocol, @unchecked Sendable {
-    private let db: Firestore
+    nonisolated(unsafe) private let db: Firestore
     private let logger = Logger(subsystem: "com.abundance.camerafeature", category: "SessionService")
 
     public init(db: Firestore = Firestore.firestore()) {

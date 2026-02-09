@@ -43,6 +43,10 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
         self.configuration = configuration
     }
 
+    // Safe to access actor-isolated `memoryMonitorTask` from deinit:
+    // deinit runs only after all strong references are gone, so no concurrent
+    // access is possible. The Task holds only a [weak self] reference, so it
+    // does not prevent deinit from firing.
     deinit {
         memoryMonitorTask?.cancel()
     }

@@ -655,6 +655,49 @@ describe('onSessionCreated validation', () => {
         expect(result.errorCode).toBe('UNAUTHORIZED_BUCKET');
       });
 
+      it('rejects sweep session with more than 50 crops', async () => {
+        const manyCrops = Array.from({ length: 51 }, (_, i) => ({
+          ...validSweepCrop,
+          cropUrl: `gs://abundance-temp/crops/crop${i}.jpg`,
+          groupId: `group-${i}`
+        }));
+
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: manyCrops
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('SWEEP_TOO_MANY_CROPS');
+      });
+
+      it('accepts sweep session with exactly 50 crops', async () => {
+        const maxCrops = Array.from({ length: 50 }, (_, i) => ({
+          ...validSweepCrop,
+          cropUrl: `gs://abundance-temp/crops/crop${i}.jpg`,
+          groupId: `group-${i}`
+        }));
+
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: maxCrops
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
       it('validates second crop even if first is valid', async () => {
         const sessionData = {
           userId: 'user-123',

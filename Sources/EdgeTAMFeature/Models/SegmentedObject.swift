@@ -32,6 +32,8 @@ public struct SegmentedObject: Identifiable, Sendable, Equatable {
         self.timestamp = timestamp
     }
 
+    // maskData excluded from equality to avoid expensive Data comparison in
+    // SwiftUI diffing hot paths. Identity is determined by id + spatial properties.
     public static func == (lhs: SegmentedObject, rhs: SegmentedObject) -> Bool {
         lhs.id == rhs.id &&
         lhs.boundingBox == rhs.boundingBox &&
