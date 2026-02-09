@@ -10,6 +10,7 @@ related-files:
   - Sources/CollectionFeature/ItemCard.swift
 screenshots:
   - 020726-catalog-view-overlap.png
+  - 020726-catalog-list-view-001.png
 axiom-agent: null
 branch: null
 design-doc: null

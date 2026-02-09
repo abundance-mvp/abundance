@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-09T04:26:01Z",
+  "generated": "2026-02-09T05:57:15Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -337,6 +337,56 @@
           "merged": null
         },
         "2026-02-07-catalog-grid-first-row-card-overlap.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-sweep-mode-non-functional-on-device.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-sweep-mode-remove-helper-text.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-sweep-mode-status-indicator-reposition.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-add-sweep-mode-hint-to-camera-view.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-single-mode-bounding-boxes-still-offset-right.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-single-mode-photo-shifts-right-of-center.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-burst-mode-error-on-capture-completion.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-burst-mode-black-background.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-retake-photo-not-cropped.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-collection-view-non-uniform-item-sizes.md": {
           "status": "Open",
           "related_branch": null,
           "merged": null

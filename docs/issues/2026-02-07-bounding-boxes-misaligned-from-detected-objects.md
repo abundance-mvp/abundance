@@ -1,6 +1,6 @@
 ---
 date: 2026-02-07
-status: Fixed
+status: Open
 priority: P1
 type: bug
 component: shared
