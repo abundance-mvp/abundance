@@ -177,7 +177,7 @@ User Captures Photo
 | **OnboardingFeature** | `Sources/OnboardingFeature/` | Authentication flow (Apple Sign-In, email), first-launch experience | FirebaseAuth, CameraFeature, Core |
 | **CameraFeature** | `Sources/CameraFeature/` | Camera capture (single tap, burst mode, sweep), photo upload, detection results display | VisionCore, EdgeTAMFeature, Persistence, FirebaseAuth |
 | **CollectionFeature** | `Sources/CollectionFeature/` | Item list, search, detail view, edit flow, rescan functionality | Core, CameraFeature, Persistence, VisionCore, FirebaseAuth |
-| **ProfileFeature** | `Sources/ProfileFeature/` | User profile, settings, subscription management | Core, Persistence, FirebaseAuth |
+| **ProfileFeature** | `Sources/ProfileFeature/` | User profile display/editing, notification and privacy settings, CSV data export, sign out | Core, Persistence, FirebaseAuth |
 | **Persistence** | `Sources/Persistence/` | Firebase services (ItemService, StorageService), Keychain, data models | FirebaseFirestore, FirebaseStorage |
 | **VisionCore** | `Sources/VisionCore/` | On-device vision: barcode detection, subject masking, image quality assessment | Vision.framework |
 | **EdgeTAMFeature** | `Sources/EdgeTAMFeature/` | On-device CoreML segmentation (EdgeTAM) for sweep capture mode | VisionCore |
@@ -195,6 +195,9 @@ User Captures Photo
 | `Item` | `Persistence/Models/Item.swift` | Core data model matching Firestore schema |
 | `BarcodeDetector` | `VisionCore/Services/BarcodeDetector.swift` | Vision framework barcode detection |
 | `SubjectMaskGenerator` | `VisionCore/Services/SubjectMaskGenerator.swift` | iOS 18 subject lifting for object isolation |
+| `ProfileViewModel` | `ProfileFeature/ProfileViewModel.swift` | Profile loading, display name editing, CSV export, sign out |
+| `CSVExporter` | `ProfileFeature/Models/CSVExporter.swift` | RFC 4180 CSV generation from Item array, Transferable CSVDocument for ShareLink |
+| `NotificationsSettingsViewModel` | `ProfileFeature/ViewModels/NotificationsSettingsViewModel.swift` | UserDefaults-backed notification preferences |
 
 ### 4.3 Cloud Functions (functions/src/)
 

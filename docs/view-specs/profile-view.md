@@ -3,7 +3,7 @@
 **Source:** `Sources/ProfileFeature/ProfileView.swift`
 **Module:** ProfileFeature
 **Priority:** P1
-**Last updated:** 2026-02-06
+**Last updated:** 2026-02-09
 
 ---
 
@@ -19,7 +19,7 @@
 | Export icon (tablecells) | `salmon` | `#E8907A` | `.foregroundStyle(Color.salmon)` |
 | Export label text | `textPrimary` | `#3B2E3A` | `.foregroundStyle(Color.textPrimary)` |
 | Export share icon | `.secondary` | (system) | `.foregroundStyle(.secondary)` |
-| Sign out text + icon | `errorColor` | `#E8907A` | `.foregroundStyle(Color.errorColor)` |
+| Sign out text + icon | `salmonHighContrast` | `#C0705A` | `.foregroundStyle(Color.salmonHighContrast)` |
 | Settings card bg | `cream` | `#F0DCC0` | Via `.abundanceCardStyle()` |
 | Settings card stroke | `peach` | `#EDBE9E` | Via `.abundanceCardStyle()` |
 | Export card bg | `cream` | `#F0DCC0` | Via `.abundanceCardStyle()` |
@@ -60,6 +60,9 @@
 | Sign Out button | "Sign out" | `.isButton` (implicit via Button) | 44pt (`padding(.vertical, 16)` = ~52pt) | Body |
 | Sign Out alert - Cancel | "Cancel" | `.isButton` | System | System |
 | Sign Out alert - Confirm | "Sign Out" | `.isButton, .isDestructiveAction` | System | System |
+| Edit profile button | "Edit profile" | `.isButton` (implicit via Button) | 44pt | Body |
+| EditProfileSheet name field | `editProfile.nameField` | `.isTextField` | N/A | Body |
+| EditProfileSheet save button | `editProfile.save` | `.isButton` | System | System |
 | Loading ProgressView | (none) | (none) | N/A | N/A |
 
 **Known violations:**
@@ -151,11 +154,41 @@
 - Combined accessibility element with descriptive label
 - Avatar is `accessibilityHidden(true)` -- correct pattern
 
+### EditProfileSheet (public, separate file)
+
+**Source:** `Sources/ProfileFeature/Views/EditProfileSheet.swift`
+
+- Modal form for editing display name
+- TextField for name input with Cancel/Save toolbar buttons
+- Displays inline error text (`.salmonHighContrast`) on save failure
+- Accessibility identifiers: `editProfile.nameField`, `editProfile.save`
+
+### NotificationsSettingsView (public, separate file)
+
+**Source:** `Sources/ProfileFeature/Views/NotificationsSettingsView.swift`
+
+- List with Toggle for item-ready push notification alerts
+- Accessibility identifier: `notifications.itemReady`
+
+### PrivacySettingsView (public, separate file)
+
+**Source:** `Sources/ProfileFeature/Views/PrivacySettingsView.swift`
+
+- List with privacy policy Link and delete account Button
+- Delete account shows confirmation alert before proceeding
+- Accessibility identifiers: `privacy.policy`, `privacy.deleteAccount`
+
+### HelpView (public, separate file)
+
+**Source:** `Sources/ProfileFeature/Views/HelpView.swift`
+
+- List showing app version, build number, and support email mailto Link
+- Accessibility identifiers: `help.contactSupport`, `help.version`, `help.build`
+
 ### SettingsRow (private)
 
 - Reusable row with icon, title, and chevron disclosure indicator
-- Each row is a `Button` with `.buttonStyle(.plain)` and `.contentShape(Rectangle())`
-- Explicit `.accessibilityAddTraits(.isButton)` and custom hint
+- Each row is a `NavigationLink` with `.contentShape(Rectangle())`
 - Icon frame width fixed at 24pt for visual alignment
 - Touch target: full-width, ~48pt tall (14pt vertical padding x2 + body text)
 

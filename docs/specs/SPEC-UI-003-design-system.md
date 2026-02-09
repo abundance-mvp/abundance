@@ -81,6 +81,9 @@ The color palette migration is **complete**. All old color names have been remov
 | `CollectionView.swift` | `.accentPrimary` select button, `.errorColor` error icon |
 | `SearchBar.swift` | `.adaptiveGlass` styling |
 | `CaptureOverlays.swift` | White text (camera dark context) |
+| `ProfileView.swift` | `.salmon` icons, `.textPrimary` text, `.salmonHighContrast` sign-out, `.backgroundDefault` bg |
+| `UserInfoCard.swift` | `.accentPrimary` avatar, `.salmon` initials/badge, `.textPrimary` text |
+| `EditProfileSheet.swift` | `.salmonHighContrast` error text |
 
 ---
 
@@ -213,7 +216,7 @@ view.abundanceCardStyle()            // Default 16pt radius
 view.abundanceCardStyle(cornerRadius: 24)  // Custom radius
 ```
 
-**Usage in codebase:** ItemDetailView metadata card, CollectionView selection toolbar, EditItemSheet saving overlay.
+**Usage in codebase:** ItemDetailView metadata card, CollectionView selection toolbar, EditItemSheet saving overlay, ProfileView settings card / export button / sign-out button, UserInfoCard (cornerRadius: 20).
 
 ### 3.5 Toast/Snackbar Styles
 

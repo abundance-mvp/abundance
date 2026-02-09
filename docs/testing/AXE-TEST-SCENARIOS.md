@@ -72,11 +72,37 @@
 | Identifier | Element |
 |---|---|
 | `profile.userInfoCard` | User info card |
+| `profile.editButton` | Edit profile button (UserInfoCard) |
 | `profile.notifications` | Notifications settings row |
 | `profile.privacy` | Privacy settings row |
 | `profile.help` | Help settings row |
 | `profile.exportCSV` | Export CSV button |
+| `profile.shareCSV` | Share CSV button |
 | `profile.signOutButton` | Sign Out button |
+
+### Edit Profile (`EditProfileSheet`)
+| Identifier | Element |
+|---|---|
+| `editProfile.nameField` | Display name text field |
+| `editProfile.save` | Save button |
+
+### Notifications Settings (`NotificationsSettingsView`)
+| Identifier | Element |
+|---|---|
+| `notifications.itemReady` | Item ready alerts toggle |
+
+### Privacy Settings (`PrivacySettingsView`)
+| Identifier | Element |
+|---|---|
+| `privacy.policy` | Privacy policy link |
+| `privacy.deleteAccount` | Delete account button |
+
+### Help (`HelpView`)
+| Identifier | Element |
+|---|---|
+| `help.contactSupport` | Contact support email link |
+| `help.version` | App version label |
+| `help.build` | App build number label |
 
 ---
 
@@ -289,7 +315,18 @@
 - Settings rows visible: `profile.notifications`, `profile.privacy`, `profile.help`
 - Export button visible: `profile.exportCSV`
 
-**Note:** Settings rows (Notifications, Privacy, Help) are placeholder - just verify they render, don't test navigation.
+**Sub-screen Navigation:**
+3. `tap` on `profile.notifications` → `snapshot_ui`
+   - `notifications.itemReady` toggle visible
+4. Navigate back → `tap` on `profile.privacy` → `snapshot_ui`
+   - `privacy.policy` link visible
+   - `privacy.deleteAccount` button visible
+5. Navigate back → `tap` on `profile.help` → `snapshot_ui`
+   - `help.contactSupport` link visible
+   - `help.version` and `help.build` visible
+6. Navigate back → `tap` on `profile.editButton` → `snapshot_ui`
+   - `editProfile.nameField` visible
+   - `editProfile.save` button visible
 
 ---
 
@@ -367,6 +404,7 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 
 | Date | Change |
 |---|---|
+| 2026-02-09 | Added Profile Phase 1 sub-screen identifiers (EditProfileSheet, NotificationsSettingsView, PrivacySettingsView, HelpView), `profile.editButton`, `profile.shareCSV`. Updated Scenario 9 with sub-screen navigation steps, removed placeholder note. |
 | 2026-02-08 | Fixed stale identifiers: tab IDs (`tab.catalog`/`tab.camera` → `tab.collection`/`tab.scan`), search IDs (`collection.searchField` → `inventory.searchField`, `collection.searchClearButton` → `inventory.searchClearButton`), detection IDs (`detection.catalogAllButton` → `detection.selectAllButton`, added `detection.catalogSelectedButton`, `detection.toggleCheck.<groupId>`, `detection.retakeOverlayButton`). Updated all scenario steps and Known Limitations to match current code. |
 | 2026-02-07 | Updated all scenario steps from stale `axe` CLI syntax to XcodeBuildMCP tool names (`snapshot_ui`, `tap`, `swipe`, `long_press`, `type_text`). Expanded Known Limitations to 6 entries (search field, edit flow, long_press). Updated Scenario 6 for two-step edit flow and swipe-to-dismiss. Updated Scenario 8 for coordinate-based long_press. Updated Scenarios 1, 2, 9, 11 for coordinate-based tab navigation. |
 | 2026-02-07 | Removed Scenario 12 (Catalog Processing States) — requires cloud API calls, violates no-network-calls policy. Now 11 scenarios total. |
