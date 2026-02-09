@@ -43,13 +43,40 @@ Apply these rules in order. Each file goes into exactly ONE domain bucket:
 
 **Priority rule:** `gemini` is a subset of `functions/src/` — files under `functions/src/ai-pipeline/` go to `gemini`, all other `functions/src/` files go to `backend`.
 
+### Step 2.5: Sub-classify iOS Files by Module
+
+For the **ios** domain bucket, group files by module for Phase 2 dynamic auditor routing:
+
+```
+ios_modules = {}
+for file in ios_bucket:
+  if file starts with "Sources/<Module>/":
+    module = extract "Sources/<Module>/"
+    ios_modules[module].append(file)
+  elif file starts with "Tests/":
+    ios_modules["Tests"].append(file)
+  elif file starts with "App/":
+    ios_modules["App"].append(file)
+```
+
+Also detect UI files for polish integration:
+
+```
+ui_files = [f for f in ios_bucket
+            if f matches *View.swift, *Sheet.swift, *Card.swift,
+               *Badge.swift, *Button.swift, *Overlay.swift, *Bar.swift]
+```
+
+Pass `ios_modules` and `ui_files` to Step 3.
+
 ### Step 3: Load Skills for Context
 
 For each non-empty domain bucket, load the corresponding skill:
 
 ```
-# iOS domain detected
+# iOS domain detected — pass module classification for two-phase review
 Skill(skill="ios-superpowers", args="review")
+# ios-superpowers will use ios_modules from Step 2.5 for Phase 2 routing
 
 # Backend domain detected
 Skill(skill="backend-superpowers")
@@ -58,9 +85,19 @@ Skill(skill="backend-superpowers")
 Skill(skill="gemini-integration")
 ```
 
-### Step 4: Dispatch Parallel Review Agents
+### Step 4: Dispatch Review Agents
 
-Launch one `superpowers:code-reviewer` Task agent per domain, **all in parallel**:
+**For iOS domain:** `ios-superpowers review` handles its own two-phase dispatch internally:
+- Phase 1: 5 fixed horizontal auditors (concurrency, accessibility, architecture, security, memory)
+- Phase 2: Dynamic auditors based on `ios_modules` from Step 2.5 (camera, codable, nav, energy, etc.)
+- Phase 3: Skill-enriched synthesis with `requesting-code-review`
+
+Provide `ios-superpowers review` with:
+1. The iOS file list
+2. The module classification from Step 2.5
+3. The UI file list for polish integration
+
+**For backend/gemini domains:** Launch one `superpowers:code-reviewer` Task agent per domain:
 
 ```
 Task(
@@ -112,7 +149,35 @@ After all agents return, produce a unified summary:
 ```markdown
 ## Code Review Summary
 
-### iOS (N files) — via ios-superpowers
+### iOS (N files) — via ios-superpowers (two-phase)
+
+#### Phase 1: Horizontal Auditors
+| Auditor | Findings |
+|---------|----------|
+| Concurrency | ... |
+| Accessibility | ... |
+| Architecture | ... |
+| Security/Privacy | ... |
+| Memory | ... |
+
+#### Phase 2: Domain Auditors (triggered by: CameraFeature, Persistence, ...)
+| Auditor | Module | Findings |
+|---------|--------|----------|
+| Camera | CameraFeature | ... |
+| Codable | Persistence | ... |
+| SwiftUI Perf | CollectionFeature | ... |
+
+#### Phase 2: Polish (triggered by UI files)
+| Auditor | Findings |
+|---------|----------|
+| Palette | ... |
+| Liquid Glass | ... |
+| HIG | ... |
+
+#### Domain Skills Loaded
+- `axiom-camera-capture` (CameraFeature context)
+- `axiom-codable` (Persistence context)
+
 - Critical: ...
 - Important: ...
 - Suggestions: ...
@@ -136,12 +201,24 @@ After all agents return, produce a unified summary:
 ## Domain-Specific Review Checklists
 
 ### iOS Checklist
+
+**Phase 1 (always checked):**
 1. Swift 6 strict concurrency — no data races, proper actor isolation
 2. ADR-010 — no `import UIKit` in Views/ViewModels (Services OK)
 3. @Observable patterns — not ObservableObject (iOS 17+)
 4. Accessibility — labels, traits, 44pt touch targets, Dynamic Type
 5. Memory — no retain cycles in closures, proper `[weak self]`
-6. SwiftUI performance — no expensive work in view bodies
+6. Security — no hardcoded credentials, proper Keychain usage
+
+**Phase 2 (checked when relevant module detected):**
+7. Camera (CameraFeature) — AVCaptureSession threading, proper interruption handling, energy efficiency
+8. Vision/ML (VisionCore, EdgeTAMFeature) — correct VNRequest patterns, CoreML model lifecycle
+9. Serialization (Persistence) — Codable correctness, no `try?` swallowing errors, proper date handling
+10. Networking (Persistence) — Firebase error handling, proper retry/timeout patterns
+11. SwiftUI performance (CollectionFeature) — no expensive work in view bodies, lazy loading, proper identity
+12. Navigation (CollectionFeature) — NavigationPath correctness, deep link handling
+13. Test quality (Tests/) — no `sleep()` calls, no shared mutable state, proper assertions
+14. Polish (UI files) — brand palette compliance, Liquid Glass adoption, HIG conformance
 
 ### Backend Checklist
 1. Firestore transactions — atomic reads+writes, no race conditions
@@ -184,6 +261,9 @@ Output: Classifies 15 changed files into 3 domains, dispatches 3 parallel review
 ## Error Handling
 
 - **No changed files** — Report "nothing to review" and exit
-- **Single domain** — Only dispatch one agent (skip parallel)
+- **Single domain** — Only dispatch one agent (skip parallel for cross-domain; Phase 1+2 still run in parallel within iOS)
 - **Infra-only changes** — Standard review without specialized skill, no agent dispatch
 - **Agent failure** — Report which domain failed, continue with others
+- **Phase 2 agent failure** — Report which module-specific auditor failed, Phase 1 results still valid
+- **No Phase 2 modules detected** — Only Phase 1 runs (equivalent to previous behavior)
+- **Token budget exceeded** — Reduce Phase 2 skills to top 2 by file count, drop polish auditors if non-UI-heavy
