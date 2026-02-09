@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-09T05:57:15Z",
+  "generated": "2026-02-09T06:28:35Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -387,6 +387,31 @@
           "merged": null
         },
         "2026-02-08-collection-view-non-uniform-item-sizes.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-missing-avaudiosession-configuration.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-mainactor-on-haptic-protocol.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-withanimation-async-boundary-itemcard.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-session-interruption-handling-not-defensive.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-unsafe-task-captures-missing-weak-self.md": {
           "status": "Open",
           "related_branch": null,
           "merged": null
