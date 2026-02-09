@@ -91,14 +91,18 @@ public final class CaptureSessionViewModel {
 
     // MARK: - Initialization
 
+    private let haptics: HapticFeedbackProviding?
+
     public init(
         sessionService: SessionServiceProtocol = SessionService(),
         storageService: StorageServiceProtocol = StorageService(),
-        catalogService: CatalogServiceProtocol = CatalogService()
+        catalogService: CatalogServiceProtocol = CatalogService(),
+        haptics: HapticFeedbackProviding? = nil
     ) {
         self.sessionService = sessionService
         self.storageService = storageService
         self.catalogService = catalogService
+        self.haptics = haptics
     }
 
     // MARK: - Single Photo Capture (Double-Tap)
@@ -402,10 +406,7 @@ public final class CaptureSessionViewModel {
     }
 
     private func triggerHapticPulse() async {
-        #if os(iOS)
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
-        #endif
+        haptics?.playImpact(style: .medium)
     }
 
     // MARK: - Public Actions

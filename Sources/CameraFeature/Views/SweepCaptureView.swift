@@ -90,18 +90,33 @@ public struct SweepCaptureView: View {
 
     private func sweepErrorOverlay(error: SweepError) -> some View {
         VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
+            if case .modelsNotBundled = error {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 40))
+                    .foregroundStyle(Color.softTeal)
 
-            Text(error.errorDescription ?? "Sweep mode unavailable")
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
+                Text("Sweep Mode Coming Soon")
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
 
-            Text("Use Photo or Burst mode instead")
-                .font(.system(.subheadline, design: .rounded))
-                .foregroundStyle(.secondary)
+                Text("This feature is under development")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+            } else {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.secondary)
+
+                Text(error.errorDescription ?? "Sweep mode unavailable")
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+
+                Text("Use Photo or Burst mode instead")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(32)
     }

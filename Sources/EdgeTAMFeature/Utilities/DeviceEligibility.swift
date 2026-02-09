@@ -23,6 +23,16 @@ public enum DeviceEligibility: Sendable {
         return hardwareOK && areModelsAvailable
     }
 
+    /// Check if the device hardware supports sweep mode (ignores model availability).
+    /// Use this to show/hide sweep UI even before models are bundled.
+    public static var isHardwareEligible: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return isEligible(machine: currentMachine())
+        #endif
+    }
+
     /// Returns true only when all three EdgeTAM CoreML model bundles are present.
     /// This gates the UI until models are actually shipped.
     public static var areModelsAvailable: Bool {

@@ -120,36 +120,34 @@ public struct DetectionResultsView: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-
-                    // Bounding box overlays mapped to the actual displayed image rect
-                    GeometryReader { containerGeometry in
-                        let imgRect = imageDisplayRect(
-                            imageSize: decodedImageSize ?? containerGeometry.size,
-                            containerSize: containerGeometry.size
-                        )
-                        ForEach(detectedObjects) { object in
-                            BoundingBoxOverlay(
-                                object: object,
-                                imageRect: imgRect,
-                                isSelected: selectedObjectId == object.groupId,
-                                isChecked: selectedObjectIds.contains(object.groupId),
-                                isCataloging: catalogingObjectIds.contains(object.groupId),
-                                isCataloged: catalogedObjectIds.contains(object.groupId)
-                            )
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel("Detected: \(object.label)")
-                            .accessibilityHint(
-                                selectedObjectIds.contains(object.groupId) ? "Double tap to deselect" : "Double tap to select"
-                            )
-                            .accessibilityAddTraits(.isButton)
-                            .onTapGesture {
-                                withAnimation(reduceMotion ? nil : .brandPress) {
-                                    selectedObjectId = selectedObjectId == object.groupId ? nil : object.groupId
-                                    toggleObjectSelection(object.groupId)
+                        .overlay {
+                            // Bounding box overlays as overlay on image ensures
+                            // coordinate alignment without offset calculations
+                            GeometryReader { imageGeometry in
+                                ForEach(detectedObjects) { object in
+                                    BoundingBoxOverlay(
+                                        object: object,
+                                        imageRect: CGRect(origin: .zero, size: imageGeometry.size),
+                                        isSelected: selectedObjectId == object.groupId,
+                                        isChecked: selectedObjectIds.contains(object.groupId),
+                                        isCataloging: catalogingObjectIds.contains(object.groupId),
+                                        isCataloged: catalogedObjectIds.contains(object.groupId)
+                                    )
+                                    .accessibilityElement(children: .ignore)
+                                    .accessibilityLabel("Detected: \(object.label)")
+                                    .accessibilityHint(
+                                        selectedObjectIds.contains(object.groupId) ? "Double tap to deselect" : "Double tap to select"
+                                    )
+                                    .accessibilityAddTraits(.isButton)
+                                    .onTapGesture {
+                                        withAnimation(reduceMotion ? nil : .brandPress) {
+                                            selectedObjectId = selectedObjectId == object.groupId ? nil : object.groupId
+                                            toggleObjectSelection(object.groupId)
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
                 }
             }
         }

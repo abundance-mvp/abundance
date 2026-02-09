@@ -17,9 +17,8 @@ public enum PerformanceTier: Sendable {
 }
 
 /// Protocol abstracting haptic feedback to avoid UIKit in ViewModels (ADR-010)
-@MainActor
 public protocol HapticFeedbackProviding {
-    func playImpact(style: HapticStyle)
+    @MainActor func playImpact(style: HapticStyle)
 }
 
 /// Haptic intensity level
@@ -127,10 +126,17 @@ public final class SweepCaptureViewModel {
 
         sweepState = .loading
 
-        // Check if EdgeTAM models are bundled
-        guard EdgeTAMConfiguration.areModelsAvailable else {
-            logger.error("Sweep mode unavailable: EdgeTAM models not bundled")
+        // Check hardware eligibility first
+        guard DeviceEligibility.isHardwareEligible else {
+            logger.error("Sweep mode unavailable: device not supported")
             sweepState = .error(.deviceNotSupported)
+            return
+        }
+
+        // Check if EdgeTAM models are bundled
+        guard DeviceEligibility.areModelsAvailable else {
+            logger.error("Sweep mode unavailable: EdgeTAM models not bundled")
+            sweepState = .error(.modelsNotBundled)
             return
         }
 

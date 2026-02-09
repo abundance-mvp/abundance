@@ -152,6 +152,8 @@ struct ItemCard: View {
         // Pad inward so shadow renders within the grid cell's allocated space,
         // preventing bleed into the adjacent column's card
         .padding(4)
+        // Fill grid cell height and align content to top for uniform card sizing
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     // MARK: - Selection Indicator
@@ -222,18 +224,15 @@ struct ItemCard: View {
             // Skip animation for Reduce Motion users
             onTap?()
         } else {
-            withAnimation(.brandPress) {
-                isPressed = true
-            }
+            // State change drives animation via .animation(.brandPress, value: isPressed) modifier
+            isPressed = true
             onTap?()
 
             pressAnimationTask?.cancel()
             pressAnimationTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(150))
                 guard !Task.isCancelled else { return }
-                withAnimation(.brandPress) {
-                    isPressed = false
-                }
+                isPressed = false
             }
         }
     }

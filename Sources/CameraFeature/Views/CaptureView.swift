@@ -20,6 +20,7 @@ public struct CaptureView: View {
     @State private var longPressActive = false
     @State private var captureSession: AVCaptureSession?
     @State private var isCaptureInProgress = false  // Synchronous guard for race prevention
+    @State private var captureTask: Task<Void, Never>?  // Track in-flight capture for cancellation
     @State private var teardownTask: Task<Void, Never>?  // Track in-flight teardown for serialization
     @State private var sweepViewModel = SweepCaptureViewModel()
     @State private var captureMode: CaptureMode = .single
@@ -100,6 +101,7 @@ public struct CaptureView: View {
             .onAppear {
                 // Clear frozen frame so live preview is visible on return
                 frozenFrame = nil
+                frozenFrameImage = nil
                 // Restart camera when returning to this tab
                 Task {
                     await restartCameraIfNeeded()
@@ -110,6 +112,7 @@ public struct CaptureView: View {
                 await checkCameraAuthorization()
             }
             .onDisappear {
+                captureTask?.cancel()
                 teardownCamera()
             }
             .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -118,6 +121,7 @@ public struct CaptureView: View {
                     case .active:
                         // App returning to foreground - clear stale frozen frame and restart
                         frozenFrame = nil
+                        frozenFrameImage = nil
                         if authorizationStatus == .authorized {
                             await restartCameraIfNeeded()
                         }
@@ -379,7 +383,7 @@ public struct CaptureView: View {
                     VStack(spacing: 4) {
                         instructionLabel
 
-                        if DeviceEligibility.isSweepModeAvailable {
+                        if DeviceEligibility.isHardwareEligible {
                             Text("triple tap to enter sweep mode")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary.opacity(0.7))
@@ -389,7 +393,7 @@ public struct CaptureView: View {
 
                 SweepModeToggle(
                     selectedMode: $captureMode,
-                    isSweepAvailable: DeviceEligibility.isSweepModeAvailable
+                    isSweepAvailable: DeviceEligibility.isHardwareEligible
                 )
                 .padding(.bottom, 40)
 
@@ -452,7 +456,7 @@ public struct CaptureView: View {
 
     /// Whether triple-tap to enter sweep mode is enabled
     private var tripleTapEnabled: Bool {
-        guard DeviceEligibility.isSweepModeAvailable else { return false }
+        guard DeviceEligibility.isHardwareEligible else { return false }
         guard captureMode != .sweep else { return false }
         guard !showingCameraError else { return false }
         guard !isCaptureInProgress else { return false }
@@ -584,7 +588,7 @@ public struct CaptureView: View {
         guard !isCaptureInProgress else { return }
         isCaptureInProgress = true
 
-        Task {
+        captureTask = Task {
             defer { isCaptureInProgress = false }
             do {
                 // Capture photo

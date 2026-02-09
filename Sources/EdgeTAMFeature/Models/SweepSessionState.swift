@@ -20,6 +20,7 @@ public enum SweepError: Equatable, Sendable, LocalizedError {
     case decoderFailed
     case noSegmentsDetected
     case deviceNotSupported
+    case modelsNotBundled
     case memoryPressure
     case catalogFailed(String)
 
@@ -35,6 +36,8 @@ public enum SweepError: Equatable, Sendable, LocalizedError {
             return "No objects detected. Try pointing at a shelf with visible items."
         case .deviceNotSupported:
             return "Sweep mode requires iPhone 15 Pro or later"
+        case .modelsNotBundled:
+            return "Sweep mode is coming soon"
         case .memoryPressure:
             return "Low memory. Try selecting fewer items."
         case .catalogFailed(let detail):
