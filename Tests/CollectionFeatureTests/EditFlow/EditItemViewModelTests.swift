@@ -5,7 +5,7 @@ import UIKit
 #elseif os(macOS)
 import AppKit
 #endif
-@testable import InventoryFeature
+@testable import CollectionFeature
 @testable import Persistence
 
 @Suite("EditItemViewModel Tests")
@@ -633,7 +633,7 @@ final class MockEditItemRepository: ItemRepository, @unchecked Sendable {
         nil
     }
 
-    func requestDeepScan(id: String) async throws {}
+    func refreshItem(id: String) async throws {}
 
     func recatalogWithPhotos(id: String) async throws {}
 }

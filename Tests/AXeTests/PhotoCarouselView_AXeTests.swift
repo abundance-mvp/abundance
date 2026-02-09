@@ -10,7 +10,7 @@ struct PhotoCarouselView_AXeTests {
     let source: SourceFile
 
     init() throws {
-        source = try AXeTestHelpers.readSource(at: "Sources/InventoryFeature/Components/PhotoCarouselView.swift")
+        source = try AXeTestHelpers.readSource(at: "Sources/CollectionFeature/Components/PhotoCarouselView.swift")
     }
 
     // MARK: - Palette

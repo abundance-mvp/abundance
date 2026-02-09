@@ -322,7 +322,7 @@ func test_captureButton_accessibility() throws {
 ```
 Tests/AXeTests/
 ├── CameraView_AXeTests.swift
-├── InventoryView_AXeTests.swift
+├── CollectionView_AXeTests.swift
 ├── ItemDetailView_AXeTests.swift
 ├── ProfileView_AXeTests.swift
 └── ...
@@ -389,7 +389,7 @@ The guard scans staged `.swift` files for:
 ```
 🛑 Brand Guard: 2 violations found
 
-Sources/InventoryFeature/InventoryView.swift:42
+Sources/CollectionFeature/CollectionView.swift:42
   .foregroundColor(.blue)
   → Use .foregroundColor(.accentPrimary)
 
@@ -409,7 +409,7 @@ Commit blocked. Fix violations or use --no-verify to bypass.
 1. Create `docs/view-specs/` directory
 2. Write `scripts/brand-guard.sh` pre-commit hook
 3. Create `.claude/commands/polish.md` command skeleton
-4. Write view specs for 3 priority views: `InventoryView`, `ItemDetailView`, `CameraView`
+4. Write view specs for 3 priority views: `CollectionView`, `ItemDetailView`, `CameraView`
 
 ### Phase 2: Auditors (build the 4 auditor agents)
 
@@ -446,19 +446,19 @@ Views requiring specs (13 views + 3 sheets + 2 app-level):
 
 | View | Module | Priority |
 |------|--------|----------|
-| `InventoryView` | InventoryFeature | P0 |
-| `ItemDetailView` | InventoryFeature | P0 |
+| `CollectionView` | CollectionFeature | P0 |
+| `ItemDetailView` | CollectionFeature | P0 |
 | `CameraView` | CameraFeature | P0 |
 | `CaptureView` | CameraFeature | P1 |
 | `ProfileView` | ProfileFeature | P1 |
 | `SignInView` | OnboardingFeature | P1 |
-| `PhotoCarouselView` | InventoryFeature | P1 |
+| `PhotoCarouselView` | CollectionFeature | P1 |
 | `DetectionResultsView` | CameraFeature | P2 |
 | `ErrorRecoveryView` | CameraFeature | P2 |
-| `EditItemSheet` | InventoryFeature | P2 |
-| `RescanComparisonSheet` | InventoryFeature | P2 |
-| `RescanPromptSheet` | InventoryFeature | P2 |
+| `EditItemSheet` | CollectionFeature | P2 |
+| `RescanComparisonSheet` | CollectionFeature | P2 |
+| `RescanPromptSheet` | CollectionFeature | P2 |
 | `MainTabView` | App | P2 |
 | `CameraPreviewView` | CameraFeature | P3 (UIViewRepresentable) |
-| `AddPhotoCameraView` | InventoryFeature | P3 |
-| `RescanCameraView` | InventoryFeature | P3 |
+| `AddPhotoCameraView` | CollectionFeature | P3 |
+| `RescanCameraView` | CollectionFeature | P3 |

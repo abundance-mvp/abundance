@@ -1,6 +1,6 @@
 import XCTest
 import SwiftUI
-@testable import InventoryFeature
+@testable import CollectionFeature
 
 final class FloatingTabBarTests: XCTestCase {
     @MainActor

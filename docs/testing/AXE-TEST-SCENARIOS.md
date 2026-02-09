@@ -15,25 +15,25 @@
 | `tab.camera` | Capture/Camera tab |
 | `tab.profile` | Profile tab |
 
-### Inventory Screen (`InventoryView`)
+### Collection Screen (`CollectionView`)
 | Identifier | Element |
 |---|---|
-| `inventory.selectButton` | Select/Done toggle button |
-| `inventory.deselectAllButton` | Deselect All button (selection mode) |
-| `inventory.bulkDeleteButton` | Bulk Delete button (selection mode) |
-| `inventory.grid` | LazyVGrid item container |
-| `inventory.loading` | Loading ProgressView |
-| `inventory.emptyState` | Empty inventory view |
-| `inventory.retryButton` | Error retry button |
-| `inventory.searchField` | Search TextField |
-| `inventory.searchClearButton` | Search clear (X) button |
-| `inventory.item.<id>` | Individual item card (dynamic) |
+| `collection.selectButton` | Select/Done toggle button |
+| `collection.deselectAllButton` | Deselect All button (selection mode) |
+| `collection.bulkDeleteButton` | Bulk Delete button (selection mode) |
+| `collection.grid` | LazyVGrid item container |
+| `collection.loading` | Loading ProgressView |
+| `collection.emptyState` | Empty collection view |
+| `collection.retryButton` | Error retry button |
+| `collection.searchField` | Search TextField |
+| `collection.searchClearButton` | Search clear (X) button |
+| `collection.item.<id>` | Individual item card (dynamic) |
 
 ### Item Detail (`ItemDetailView`)
 | Identifier | Element |
 |---|---|
 | `detail.editButton` | Edit (pencil) button |
-| `detail.recatalogButton` | Re-catalog (arrows) button |
+| `detail.refreshButton` | Refresh (arrows) button |
 | `detail.itemName` | Item name text |
 
 ### Edit Flow (`EditItemSheet`)
@@ -83,7 +83,7 @@
 **Steps:**
 1. `snapshot_ui` - verify tab bar area present
 2. `tap(x: 100, y: 850)` - Catalog tab
-3. `snapshot_ui` - verify "Inventory" navigation title
+3. `snapshot_ui` - verify "Collection" navigation title
 4. `tap(x: 200, y: 850)` - Camera tab
 5. `snapshot_ui` - verify camera content ("Camera" heading or `camera.simulatorPlaceholder`)
 6. `tap(x: 300, y: 850)` - Profile tab
@@ -92,7 +92,7 @@
 **Assertions:**
 - "Tab Bar" group exists in the AX tree
 - Each tab shows its expected navigation title or content
-- Catalog tab shows "Inventory" heading
+- Catalog tab shows "Collection" heading
 - Camera tab shows "Camera" heading (simulator: `camera.simulatorPlaceholder`)
 - Profile tab shows "Profile" heading
 
@@ -102,22 +102,22 @@
 
 ---
 
-### Scenario 2: Empty Inventory State
+### Scenario 2: Empty Collection State
 
 **Goal:** Empty state renders when no items exist.
 
-**Precondition:** Fresh user or cleared inventory.
+**Precondition:** Fresh user or cleared collection.
 
 **Steps:**
 1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
-2. `snapshot_ui` - inspect inventory state
+2. `snapshot_ui` - inspect collection state
 
 **Assertions:**
-- `inventory.emptyState` is visible
+- `collection.emptyState` is visible
 - "No Items Yet" label present
 - "Open Camera" button present
 
-**Skip if:** User has items (check for `inventory.item.*` identifiers in tree).
+**Skip if:** User has items (check for `collection.item.*` identifiers in tree).
 
 ---
 
@@ -130,13 +130,13 @@
 **Steps:**
 1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
 2. `snapshot_ui` - check grid and items
-3. Count `inventory.item.*` identifiers
+3. Count `collection.item.*` identifiers
 4. `swipe(direction: "up")` - scroll down (swipe up to scroll content down)
 5. `snapshot_ui` - check for additional items
 
 **Assertions:**
-- `inventory.grid` exists
-- Multiple `inventory.item.*` identifiers present
+- `collection.grid` exists
+- Multiple `collection.item.*` identifiers present
 - Scrolling reveals more items (if applicable)
 
 **Skip if:** < 2 items.
@@ -150,13 +150,13 @@
 **Steps:**
 1. Navigate to Catalog tab (with items present)
 2. `snapshot_ui` - count initial items
-3. `tap(id: "inventory.searchField")` - focus search (MUST use id, not coordinates)
+3. `tap(id: "collection.searchField")` - focus search (MUST use id, not coordinates)
 4. `snapshot_ui` - confirm focus (AXValue changes from placeholder)
 5. `type_text("<known-item-term>")` - type a search term from a visible item's label
 6. `snapshot_ui` - verify filtered results (fewer items)
-7. `tap(id: "inventory.searchClearButton")` - clear search
+7. `tap(id: "collection.searchClearButton")` - clear search
 8. `snapshot_ui` - verify all items restored
-9. `tap(id: "inventory.searchField")` - focus again
+9. `tap(id: "collection.searchField")` - focus again
 10. `type_text("zzz_nonexistent_item_zzz")` - type nonsense
 11. `snapshot_ui` - verify empty search state (ContentUnavailableView)
 
@@ -175,8 +175,8 @@
 
 **Steps:**
 1. Navigate to Catalog tab (with items present)
-2. `snapshot_ui` - find first `inventory.item.*` identifier
-3. `tap(id: "inventory.item.<id>")` - tap item
+2. `snapshot_ui` - find first `collection.item.*` identifier
+3. `tap(id: "collection.item.<id>")` - tap item
 4. `snapshot_ui` - inspect detail view
 5. `swipe(direction: "up")` - scroll down to see all metadata
 
@@ -223,20 +223,20 @@
 
 **Steps:**
 1. Navigate to Catalog tab (with 2+ items)
-2. `tap(id: "inventory.selectButton")` - enter selection mode
+2. `tap(id: "collection.selectButton")` - enter selection mode
 3. `snapshot_ui` - verify button label changed to "Done"
-4. `tap(id: "inventory.item.<id1>")` then `tap(id: "inventory.item.<id2>")` - select two items
+4. `tap(id: "collection.item.<id1>")` then `tap(id: "collection.item.<id2>")` - select two items
 5. `snapshot_ui` - verify "selected" in item labels, selection count in delete button
-6. `tap(id: "inventory.bulkDeleteButton")` - tap bulk delete
+6. `tap(id: "collection.bulkDeleteButton")` - tap bulk delete
 7. `snapshot_ui` - verify confirmation dialog appears
 8. Tap "Cancel" in the dialog
-9. `tap(id: "inventory.deselectAllButton")` - deselect all
-10. `tap(id: "inventory.selectButton")` - exit selection mode (tap "Done")
+9. `tap(id: "collection.deselectAllButton")` - deselect all
+10. `tap(id: "collection.selectButton")` - exit selection mode (tap "Done")
 
 **Assertions:**
 - Button toggles between "Select" and "Done"
 - Checkmarks appear on selected items
-- `inventory.bulkDeleteButton` and `inventory.deselectAllButton` visible in selection mode
+- `collection.bulkDeleteButton` and `collection.deselectAllButton` visible in selection mode
 - Confirmation dialog appears on bulk delete
 - Cancel dismisses dialog without deleting
 
@@ -250,17 +250,17 @@
 
 **Steps:**
 1. Navigate to Catalog tab (with items, NOT in selection mode)
-2. `snapshot_ui` - find an item `inventory.item.<id>` and note its frame center coordinates
+2. `snapshot_ui` - find an item `collection.item.<id>` and note its frame center coordinates
 3. `long_press(x: <center_x>, y: <center_y>, duration: 1500)` — `long_press` does NOT accept an `id` parameter, must use coordinates calculated from item's AXFrame (x + width/2, y + height/2). See Known Limitations.
 4. `snapshot_ui` - verify context menu
-5. Check for "Delete" and "Re-catalog" menu options
+5. Check for "Delete" and "Refresh" menu options
 6. Tap "Delete" if present
 7. `snapshot_ui` - verify confirmation dialog
 8. Tap "Cancel" to dismiss (or tap "Dismiss context menu" button if no action taken)
 
 **Assertions:**
 - Context menu appears with "Delete" option
-- "Re-catalog" option present in context menu
+- "Refresh" option present in context menu
 - "Preview" option present in context menu
 - Delete shows confirmation dialog
 - Cancel dismisses without deleting
@@ -311,7 +311,7 @@
 
 **Steps:**
 1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
-2. `snapshot_ui` - check for inventory identifiers
+2. `snapshot_ui` - check for collection identifiers
 3. Navigate to Profile tab: `tap(x: 300, y: 850)`
 4. `snapshot_ui` - check for profile identifiers
 5. If items exist, tap into detail view and check detail identifiers
@@ -332,8 +332,8 @@
 |---|---|
 | SwiftUI toolbar buttons (`edit.cancelButton`, `edit.saveButton`) not exposed as children in the AX tree when inside NavigationBar | Identifiers are correctly applied in code; this is a SwiftUI accessibility limitation. The `edit.cancelButton` on the **rescan prompt sheet** IS accessible — only the edit form's NavigationBar toolbar buttons are hidden. To dismiss the edit form, **swipe down** (y=100 → y=800, duration 0.3s). |
 | SwiftUI `TabView` tab bar buttons not traversable by `snapshot_ui`/AXe | Identifiers (`tab.catalog`, `tab.camera`, `tab.profile`) are correctly set on content views in code. `UITabBarButton` elements are not exposed through the AXe accessibility hierarchy. Use coordinate-based tapping: **Catalog (100,850), Camera (200,850), Profile (300,850)**. If tap doesn't register (scrollable content intercepts), take a `screenshot` to verify tab bar position and adjust y (try 840-860). Works correctly in XCUITest via `tabBars.buttons["Catalog"]`. |
-| `inventory.grid` identifier on `LazyVGrid` not exposed as a separate AX element | Grid items appear as direct children of the Application. The `LazyVGrid` container is not represented as a distinct element in the AX tree. Verify grid by checking for multiple `inventory.item.*` identifiers instead. |
-| Search field requires tap-by-ID before typing | The SwiftUI `.searchable` field does not activate from a coordinate tap alone. Always use `tap(id: "inventory.searchField")` first, confirm focus via `snapshot_ui` (AXValue changes from placeholder to empty or typed text), then use `type_text`. |
+| `collection.grid` identifier on `LazyVGrid` not exposed as a separate AX element | Grid items appear as direct children of the Application. The `LazyVGrid` container is not represented as a distinct element in the AX tree. Verify grid by checking for multiple `collection.item.*` identifiers instead. |
+| Search field requires tap-by-ID before typing | The SwiftUI `.searchable` field does not activate from a coordinate tap alone. Always use `tap(id: "collection.searchField")` first, confirm focus via `snapshot_ui` (AXValue changes from placeholder to empty or typed text), then use `type_text`. |
 | Edit flow has a rescan prompt before the edit form | Tapping `detail.editButton` opens a rescan prompt sheet with `edit.takeNewPhotoButton`, `edit.skipRescanButton`, and `edit.cancelButton`. Tap `edit.skipRescanButton` ("Edit Without Rescan") to reach the actual edit form. |
 | `long_press` requires explicit coordinates, not element ID | The XcodeBuildMCP `long_press` tool only accepts `x`, `y`, `duration` — no `id` parameter. Calculate coordinates from the target element's frame center (x + width/2, y + height/2). Use duration 1500ms. |
 
@@ -365,6 +365,6 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 | 2026-02-07 | Removed Scenario 12 (Catalog Processing States) — requires cloud API calls, violates no-network-calls policy. Now 11 scenarios total. |
 | 2026-02-07 | Removed Scenario 12 (Deep Catalog Trigger) — catalog pipeline requires Cloud Functions/network, not suitable for AXe testing. Renumbered Scenario 13 → 12. Now 12 scenarios total. |
 | 2026-02-07 | Fixed 4 AXe issues: search clear button 44x44 touch target, item IDs in selection mode, tab IDs on content views, Scenario 12 rewritten for simulator re-catalog flow. Documented 3 known limitations (tab bar, toolbar buttons, grid container). |
-| 2026-02-06 | Fixed 7 AXe findings: tab IDs, grid ID, recatalog button/context menu, CSV-only export, select button height, known limitations |
+| 2026-02-06 | Fixed 7 AXe findings: tab IDs, grid ID, refresh button/context menu, CSV-only export, select button height, known limitations |
 | 2026-02-05 | Added re-catalog identifiers, updated Scenario 8 & 12 for re-catalog flow |
 | 2026-02-05 | Initial creation with 13 scenarios |

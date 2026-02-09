@@ -1,7 +1,7 @@
 # View Spec: ItemDetailView
 
-**Source:** `Sources/InventoryFeature/ItemDetailView.swift`
-**Module:** InventoryFeature
+**Source:** `Sources/CollectionFeature/ItemDetailView.swift`
+**Module:** CollectionFeature
 **Priority:** P0
 **Last updated:** 2026-02-06
 
@@ -20,7 +20,7 @@
 | Estimated value | `mutedSage` | `#9DC4A8` | `.foregroundStyle(Color.mutedSage)` |
 | Metadata card | `cream` / `peach` | — | `.abundanceCardStyle(cornerRadius: 24)` |
 | Card shadow | `black.opacity(0.15)` | — | Drop shadow |
-| Deep scan icon | `softTeal` | `#8ECAC0` | `Color.softTeal` for deep scan feature |
+| Refresh icon | `softTeal` | `#8ECAC0` | `Color.softTeal` for refresh feature |
 | Confidence high | `mutedSage` | `#9DC4A8` | ConfidenceRow |
 | Confidence medium | `peach` | `#EDBE9E` | ConfidenceRow |
 | Confidence low | `salmon` | `#E8907A` | ConfidenceRow |
@@ -35,8 +35,7 @@
 | Hero image (single) | "Detail photo of {displayName}" | — | — | — |
 | Hero image (multi) | "Photos of {displayName}, N photos" | — | — | — |
 | Item name | `detail.itemName` | `.isHeader` | — | Title bold |
-| Re-catalog button | "Re-catalog item" / "Re-cataloging in progress" | `.isButton` | 44×44pt | — |
-| Deep scan button | "Deep scan item" / "Deep scan in progress" | `.isButton` | 44×44pt | — |
+| Refresh button | "Refresh item" / "Refresh in progress" | `.isButton` | 44×44pt | — |
 | Edit button | "Edit item" | `.isButton` | 44×44pt | — |
 | Estimated value | "Estimated value: $X.XX" | `.combine` | — | Title3 bold |
 | AI Confidence | "AI Confidence: {level}" | `.combine` | — | Subheadline |
@@ -70,7 +69,7 @@
 | Metadata card | horizontal margin | 16pt |
 | Metadata grid | 2 columns flexible | `GridItem(.flexible()) × 2` |
 | Metadata grid | spacing | 12pt |
-| Deep scan grid | 2 columns flexible | Same as metadata |
+| Refresh grid | 2 columns flexible | Same as metadata |
 
 ## 5. Animations & Haptics
 

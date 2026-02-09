@@ -1,0 +1,65 @@
+name: Documentation Freshness Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  doc-freshness:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check doc freshness
+        id: freshness
+        run: |
+          python3 scripts/check_doc_freshness.py --format github-comment > freshness.md 2>/dev/null || true
+          if [ -s freshness.md ]; then
+            echo "has_stale=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_stale=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post or update PR comment
+        if: steps.freshness.outputs.has_stale == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('freshness.md', 'utf8');
+            const marker = '<!-- doc-freshness-check -->';
+            const fullBody = `${marker}\n${body}`;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.data.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: fullBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: fullBody,
+              });
+            }

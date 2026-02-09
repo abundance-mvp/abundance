@@ -10,7 +10,7 @@ struct EditItemSheet_AXeTests {
     let source: SourceFile
 
     init() throws {
-        source = try AXeTestHelpers.readSource(at: "Sources/InventoryFeature/EditFlow/EditItemSheet.swift")
+        source = try AXeTestHelpers.readSource(at: "Sources/CollectionFeature/EditFlow/EditItemSheet.swift")
     }
 
     // MARK: - Palette

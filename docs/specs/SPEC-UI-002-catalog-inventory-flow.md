@@ -12,7 +12,7 @@ The Catalog Inventory Flow provides users with a comprehensive interface to brow
 
 ### 1.1 Key Capabilities
 
-- **Grid-based inventory browsing** with responsive 2-column layout
+- **Grid-based collection browsing** with responsive 2-column layout
 - **Search and filtering** across all item attributes
 - **Multi-select mode** for bulk operations (delete)
 - **Detailed item view** with parallax hero image and metadata display
@@ -22,13 +22,13 @@ The Catalog Inventory Flow provides users with a comprehensive interface to brow
 ### 1.2 Module Location
 
 ```
-Sources/InventoryFeature/
-  InventoryFeature.swift       # Module declaration
-  InventoryView.swift          # Main list view
-  InventoryViewModel.swift     # List view state management
+Sources/CollectionFeature/
+  CollectionFeature.swift       # Module declaration
+  CollectionView.swift          # Main list view
+  CollectionViewModel.swift     # List view state management
   ItemCard.swift               # Grid item component
   ItemDetailView.swift         # Full item detail view
-  EmptyStateCard.swift         # Empty inventory state
+  EmptyStateCard.swift         # Empty collection state
   Components/
     SearchBar.swift            # Search input component
     FloatingTabBar.swift       # Tab navigation component
@@ -45,14 +45,14 @@ Sources/InventoryFeature/
 ## 2. View Hierarchy
 
 ```
-InventoryView (NavigationStack)
+CollectionView (NavigationStack)
   |
   +-- SearchBar (when items exist)
   |
   +-- Content Area:
   |     +-- ProgressView (loading state)
   |     +-- ErrorView (error state)
-  |     +-- EmptyInventoryView (empty state)
+  |     +-- EmptyCollectionView (empty state)
   |     +-- ContentUnavailableView (no search results)
   |     +-- ItemGridView (main content)
   |           +-- LazyVGrid (2 columns)
@@ -85,9 +85,9 @@ InventoryView (NavigationStack)
 
 ## 3. Item Card Component
 
-**File:** `Sources/InventoryFeature/ItemCard.swift`
+**File:** `Sources/CollectionFeature/ItemCard.swift`
 
-The ItemCard is a reusable component that displays item thumbnails in the inventory grid.
+The ItemCard is a reusable component that displays item thumbnails in the collection grid.
 
 ### 3.1 Component Structure
 
@@ -160,7 +160,7 @@ In multi-select mode, cards display a selection indicator:
 
 ## 4. Item Detail View
 
-**File:** `Sources/InventoryFeature/ItemDetailView.swift`
+**File:** `Sources/CollectionFeature/ItemDetailView.swift`
 
 Full-screen detail view with hero image and expanded metadata.
 
@@ -245,7 +245,7 @@ The edit flow is designed around a "rescan-first" approach where users must capt
 
 ### 5.1 State Machine
 
-**File:** `Sources/InventoryFeature/EditFlow/EditItemViewModel.swift`
+**File:** `Sources/CollectionFeature/EditFlow/EditItemViewModel.swift`
 
 ```swift
 public enum EditFlowState: Equatable {
@@ -309,7 +309,7 @@ public enum EditFlowState: Equatable {
 
 ### 5.3 Rescan Prompt Sheet
 
-**File:** `Sources/InventoryFeature/EditFlow/RescanPromptSheet.swift`
+**File:** `Sources/CollectionFeature/EditFlow/RescanPromptSheet.swift`
 
 - **Presentation:** `.medium` detent
 - **Content:** Camera viewfinder icon, explanation text
@@ -317,7 +317,7 @@ public enum EditFlowState: Equatable {
 
 ### 5.4 Rescan Camera View
 
-**File:** `Sources/InventoryFeature/EditFlow/RescanCameraView.swift`
+**File:** `Sources/CollectionFeature/EditFlow/RescanCameraView.swift`
 
 - **Presentation:** Full screen cover (iOS)
 - **Features:**
@@ -329,7 +329,7 @@ public enum EditFlowState: Equatable {
 
 ### 5.5 Comparison Sheet
 
-**File:** `Sources/InventoryFeature/EditFlow/RescanComparisonSheet.swift`
+**File:** `Sources/CollectionFeature/EditFlow/RescanComparisonSheet.swift`
 
 - **Presentation:** `.large` detent
 - **Layout:** Side-by-side "Before" and "After" cards
@@ -341,7 +341,7 @@ public enum EditFlowState: Equatable {
 
 ### 5.6 Edit Item Sheet
 
-**File:** `Sources/InventoryFeature/EditFlow/EditItemSheet.swift`
+**File:** `Sources/CollectionFeature/EditFlow/EditItemSheet.swift`
 
 - **Presentation:** `.large` detent
 - **Form sections:**
@@ -406,7 +406,7 @@ public enum ItemStatus: String, Codable, Sendable {
 ### 7.1 Primary Navigation
 
 ```
-InventoryView
+CollectionView
      |
      | tap ItemCard (normal mode)
      v
@@ -426,7 +426,7 @@ ItemDetailView
 ### 7.3 Selection Mode Navigation
 
 ```
-InventoryView
+CollectionView
      |
      | tap "Select" button
      v
@@ -444,12 +444,12 @@ InventoryView
 
 ### 8.1 ViewModel Architecture
 
-**File:** `Sources/InventoryFeature/InventoryViewModel.swift`
+**File:** `Sources/CollectionFeature/CollectionViewModel.swift`
 
 ```swift
 @MainActor
 @Observable
-public final class InventoryViewModel {
+public final class CollectionViewModel {
     public var items: [Item] = []
     public var isLoading: Bool = false
     public var error: String?
@@ -524,7 +524,7 @@ public func deleteItem(_ item: Item) async {
 
 ### 9.1 Search Bar Component
 
-**File:** `Sources/InventoryFeature/Components/SearchBar.swift`
+**File:** `Sources/CollectionFeature/Components/SearchBar.swift`
 
 - Capsule-shaped input with magnifying glass icon
 - Clear button appears when text is present
@@ -559,7 +559,7 @@ private var filteredItems: [Item] {
 
 ## 10. Empty States
 
-### 10.1 Empty Inventory
+### 10.1 Empty Collection
 
 **Component:** `EmptyStateCard`
 

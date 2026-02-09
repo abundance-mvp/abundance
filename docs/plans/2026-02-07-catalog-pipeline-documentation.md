@@ -379,7 +379,7 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant Detail as ItemDetailView
-    participant InvVM as InventoryViewModel
+    participant InvVM as CollectionViewModel
     participant ItemSvc as ItemService
     participant FS as Firestore<br/>items/
     participant CF as onItemUpdated<br/>Rescan
@@ -389,7 +389,7 @@ sequenceDiagram
     Detail->>Detail: Show confirmation dialog
     User->>Detail: Confirm
 
-    Detail->>InvVM: recatalogItem(item)
+    Detail->>InvVM: refreshItem(item)
     InvVM->>ItemSvc: rescanItem(item)
 
     ItemSvc->>FS: items/{id}.update({<br/>  status: "pending",<br/>  deepScanRequested: false,<br/>  lastRescanAt: serverTimestamp(),<br/>  updatedAt: serverTimestamp()<br/>})
@@ -428,7 +428,7 @@ sequenceDiagram
 sequenceDiagram
     participant User
     participant Detail as ItemDetailView
-    participant InvVM as InventoryViewModel
+    participant InvVM as CollectionViewModel
     participant ItemSvc as ItemService
     participant FS as Firestore<br/>items/
     participant CF as onItemUpdated<br/>DeepScan<br/>1GiB / 180s
@@ -438,8 +438,8 @@ sequenceDiagram
     Detail->>Detail: Show confirmation dialog
     User->>Detail: Confirm
 
-    Detail->>InvVM: requestDeepScan(item)
-    InvVM->>ItemSvc: requestDeepScan(id)
+    Detail->>InvVM: refreshItem(item)
+    InvVM->>ItemSvc: refreshItem(id)
 
     ItemSvc->>FS: items/{id}.update({<br/>  deepScanRequested: true,<br/>  status: "pending",<br/>  updatedAt: serverTimestamp()<br/>})
 
@@ -614,7 +614,7 @@ stateDiagram-v2
         pending --> failed: Layer 2 error
         pending --> failed_layer2a: Layer 2a error
         pending --> failed_layer2b: Layer 2b error
-        complete --> pending: rescanItem()<br/>or requestDeepScan()
+        complete --> pending: rescanItem()<br/>or refreshItem()
         failed --> pending: rescanItem() retry
     }
 ```
@@ -714,7 +714,7 @@ This is the master document that combines all diagrams with detailed explanatory
    - Injects catalog history as context prompt prefix
    - History format (verbatim `PREVIOUS CATALOG CONTEXT` block)
 8. **Deep Scan** — Reference `08-deep-scan-flow.png`
-   - Trigger: `ItemService.requestDeepScan()` sets deepScanRequested=true
+   - Trigger: `ItemService.refreshItem()` sets deepScanRequested=true
    - Cloud Function: `onItemUpdatedDeepScan` (1GiB, 180s)
    - Extended schema fields: productUrl, upcCode, marketPriceRange, originalRetailPrice
    - One-time operation (button disabled after completion)

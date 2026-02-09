@@ -1,18 +1,18 @@
-// Tests/InventoryFeatureTests/InventoryViewSearchTests.swift
+// Tests/CollectionFeatureTests/CollectionViewSearchTests.swift
 
 import Testing
 import SwiftUI
 import Foundation
 import Combine
 import FirebaseFirestore
-@testable import InventoryFeature
+@testable import CollectionFeature
 @testable import Persistence
 
 // swiftlint:disable explicit_type_interface
 
-@Suite("InventoryView Search Tests")
+@Suite("CollectionView Search Tests")
 @MainActor
-struct InventoryViewSearchTests {
+struct CollectionViewSearchTests {
 
     // MARK: - Integration Tests (ViewModel + View Logic)
 
@@ -26,7 +26,7 @@ struct InventoryViewSearchTests {
             createTestItem(id: "3", category: "Clothing")
         ]
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepo,
             requiresAuthentication: false
@@ -48,7 +48,7 @@ struct InventoryViewSearchTests {
             createTestItem(id: "3", category: "Electronics")
         ]
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepo,
             requiresAuthentication: false
@@ -70,7 +70,7 @@ struct InventoryViewSearchTests {
             createTestItem(id: "3", color: "Blue")
         ]
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepo,
             requiresAuthentication: false
@@ -91,7 +91,7 @@ struct InventoryViewSearchTests {
             createTestItem(id: "3", material: "Wooden Frame")
         ]
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepo,
             requiresAuthentication: false
@@ -111,7 +111,7 @@ struct InventoryViewSearchTests {
             createTestItem(id: "2", category: "Furniture", color: "Brown")
         ]
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepo,
             requiresAuthentication: false
@@ -132,7 +132,7 @@ struct InventoryViewSearchTests {
             createTestItem(id: "3", category: "electronics")
         ]
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepo,
             requiresAuthentication: false
@@ -153,7 +153,7 @@ struct InventoryViewSearchTests {
             createTestItem(id: "3", category: "Furniture")
         ]
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepo,
             requiresAuthentication: false
@@ -174,7 +174,7 @@ struct InventoryViewSearchTests {
             createTestItem(id: "3", category: "Electronics", material: "Blue Plastic")
         ]
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepo,
             requiresAuthentication: false
@@ -219,7 +219,7 @@ struct InventoryViewSearchTests {
 
 // MARK: - Mock Repository for Search Tests
 
-/// Separate mock to avoid conflicts with existing mock in InventoryViewModelTests
+/// Separate mock to avoid conflicts with existing mock in CollectionViewModelTests
 final class MockSearchTestItemRepository: ItemRepository, @unchecked Sendable {
     var getItemsCalled: Bool = false
     var lastUserId: String?
@@ -290,7 +290,7 @@ final class MockSearchTestItemRepository: ItemRepository, @unchecked Sendable {
         nil
     }
 
-    func requestDeepScan(id: String) async throws {}
+    func refreshItem(id: String) async throws {}
 
     func recatalogWithPhotos(id: String) async throws {}
 }

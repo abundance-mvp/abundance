@@ -1,6 +1,6 @@
 import Testing
 import SwiftUI
-@testable import InventoryFeature
+@testable import CollectionFeature
 @testable import Persistence
 
 @Suite("ItemDetailView Tests")

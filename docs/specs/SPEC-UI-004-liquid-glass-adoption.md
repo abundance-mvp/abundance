@@ -4,7 +4,7 @@
 **Created:** 2026-02-06
 **References:** Brand Bible v3.0 (Section 1.7 Two-Layer Strategy),
                axiom-liquid-glass-ref, axiom-swiftui-26-ref
-**Code Refs:** App/AbundanceApp.swift, Sources/InventoryFeature/,
+**Code Refs:** App/AbundanceApp.swift, Sources/CollectionFeature/,
               Sources/CameraFeature/, Sources/Core/DesignSystem/
 
 ---
@@ -23,13 +23,13 @@ This spec defines the adoption of iOS 26 Liquid Glass for navigation-layer eleme
 
 ### 2.1 Current State
 
-`App/DebugMainTabView.swift` uses a basic `TabView` with 3 tabs and a custom `FloatingTabBar` component in `Sources/InventoryFeature/Components/FloatingTabBar.swift`.
+`App/DebugMainTabView.swift` uses a basic `TabView` with 3 tabs and a custom `FloatingTabBar` component in `Sources/CollectionFeature/Components/FloatingTabBar.swift`.
 
 ### 2.2 Target State
 
 ```swift
 TabView {
-    InventoryView()
+    CollectionView()
         .tabItem { Label("Catalog", systemImage: "square.grid.2x2") }
     CameraView()
         .tabItem { Label("Scan", systemImage: "camera") }
@@ -88,7 +88,7 @@ These will interfere with Liquid Glass.
 
 ### 4.1 Current State
 
-`Sources/InventoryFeature/Components/SearchBar.swift` is a custom search implementation.
+`Sources/CollectionFeature/Components/SearchBar.swift` is a custom search implementation.
 
 ### 4.2 Target State
 

@@ -501,7 +501,7 @@ This gives Gemini Pro context about what was tried before and any user correctio
 ![Deep Scan Flow](diagrams/08-deep-scan-flow.png)
 
 ### Trigger
-User taps sparkles button in Item Detail View → confirmation dialog → `ItemService.requestDeepScan(id)`.
+User taps sparkles button in Item Detail View → confirmation dialog → `ItemService.refreshItem(id)`.
 
 ### Firestore Update
 ```json
@@ -689,12 +689,12 @@ Deep scan is a one-time operation per item. After completion:
 
 | Transition | Trigger |
 |-----------|---------|
-| → `pending` | `catalogDetectedObject()`, `rescanItem()`, or `requestDeepScan()` |
+| → `pending` | `catalogDetectedObject()`, `rescanItem()`, or `refreshItem()` |
 | → `complete` | Layer 2 success — catalog fields populated |
 | → `failed` | Layer 2 error — generic failure |
 | → `failed_layer2a` | Layer 2a specific error (initial catalog) |
 | → `failed_layer2b` | Layer 2b specific error (tool execution) |
-| `complete` → `pending` | `rescanItem()` or `requestDeepScan()` |
+| `complete` → `pending` | `rescanItem()` or `refreshItem()` |
 | `failed` → `pending` | `rescanItem()` retry |
 
 ### Cloud Function Trigger Conditions

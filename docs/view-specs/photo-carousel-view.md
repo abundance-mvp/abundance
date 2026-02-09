@@ -1,7 +1,7 @@
 # View Spec: PhotoCarouselView
 
-**Source:** `Sources/InventoryFeature/Components/PhotoCarouselView.swift`
-**Module:** InventoryFeature
+**Source:** `Sources/CollectionFeature/Components/PhotoCarouselView.swift`
+**Module:** CollectionFeature
 **Priority:** P1
 **Last updated:** 2026-02-06
 

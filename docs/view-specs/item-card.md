@@ -1,7 +1,7 @@
 # View Spec: ItemCard
 
-**Source:** `Sources/InventoryFeature/ItemCard.swift`
-**Module:** InventoryFeature
+**Source:** `Sources/CollectionFeature/ItemCard.swift`
+**Module:** CollectionFeature
 **Priority:** P0 (core grid component)
 **Last updated:** 2026-02-06
 
@@ -40,7 +40,7 @@
 | Photo image | "Photo of {displayName}" | — | — | — |
 | Selection indicator | (part of combined card) | — | 44x44pt circle | — |
 | Context menu (Edit) | "Edit" | `.isButton` | System | System |
-| Context menu (Re-catalog) | "Re-catalog" | `.isButton` | System | System |
+| Context menu (Refresh) | "Refresh" | `.isButton` | System | System |
 | Context menu (Delete) | "Delete" | `.isButton`, `.destructive` | System | System |
 
 **Notes:**

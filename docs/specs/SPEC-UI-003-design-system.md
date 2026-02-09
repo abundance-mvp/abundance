@@ -3,7 +3,7 @@
 **Status:** Draft
 **Created:** 2026-02-06
 **References:** Brand Bible v3.0, SPEC-UI-001, SPEC-UI-002
-**Code Refs:** Sources/Core/DesignSystem/, Sources/InventoryFeature/,
+**Code Refs:** Sources/Core/DesignSystem/, Sources/CollectionFeature/,
               Sources/CameraFeature/, Sources/ProfileFeature/, App/
 
 ---
@@ -92,10 +92,10 @@ Every file using the old color names must be updated:
 | File | Old Reference | New Reference |
 |------|--------------|---------------|
 | `Sources/Core/DesignSystem/Components/PrimaryButton.swift` | `brandBrightBlue` (glow, stroke) | Remove glow; use `.salmon` fill |
-| `Sources/InventoryFeature/ItemCard.swift` | `.adaptiveGlass()` background | `.cream` opaque fill, `.peach` stroke |
-| `Sources/InventoryFeature/SearchBar.swift` | Check for blue references | `.salmon` cursor, glass search styling |
-| `Sources/InventoryFeature/EmptyStateCard.swift` | Check color usage | `.salmon` CTA, `.deepPlum` text |
-| `Sources/InventoryFeature/ItemDetailView.swift` | Check color usage | `.deepPlum` text, `.cream` metadata bg |
+| `Sources/CollectionFeature/ItemCard.swift` | `.adaptiveGlass()` background | `.cream` opaque fill, `.peach` stroke |
+| `Sources/CollectionFeature/SearchBar.swift` | Check for blue references | `.salmon` cursor, glass search styling |
+| `Sources/CollectionFeature/EmptyStateCard.swift` | Check color usage | `.salmon` CTA, `.deepPlum` text |
+| `Sources/CollectionFeature/ItemDetailView.swift` | Check color usage | `.deepPlum` text, `.cream` metadata bg |
 | `Sources/CameraFeature/Views/DetectionResultsView.swift` | `.blue` on catalog button | `.salmon` accent |
 | `Sources/CameraFeature/Views/CaptureOverlays.swift` | `.white` text | Keep (camera is dark context) |
 | `Sources/ProfileFeature/ProfileView.swift` | Check color usage | `.deepPlum` text, `.warmWhite` bg |
@@ -210,7 +210,7 @@ public struct SecondaryButton: View {
 
 ### 3.3 ItemCard Restyling
 
-**File:** `Sources/InventoryFeature/ItemCard.swift`
+**File:** `Sources/CollectionFeature/ItemCard.swift`
 
 **Current:** Uses `.adaptiveGlass()` (glass material background)
 **Target:** Opaque Cream background, Peach 1px border, DeepPlum text

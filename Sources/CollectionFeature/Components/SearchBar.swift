@@ -1,4 +1,4 @@
-// Sources/InventoryFeature/Components/SearchBar.swift
+// Sources/CollectionFeature/Components/SearchBar.swift
 import SwiftUI
 import Core
 

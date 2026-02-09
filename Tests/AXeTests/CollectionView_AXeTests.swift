@@ -1,21 +1,21 @@
-// Generated from docs/view-specs/inventory-view.md
+// Generated from docs/view-specs/collection-view.md
 // DO NOT EDIT MANUALLY — regenerate via /polish pipeline
 
 import Foundation
 import Testing
 
-@Suite("AXe: InventoryView")
-struct InventoryView_AXeTests {
+@Suite("AXe: CollectionView")
+struct CollectionView_AXeTests {
 
     let source: SourceFile
 
     init() throws {
-        source = try AXeTestHelpers.readSource(at: "Sources/InventoryFeature/InventoryView.swift")
+        source = try AXeTestHelpers.readSource(at: "Sources/CollectionFeature/CollectionView.swift")
     }
 
     // MARK: - Palette
 
-    @Test("No system colors in InventoryView")
+    @Test("No system colors in CollectionView")
     func noSystemColors() {
         let violations = source.systemColorViolations()
         #expect(violations.isEmpty,
@@ -33,44 +33,44 @@ struct InventoryView_AXeTests {
 
     @Test("Select/Done button has accessibility identifier")
     func selectButtonA11y() {
-        #expect(source.containsPattern(#"inventory\.selectButton"#),
-                "Select button must have .accessibilityIdentifier(\"inventory.selectButton\")")
+        #expect(source.containsPattern(#"collection\.selectButton"#),
+                "Select button must have .accessibilityIdentifier(\"collection.selectButton\")")
     }
 
     @Test("Loading indicator has accessibility identifier")
     func loadingA11y() {
-        #expect(source.containsPattern(#"inventory\.loading"#),
-                "Loading indicator must have .accessibilityIdentifier(\"inventory.loading\")")
+        #expect(source.containsPattern(#"collection\.loading"#),
+                "Loading indicator must have .accessibilityIdentifier(\"collection.loading\")")
     }
 
     @Test("Empty state has accessibility identifier")
     func emptyStateA11y() {
-        #expect(source.containsPattern(#"inventory\.emptyState"#),
-                "Empty state must have .accessibilityIdentifier(\"inventory.emptyState\")")
+        #expect(source.containsPattern(#"collection\.emptyState"#),
+                "Empty state must have .accessibilityIdentifier(\"collection.emptyState\")")
     }
 
     @Test("Item grid has accessibility identifier")
     func gridA11y() {
-        #expect(source.containsPattern(#"inventory\.grid"#),
-                "Item grid must have .accessibilityIdentifier(\"inventory.grid\")")
+        #expect(source.containsPattern(#"collection\.grid"#),
+                "Item grid must have .accessibilityIdentifier(\"collection.grid\")")
     }
 
     @Test("Retry button has accessibility identifier")
     func retryButtonA11y() {
-        #expect(source.containsPattern(#"inventory\.retryButton"#),
-                "Retry button must have .accessibilityIdentifier(\"inventory.retryButton\")")
+        #expect(source.containsPattern(#"collection\.retryButton"#),
+                "Retry button must have .accessibilityIdentifier(\"collection.retryButton\")")
     }
 
     @Test("Deselect All button has accessibility identifier")
     func deselectAllA11y() {
-        #expect(source.containsPattern(#"inventory\.deselectAllButton"#),
-                "Deselect All button must have .accessibilityIdentifier(\"inventory.deselectAllButton\")")
+        #expect(source.containsPattern(#"collection\.deselectAllButton"#),
+                "Deselect All button must have .accessibilityIdentifier(\"collection.deselectAllButton\")")
     }
 
     @Test("Bulk Delete button has accessibility identifier")
     func bulkDeleteA11y() {
-        #expect(source.containsPattern(#"inventory\.bulkDeleteButton"#),
-                "Bulk Delete button must have .accessibilityIdentifier(\"inventory.bulkDeleteButton\")")
+        #expect(source.containsPattern(#"collection\.bulkDeleteButton"#),
+                "Bulk Delete button must have .accessibilityIdentifier(\"collection.bulkDeleteButton\")")
     }
 
     // MARK: - Dynamic Type

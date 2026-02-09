@@ -289,7 +289,7 @@ struct SimulatorDebugItemTests {
         // Verify the actual image files exist on disk (source tree check)
         // This catches accidental deletion of debug resources
         let projectRoot = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent() // Tests/InventoryFeatureTests/
+            .deletingLastPathComponent() // Tests/CollectionFeatureTests/
             .deletingLastPathComponent() // Tests/
             .deletingLastPathComponent() // project root
 

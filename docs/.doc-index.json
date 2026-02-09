@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-08T09:02:41Z",
+  "generated": "2026-02-08T00:00:00Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -14,8 +14,11 @@
             "Sources/",
             "functions/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/": "224a99abb69380fe",
+            "functions/": "aaabb45e9d5683ae"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-ARCH-002-layer1-layer2-pipeline.md": {
@@ -24,8 +27,11 @@
             "functions/src/ai-pipeline/",
             "Sources/CameraFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a",
+            "Sources/CameraFeature/": "32eb7c3cdfe96aa7"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-ARCH-003-security-authentication.md": {
@@ -34,8 +40,11 @@
             "Sources/OnboardingFeature/",
             "functions/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/OnboardingFeature/": "8a7fda1671fad1db",
+            "functions/": "aaabb45e9d5683ae"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-API-001-cloud-functions.md": {
@@ -43,8 +52,10 @@
           "code_refs": [
             "functions/src/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-DATA-001-firestore-schema.md": {
@@ -53,8 +64,11 @@
             "functions/src/",
             "Sources/Core/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1",
+            "Sources/Core/": "4862099466d15069"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-DATA-002-storage-architecture.md": {
@@ -63,8 +77,11 @@
             "functions/src/",
             "Sources/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1",
+            "Sources/": "224a99abb69380fe"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-PIPE-001-layer1-detection.md": {
@@ -73,8 +90,11 @@
             "functions/src/ai-pipeline/gemini/",
             "functions/src/ai-pipeline/layer1/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/gemini/": "58f52e8282d9e940",
+            "functions/src/ai-pipeline/layer1/": "5db4b6fc077534a0"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-PIPE-002-layer2-cataloging.md": {
@@ -82,8 +102,10 @@
           "code_refs": [
             "functions/src/ai-pipeline/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-PIPE-003-session-persistence.md": {
@@ -91,8 +113,10 @@
           "code_refs": [
             "functions/src/ai-pipeline/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-UI-001-camera-capture-flow.md": {
@@ -100,29 +124,38 @@
           "code_refs": [
             "Sources/CameraFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CameraFeature/": "32eb7c3cdfe96aa7"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-UI-002-catalog-inventory-flow.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/"
+            "Sources/CollectionFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "MISSING"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-UI-003-design-system.md": {
           "status": "Draft",
           "code_refs": [
             "Sources/Core/DesignSystem/",
-            "Sources/InventoryFeature/",
+            "Sources/CollectionFeature/",
             "Sources/CameraFeature/",
             "Sources/ProfileFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/Core/DesignSystem/": "d2fbae0ada6944f7",
+            "Sources/CollectionFeature/": "MISSING",
+            "Sources/CameraFeature/": "32eb7c3cdfe96aa7",
+            "Sources/ProfileFeature/": "7a0a468f4b163e79"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-02-06"
         },
         "SPEC-UI-004-liquid-glass-adoption.md": {
@@ -130,10 +163,14 @@
           "code_refs": [
             "App/",
             "Sources/Core/DesignSystem/",
-            "Sources/InventoryFeature/Components/"
+            "Sources/CollectionFeature/Components/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "App/": "e9cbf8c6c18b0a72",
+            "Sources/Core/DesignSystem/": "d2fbae0ada6944f7",
+            "Sources/CollectionFeature/Components/": "MISSING"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-02-06"
         },
         "SPEC-OPS-001-cicd-workflows.md": {
@@ -141,8 +178,10 @@
           "code_refs": [
             ".github/workflows/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            ".github/workflows/": "03364397af0908ac"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-OPS-002-dev-workflow.md": {
@@ -151,8 +190,11 @@
             "scripts/",
             ".claude/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "scripts/": "7404f3783a159d98",
+            ".claude/": "a71f2fb1036b00b0"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-OPS-003-cost-model.md": {
@@ -307,8 +349,10 @@
           "code_refs": [
             "Sources/Core/DesignSystem/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/Core/DesignSystem/": "d2fbae0ada6944f7"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-02-06"
         }
       }
@@ -320,12 +364,16 @@
         "GLOSSARY.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/",
+            "Sources/CollectionFeature/",
             "Sources/CameraFeature/",
             "App/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "MISSING",
+            "Sources/CameraFeature/": "32eb7c3cdfe96aa7",
+            "App/": "e9cbf8c6c18b0a72"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-02-08",
           "related_adr": "ADR-027-terminology-standardization.md"
         }
@@ -371,8 +419,10 @@
           "code_refs": [
             "Sources/Core/Services/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/Core/Services/": "MISSING"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-006-database-selection.md": {
@@ -380,8 +430,10 @@
           "code_refs": [
             "functions/src/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-007-api-architecture.md": {
@@ -389,8 +441,10 @@
           "code_refs": [
             "functions/src/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-008-image-storage-architecture.md": {
@@ -398,8 +452,10 @@
           "code_refs": [
             "functions/src/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-009-ios-deployment-cicd.md": {
@@ -407,8 +463,10 @@
           "code_refs": [
             ".github/workflows/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            ".github/workflows/": "03364397af0908ac"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-014-cloud-ai-provider-selection.md": {
@@ -416,8 +474,10 @@
           "code_refs": [
             "functions/src/ai-pipeline/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-015-ai-reasoning-layer-architecture.md": {
@@ -425,8 +485,10 @@
           "code_refs": [
             "functions/src/ai-pipeline/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-016-image-hosting-strategy.md": {
@@ -434,8 +496,10 @@
           "code_refs": [
             "functions/src/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-017-llm-parsing-architecture.md": {
@@ -443,8 +507,10 @@
           "code_refs": [
             "functions/src/ai-pipeline/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-018-barcode-product-lookup-strategy.md": {
@@ -452,8 +518,10 @@
           "code_refs": [
             "Sources/CameraFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CameraFeature/": "32eb7c3cdfe96aa7"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-019-firestore-data-model-rationale.md": {
@@ -461,8 +529,10 @@
           "code_refs": [
             "functions/src/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-020-cloud-functions-organization.md": {
@@ -470,8 +540,10 @@
           "code_refs": [
             "functions/src/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "functions/src/": "ccd5741e8e2030d1"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-021-data-encryption-approach.md": {
@@ -479,8 +551,10 @@
           "code_refs": [
             "Sources/Core/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/Core/": "4862099466d15069"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-022-photo-privacy-protection.md": {
@@ -488,8 +562,10 @@
           "code_refs": [
             "Sources/CameraFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CameraFeature/": "32eb7c3cdfe96aa7"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-023-authentication-authorization-strategy.md": {
@@ -497,8 +573,10 @@
           "code_refs": [
             "Sources/OnboardingFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/OnboardingFeature/": "8a7fda1671fad1db"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-14"
         },
         "ADR-024-observability-stack.md": {
@@ -531,8 +609,12 @@
             "functions/src/ai-pipeline/",
             "functions/src/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CameraFeature/": "32eb7c3cdfe96aa7",
+            "functions/src/ai-pipeline/": "83750a98f9053a5a",
+            "functions/src/": "ccd5741e8e2030d1"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-02-07"
         }
       }
@@ -548,8 +630,10 @@
           "code_refs": [
             "Sources/CameraFeature/Views/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CameraFeature/Views/": "5e29fdb9a5d1f957"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "detection-results-view.md": {
@@ -557,53 +641,65 @@
           "code_refs": [
             "Sources/CameraFeature/Views/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CameraFeature/Views/": "5e29fdb9a5d1f957"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "edit-item-sheet.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/Views/"
+            "Sources/CollectionFeature/Views/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/Views/": "MISSING"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
-        "inventory-view.md": {
+        "collection-view.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/"
+            "Sources/CollectionFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "MISSING"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "item-card.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/Components/"
+            "Sources/CollectionFeature/Components/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/Components/": "MISSING"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "item-detail-view.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/Views/"
+            "Sources/CollectionFeature/Views/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/Views/": "MISSING"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "photo-carousel-view.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/Components/"
+            "Sources/CollectionFeature/Components/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/Components/": "MISSING"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "profile-view.md": {
@@ -611,8 +707,10 @@
           "code_refs": [
             "Sources/ProfileFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/ProfileFeature/": "7a0a468f4b163e79"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "sign-in-view.md": {
@@ -620,8 +718,10 @@
           "code_refs": [
             "Sources/OnboardingFeature/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/OnboardingFeature/": "8a7fda1671fad1db"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         }
       }
@@ -637,19 +737,25 @@
           "code_refs": [
             "scripts/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "scripts/": "7404f3783a159d98"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-20"
         },
         "AXE-TEST-SCENARIOS.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/Views/",
+            "Sources/CollectionFeature/Views/",
             "Sources/ProfileFeature/",
             "Sources/CameraFeature/Views/"
           ],
-          "code_ref_hashes": {},
-          "last_verified": null,
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/Views/": "MISSING",
+            "Sources/ProfileFeature/": "7a0a468f4b163e79",
+            "Sources/CameraFeature/Views/": "5e29fdb9a5d1f957"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-20"
         }
       }

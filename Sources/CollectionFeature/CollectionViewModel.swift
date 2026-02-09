@@ -4,17 +4,17 @@ import FirebaseAuth
 import Combine
 import Persistence
 
-/// ViewModel for Inventory list view
+/// ViewModel for Collection list view
 /// **Patterns:** DESIGN-037 Pattern 1 (Constructor Injection), Pattern 2 (Real-time Listener)
 @MainActor
 @Observable
-public final class InventoryViewModel {
+public final class CollectionViewModel {
     // @Observable tracks changes automatically - no @Published needed
     public var items: [Item] = []
     public var isLoading: Bool = false
     public var error: String?
     public var deleteError: String?
-    public var recatalogError: String?
+    public var refreshError: String?
     public var searchText: String = ""
 
     /// Filters items based on search text matching any searchable text field.
@@ -31,7 +31,7 @@ public final class InventoryViewModel {
     private let userId: String?
     private var cancellables: Set<AnyCancellable> = Set<AnyCancellable>()
 
-    /// Initialize InventoryViewModel
+    /// Initialize CollectionViewModel
     /// - Parameters:
     ///   - userId: User ID. If nil, falls back to current Firebase user.
     ///   - itemRepository: Repository for item persistence (injectable for testing)
@@ -135,24 +135,12 @@ public final class InventoryViewModel {
         }
     }
 
-    /// Re-catalogs an item by resetting its status to pending
-    /// - Parameter item: The item to re-catalog
-    /// - Note: Triggers the AI pipeline to re-process the item
-    public func recatalogItem(_ item: Item) async {
+    /// Refresh an item by re-running AI analysis on existing images
+    public func refreshItem(_ item: Item) async {
         do {
-            try await itemRepository.rescanItem(item)
+            try await itemRepository.refreshItem(id: item.id)
         } catch {
-            recatalogError = "Failed to re-catalog item: \(error.localizedDescription)"
-        }
-    }
-
-    /// Request a deep scan for an item
-    /// - Parameter item: The item to deep scan
-    public func requestDeepScan(_ item: Item) async {
-        do {
-            try await itemRepository.requestDeepScan(id: item.id)
-        } catch {
-            recatalogError = "Failed to start deep scan: \(error.localizedDescription)"
+            refreshError = "Failed to refresh item: \(error.localizedDescription)"
         }
     }
 

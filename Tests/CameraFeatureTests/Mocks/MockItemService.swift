@@ -117,7 +117,7 @@ final class MockItemService: ItemRepository, @unchecked Sendable {
         nil
     }
 
-    func requestDeepScan(id: String) async throws {
+    func refreshItem(id: String) async throws {
         if shouldFail {
             throw NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
         }

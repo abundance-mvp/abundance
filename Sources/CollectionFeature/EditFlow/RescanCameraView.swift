@@ -195,7 +195,7 @@ private final class PreviewRescanItemRepository: ItemRepository, @unchecked Send
     func updateItem(_ item: Item, userEditedFields: [String]?) async throws {}
     func rescanItem(_ item: Item) async throws {}
     func refreshImageUrl(id: String) async throws -> String? { nil }
-    func requestDeepScan(id: String) async throws {}
+    func refreshItem(id: String) async throws {}
     func recatalogWithPhotos(id: String) async throws {}
 }
 // swiftlint:enable line_length

@@ -466,7 +466,7 @@ After the existing `### Physical Device: Screenshots` section (after line ~119),
 When Xcode is open and mcpbridge is available, render SwiftUI previews directly:
 
 \`\`\`
-mcp__xcode__RenderPreview(file: "Sources/InventoryFeature/ItemCard.swift")
+mcp__xcode__RenderPreview(file: "Sources/CollectionFeature/ItemCard.swift")
 \`\`\`
 
 Returns a snapshot image of the SwiftUI preview. Use this to:
@@ -770,7 +770,7 @@ mcp__xcode__XcodeLS(path: "Sources/")                             # File listing
 mcp__xcode__BuildProject                                          # Build
 mcp__xcode__GetBuildLog(severity: "error")                        # Build log
 mcp__xcode__DocumentationSearch(query: "AVCaptureSession")        # Apple docs
-mcp__xcode__RenderPreview(file: "Sources/InventoryFeature/ItemCard.swift")  # Preview
+mcp__xcode__RenderPreview(file: "Sources/CollectionFeature/ItemCard.swift")  # Preview
 mcp__xcode__GetTestList                                           # Test discovery
 mcp__xcode__XcodeListNavigatorIssues                              # Diagnostics
 ```

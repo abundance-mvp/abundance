@@ -123,7 +123,7 @@ final class TestItemRepository: ItemRepository, @unchecked Sendable {
         nil
     }
 
-    func requestDeepScan(id: String) async throws {}
+    func refreshItem(id: String) async throws {}
 
     func recatalogWithPhotos(id: String) async throws {}
 }

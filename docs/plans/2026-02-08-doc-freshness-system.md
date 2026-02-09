@@ -177,27 +177,27 @@ Note: The 12 PNG diagrams in `docs/architecture/diagrams/` are outputs, not sour
     },
     "edit-item-sheet.md": {
       "status": "Active",
-      "code_refs": ["Sources/InventoryFeature/Views/"],
+      "code_refs": ["Sources/CollectionFeature/Views/"],
       "updated": "2026-01-18"
     },
-    "inventory-view.md": {
+    "collection-view.md": {
       "status": "Active",
-      "code_refs": ["Sources/InventoryFeature/"],
+      "code_refs": ["Sources/CollectionFeature/"],
       "updated": "2026-01-18"
     },
     "item-card.md": {
       "status": "Active",
-      "code_refs": ["Sources/InventoryFeature/Components/"],
+      "code_refs": ["Sources/CollectionFeature/Components/"],
       "updated": "2026-01-18"
     },
     "item-detail-view.md": {
       "status": "Active",
-      "code_refs": ["Sources/InventoryFeature/Views/"],
+      "code_refs": ["Sources/CollectionFeature/Views/"],
       "updated": "2026-01-18"
     },
     "photo-carousel-view.md": {
       "status": "Active",
-      "code_refs": ["Sources/InventoryFeature/Components/"],
+      "code_refs": ["Sources/CollectionFeature/Components/"],
       "updated": "2026-01-18"
     },
     "profile-view.md": {
@@ -229,7 +229,7 @@ Note: The 12 PNG diagrams in `docs/architecture/diagrams/` are outputs, not sour
     "AXE-TEST-SCENARIOS.md": {
       "status": "Active",
       "code_refs": [
-        "Sources/InventoryFeature/Views/",
+        "Sources/CollectionFeature/Views/",
         "Sources/ProfileFeature/",
         "Sources/CameraFeature/Views/"
       ],

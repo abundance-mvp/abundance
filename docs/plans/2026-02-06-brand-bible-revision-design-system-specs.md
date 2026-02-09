@@ -219,7 +219,7 @@ This is the core deliverable: a spec document that tells an engineer exactly wha
 **Status:** Draft
 **Created:** 2026-02-06
 **References:** Brand Bible v3.0, SPEC-UI-001, SPEC-UI-002
-**Code Refs:** Sources/Core/DesignSystem/, Sources/InventoryFeature/,
+**Code Refs:** Sources/Core/DesignSystem/, Sources/CollectionFeature/,
               Sources/CameraFeature/, Sources/ProfileFeature/, App/
 
 ---
@@ -309,10 +309,10 @@ Every file using the old color names must be updated:
 | File | Old Reference | New Reference |
 |------|--------------|---------------|
 | `Sources/Core/DesignSystem/Components/PrimaryButton.swift` | `brandBrightBlue` (glow, stroke) | Remove glow; use `.salmon` fill |
-| `Sources/InventoryFeature/ItemCard.swift` | `.adaptiveGlass()` background | `.cream` opaque fill, `.peach` stroke |
-| `Sources/InventoryFeature/SearchBar.swift` | Check for blue references | `.salmon` cursor, glass search styling |
-| `Sources/InventoryFeature/EmptyStateCard.swift` | Check color usage | `.salmon` CTA, `.deepPlum` text |
-| `Sources/InventoryFeature/ItemDetailView.swift` | Check color usage | `.deepPlum` text, `.cream` metadata bg |
+| `Sources/CollectionFeature/ItemCard.swift` | `.adaptiveGlass()` background | `.cream` opaque fill, `.peach` stroke |
+| `Sources/CollectionFeature/SearchBar.swift` | Check for blue references | `.salmon` cursor, glass search styling |
+| `Sources/CollectionFeature/EmptyStateCard.swift` | Check color usage | `.salmon` CTA, `.deepPlum` text |
+| `Sources/CollectionFeature/ItemDetailView.swift` | Check color usage | `.deepPlum` text, `.cream` metadata bg |
 | `Sources/CameraFeature/Views/DetectionResultsView.swift` | `.blue` on catalog button | `.salmon` accent |
 | `Sources/CameraFeature/Views/CaptureOverlays.swift` | `.white` text | Keep (camera is dark context) |
 | `Sources/ProfileFeature/ProfileView.swift` | Check color usage | `.deepPlum` text, `.warmWhite` bg |
@@ -431,7 +431,7 @@ public struct SecondaryButton: View {
 
 ### 3.3 ItemCard Restyling
 
-**File:** `Sources/InventoryFeature/ItemCard.swift`
+**File:** `Sources/CollectionFeature/ItemCard.swift`
 
 **Current:** Uses `.adaptiveGlass()` (glass material background)
 **Target:** Opaque Cream background, Peach 1px border, DeepPlum text
@@ -675,7 +675,7 @@ git commit -m "docs(spec): add SPEC-UI-003 design system implementation spec"
 **Created:** 2026-02-06
 **References:** Brand Bible v3.0 (Section 1.7 Two-Layer Strategy),
                axiom-liquid-glass-ref, axiom-swiftui-26-ref
-**Code Refs:** App/AbundanceApp.swift, Sources/InventoryFeature/,
+**Code Refs:** App/AbundanceApp.swift, Sources/CollectionFeature/,
               Sources/CameraFeature/, Sources/Core/DesignSystem/
 
 ---
@@ -698,13 +698,13 @@ Content-layer components are covered in SPEC-UI-003.
 ### 2.1 Current State
 
 `App/DebugMainTabView.swift` uses a basic `TabView` with 3 tabs and a custom
-`FloatingTabBar` component in `Sources/InventoryFeature/Components/FloatingTabBar.swift`.
+`FloatingTabBar` component in `Sources/CollectionFeature/Components/FloatingTabBar.swift`.
 
 ### 2.2 Target State
 
 ```swift
 TabView {
-    InventoryView()
+    CollectionView()
         .tabItem { Label("Catalog", systemImage: "square.grid.2x2") }
     CameraView()
         .tabItem { Label("Scan", systemImage: "camera") }
@@ -766,7 +766,7 @@ These will interfere with Liquid Glass.
 
 ### 4.1 Current State
 
-`Sources/InventoryFeature/Components/SearchBar.swift` is a custom search
+`Sources/CollectionFeature/Components/SearchBar.swift` is a custom search
 implementation.
 
 ### 4.2 Target State
@@ -932,7 +932,7 @@ Add to the `specs.docs` section:
     "status": "Draft",
     "code_refs": [
         "Sources/Core/DesignSystem/",
-        "Sources/InventoryFeature/",
+        "Sources/CollectionFeature/",
         "Sources/CameraFeature/",
         "Sources/ProfileFeature/"
     ],
@@ -943,7 +943,7 @@ Add to the `specs.docs` section:
     "code_refs": [
         "App/",
         "Sources/Core/DesignSystem/",
-        "Sources/InventoryFeature/Components/"
+        "Sources/CollectionFeature/Components/"
     ],
     "updated": "2026-02-06"
 }

@@ -2,12 +2,12 @@ import SwiftUI
 import CameraFeature
 
 struct CameraTabView: View {
-    let onNavigateToCatalog: () -> Void
+    let onNavigateToCollection: () -> Void
 
     // Persist CameraService across tab switches using @StateObject
     @StateObject private var cameraService = CameraService()
 
     var body: some View {
-        CaptureView(cameraService: cameraService, onDone: onNavigateToCatalog)
+        CaptureView(cameraService: cameraService, onDone: onNavigateToCollection)
     }
 }

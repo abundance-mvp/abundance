@@ -2,9 +2,9 @@ import SwiftUI
 import Core
 import Persistence
 
-public struct InventoryView: View {
+public struct CollectionView: View {
     // Plain var for @Observable type - SwiftUI tracks changes automatically
-    @Bindable var viewModel: InventoryViewModel
+    @Bindable var viewModel: CollectionViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isSelectionMode = false
     @State private var selectedItemIds: [String: Bool] = [:]
@@ -12,11 +12,11 @@ public struct InventoryView: View {
     @State private var showDeleteConfirmation = false
     @State private var showBulkDeleteConfirmation = false
     @State private var showDeleteErrorAlert = false
-    @State private var showRecatalogErrorAlert = false
+    @State private var showRefreshErrorAlert = false
     var onOpenCamera: (() -> Void)?
 
     public init(
-        viewModel: InventoryViewModel = InventoryViewModel(),
+        viewModel: CollectionViewModel = CollectionViewModel(),
         onOpenCamera: (() -> Void)? = nil
     ) {
         self.viewModel = viewModel
@@ -36,14 +36,14 @@ public struct InventoryView: View {
                 Group {
                     if viewModel.isLoading {
                         ProgressView("Loading items...")
-                            .accessibilityIdentifier("inventory.loading")
+                            .accessibilityIdentifier("collection.loading")
                     } else if let error = viewModel.error {
                         ErrorView(message: error, retry: {
                             Task { await viewModel.loadItems() }
                         })
                     } else if viewModel.items.isEmpty {
-                        EmptyInventoryView(onOpenCamera: onOpenCamera)
-                            .accessibilityIdentifier("inventory.emptyState")
+                        EmptyCollectionView(onOpenCamera: onOpenCamera)
+                            .accessibilityIdentifier("collection.emptyState")
                     } else if viewModel.filteredItems.isEmpty {
                         // No search results
                         ContentUnavailableView.search(text: viewModel.searchText)
@@ -52,11 +52,8 @@ public struct InventoryView: View {
                             items: viewModel.filteredItems,
                             isSelectionMode: isSelectionMode,
                             selectedItemIds: $selectedItemIds,
-                            onRecatalog: { item in
-                                Task { await viewModel.recatalogItem(item) }
-                            },
-                            onDeepScan: { item in
-                                Task { await viewModel.requestDeepScan(item) }
+                            onRefresh: { item in
+                                Task { await viewModel.refreshItem(item) }
                             },
                             onDeletePhoto: { item, index in
                                 Task { await viewModel.deletePhoto(from: item, at: index) }
@@ -74,7 +71,7 @@ public struct InventoryView: View {
                     selectionToolbar
                 }
             }
-            .navigationTitle("Inventory")
+            .navigationTitle("Collection")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     if !viewModel.items.isEmpty && !viewModel.isLoading {
@@ -89,7 +86,7 @@ public struct InventoryView: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
                         .tint(Color.accentPrimary)
-                        .accessibilityIdentifier("inventory.selectButton")
+                        .accessibilityIdentifier("collection.selectButton")
                         .accessibilityHint(
                             isSelectionMode
                                 ? "Exit selection mode"
@@ -152,16 +149,16 @@ public struct InventoryView: View {
             .onChange(of: viewModel.deleteError) { _, newValue in
                 showDeleteErrorAlert = newValue != nil
             }
-            // Re-catalog error alert
-            .alert("Re-catalog Failed", isPresented: $showRecatalogErrorAlert) {
+            // Refresh error alert
+            .alert("Refresh Failed", isPresented: $showRefreshErrorAlert) {
                 Button("OK") {
-                    viewModel.recatalogError = nil
+                    viewModel.refreshError = nil
                 }
             } message: {
-                Text(viewModel.recatalogError ?? "An error occurred")
+                Text(viewModel.refreshError ?? "An error occurred")
             }
-            .onChange(of: viewModel.recatalogError) { _, newValue in
-                showRecatalogErrorAlert = newValue != nil
+            .onChange(of: viewModel.refreshError) { _, newValue in
+                showRefreshErrorAlert = newValue != nil
             }
         }
     }
@@ -177,7 +174,7 @@ public struct InventoryView: View {
                 Text("Deselect All")
                     .frame(minHeight: 44)
             }
-            .accessibilityIdentifier("inventory.deselectAllButton")
+            .accessibilityIdentifier("collection.deselectAllButton")
 
             Spacer()
 
@@ -187,7 +184,7 @@ public struct InventoryView: View {
                 Label("Delete (\(selectedItemIds.count))", systemImage: "trash")
                     .frame(minHeight: 44)
             }
-            .accessibilityIdentifier("inventory.bulkDeleteButton")
+            .accessibilityIdentifier("collection.bulkDeleteButton")
             .disabled(selectedItemIds.isEmpty)
         }
         .padding()
@@ -201,8 +198,7 @@ private struct ItemGridView: View {
     let items: [Item]
     let isSelectionMode: Bool
     @Binding var selectedItemIds: [String: Bool]
-    let onRecatalog: (Item) -> Void
-    let onDeepScan: (Item) -> Void
+    let onRefresh: (Item) -> Void
     let onDeletePhoto: (Item, Int) -> Void
     let onDelete: (Item) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -227,35 +223,34 @@ private struct ItemGridView: View {
                             isSelectionMode: true,
                             isSelected: selectedItemIds[item.id] == true
                         )
-                        .accessibilityIdentifier("inventory.item.\(item.id)")
+                        .accessibilityIdentifier("collection.item.\(item.id)")
                     } else {
                         // Normal mode with navigation
                         NavigationLink {
                             ItemDetailView(
                                 item: item,
-                                onRecatalog: { onRecatalog(item) },
-                                onDeepScan: { onDeepScan(item) },
+                                onRefresh: { onRefresh(item) },
                                 onDeletePhoto: { index in onDeletePhoto(item, index) }
                             )
                         } label: {
                             ItemCard(
                                 item: item,
-                                onRecatalog: { onRecatalog(item) },
+                                onRefresh: { onRefresh(item) },
                                 onDelete: { onDelete(item) }
                             )
                         }
                         .buttonStyle(.plain)
-                        .accessibilityIdentifier("inventory.item.\(item.id)")
+                        .accessibilityIdentifier("collection.item.\(item.id)")
                     }
                 }
             }
             .padding()
-            .accessibilityIdentifier("inventory.grid")
+            .accessibilityIdentifier("collection.grid")
         }
     }
 }
 
-private struct EmptyInventoryView: View {
+private struct EmptyCollectionView: View {
     var onOpenCamera: (() -> Void)?
 
     var body: some View {
@@ -292,7 +287,7 @@ private struct ErrorView: View {
             Button("Retry", action: retry)
                 .buttonStyle(.bordered)
                 .controlSize(.large)
-                .accessibilityIdentifier("inventory.retryButton")
+                .accessibilityIdentifier("collection.retryButton")
         }
         .padding()
     }

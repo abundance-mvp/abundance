@@ -1,10 +1,10 @@
 import Foundation
 import Combine
 import FirebaseFirestore
-@testable import InventoryFeature
+@testable import CollectionFeature
 @testable import Persistence
 
-/// Comprehensive mock ItemRepository for testing InventoryViewModel and EditItemViewModel
+/// Comprehensive mock ItemRepository for testing CollectionViewModel and EditItemViewModel
 /// Supports configurable behavior for success/failure scenarios and tracking of method calls
 final class MockItemRepository: ItemRepository, @unchecked Sendable {
     // MARK: - Call Tracking
@@ -171,12 +171,12 @@ final class MockItemRepository: ItemRepository, @unchecked Sendable {
         return refreshedImageUrl ?? itemsToReturn.first { $0.id == id }?.imageUrl
     }
 
-    var requestDeepScanCalled = false
-    var lastDeepScanId: String?
+    var refreshItemCalled = false
+    var lastRefreshItemId: String?
 
-    func requestDeepScan(id: String) async throws {
-        requestDeepScanCalled = true
-        lastDeepScanId = id
+    func refreshItem(id: String) async throws {
+        refreshItemCalled = true
+        lastRefreshItemId = id
     }
 
     var recatalogWithPhotosCalled = false

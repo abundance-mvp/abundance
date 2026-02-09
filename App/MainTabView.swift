@@ -1,14 +1,14 @@
 import SwiftUI
 import Core
-import InventoryFeature
+import CollectionFeature
 import ProfileFeature
 
 public struct MainTabView: View {
-    @State private var selectedTab: Tab = .catalog
+    @State private var selectedTab: Tab = .collection
 
     enum Tab {
-        case catalog
-        case camera
+        case collection
+        case scan
         case profile
     }
 
@@ -16,23 +16,23 @@ public struct MainTabView: View {
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            InventoryView(onOpenCamera: {
-                selectedTab = .camera
+            CollectionView(onOpenCamera: {
+                selectedTab = .scan
             })
-                .accessibilityIdentifier("tab.catalog")
+                .accessibilityIdentifier("tab.collection")
                 .tabItem {
-                    Label("Catalog", systemImage: "square.grid.2x2.fill")
+                    Label("Collection", systemImage: "square.grid.2x2.fill")
                 }
-                .tag(Tab.catalog)
+                .tag(Tab.collection)
 
-            CameraTabView(onNavigateToCatalog: {
-                selectedTab = .catalog
+            CameraTabView(onNavigateToCollection: {
+                selectedTab = .collection
             })
-                .accessibilityIdentifier("tab.camera")
+                .accessibilityIdentifier("tab.scan")
                 .tabItem {
-                    Label("Camera", systemImage: "camera.fill")
+                    Label("Scan", systemImage: "camera.fill")
                 }
-                .tag(Tab.camera)
+                .tag(Tab.scan)
 
             ProfileView()
                 .accessibilityIdentifier("tab.profile")

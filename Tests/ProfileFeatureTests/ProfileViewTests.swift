@@ -382,7 +382,7 @@ extension MockItemRepository: ItemRepository {
         nil
     }
 
-    func requestDeepScan(id: String) async throws {}
+    func refreshItem(id: String) async throws {}
 
     func recatalogWithPhotos(id: String) async throws {}
 }

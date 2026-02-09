@@ -87,9 +87,9 @@ public protocol ItemWriteRepository: Sendable {
     /// - Returns: Fresh download URL, or nil if item has no storage path
     func refreshImageUrl(id: String) async throws -> String?
 
-    /// Request a deep scan for an item
+    /// Request a refresh for an item
     /// - Parameter id: The item document ID
-    func requestDeepScan(id: String) async throws
+    func refreshItem(id: String) async throws
 
     /// Trigger re-catalog after adding additional photos
     /// - Parameter id: The item document ID
@@ -351,26 +351,27 @@ public final class ItemService: ItemRepository {
             .eraseToAnyPublisher()
     }
 
-    // MARK: - Deep Scan
+    // MARK: - Refresh
 
-    /// Request a deep scan for an item (sets deepScanRequested=true, status=pending)
-    public func requestDeepScan(id: String) async throws {
+    /// Request a refresh for an item (sets deepScanRequested=true, status=pending)
+    /// Note: Firestore field name remains "deepScanRequested" for backward compatibility
+    public func refreshItem(id: String) async throws {
         let itemRef = db.collection("items").document(id)
         try await itemRef.updateData([
-            "deepScanRequested": true,
+            "deepScanRequested": true,  // Firestore field name preserved
             "status": "pending",
             "updatedAt": FieldValue.serverTimestamp()
         ])
-        os_log(.info, log: .default, "Requested deep scan for item id=%{public}@", id)
+        os_log(.info, log: .default, "Requested refresh for item id=%{public}@", id)
     }
 
     // MARK: - Re-catalog with Photos
 
     /// Trigger re-catalog after adding photos.
-    /// Delegates to requestDeepScan — the Cloud Function reads additionalImageUrls
+    /// Delegates to refreshItem — the Cloud Function reads additionalImageUrls
     /// from the document and passes all images to Gemini.
     public func recatalogWithPhotos(id: String) async throws {
-        try await requestDeepScan(id: id)
+        try await refreshItem(id: id)
     }
 
     // MARK: - Image URL Refresh
@@ -484,7 +485,7 @@ public final class ItemService: ItemRepository {
         let data: [String: Any] = [
             "imageUrl": item.imageUrl,
             "status": "pending", // Triggers onItemUpdatedRescan Cloud Function
-            "deepScanRequested": false, // Reset stale deep scan state
+            "deepScanRequested": false, // Reset stale refresh state (Firestore field name preserved)
             "lastRescanAt": FieldValue.serverTimestamp(),
             "updatedAt": FieldValue.serverTimestamp()
         ]
@@ -540,8 +541,8 @@ public final class ItemService: ItemRepository {
             photoMetadata = nil
         }
 
-        // Parse deep scan completion timestamp
-        let deepScanCompletedAt = (data["deepScanCompletedAt"] as? Timestamp)?.dateValue()
+        // Parse refresh completion timestamp (Firestore field: deepScanCompletedAt)
+        let refreshCompletedAt = (data["deepScanCompletedAt"] as? Timestamp)?.dateValue()
 
         return Item(
             id: id,
@@ -564,8 +565,8 @@ public final class ItemService: ItemRepository {
             userEditedFields: data["userEditedFields"] as? [String],
             lastRescanAt: lastRescanAt,
             additionalImageUrls: data["additionalImageUrls"] as? [String],
-            deepScanRequested: data["deepScanRequested"] as? Bool,
-            deepScanCompletedAt: deepScanCompletedAt,
+            refreshRequested: data["deepScanRequested"] as? Bool,  // Firestore field name preserved
+            refreshCompletedAt: refreshCompletedAt,
             productUrl: data["productUrl"] as? String,
             upcCode: data["upcCode"] as? String,
             marketPriceRange: data["marketPriceRange"] as? String,

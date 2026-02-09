@@ -4,8 +4,7 @@ import Persistence
 
 public struct ItemDetailView: View {
     public let item: Item
-    public var onRecatalog: (() -> Void)?
-    public var onDeepScan: (() -> Void)?
+    public var onRefresh: (() -> Void)?
     public var onDeletePhoto: ((Int) -> Void)?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -15,25 +14,21 @@ public struct ItemDetailView: View {
     @State private var showRescanCamera = false
     @State private var showRescanComparison = false
     @State private var showEditSheet = false
-    @State private var showRecatalogConfirmation = false
-    @State private var showDeepScanConfirmation = false
+    @State private var showRefreshConfirmation = false
     @State private var showAddPhotoCamera = false
-    @State private var isRecataloging = false
-    @State private var isDeepScanning = false
+    @State private var isRefreshing = false
 
     private var isProcessing: Bool {
-        isRecataloging || item.status == .processing
+        isRefreshing || item.status == .processing
     }
 
     public init(
         item: Item,
-        onRecatalog: (() -> Void)? = nil,
-        onDeepScan: (() -> Void)? = nil,
+        onRefresh: (() -> Void)? = nil,
         onDeletePhoto: ((Int) -> Void)? = nil
     ) {
         self.item = item
-        self.onRecatalog = onRecatalog
-        self.onDeepScan = onDeepScan
+        self.onRefresh = onRefresh
         self.onDeletePhoto = onDeletePhoto
     }
 
@@ -86,9 +81,9 @@ public struct ItemDetailView: View {
 
                             Spacer()
 
-                            if onRecatalog != nil {
+                            if onRefresh != nil {
                                 Button {
-                                    showRecatalogConfirmation = true
+                                    showRefreshConfirmation = true
                                 } label: {
                                     Group {
                                         if isProcessing {
@@ -102,28 +97,8 @@ public struct ItemDetailView: View {
                                     .frame(minWidth: 44, minHeight: 44)
                                 }
                                 .disabled(isProcessing)
-                                .accessibilityIdentifier("detail.recatalogButton")
-                                .accessibilityLabel(isProcessing ? "Re-cataloging in progress" : "Re-catalog item")
-                            }
-
-                            if onDeepScan != nil {
-                                Button {
-                                    showDeepScanConfirmation = true
-                                } label: {
-                                    Group {
-                                        if isDeepScanning {
-                                            ProgressView()
-                                        } else {
-                                            Image(systemName: "sparkles")
-                                        }
-                                    }
-                                    .font(.title3)
-                                    .foregroundStyle(isDeepScanning ? .secondary : Color.softTeal)
-                                    .frame(minWidth: 44, minHeight: 44)
-                                }
-                                .disabled(isDeepScanning || item.deepScanCompletedAt != nil)
-                                .accessibilityIdentifier("detail.deepScanButton")
-                                .accessibilityLabel(isDeepScanning ? "Deep scan in progress" : "Deep scan item")
+                                .accessibilityIdentifier("detail.refreshButton")
+                                .accessibilityLabel(isProcessing ? "Refreshing in progress" : "Refresh item")
                             }
 
                             Button {
@@ -169,7 +144,7 @@ public struct ItemDetailView: View {
                             HStack(spacing: 8) {
                                 ProgressView()
                                     .controlSize(.small)
-                                Text("Re-cataloging with AI...")
+                                Text("Refreshing with AI...")
                                     .font(.subheadline.weight(.medium))
                                     .foregroundStyle(.secondary)
                             }
@@ -217,19 +192,19 @@ public struct ItemDetailView: View {
                             ConfidenceRow(confidence: confidence)
                         }
 
-                        // Deep Scan Details
-                        if item.deepScanRequested == true || item.deepScanCompletedAt != nil {
+                        // Refresh Details
+                        if item.refreshRequested == true || item.refreshCompletedAt != nil {
                             Divider()
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Image(systemName: "sparkles")
+                                    Image(systemName: "arrow.triangle.2.circlepath")
                                         .foregroundStyle(Color.softTeal)
                                         .accessibilityHidden(true)
-                                    Text("Deep Scan Details")
+                                    Text("Refresh Details")
                                         .font(.subheadline.weight(.semibold))
                                 }
 
-                                if item.deepScanCompletedAt != nil {
+                                if item.refreshCompletedAt != nil {
                                     LazyVGrid(columns: [
                                         GridItem(.flexible()),
                                         GridItem(.flexible())
@@ -242,11 +217,11 @@ public struct ItemDetailView: View {
                                         )
                                         MetadataCell(label: "Product URL", value: item.productUrl != nil ? "View" : nil)
                                     }
-                                } else if isDeepScanning {
+                                } else if isRefreshing {
                                     HStack(spacing: 8) {
                                         ProgressView()
                                             .controlSize(.small)
-                                        Text("Scanning...")
+                                        Text("Refreshing...")
                                             .font(.footnote)
                                             .foregroundStyle(.secondary)
                                     }
@@ -356,13 +331,13 @@ public struct ItemDetailView: View {
             }
             #endif
             .confirmationDialog(
-                "Re-catalog Item",
-                isPresented: $showRecatalogConfirmation,
+                "Refresh Item",
+                isPresented: $showRefreshConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("Re-catalog") {
-                    isRecataloging = true
-                    onRecatalog?()
+                Button("Refresh") {
+                    isRefreshing = true
+                    onRefresh?()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
@@ -370,22 +345,8 @@ public struct ItemDetailView: View {
             }
             .onChange(of: item.status) { _, newStatus in
                 if newStatus != .processing {
-                    isRecataloging = false
-                    isDeepScanning = false
+                    isRefreshing = false
                 }
-            }
-            .confirmationDialog(
-                "Deep Scan",
-                isPresented: $showDeepScanConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button("Start Deep Scan") {
-                    isDeepScanning = true
-                    onDeepScan?()
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Deep Scan uses advanced AI to find pricing, dimensions, product details, and market value.")
             }
         }
     }

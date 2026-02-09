@@ -126,24 +126,24 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         1 + (additionalImageUrls?.count ?? 0)
     }
 
-    // MARK: - Deep Scan
+    // MARK: - Refresh (Firestore fields: deepScanRequested, deepScanCompletedAt)
 
-    /// Whether a deep scan has been requested
-    public var deepScanRequested: Bool?
+    /// Whether a refresh has been requested (Firestore field: deepScanRequested)
+    public var refreshRequested: Bool?
 
-    /// When deep scan completed
-    public var deepScanCompletedAt: Date?
+    /// When refresh completed (Firestore field: deepScanCompletedAt)
+    public var refreshCompletedAt: Date?
 
-    /// Product URL from deep scan
+    /// Product URL from refresh
     public var productUrl: String?
 
-    /// UPC/barcode from deep scan
+    /// UPC/barcode from refresh
     public var upcCode: String?
 
-    /// Market price range from deep scan (e.g., "$50-$80")
+    /// Market price range from refresh (e.g., "$50-$80")
     public var marketPriceRange: String?
 
-    /// Original retail price from deep scan
+    /// Original retail price from refresh
     public var originalRetailPrice: Double?
 
     // MARK: - Photo Metadata
@@ -181,8 +181,8 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         userEditedFields: [String]? = nil,
         lastRescanAt: Date? = nil,
         additionalImageUrls: [String]? = nil,
-        deepScanRequested: Bool? = nil,
-        deepScanCompletedAt: Date? = nil,
+        refreshRequested: Bool? = nil,
+        refreshCompletedAt: Date? = nil,
         productUrl: String? = nil,
         upcCode: String? = nil,
         marketPriceRange: String? = nil,
@@ -213,8 +213,8 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         self.userEditedFields = userEditedFields
         self.lastRescanAt = lastRescanAt
         self.additionalImageUrls = additionalImageUrls
-        self.deepScanRequested = deepScanRequested
-        self.deepScanCompletedAt = deepScanCompletedAt
+        self.refreshRequested = refreshRequested
+        self.refreshCompletedAt = refreshCompletedAt
         self.productUrl = productUrl
         self.upcCode = upcCode
         self.marketPriceRange = marketPriceRange

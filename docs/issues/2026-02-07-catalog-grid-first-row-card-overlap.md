@@ -6,8 +6,8 @@ type: bug
 component: ios
 source: manual
 related-files:
-  - Sources/InventoryFeature/InventoryView.swift
-  - Sources/InventoryFeature/ItemCard.swift
+  - Sources/CollectionFeature/CollectionView.swift
+  - Sources/CollectionFeature/ItemCard.swift
 screenshots:
   - 020726-catalog-view-overlap.png
 axiom-agent: null
@@ -17,11 +17,11 @@ design-doc: null
 
 ## Summary
 
-Right card in first grid row overlaps left card in the Catalog/Inventory view.
+Right card in first grid row overlaps left card in the Collection view.
 
 ## Description
 
-In the Catalog (Inventory) view, the item card at row 1, position 2 (right side) consistently overlaps the item card at row 1, position 1 (left side). The right card's left edge visually bleeds over the left card's right edge, creating an overlapping appearance.
+In the Collection view, the item card at row 1, position 2 (right side) consistently overlaps the item card at row 1, position 1 (left side). The right card's left edge visually bleeds over the left card's right edge, creating an overlapping appearance.
 
 ## Expected Behavior
 
@@ -33,7 +33,7 @@ The right card in the first row overlaps the left card. The card edges collide o
 
 ## Technical Context
 
-**Grid layout** (`InventoryView.swift`):
+**Grid layout** (`CollectionView.swift`):
 - `LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16)`
 - `.padding()` on the grid (16pt all sides)
 

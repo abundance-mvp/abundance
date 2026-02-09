@@ -82,9 +82,9 @@ final class SimulatorItemRepository: @preconcurrency ItemRepository {
         items.first { $0.id == id }?.imageUrl
     }
 
-    func requestDeepScan(id: String) async throws {
+    func refreshItem(id: String) async throws {
         if let index = items.firstIndex(where: { $0.id == id }) {
-            items[index].deepScanRequested = true
+            items[index].refreshRequested = true
             items[index].status = .processing
             subject.send(items)
         }
@@ -92,7 +92,7 @@ final class SimulatorItemRepository: @preconcurrency ItemRepository {
 
     func recatalogWithPhotos(id: String) async throws {
         if let index = items.firstIndex(where: { $0.id == id }) {
-            items[index].deepScanRequested = true
+            items[index].refreshRequested = true
             items[index].status = .processing
             subject.send(items)
         }

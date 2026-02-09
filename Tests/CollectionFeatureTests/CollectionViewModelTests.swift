@@ -2,12 +2,12 @@ import Testing
 import Foundation
 import Combine
 import FirebaseFirestore
-@testable import InventoryFeature
+@testable import CollectionFeature
 @testable import Persistence
 
-@Suite("InventoryViewModel Tests")
+@Suite("CollectionViewModel Tests")
 @MainActor
-struct InventoryViewModelTests {
+struct CollectionViewModelTests {
 
     // MARK: - Authentication State Tests
 
@@ -17,7 +17,7 @@ struct InventoryViewModelTests {
         let mockRepository = MockItemRepository()
 
         // When: Create ViewModel without userId, using mock auth provider that returns nil
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: nil,
             itemRepository: mockRepository,
             requiresAuthentication: true,
@@ -36,7 +36,7 @@ struct InventoryViewModelTests {
         let mockRepository = MockItemRepository()
 
         // When: Create ViewModel with userId
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user-123",
             itemRepository: mockRepository,
             requiresAuthentication: true
@@ -50,7 +50,7 @@ struct InventoryViewModelTests {
     func testLoadItems_withNoAuth_setsError() async throws {
         // Given: ViewModel with no userId
         let mockRepository = MockItemRepository()
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: nil,
             itemRepository: mockRepository,
             requiresAuthentication: true,
@@ -84,7 +84,7 @@ struct InventoryViewModelTests {
                 updatedAt: Date()
             )
         ]
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user-123",
             itemRepository: mockRepository,
             requiresAuthentication: true
@@ -106,7 +106,7 @@ struct InventoryViewModelTests {
         let mockRepository = MockItemRepository()
 
         // When: Create ViewModel without userId and auth not required
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: nil,
             itemRepository: mockRepository,
             requiresAuthentication: false
@@ -130,7 +130,7 @@ struct InventoryViewModelTests {
             category: "Test Item"
         )
         // Don't set mockItems to avoid observer overwriting
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: nil,  // No userId means no observer
             itemRepository: mockRepository,
             requiresAuthentication: false
@@ -157,7 +157,7 @@ struct InventoryViewModelTests {
             status: .complete,
             category: "Test Item"
         )
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepository,
             requiresAuthentication: false
@@ -183,7 +183,7 @@ struct InventoryViewModelTests {
             status: .complete,
             category: "Test Item"
         )
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepository,
             requiresAuthentication: false
@@ -208,7 +208,7 @@ struct InventoryViewModelTests {
             Item(id: "item-2", userId: "test-user", imageUrl: "url2", status: .complete, category: "Item 2"),
             Item(id: "item-3", userId: "test-user", imageUrl: "url3", status: .complete, category: "Item 3")
         ]
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: nil,  // No userId means no observer
             itemRepository: mockRepository,
             requiresAuthentication: false
@@ -232,7 +232,7 @@ struct InventoryViewModelTests {
             Item(id: "item-1", userId: "test-user", imageUrl: "url1", status: .complete, category: "Item 1"),
             Item(id: "item-2", userId: "test-user", imageUrl: "url2", status: .complete, category: "Item 2")
         ]
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepository,
             requiresAuthentication: false
@@ -254,7 +254,7 @@ struct InventoryViewModelTests {
         let items = [
             Item(id: "item-1", userId: "test-user", imageUrl: "url1", status: .complete, category: "Item 1")
         ]
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user",
             itemRepository: mockRepository,
             requiresAuthentication: false
@@ -284,7 +284,7 @@ struct InventoryViewModelTests {
                 category: "camping"
             )
         ]
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user-123",
             itemRepository: mockRepository,
             requiresAuthentication: true
@@ -310,7 +310,7 @@ struct InventoryViewModelTests {
             code: 500,
             userInfo: [NSLocalizedDescriptionKey: "Network error"]
         )
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user-123",
             itemRepository: mockRepository,
             requiresAuthentication: true
@@ -356,7 +356,7 @@ struct InventoryViewModelTests {
                 category: "furniture"
             )
         ]
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user-123",
             itemRepository: mockRepository,
             requiresAuthentication: true
@@ -390,7 +390,7 @@ struct InventoryViewModelTests {
         ]
         mockRepository.mockItems = initialItems
 
-        let viewModel = InventoryViewModel(
+        let viewModel = CollectionViewModel(
             userId: "test-user-123",
             itemRepository: mockRepository,
             requiresAuthentication: true
@@ -406,4 +406,4 @@ struct InventoryViewModelTests {
     }
 }
 
-// Note: MockItemRepository is now in Tests/InventoryFeatureTests/Mocks/MockItemRepository.swift
+// Note: MockItemRepository is now in Tests/CollectionFeatureTests/Mocks/MockItemRepository.swift

@@ -1,10 +1,10 @@
 import Testing
 import SwiftUI
-@testable import InventoryFeature
+@testable import CollectionFeature
 
-@Suite("InventoryView Tests")
+@Suite("CollectionView Tests")
 @MainActor
-struct InventoryViewTests {
+struct CollectionViewTests {
 
     @Test("Open Camera button callback can be created")
     func testCallbackCreation() async throws {

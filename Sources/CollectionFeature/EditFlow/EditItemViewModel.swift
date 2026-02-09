@@ -64,8 +64,8 @@ public final class EditItemViewModel {
     public var validationErrors: [String: String] = [:]
     public var isUploadingPhoto = false
     public var photoError: String?
-    public var showRecatalogPrompt = false
-    public var isRecataloging = false
+    public var showRefreshPrompt = false
+    public var isRefreshing = false
 
     // MARK: - Dependencies
 
@@ -174,9 +174,9 @@ public final class EditItemViewModel {
                 userEditedFields: fieldTracker.asArray
             )
 
-            // If new photos were added, prompt for re-catalog
+            // If new photos were added, prompt for refresh
             if fieldTracker.editedFields.contains("additionalImageUrls") {
-                showRecatalogPrompt = true
+                showRefreshPrompt = true
             }
 
             state = .idle
@@ -186,23 +186,23 @@ public final class EditItemViewModel {
         }
     }
 
-    /// Trigger re-catalog with all photos (primary + additional)
-    public func recatalogWithPhotos() async {
-        isRecataloging = true
-        showRecatalogPrompt = false
+    /// Trigger refresh with all photos (primary + additional)
+    public func refreshWithPhotos() async {
+        isRefreshing = true
+        showRefreshPrompt = false
 
         do {
             try await itemRepository.recatalogWithPhotos(id: editableItem.id)
         } catch {
-            photoError = "Re-catalog failed: \(error.localizedDescription)"
+            photoError = "Refresh failed: \(error.localizedDescription)"
         }
 
-        isRecataloging = false
+        isRefreshing = false
     }
 
-    /// Dismiss the re-catalog prompt without triggering
-    public func dismissRecatalogPrompt() {
-        showRecatalogPrompt = false
+    /// Dismiss the refresh prompt without triggering
+    public func dismissRefreshPrompt() {
+        showRefreshPrompt = false
     }
 
     // MARK: - Photo Management

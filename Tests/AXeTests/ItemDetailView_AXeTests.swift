@@ -10,7 +10,7 @@ struct ItemDetailView_AXeTests {
     let source: SourceFile
 
     init() throws {
-        source = try AXeTestHelpers.readSource(at: "Sources/InventoryFeature/ItemDetailView.swift")
+        source = try AXeTestHelpers.readSource(at: "Sources/CollectionFeature/ItemDetailView.swift")
     }
 
     // MARK: - Palette

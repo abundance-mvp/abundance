@@ -1,26 +1,26 @@
 #if DEBUG
 import SwiftUI
 import Core
-import InventoryFeature
+import CollectionFeature
 import ProfileFeature
 import Persistence
 
 /// Debug-only MainTabView that bypasses Firebase Auth and uses in-memory data.
 /// Used when running on simulator to enable AXe test scenarios.
 struct DebugMainTabView: View {
-    @State private var selectedTab: Tab = .catalog
-    @State private var inventoryViewModel: InventoryViewModel
+    @State private var selectedTab: Tab = .collection
+    @State private var collectionViewModel: CollectionViewModel
     @State private var profileViewModel: ProfileViewModel
 
     enum Tab {
-        case catalog
-        case camera
+        case collection
+        case scan
         case profile
     }
 
     init() {
         let repo = SimulatorItemRepository()
-        _inventoryViewModel = State(initialValue: InventoryViewModel(
+        _collectionViewModel = State(initialValue: CollectionViewModel(
             userId: SimulatorItemFactory.userId,
             itemRepository: repo,
             requiresAuthentication: false
@@ -36,22 +36,22 @@ struct DebugMainTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            InventoryView(
-                viewModel: inventoryViewModel,
-                onOpenCamera: { selectedTab = .camera }
+            CollectionView(
+                viewModel: collectionViewModel,
+                onOpenCamera: { selectedTab = .scan }
             )
-            .accessibilityIdentifier("tab.catalog")
+            .accessibilityIdentifier("tab.collection")
             .tabItem {
-                Label("Catalog", systemImage: "square.grid.2x2.fill")
+                Label("Collection", systemImage: "square.grid.2x2.fill")
             }
-            .tag(Tab.catalog)
+            .tag(Tab.collection)
 
             cameraPlaceholder
-                .accessibilityIdentifier("tab.camera")
+                .accessibilityIdentifier("tab.scan")
                 .tabItem {
-                    Label("Camera", systemImage: "camera.fill")
+                    Label("Scan", systemImage: "camera.fill")
                 }
-                .tag(Tab.camera)
+                .tag(Tab.scan)
 
             ProfileView(viewModel: profileViewModel)
             .accessibilityIdentifier("tab.profile")
@@ -81,7 +81,7 @@ struct DebugMainTabView: View {
                     .multilineTextAlignment(.center)
             }
             .padding()
-            .navigationTitle("Camera")
+            .navigationTitle("Scan")
             .accessibilityIdentifier("camera.simulatorPlaceholder")
         }
     }

@@ -7,7 +7,7 @@
 
 ## Completed
 
-- [x] P0: Delete dialog shows category instead of item name (`InventoryView.swift:109`)
+- [x] P0: Delete dialog shows category instead of item name (`CollectionView.swift:109`)
 - [x] P0: Grid overlap from AsyncImage `.fill` expanding beyond column (`ItemCard.swift`)
 - [x] P1: Export button touch targets below 44pt HIG minimum (`ProfileView.swift`)
 - [x] P2: Test doc `tab.capture` → `tab.camera` mismatch (`AXE-TEST-SCENARIOS.md`)
@@ -17,20 +17,20 @@
 
 ## Remaining Items
 
-### 1. Scenario 12: Re-Catalog from Inventory View
+### 1. Scenario 12: Refresh from Collection View
 
-**Problem:** Scenario 12 (Deep Catalog Trigger) currently requires DetectionResultsView with a camera capture session. It should be triggerable from the inventory view without a camera.
+**Problem:** Scenario 12 (Deep Catalog Trigger) currently requires DetectionResultsView with a camera capture session. It should be triggerable from the collection view without a camera.
 
-**Investigation:** No "Catalog" or "Re-catalog" button exists in the inventory view or item detail view. The catalog process is only triggered by new photo captures via the camera flow.
+**Investigation:** No "Refresh" button exists in the collection view or item detail view. The catalog process is only triggered by new photo captures via the camera flow.
 
 **Proposed Solution:**
-- Add "Re-catalog" action to item context menu (long press) and item detail view
+- Add "Refresh" action to item context menu (long press) and item detail view
 - Implementation: Set `item.status` back to `.pending`, which re-triggers the Cloud Function AI pipeline
 - UI: Show confirmation dialog before re-triggering (costs API credits)
 - Files to modify:
-  - `Sources/InventoryFeature/ItemCard.swift` — add Re-catalog to context menu
-  - `Sources/InventoryFeature/ItemDetailView.swift` — add Re-catalog button
-  - `Sources/InventoryFeature/InventoryViewModel.swift` — add `recatalogItem()` method
+  - `Sources/CollectionFeature/ItemCard.swift` — add Refresh to context menu
+  - `Sources/CollectionFeature/ItemDetailView.swift` — add Refresh button
+  - `Sources/CollectionFeature/CollectionViewModel.swift` — add `refreshItem()` method
   - `Sources/Persistence/ItemRepository.swift` — may need status update method
 
 **Effort:** ~2 hours
@@ -83,7 +83,7 @@
 
 ### 4. Select Button Height (P1 — deferred)
 
-**Problem:** Inventory "Select" toolbar button reports 34pt height, below the 44pt HIG minimum.
+**Problem:** Collection "Select" toolbar button reports 34pt height, below the 44pt HIG minimum.
 
 **Note:** This is a `.borderedProminent` SwiftUI button in a `.toolbar`. SwiftUI toolbar buttons have system-managed sizing. Adding `.frame(minHeight: 44)` may not work in toolbar context. Needs investigation — may require custom toolbar content or `.controlSize(.large)`.
 

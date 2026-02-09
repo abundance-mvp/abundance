@@ -1,7 +1,7 @@
 #if DEBUG
 import SwiftUI
 import PhotosUI
-import InventoryFeature
+import CollectionFeature
 import ProfileFeature
 import CameraFeature
 import FirebaseAuth
@@ -12,29 +12,29 @@ import FirebaseAuth
 /// Launch with `--e2e-test-mode` argument to activate.
 /// Uses real Firebase Auth, Firestore, Storage, and Cloud Functions.
 struct E2ETestMainTabView: View {
-    @State private var selectedTab: Tab = .catalog
+    @State private var selectedTab: Tab = .collection
 
     enum Tab {
-        case catalog
-        case camera
+        case collection
+        case scan
         case profile
     }
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            InventoryView(onOpenCamera: { selectedTab = .camera })
+            CollectionView(onOpenCamera: { selectedTab = .scan })
                 .tabItem {
-                    Label("Catalog", systemImage: "square.grid.2x2.fill")
+                    Label("Collection", systemImage: "square.grid.2x2.fill")
                 }
-                .accessibilityIdentifier("tab.catalog")
-                .tag(Tab.catalog)
+                .accessibilityIdentifier("tab.collection")
+                .tag(Tab.collection)
 
-            E2EImageInjectionView(onDone: { selectedTab = .catalog })
+            E2EImageInjectionView(onDone: { selectedTab = .collection })
                 .tabItem {
-                    Label("Camera", systemImage: "camera.fill")
+                    Label("Scan", systemImage: "camera.fill")
                 }
-                .accessibilityIdentifier("tab.camera")
-                .tag(Tab.camera)
+                .accessibilityIdentifier("tab.scan")
+                .tag(Tab.scan)
 
             ProfileView()
                 .tabItem {

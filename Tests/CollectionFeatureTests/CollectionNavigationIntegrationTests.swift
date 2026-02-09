@@ -1,10 +1,10 @@
 import Testing
 import SwiftUI
-@testable import InventoryFeature
+@testable import CollectionFeature
 
-@Suite("Inventory Navigation Integration Tests")
+@Suite("Collection Navigation Integration Tests")
 @MainActor
-struct InventoryNavigationIntegrationTests {
+struct CollectionNavigationIntegrationTests {
 
     @Test("Empty inventory triggers camera navigation when button tapped")
     func testEmptyInventoryNavigatesToCamera() async throws {

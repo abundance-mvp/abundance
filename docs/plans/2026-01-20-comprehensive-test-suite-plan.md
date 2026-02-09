@@ -21,7 +21,7 @@ This plan covers implementation of a comprehensive test suite for the iOS app, t
 | Domain | Files to Test | Test Type | Agent |
 |--------|---------------|-----------|-------|
 | Camera Preview | `CameraPreviewView.swift`, `CameraService.swift` | Unit | Agent 1 |
-| Inventory CRUD | `InventoryView.swift`, `InventoryViewModel.swift`, `ItemDetailView.swift` | Unit + UI | Agent 2 |
+| Inventory CRUD | `CollectionView.swift`, `CollectionViewModel.swift`, `ItemDetailView.swift` | Unit + UI | Agent 2 |
 | Thumbnail Rendering | `ItemCard.swift`, thumbnail loading | Unit | Agent 3 |
 | Storage Permissions | `StorageService.swift`, upload flows | Unit (mocked) | Agent 4 |
 | Capture Modes | `CaptureSessionViewModel.swift` | Unit | Agent 5 |
@@ -82,9 +82,9 @@ Tests/CameraFeatureTests/
 
 ## Agent 2: Inventory CRUD Tests
 
-**Scope:** `Sources/InventoryFeature/InventoryView.swift`, `InventoryViewModel.swift`, `ItemDetailView.swift`, `EditItemViewModel.swift`
+**Scope:** `Sources/CollectionFeature/CollectionView.swift`, `CollectionViewModel.swift`, `ItemDetailView.swift`, `EditItemViewModel.swift`
 
-### InventoryViewModel Unit Tests
+### CollectionViewModel Unit Tests
 
 | Test | Purpose |
 |------|---------|
@@ -97,7 +97,7 @@ Tests/CameraFeatureTests/
 | `testDeleteItems_partialFailure_rollbacksAll` | Atomic batch behavior |
 | `testRealTimeUpdates_syncsChanges` | Firestore listener updates |
 
-### InventoryView UI Tests
+### CollectionView UI Tests
 
 | Test | Purpose |
 |------|---------|
@@ -139,12 +139,12 @@ Tests/CameraFeatureTests/
 ### Files to Create
 
 ```
-Tests/InventoryFeatureTests/
+Tests/CollectionFeatureTests/
 ├── ViewModels/
-│   ├── InventoryViewModelTests.swift     (NEW - 8 tests)
+│   ├── CollectionViewModelTests.swift     (NEW - 8 tests)
 │   └── EditItemViewModelTests.swift      (NEW - 12 tests)
 ├── Views/
-│   ├── InventoryViewTests.swift          (NEW - 8 UI tests)
+│   ├── CollectionViewTests.swift          (NEW - 8 UI tests)
 │   └── ItemDetailViewTests.swift         (NEW - 4 tests)
 └── Mocks/
     └── MockItemRepository.swift          (NEW - test double)
@@ -156,7 +156,7 @@ Tests/InventoryFeatureTests/
 
 ## Agent 3: Thumbnail Rendering Tests
 
-**Scope:** `Sources/InventoryFeature/ItemCard.swift`, image loading and caching
+**Scope:** `Sources/CollectionFeature/ItemCard.swift`, image loading and caching
 
 ### ItemCard Unit Tests
 
@@ -189,7 +189,7 @@ Tests/InventoryFeatureTests/
 ### Files to Create
 
 ```
-Tests/InventoryFeatureTests/
+Tests/CollectionFeatureTests/
 ├── Views/
 │   └── ItemCardTests.swift               (NEW - 15 tests)
 └── Helpers/
@@ -352,17 +352,17 @@ Use Swift Testing framework for speed:
 
 ```swift
 import Testing
-@testable import InventoryFeature
+@testable import CollectionFeature
 
-@Suite("InventoryViewModel Tests")
-struct InventoryViewModelTests {
+@Suite("CollectionViewModel Tests")
+struct CollectionViewModelTests {
 
     @Test("loadItems populates items array")
     @MainActor
     func loadItems_populatesItemsArray() async {
         let repo = MockItemRepository()
         repo.itemsToReturn = [Item.mock()]
-        let vm = InventoryViewModel(repository: repo)
+        let vm = CollectionViewModel(repository: repo)
 
         await vm.loadItems()
 
@@ -373,7 +373,7 @@ struct InventoryViewModelTests {
 
 ### Phase 3: UI Tests (XCUITest)
 
-For InventoryView navigation and interaction:
+For CollectionView navigation and interaction:
 
 ```swift
 import XCTest
@@ -415,7 +415,7 @@ swift test --filter CameraFeatureTests
 
 - [x] `Tests/` directory structure
 - [x] `CameraFeatureTests` target
-- [ ] `InventoryFeatureTests` target (create)
+- [ ] `CollectionFeatureTests` target (create)
 - [ ] `PersistenceTests` target (create)
 
 ### Mock Data

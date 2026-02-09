@@ -1,7 +1,7 @@
 # View Spec: EditItemSheet
 
-**Source:** `Sources/InventoryFeature/EditFlow/EditItemSheet.swift`
-**Module:** InventoryFeature
+**Source:** `Sources/CollectionFeature/EditFlow/EditItemSheet.swift`
+**Module:** CollectionFeature
 **Priority:** P1
 **Last updated:** 2026-02-06
 

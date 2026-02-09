@@ -1,7 +1,7 @@
-# View Spec: InventoryView
+# View Spec: CollectionView
 
-**Source:** `Sources/InventoryFeature/InventoryView.swift`
-**Module:** InventoryFeature
+**Source:** `Sources/CollectionFeature/CollectionView.swift`
+**Module:** CollectionFeature
 **Priority:** P0
 **Last updated:** 2026-02-06
 
@@ -29,10 +29,10 @@
 | Loading indicator | "Loading items..." | `.updatesFrequently` | — | — |
 | Empty state CTA | "Open Camera" | `.isButton` | 44×44pt | Body |
 | Retry button | "Retry" | `.isButton` | 44×44pt | Body |
-| Item grid | `inventory.grid` | — | — | — |
+| Item grid | `collection.grid` | — | — | — |
 | Item card | Combined a11y element | `.isButton` | — | Body/Footnote |
-| Deselect All button | `inventory.deselectAllButton` | `.isButton` | 44×44pt | Body |
-| Bulk Delete button | `inventory.bulkDeleteButton` | `.isButton` | 44×44pt | Body |
+| Deselect All button | `collection.deselectAllButton` | `.isButton` | 44×44pt | Body |
+| Bulk Delete button | `collection.bulkDeleteButton` | `.isButton` | 44×44pt | Body |
 
 **Notes:**
 - `ErrorView` error icon uses `@ScaledMetric(relativeTo: .largeTitle)` with `.font(.system(size:))` — Dynamic Type compliant
@@ -80,7 +80,7 @@
 - Selection mode toggles between `Button` tap and `NavigationLink`
 - Respects `reduceMotion`
 
-### EmptyInventoryView (private)
+### EmptyCollectionView (private)
 - Uses `EmptyStateCard` component
 - "Open Camera" CTA delegates to parent
 

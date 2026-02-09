@@ -176,7 +176,7 @@ User Captures Photo
 | **AbundanceApp** | `App/` | Main app entry point, Firebase initialization | All feature modules, FirebaseCore |
 | **OnboardingFeature** | `Sources/OnboardingFeature/` | Authentication flow (Apple Sign-In, email), first-launch experience | FirebaseAuth, CameraFeature, Core |
 | **CameraFeature** | `Sources/CameraFeature/` | Camera capture (single tap, burst mode), photo upload, detection results display | VisionCore, Persistence, FirebaseAuth |
-| **InventoryFeature** | `Sources/InventoryFeature/` | Item list, search, detail view, edit flow, rescan functionality | Core, CameraFeature, Persistence |
+| **CollectionFeature** | `Sources/CollectionFeature/` | Item list, search, detail view, edit flow, rescan functionality | Core, CameraFeature, Persistence |
 | **ProfileFeature** | `Sources/ProfileFeature/` | User profile, settings, subscription management | Core, Persistence, FirebaseAuth |
 | **Persistence** | `Sources/Persistence/` | Firebase services (ItemService, StorageService), Keychain, data models | FirebaseFirestore, FirebaseStorage |
 | **VisionCore** | `Sources/VisionCore/` | On-device vision: barcode detection, subject masking, image quality assessment | Vision.framework |
@@ -188,7 +188,7 @@ User Captures Photo
 |-----------|------|----------------|
 | `CaptureSessionViewModel` | `CameraFeature/ViewModels/CaptureSessionViewModel.swift` | Manages capture flow: single/burst capture, upload, session observation |
 | `CameraViewModel` | `CameraFeature/ViewModels/CameraViewModel.swift` | Camera session management, preview rendering |
-| `InventoryViewModel` | `InventoryFeature/InventoryViewModel.swift` | Item list state, search, deletion, real-time updates |
+| `CollectionViewModel` | `CollectionFeature/CollectionViewModel.swift` | Item list state, search, deletion, real-time updates |
 | `ItemService` | `Persistence/Firebase/ItemService.swift` | Firestore CRUD operations for items, real-time listeners |
 | `StorageService` | `Persistence/Firebase/StorageService.swift` | GCS upload/download for images |
 | `Item` | `Persistence/Models/Item.swift` | Core data model matching Firestore schema |
