@@ -69,7 +69,7 @@ export const LAYER1_MODEL_ID = 'gemini-3-flash-preview';
 
 ```typescript
 export const LAYER1_GENERATION_CONFIG = {
-  temperature: 0.1,
+  temperature: 0,  // Deterministic bounding boxes for consistent object detection
   topP: 0.95,
   maxOutputTokens: 4096,
   responseMimeType: 'application/json',
@@ -84,7 +84,7 @@ export const LAYER1_GENERATION_CONFIG = {
 
 | Parameter | Value | Purpose |
 |-----------|-------|---------|
-| `temperature` | `0.1` | Low temperature for deterministic detection |
+| `temperature` | `0` | Zero temperature for deterministic bounding boxes |
 | `topP` | `0.95` | Nucleus sampling threshold |
 | `maxOutputTokens` | `4096` | Maximum response length for complex scenes |
 | `responseMimeType` | `application/json` | Force JSON output |
@@ -115,6 +115,13 @@ DETECTION RULES:
 3. For each object, provide a bounding box as [ymin, xmin, ymax, xmax] normalized to 0-1000
 4. Provide a specific label (e.g., "leather armchair" not just "chair")
 
+CRITICAL - BOUNDING BOX ACCURACY:
+Each bounding box MUST accurately frame ONLY the specific object described by its label.
+- Double-check that [ymin, xmin, ymax, xmax] coordinates enclose ONLY the labeled item
+- Do NOT include adjacent objects in a bounding box
+- If two objects are close together, draw SEPARATE tight boxes around each one
+- Verify the label matches what is INSIDE the bounding box, not nearby objects
+
 MULTI-IMAGE RULES:
 When given multiple images:
 1. Identify if the SAME object appears in multiple photos (different angles)
@@ -141,9 +148,10 @@ OUTPUT: Return valid JSON array matching the schema.`;
 1. **Clear Task Definition**: Explicit scope (home inventory cataloging)
 2. **Exclusion Rules**: Built-in fixtures, people, pets excluded
 3. **Label Specificity**: Encourages descriptive labels ("leather armchair" vs "chair")
-4. **Bounding Box Format**: Explicit coordinate system documentation
-5. **Multi-Image Logic**: Clear grouping instructions for burst mode
-6. **Empty Result Handling**: Requires reasoning when no objects found
+4. **Bounding Box Accuracy**: Explicit instructions to tightly frame only the labeled object
+5. **Bounding Box Format**: Explicit coordinate system documentation
+6. **Multi-Image Logic**: Clear grouping instructions for burst mode
+7. **Empty Result Handling**: Requires reasoning when no objects found
 
 ---
 
@@ -594,13 +602,16 @@ export function isValidBoundingBox(box_2d: BoundingBox): boolean {
 
 ### Upload to Permanent Storage
 
-Cropped images are uploaded to permanent GCS storage with signed URLs:
+Cropped images are uploaded to permanent GCS storage with Firebase download tokens for permanent URLs (unlike signed URLs which expire):
 
 ```typescript
-// Upload to GCS
-const cropPath = `users/${userId}/items/${groupId}_crop_${croppedUrls.length}.jpg`;
+// Upload to GCS (path includes sessionId to prevent cross-session overwrites)
+const cropPath = `users/${userId}/sessions/${sessionId}/crops/${groupId}_crop_${croppedUrls.length}.jpg`;
 const bucket = storage.bucket();
 const file = bucket.file(cropPath);
+
+// Generate a download token for permanent Firebase Storage URL
+const downloadToken = randomUUID();
 
 await file.save(croppedBuffer, {
   metadata: {
@@ -609,18 +620,24 @@ await file.save(croppedBuffer, {
       sessionId,
       groupId,
       label: obj.label,
-      imageIndex: obj.image_index.toString()
+      imageIndex: obj.image_index.toString(),
+      // Set Firebase download token for permanent URL access
+      firebaseStorageDownloadTokens: downloadToken
     }
   }
 });
 
-// Generate signed URL with 24-hour expiration (security: no public access)
-const [signedUrl] = await file.getSignedUrl({
-  action: 'read',
-  expires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-  version: 'v4'
-});
+// Generate permanent Firebase download URL (doesn't expire like signed URLs)
+const bucketName = bucket.name;
+const downloadUrl = generateFirebaseDownloadUrl(bucketName, cropPath, downloadToken);
 ```
+
+**Firebase Download URL Format:**
+```
+https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encodedPath}?alt=media&token={uuid}
+```
+
+Unlike signed URLs (which expire after a set duration), Firebase download URLs with tokens are permanent and work as long as the file exists.
 
 ---
 
@@ -634,7 +651,7 @@ export const LAYER1_TIMEOUTS = {
   GEMINI_FLASH_TIMEOUT_MS: 30000,
 
   /** Max retries for transient failures */
-  GEMINI_FLASH_MAX_RETRIES: 2,
+  GEMINI_FLASH_MAX_RETRIES: 4,
 
   /** Per-image fetch timeout (10 seconds) */
   IMAGE_FETCH_TIMEOUT_MS: 10000,
@@ -662,14 +679,24 @@ const RETRYABLE_ERROR_CODES = [
 ];
 ```
 
-### Exponential Backoff Retry
+### Exponential Backoff Retry with Rate Limit Circuit Breaker
+
+The retry logic distinguishes between transient errors and rate limit (429/RESOURCE_EXHAUSTED) errors:
+
+- **Transient errors**: Standard exponential backoff (1s, 2s, 4s, 8s, 16s)
+- **Rate limit errors**: Much longer backoff (15s, 30s, 60s, 120s) with a circuit breaker
+- **Circuit breaker**: After 3 consecutive 429 errors, fails fast with `RATE_LIMITED` instead of continuing to hammer the API
+- **Jitter**: 0-50% random jitter on all backoff delays, capped at 60 seconds
 
 ```typescript
+const RATE_LIMIT_CIRCUIT_BREAKER_THRESHOLD = 3;
+
 export async function callGeminiFlashWithRetry(
   imageBase64s: string[],
   maxRetries: number = LAYER1_TIMEOUTS.GEMINI_FLASH_MAX_RETRIES
 ): Promise<Layer1DetectionResponse> {
   let lastError: Error | null = null;
+  let consecutive429Count = 0;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -682,16 +709,29 @@ export async function callGeminiFlashWithRetry(
         throw lastError;
       }
 
-      logger.warn('Gemini Flash attempt failed', {
-        attempt: attempt + 1,
-        maxAttempts: maxRetries + 1,
-        error: lastError.message
-      });
+      const isRateLimit = isRateLimitError(lastError);
 
-      // Apply exponential backoff before next retry (except on last attempt)
+      // Circuit breaker: after N consecutive 429s, fail fast
+      if (isRateLimit) {
+        consecutive429Count++;
+        if (consecutive429Count >= RATE_LIMIT_CIRCUIT_BREAKER_THRESHOLD) {
+          throw new Error(
+            `RATE_LIMITED: ${consecutive429Count} consecutive 429 errors. ` +
+            `Circuit breaker tripped to prevent further API hammering.`
+          );
+        }
+      } else {
+        consecutive429Count = 0; // Reset on non-429 errors
+      }
+
+      // Apply backoff before next retry (except on last attempt)
+      // Rate limit errors (429) need much longer backoff than transient errors
       if (attempt < maxRetries) {
-        const backoffMs = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
-        logger.info('Retrying Gemini Flash', { backoffMs });
+        const baseMs = isRateLimit
+          ? 15000 * Math.pow(2, attempt)  // 15s, 30s, 60s, 120s for rate limits
+          : 1000 * Math.pow(2, attempt);  // 1s, 2s, 4s, 8s, 16s for transient errors
+        const jitter = Math.random() * baseMs * 0.5; // 0-50% jitter
+        const backoffMs = Math.min(baseMs + jitter, 60000); // Cap at 60s
         await sleep(backoffMs);
       }
     }
@@ -707,7 +747,7 @@ export async function callGeminiFlashWithRetry(
 function determineErrorCode(error: unknown): string {
   if (error instanceof Error) {
     if (error.message.includes('timeout')) return 'TIMEOUT';
-    if (error.message.includes('quota')) return 'QUOTA_EXCEEDED';
+    if (error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED') || error.message.includes('429')) return 'QUOTA_EXCEEDED';
     if (error.message.includes('invalid')) return 'INVALID_INPUT';
     if (error.message.includes('permission')) return 'PERMISSION_DENIED';
     if (error.message.includes('not found')) return 'NOT_FOUND';
@@ -822,7 +862,12 @@ export async function validateSessionDocument(
 
 **Allowed Buckets**:
 ```typescript
-const ALLOWED_BUCKETS = ['abundance-temp', 'abundance-dev-temp', 'abundance-staging-temp'];
+const ALLOWED_BUCKETS = [
+  'abundance-mvp.firebasestorage.app',  // Default Firebase Storage bucket
+  'abundance-temp',
+  'abundance-dev-temp',
+  'abundance-staging-temp'
+];
 ```
 
 ### Session Status Flow
@@ -844,7 +889,7 @@ const ALLOWED_BUCKETS = ['abundance-temp', 'abundance-dev-temp', 'abundance-stag
 interface CaptureSession {
   id: string;
   userId: string;
-  captureMode: 'single' | 'burst';
+  captureMode: 'single' | 'burst' | 'sweep';
   status: 'uploading' | 'detecting' | 'detected' | 'failed';
   createdAt: Timestamp;
   detectedAt?: Timestamp;
@@ -866,8 +911,23 @@ interface CaptureSession {
   reasoning?: string;
   error?: string;
   errorCode?: string;
+  /** Sweep mode: pre-cropped segments from on-device EdgeTAM */
+  sweepCrops?: SweepCropInfo[];
+}
+
+interface SweepCropInfo {
+  /** GCS URL of the pre-cropped image */
+  cropUrl: string;
+  /** Bounding box [ymin, xmin, ymax, xmax] normalized 0-1000 */
+  boundingBox: [number, number, number, number];
+  /** Index of the keyframe this crop came from */
+  frameIndex: number;
+  /** Deduplication group ID from on-device segment grouping */
+  groupId: string;
 }
 ```
+
+**Sweep mode** skips Layer 1 detection entirely. Pre-cropped images from on-device EdgeTAM segmentation are labeled directly using Gemini Flash without bounding box detection, making it ~50% cheaper per item than the full single/burst detection pipeline.
 
 ---
 

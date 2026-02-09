@@ -8,11 +8,11 @@
 
 ## Identifier Reference
 
-### Tab Bar (`FloatingTabBar`)
+### Tab Bar (`FloatingTabBar` / `DebugMainTabView`)
 | Identifier | Element |
 |---|---|
-| `tab.catalog` | Catalog tab |
-| `tab.camera` | Capture/Camera tab |
+| `tab.collection` | Collection tab |
+| `tab.scan` | Scan tab |
 | `tab.profile` | Profile tab |
 
 ### Collection Screen (`CollectionView`)
@@ -25,8 +25,8 @@
 | `collection.loading` | Loading ProgressView |
 | `collection.emptyState` | Empty collection view |
 | `collection.retryButton` | Error retry button |
-| `collection.searchField` | Search TextField |
-| `collection.searchClearButton` | Search clear (X) button |
+| `inventory.searchField` | Search TextField |
+| `inventory.searchClearButton` | Search clear (X) button |
 | `collection.item.<id>` | Individual item card (dynamic) |
 
 ### Item Detail (`ItemDetailView`)
@@ -35,10 +35,14 @@
 | `detail.editButton` | Edit (pencil) button |
 | `detail.refreshButton` | Refresh (arrows) button |
 | `detail.itemName` | Item name text |
+| `detail.processingBanner` | Processing/refreshing banner |
 
-### Edit Flow (`EditItemSheet`)
+### Edit Flow (`RescanPromptSheet` + `EditItemSheet`)
 | Identifier | Element |
 |---|---|
+| `edit.takeNewPhotoButton` | "Take New Photo" button (rescan prompt) |
+| `edit.skipRescanButton` | "Edit Without Rescan" button (rescan prompt) |
+| `edit.cancelButton` | Cancel button (rescan prompt + edit form toolbar) |
 | `edit.nameField` | Name text field |
 | `edit.brandField` | Brand text field |
 | `edit.modelField` | Model text field |
@@ -50,17 +54,19 @@
 | `edit.conditionPicker` | Condition picker |
 | `edit.quantityStepper` | Quantity stepper |
 | `edit.valueField` | Estimated Value currency field |
-| `edit.cancelButton` | Cancel toolbar button |
+| `edit.addPhotoButton` | Add photo button |
 | `edit.saveButton` | Save toolbar button |
 
 ### Detection Results (`DetectionResultsView`)
 | Identifier | Element |
 |---|---|
-| `detection.catalogAllButton` | "Catalog All" header button |
-| `detection.catalogButton.<groupId>` | Per-object "Catalog" button (dynamic) |
+| `detection.selectAllButton` | "Select All" / "Deselect All" header button |
+| `detection.catalogSelectedButton` | "Catalog" button for selected objects |
+| `detection.toggleCheck.<groupId>` | Per-object selection toggle (dynamic) |
 | `detection.object.<groupId>` | Per-object card (dynamic) |
-| `detection.retakeButton` | Retake button |
-| `detection.doneButton` | Done button |
+| `detection.retakeOverlayButton` | Retake overlay button (on image) |
+| `detection.retakeButton` | Retake button (bottom bar) |
+| `detection.doneButton` | Done button (bottom bar) |
 
 ### Profile Screen (`ProfileView`)
 | Identifier | Element |
@@ -82,21 +88,21 @@
 
 **Steps:**
 1. `snapshot_ui` - verify tab bar area present
-2. `tap(x: 100, y: 850)` - Catalog tab
+2. `tap(x: 100, y: 850)` - Collection tab
 3. `snapshot_ui` - verify "Collection" navigation title
-4. `tap(x: 200, y: 850)` - Camera tab
-5. `snapshot_ui` - verify camera content ("Camera" heading or `camera.simulatorPlaceholder`)
+4. `tap(x: 200, y: 850)` - Scan tab
+5. `snapshot_ui` - verify scan content ("Scan" heading or `camera.simulatorPlaceholder`)
 6. `tap(x: 300, y: 850)` - Profile tab
 7. `snapshot_ui` - verify "Profile" navigation title
 
 **Assertions:**
 - "Tab Bar" group exists in the AX tree
 - Each tab shows its expected navigation title or content
-- Catalog tab shows "Collection" heading
-- Camera tab shows "Camera" heading (simulator: `camera.simulatorPlaceholder`)
+- Collection tab shows "Collection" heading
+- Scan tab shows "Scan" heading (simulator: `camera.simulatorPlaceholder`)
 - Profile tab shows "Profile" heading
 
-**Note:** Tab bar button identifiers (`tab.catalog`, `tab.camera`, `tab.profile`) are set on content views in code but not traversable by `snapshot_ui`/AXe due to SwiftUI TabView platform limitation (see Known Limitations). Use coordinate-based tapping.
+**Note:** Tab bar button identifiers (`tab.collection`, `tab.scan`, `tab.profile`) are set on content views in code but not traversable by `snapshot_ui`/AXe due to SwiftUI TabView platform limitation (see Known Limitations). Use coordinate-based tapping.
 
 **Skip if:** N/A - tabs always exist.
 
@@ -109,7 +115,7 @@
 **Precondition:** Fresh user or cleared collection.
 
 **Steps:**
-1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
+1. Navigate to Collection tab: `tap(x: 100, y: 850)`
 2. `snapshot_ui` - inspect collection state
 
 **Assertions:**
@@ -128,7 +134,7 @@
 **Precondition:** 5+ items in account.
 
 **Steps:**
-1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
+1. Navigate to Collection tab: `tap(x: 100, y: 850)`
 2. `snapshot_ui` - check grid and items
 3. Count `collection.item.*` identifiers
 4. `swipe(direction: "up")` - scroll down (swipe up to scroll content down)
@@ -148,15 +154,15 @@
 **Goal:** Search bar filters items, clear restores all, no-match shows empty search state.
 
 **Steps:**
-1. Navigate to Catalog tab (with items present)
+1. Navigate to Collection tab (with items present)
 2. `snapshot_ui` - count initial items
-3. `tap(id: "collection.searchField")` - focus search (MUST use id, not coordinates)
+3. `tap(id: "inventory.searchField")` - focus search (MUST use id, not coordinates)
 4. `snapshot_ui` - confirm focus (AXValue changes from placeholder)
 5. `type_text("<known-item-term>")` - type a search term from a visible item's label
 6. `snapshot_ui` - verify filtered results (fewer items)
-7. `tap(id: "collection.searchClearButton")` - clear search
+7. `tap(id: "inventory.searchClearButton")` - clear search
 8. `snapshot_ui` - verify all items restored
-9. `tap(id: "collection.searchField")` - focus again
+9. `tap(id: "inventory.searchField")` - focus again
 10. `type_text("zzz_nonexistent_item_zzz")` - type nonsense
 11. `snapshot_ui` - verify empty search state (ContentUnavailableView)
 
@@ -174,7 +180,7 @@
 **Goal:** Tapping an item navigates to detail with metadata.
 
 **Steps:**
-1. Navigate to Catalog tab (with items present)
+1. Navigate to Collection tab (with items present)
 2. `snapshot_ui` - find first `collection.item.*` identifier
 3. `tap(id: "collection.item.<id>")` - tap item
 4. `snapshot_ui` - inspect detail view
@@ -222,7 +228,7 @@
 **Goal:** Selection mode works, multi-select toggles, bulk delete confirmation shows.
 
 **Steps:**
-1. Navigate to Catalog tab (with 2+ items)
+1. Navigate to Collection tab (with 2+ items)
 2. `tap(id: "collection.selectButton")` - enter selection mode
 3. `snapshot_ui` - verify button label changed to "Done"
 4. `tap(id: "collection.item.<id1>")` then `tap(id: "collection.item.<id2>")` - select two items
@@ -249,7 +255,7 @@
 **Goal:** Long-press shows context menu with Edit/Delete.
 
 **Steps:**
-1. Navigate to Catalog tab (with items, NOT in selection mode)
+1. Navigate to Collection tab (with items, NOT in selection mode)
 2. `snapshot_ui` - find an item `collection.item.<id>` and note its frame center coordinates
 3. `long_press(x: <center_x>, y: <center_y>, duration: 1500)` — `long_press` does NOT accept an `id` parameter, must use coordinates calculated from item's AXFrame (x + width/2, y + height/2). See Known Limitations.
 4. `snapshot_ui` - verify context menu
@@ -310,7 +316,7 @@
 **Goal:** All identifiers from the Identifier Reference are present in the accessibility tree.
 
 **Steps:**
-1. Navigate to Catalog tab: `tap(x: 100, y: 850)`
+1. Navigate to Collection tab: `tap(x: 100, y: 850)`
 2. `snapshot_ui` - check for collection identifiers
 3. Navigate to Profile tab: `tap(x: 300, y: 850)`
 4. `snapshot_ui` - check for profile identifiers
@@ -331,9 +337,9 @@
 | Issue | Workaround |
 |---|---|
 | SwiftUI toolbar buttons (`edit.cancelButton`, `edit.saveButton`) not exposed as children in the AX tree when inside NavigationBar | Identifiers are correctly applied in code; this is a SwiftUI accessibility limitation. The `edit.cancelButton` on the **rescan prompt sheet** IS accessible — only the edit form's NavigationBar toolbar buttons are hidden. To dismiss the edit form, **swipe down** (y=100 → y=800, duration 0.3s). |
-| SwiftUI `TabView` tab bar buttons not traversable by `snapshot_ui`/AXe | Identifiers (`tab.catalog`, `tab.camera`, `tab.profile`) are correctly set on content views in code. `UITabBarButton` elements are not exposed through the AXe accessibility hierarchy. Use coordinate-based tapping: **Catalog (100,850), Camera (200,850), Profile (300,850)**. If tap doesn't register (scrollable content intercepts), take a `screenshot` to verify tab bar position and adjust y (try 840-860). Works correctly in XCUITest via `tabBars.buttons["Catalog"]`. |
+| SwiftUI `TabView` tab bar buttons not traversable by `snapshot_ui`/AXe | Identifiers (`tab.collection`, `tab.scan`, `tab.profile`) are correctly set on content views in code. `UITabBarButton` elements are not exposed through the AXe accessibility hierarchy. Use coordinate-based tapping: **Collection (100,850), Scan (200,850), Profile (300,850)**. If tap doesn't register (scrollable content intercepts), take a `screenshot` to verify tab bar position and adjust y (try 840-860). Works correctly in XCUITest via `tabBars.buttons["Collection"]`. |
 | `collection.grid` identifier on `LazyVGrid` not exposed as a separate AX element | Grid items appear as direct children of the Application. The `LazyVGrid` container is not represented as a distinct element in the AX tree. Verify grid by checking for multiple `collection.item.*` identifiers instead. |
-| Search field requires tap-by-ID before typing | The SwiftUI `.searchable` field does not activate from a coordinate tap alone. Always use `tap(id: "collection.searchField")` first, confirm focus via `snapshot_ui` (AXValue changes from placeholder to empty or typed text), then use `type_text`. |
+| Search field requires tap-by-ID before typing | The custom `SearchBar` field does not activate from a coordinate tap alone. Always use `tap(id: "inventory.searchField")` first, confirm focus via `snapshot_ui` (AXValue changes from placeholder to empty or typed text), then use `type_text`. |
 | Edit flow has a rescan prompt before the edit form | Tapping `detail.editButton` opens a rescan prompt sheet with `edit.takeNewPhotoButton`, `edit.skipRescanButton`, and `edit.cancelButton`. Tap `edit.skipRescanButton` ("Edit Without Rescan") to reach the actual edit form. |
 | `long_press` requires explicit coordinates, not element ID | The XcodeBuildMCP `long_press` tool only accepts `x`, `y`, `duration` — no `id` parameter. Calculate coordinates from the target element's frame center (x + width/2, y + height/2). Use duration 1500ms. |
 
@@ -361,6 +367,7 @@ This is **not** a brittle script - Claude reads the accessibility tree, understa
 
 | Date | Change |
 |---|---|
+| 2026-02-08 | Fixed stale identifiers: tab IDs (`tab.catalog`/`tab.camera` → `tab.collection`/`tab.scan`), search IDs (`collection.searchField` → `inventory.searchField`, `collection.searchClearButton` → `inventory.searchClearButton`), detection IDs (`detection.catalogAllButton` → `detection.selectAllButton`, added `detection.catalogSelectedButton`, `detection.toggleCheck.<groupId>`, `detection.retakeOverlayButton`). Updated all scenario steps and Known Limitations to match current code. |
 | 2026-02-07 | Updated all scenario steps from stale `axe` CLI syntax to XcodeBuildMCP tool names (`snapshot_ui`, `tap`, `swipe`, `long_press`, `type_text`). Expanded Known Limitations to 6 entries (search field, edit flow, long_press). Updated Scenario 6 for two-step edit flow and swipe-to-dismiss. Updated Scenario 8 for coordinate-based long_press. Updated Scenarios 1, 2, 9, 11 for coordinate-based tab navigation. |
 | 2026-02-07 | Removed Scenario 12 (Catalog Processing States) — requires cloud API calls, violates no-network-calls policy. Now 11 scenarios total. |
 | 2026-02-07 | Removed Scenario 12 (Deep Catalog Trigger) — catalog pipeline requires Cloud Functions/network, not suitable for AXe testing. Renumbered Scenario 13 → 12. Now 12 scenarios total. |

@@ -1,9 +1,9 @@
 # ADR-024: Observability Stack
 
-**Status:** Approved
+**Status:** Approved (Revised 2026-02-08)
 **Date:** 2025-10-24
 **Decision Makers:** Engineering Leadership, DevOps/SRE
-**Related Documents:** TECH-STACK-001, ADR-005, ADR-012
+**Related Documents:** TECH-STACK-001, ADR-005, ADR-007
 
 ---
 
@@ -21,8 +21,8 @@ Observability strategy for Abundance MVP: logging, monitoring, analytics, error 
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| **Backend Logging** | Cloud Logging | Cloud Functions logs, Shopping Graph API calls |
-| **Backend Monitoring** | Cloud Monitoring | Latency, error rate, Shopping Graph success rate |
+| **Backend Logging** | Cloud Logging | Cloud Functions logs, AI Pipeline (Gemini 3 Pro) API calls |
+| **Backend Monitoring** | Cloud Monitoring | Latency, error rate, AI Pipeline success rate |
 | **iOS Analytics** | Firebase Analytics | User events, funnels, retention |
 | **iOS Crash Tracking** | Firebase Crashlytics | App crashes, non-fatal errors |
 | **Alerting** | Cloud Monitoring Alerts | PagerDuty/Slack notifications |
@@ -68,9 +68,9 @@ Analytics.logEvent("item_cataloged", parameters: ["tier": "free"])
 
 | Metric | Target | Alert |
 |--------|--------|-------|
-| Shopping Graph success rate | >95% | <90% |
-| Shopping Graph latency (p95) | <5 sec | >8 sec |
-| `enrichItem` invocations/hour | Baseline TBD | 10× spike |
+| AI Pipeline success rate | >95% | <90% |
+| AI Pipeline latency (p95) | <5 sec | >8 sec |
+| `onItemCreatedGemini3` invocations/hour | Baseline TBD | 10x spike |
 | Firestore read/write quota | <80% of free tier | >90% |
 | Cloud Functions error rate | <1% | >5% |
 
@@ -102,7 +102,7 @@ Analytics.logEvent("item_cataloged", parameters: ["tier": "free"])
 
 **Cons:**
 - **Cost:** $15-31/host/month (vs. $0 GCP native)
-- **Overkill:** MVP doesn't need APM (2 Cloud Functions, simple architecture)
+- **Overkill:** MVP doesn't need APM (14 Cloud Functions, straightforward architecture)
 
 **Why Rejected:** GCP native tools are free and sufficient for MVP
 
@@ -125,20 +125,20 @@ Analytics.logEvent("item_cataloged", parameters: ["tier": "free"])
 
 ## Monitoring Dashboard (Cloud Monitoring)
 
-### Dashboard 1: Shopping Graph Health
+### Dashboard 1: AI Pipeline Health
 
 ```yaml
-- Shopping Graph Success Rate (%)
+- AI Pipeline Success Rate (%)
   - Green: >95%
   - Yellow: 90-95%
   - Red: <90%
 
-- Shopping Graph Latency (p95)
+- AI Pipeline Latency (p95)
   - Green: <5 sec
   - Yellow: 5-8 sec
   - Red: >8 sec
 
-- Retry Success Rate (%)
+- Tool Call Success Rate (%)   # google_lens, barcode_lookup, web_search
   - Green: >80%
   - Yellow: 60-80%
   - Red: <60%
@@ -156,7 +156,7 @@ Analytics.logEvent("item_cataloged", parameters: ["tier": "free"])
 ### Dashboard 3: Cost Tracking
 
 ```yaml
-- Shopping Graph API Cost per Day
+- AI Pipeline Cost per Day (Gemini 3 Pro + tool calls)
 - Firebase Storage Cost per Day
 - Cloud Functions Invocations (% of free tier quota)
 - Firestore Reads/Writes (% of free tier quota)
@@ -170,7 +170,7 @@ Analytics.logEvent("item_cataloged", parameters: ["tier": "free"])
 
 | Alert | Condition | Action |
 |-------|-----------|--------|
-| Shopping Graph down | Success rate < 90% for 15 min | Page on-call engineer |
+| AI Pipeline down | Success rate < 90% for 15 min | Page on-call engineer |
 | Firestore quota exceeded | >95% of free tier | Upgrade to Blaze plan |
 | Cloud Functions error spike | Error rate > 10% for 5 min | Page on-call engineer |
 
@@ -178,8 +178,8 @@ Analytics.logEvent("item_cataloged", parameters: ["tier": "free"])
 
 | Alert | Condition | Action |
 |-------|-----------|--------|
-| Shopping Graph latency high | p95 > 8 sec for 30 min | Investigate, may need optimization |
-| Retry rate high | >20% of enrichments require retry | Check Shopping Graph health |
+| AI Pipeline latency high | p95 > 8 sec for 30 min | Investigate, may need optimization |
+| Tool call failure rate high | >20% of tool calls failing | Check SerpAPI/barcode service health |
 | Cost anomaly | Daily cost > $50 (expected: $20) | Investigate runaway costs |
 
 ---
@@ -189,22 +189,22 @@ Analytics.logEvent("item_cataloged", parameters: ["tier": "free"])
 ### Log Levels
 
 **ERROR:**
-- Shopping Graph API failures (timeout, 5xx)
+- AI Pipeline failures (Gemini API timeout, 5xx, tool call failures)
 - Authentication errors (invalid JWT)
 - Firestore write failures
 
 **WARN:**
-- Retry attempts (1st, 2nd, 3rd)
-- Low confidence detections (<0.7)
+- Tool call failures (Google Lens, barcode lookup, web search)
+- Low confidence detections
 - Rate limit warnings (approaching quota)
 
 **INFO:**
-- Successful enrichments
+- Successful cataloging (item processed by Gemini 3 Pro)
 - User signups
 - Subscription changes
 
 **DEBUG (Staging Only):**
-- Request/response payloads (Shopping Graph API)
+- Request/response payloads (Gemini API, tool calls)
 - Firestore queries
 
 ### Structured Logging (JSON)
@@ -239,3 +239,4 @@ console.log(JSON.stringify({
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-10-24 | 1.0 | Initial observability stack | Stage 2.1 Execution |
+| 2026-02-08 | 1.1 | Replaced all "Shopping Graph" references with "AI Pipeline" (Gemini 3 Pro), fixed ADR-012 reference to ADR-007, updated function count | Documentation Agent |

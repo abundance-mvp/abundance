@@ -905,20 +905,20 @@ Deep scan is a one-time operation per item. After completion:
 | Item service | `Sources/Persistence/Firebase/ItemService.swift` |
 | Item model | `Sources/Persistence/Models/Item.swift` |
 | Session model | `Sources/CameraFeature/Models/CaptureSession.swift` |
-| Layer 1 prompts | `functions/src/layer1/prompts.ts` |
-| Layer 2 prompts | `functions/src/gemini/prompts.ts` |
-| Layer 1 service | `functions/src/layer1/layer1-service.ts` |
-| Layer 2 orchestrator | `functions/src/gemini/orchestrator.ts` |
-| Tool: Google Lens | `functions/src/gemini/tools/google-lens.ts` |
-| Tool: Barcode | `functions/src/gemini/tools/barcode-lookup.ts` |
-| Tool: Web Search | `functions/src/gemini/tools/web-search.ts` |
-| Context cache | `functions/src/gemini/context-cache-service.ts` |
-| Catalog history | `functions/src/gemini/catalog-history-service.ts` |
-| Session trigger | `functions/src/onSessionCreated.ts` |
-| Item trigger | `functions/src/onItemFromSession.ts` |
-| Rescan trigger | `functions/src/onItemUpdatedRescan.ts` |
-| Deep scan trigger | `functions/src/onItemUpdatedDeepScan.ts` |
-| Vertex AI config | `functions/src/vertexai-config.ts` |
+| Layer 1 prompts | `functions/src/ai-pipeline/layer1/prompts.ts` |
+| Layer 2 prompts | `functions/src/ai-pipeline/gemini/prompts.ts` |
+| Layer 1 service | `functions/src/ai-pipeline/layer1/layer1-service.ts` |
+| Layer 2 orchestrator | `functions/src/ai-pipeline/gemini/orchestrator.ts` |
+| Tool: Google Lens | `functions/src/ai-pipeline/tools/google-lens.ts` |
+| Tool: Barcode | `functions/src/ai-pipeline/tools/barcode-lookup.ts` |
+| Tool: Web Search | `functions/src/ai-pipeline/tools/web-search.ts` |
+| Context cache | `functions/src/ai-pipeline/gemini/context-cache-service.ts` |
+| Catalog history | `functions/src/ai-pipeline/gemini/catalog-history-service.ts` |
+| Session trigger | `functions/src/triggers/onSessionCreated.ts` |
+| Item trigger | `functions/src/triggers/onItemFromSession.ts` |
+| Rescan trigger | `functions/src/triggers/onItemUpdatedRescan.ts` |
+| Deep scan trigger | `functions/src/triggers/onItemUpdatedDeepScan.ts` |
+| Vertex AI config | `functions/src/ai-pipeline/gemini/vertexai-config.ts` |
 | EdgeTAM service | `Sources/EdgeTAMFeature/Services/EdgeTAMService.swift` |
 | EdgeTAM config | `Sources/EdgeTAMFeature/Models/EdgeTAMConfiguration.swift` |
 | Frame scheduler | `Sources/EdgeTAMFeature/Services/FrameScheduler.swift` |

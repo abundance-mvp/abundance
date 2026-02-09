@@ -3,7 +3,7 @@
 **Source:** `Sources/CameraFeature/Views/DetectionResultsView.swift`
 **Module:** CameraFeature
 **Priority:** P1
-**Last updated:** 2026-02-06
+**Last updated:** 2026-02-08
 
 ---
 
@@ -13,10 +13,11 @@
 |---------|-------|-----|-------|
 | Image area background | `Color.black` | `#000000` | Camera image backdrop (viewfinder exempt) |
 | Retake overlay text | `.white` | — | Icon + label on image overlay button |
-| Retake overlay bg | `black.opacity(0.5)` | — | Semi-transparent capsule fill |
-| Bounding box (default) | `.white.opacity(0.8)` | — | Unselected, uncataloged object border |
+| Retake overlay bg | `.glassEffect(.regular.interactive(), in: Capsule())` | — | iOS 26+ glass; fallback `black.opacity(0.5)` capsule fill |
+| Bounding box (checked) | `.white.opacity(0.8)` | — | Checked, uncataloged object border |
+| Bounding box (unchecked) | `.white.opacity(0.6)` | — | Unchecked, uncataloged object border |
 | Bounding box (selected) | `Color.accentPrimary` | `#E8907A` (salmon) | Selected object border |
-| Bounding box (cataloging) | `.yellow` | — | In-progress cataloging border |
+| Bounding box (cataloging) | `Color.cream` | — | In-progress cataloging border |
 | Bounding box (cataloged) | `Color.successColor` | `#9DC4A8` (mutedSage) | Successfully cataloged border |
 | Label badge text | `.white` | — | Object label text on bounding box |
 | Label badge bg | `borderColor` | — | Matches dynamic border color |
@@ -32,8 +33,9 @@
 | Object label text | (default) | — | Uses default `.body` foreground |
 | Object category text | `.secondary` | — | Muted category label |
 | Attribute chip bg | `Color.secondary.opacity(0.2)` | — | Attribute capsule fill |
-| Catalog All button | `Color.accentPrimary` | `#E8907A` (salmon) | Header action text |
-| Catalog button (per object) | `.borderedProminent` | — | System tinted button |
+| Select All button | `Color.accentPrimary` | `#E8907A` (salmon) | Header action text |
+| Catalog Selected button | `.borderedProminent` | — | System tinted button (bottom bar) |
+| Toggle check (per object) | `Color.accentPrimary` / `.secondary` | — | Checked/unchecked toggle per card |
 | Cataloged checkmark | `Color.successColor` | `#9DC4A8` (mutedSage) | Completion indicator |
 | Header text | (default) | — | Uses default `.headline` foreground |
 | Empty state icon | `.secondary` | — | Viewfinder icon |
@@ -50,8 +52,8 @@
 
 - **VIOLATION:** `Color(.systemBackground)` used at lines 163, 173 (object list bg) and line 323 (`secondarySystemBackground` in card bg) -- these are UIKit system colors, not brand tokens. Should use `Color.backgroundDefault` (warmWhite `#FAF6F0`) or a semantic surface token.
 - **VIOLATION:** `Color(.secondarySystemFill)` at line 378 (thumbnail placeholder) -- UIKit system color. Should use brand token or design-system fill.
-- **VIOLATION:** `.yellow` at line 279 (cataloging bounding box) -- raw system color, not a brand token. Consider adding a `Color.warningColor` semantic alias or use `Color.peach`.
-- **VIOLATION:** `.white` and `Color.black` are used intentionally for the image overlay layer (viewfinder exemption applies), but the retake overlay capsule `black.opacity(0.5)` could use a design-system overlay token for consistency.
+- **FIXED:** Cataloging bounding box now uses `Color.cream` instead of `.yellow`.
+- `.white` and `Color.black` are used intentionally for the image overlay layer (viewfinder exemption applies). The retake overlay capsule now uses `.glassEffect(.regular.interactive(), in: Capsule())` on iOS 26+ with `black.opacity(0.5)` fallback.
 - **VIOLATION:** `Color.secondary.opacity(0.2)` at line 408 (attribute chip bg) and `Color.secondary.opacity(0.1)` at line 471 (tips bg) -- raw opacity on system color. Should use brand surface tokens.
 
 ## 2. Accessibility
@@ -59,20 +61,25 @@
 | Element | Label | Trait | Min Target | Dynamic Type |
 |---------|-------|-------|------------|--------------|
 | Bounding box overlay | "Detected: {label}" | `.isButton` | Tap region = normalized bbox | — |
-| Bounding box overlay hint | "Double tap to select/deselect" | — | — | — |
+| Bounding box overlay hint | "Double tap to select" / "Double tap to deselect" | — | — | — |
 | Retake overlay button | "Retake photo" | `.isButton` | Capsule padded 12pt | Caption2 / Caption semibold |
 | Retake overlay identifier | `detection.retakeOverlayButton` | — | — | — |
 | Object card (combined) | "{label}, {category}" | `.isButton` | Card area (~full width x ~84pt) | Body / Caption |
 | Object card identifier | `detection.object.{groupId}` | — | — | — |
 | Object card hint | "Double tap to select this object" | — | — | — |
-| Catalog All button | (text: "Catalog All") | (implicit link) | Text-only | Caption semibold |
-| Catalog button (per card) | (text: "Catalog") | `.isButton` | `.controlSize(.small)` | Caption semibold |
-| Catalog button identifier | `detection.catalogButton.{groupId}` | — | — | — |
-| Cataloged checkmark | (none) | (image) | 44x44pt (`.title2`) | — |
+| Select All button | (text: "Select All" / "Deselect All") | `.isButton` | Text-only | Caption semibold |
+| Select All identifier | `detection.selectAllButton` | — | — | — |
+| Toggle check (per card) | "Selected for cataloging" / "Not selected" | `.isButton` | `.title2` icon | — |
+| Toggle check identifier | `detection.toggleCheck.{groupId}` | — | — | — |
+| Toggle check hint | "Double tap to select/deselect this item" | — | — | — |
+| Cataloged checkmark | "Cataloged" | (image) | 44x44pt (`.title2`) | — |
 | Retake bottom button | (text: "Retake") with icon | `.isButton` | `.bordered` default | Body |
 | Retake bottom identifier | `detection.retakeButton` | — | — | — |
+| Catalog Selected button | "Catalog N items" | `.isButton` | `.borderedProminent` | Body semibold |
+| Catalog Selected identifier | `detection.catalogSelectedButton` | — | — | — |
 | Done bottom button | (text: "Done") | `.isButton` | `.borderedProminent` default | Body semibold |
 | Done bottom identifier | `detection.doneButton` | — | — | — |
+| Done bottom hint | "Saves results and returns to catalog view" | — | — | — |
 | Empty state icon | (decorative) | — | — | `@ScaledMetric` (48pt base) |
 | No-objects icon | (decorative) | — | — | `@ScaledMetric` (64pt base) |
 | No-objects retake button | (text: "Retake Photo") | `.isButton` | `.controlSize(.large)` | Body |
@@ -80,29 +87,28 @@
 
 **Concerns:**
 
-- **VIOLATION:** Cataloged checkmark (`Image(systemName: "checkmark.circle.fill")` at line 418) has no `.accessibilityLabel`. VoiceOver will announce the SF Symbol name. Should add `.accessibilityLabel("Cataloged")`.
-- **VIOLATION:** The "Catalog All" button at line 187 has no `.accessibilityLabel` or `.accessibilityHint` -- the text is self-describing, but there is no `.accessibilityAddTraits(.isButton)` explicitly set (it is a `Button` so traits are implicit -- acceptable).
+- **FIXED:** Cataloged checkmark now has `.accessibilityLabel("Cataloged")`.
+- **FIXED:** Cataloging `ProgressView` now has `.accessibilityLabel("Cataloging in progress")`.
+- **FIXED:** `accessibilityReduceMotion` IS now checked -- animations use `.brandPress` with `nil` fallback when reduce-motion is enabled.
 - **CONCERN:** Retake overlay capsule has padding of only 12pt from edges, with `caption2`/`caption` text size, resulting in a small visual target. The actual hit area may be under 44x44pt. Should verify with a frame of at least 44x44pt.
-- **CONCERN:** `ProgressView` spinners (lines 292, 362, 422) lack accessibility labels. VoiceOver may announce "In progress" generically. Consider `.accessibilityLabel("Cataloging in progress")`.
 - **CONCERN:** The `NoObjectsDetectedView` tip rows have no individual accessibility identifiers or grouping. Consider `.accessibilityElement(children: .combine)` on the tips container.
-- **GOOD:** `@ScaledMetric` is used for empty-state and no-objects icon sizes (lines 197, 441), properly supporting Dynamic Type.
+- **GOOD:** `@ScaledMetric` is used for empty-state and no-objects icon sizes, properly supporting Dynamic Type.
 - **GOOD:** `accessibilityReduceTransparency` is respected for the bottom action bar background.
-- **MISSING:** `accessibilityReduceMotion` is NOT checked -- animations use raw `.easeInOut(duration: 0.2)` regardless of user preference.
+- **GOOD:** Toggle check buttons have descriptive labels ("Selected for cataloging" / "Not selected") and hints.
 
 ## 3. Liquid Glass
 
 | Element | Treatment | Tint | Fallback (< iOS 26) |
 |---------|-----------|------|---------------------|
-| Bottom action bar | None (uses `.ultraThinMaterial`) | None | `Color(.systemBackground)` when reduce-transparency |
-| Object list background | None | None | `Color(.systemBackground)` |
-| Retake overlay capsule | None (uses `black.opacity(0.5)`) | None | Same opaque fill |
-| Object cards | None (uses opaque fill) | None | N/A |
+| Bottom action bar | `.adaptiveGlass(in: Rectangle())` | None | Adaptive glass with material fallback |
+| Object list background | `Color(.systemBackground)` | None | System background |
+| Retake overlay capsule | `.glassEffect(.regular.interactive(), in: Capsule())` | None | `black.opacity(0.5)` capsule fill fallback (< iOS 26) |
+| Object cards | Opaque fill | None | N/A |
 
-**Known violations:**
+**Notes:**
 
-- **VIOLATION:** No Liquid Glass treatments are applied anywhere in this view. The bottom action bar at line 168 uses `.ultraThinMaterial` directly instead of `adaptiveGlass()` from `LiquidGlassHelpers.swift`. This is inconsistent with the rest of the app (e.g., `CaptureView` uses `.glassEffect`).
-- **RECOMMENDATION:** The bottom action bar should use `adaptiveGlass(in: Rectangle())` which provides iOS 26+ glass with automatic fallback to `.thickMaterial` and reduce-transparency support.
-- **RECOMMENDATION:** The retake overlay capsule (`black.opacity(0.5)`) could use `adaptiveGlass(in: Capsule())` for iOS 26+ consistency with the capture view's mode indicator.
+- Bottom action bar now uses `.adaptiveGlass(in: Rectangle())` for iOS 26+ glass treatment.
+- Retake overlay capsule uses `.glassEffect(.regular.interactive(), in: Capsule())` on iOS 26+.
 - **RECOMMENDATION:** Object cards could adopt `adaptiveGlass(cornerRadius: 12)` for the selected state instead of raw opacity fill.
 
 ## 4. Layout
@@ -158,20 +164,20 @@
 
 | Trigger | Animation | Haptic | Duration |
 |---------|-----------|--------|----------|
-| Bounding box tap (select/deselect) | `withAnimation(.easeInOut(duration: 0.2))` | None | 200ms |
-| Object card tap (select) | `withAnimation(.easeInOut(duration: 0.2))` | None | 200ms |
+| Bounding box tap (select/deselect) | `withAnimation(.brandPress)` (nil when reduceMotion) | None | 300ms spring |
+| Object card tap (select) | `withAnimation(.brandPress)` (nil when reduceMotion) | None | 300ms spring |
 | ProgressView (cataloging spinner) | System default | None | System |
 | AsyncImage phase transition | System default | None | System |
 
-**Known violations:**
+**Notes:**
 
-- **VIOLATION:** Lines 85, 145 use raw `.easeInOut(duration: 0.2)` instead of brand animation tokens. Should use `.brandPress` (300ms spring, dampingFraction 0.6) for tap interactions, which provides more satisfying bounce feedback. If reduced motion is desired, should conditionally use `.brandReducedMotion`.
-- **VIOLATION:** `@Environment(\.accessibilityReduceMotion)` is NOT read anywhere in this file. All selection animations will play regardless of the user's Reduce Motion preference. Should gate animations behind a reduce-motion check.
+- **FIXED:** Animations now use `.brandPress` brand token instead of raw `.easeInOut`.
+- **FIXED:** `@Environment(\.accessibilityReduceMotion)` is now read and respected -- animations pass `nil` when reduce-motion is enabled.
 - **MISSING:** No haptic feedback on any interaction. Consider adding:
   - `.impact(.light)` on bounding box selection/deselection
   - `.impact(.light)` on object card selection
   - `.notification(.success)` when an object finishes cataloging (via `isCataloged` state change)
-  - `.impact(.medium)` on "Catalog All" tap
+  - `.impact(.medium)` on "Catalog Selected" tap
 - **MISSING:** No entrance animation for object cards or bounding boxes. Consider a staggered `.brandDefault` entrance when detection results first appear.
 - **MISSING:** No transition animation on the cataloged checkmark appearance. The `checkmark.circle.fill` icon appears instantly when `isCataloged` becomes true. Consider a `.transition(.scale.combined(with: .opacity))` with `.brandPress`.
 
@@ -190,16 +196,16 @@
 
 ## Summary of Violations
 
-| # | Severity | Category | Description |
-|---|----------|----------|-------------|
-| V1 | Medium | Palette | `Color(.systemBackground)` and `Color(.secondarySystemBackground)` used instead of brand tokens |
-| V2 | Medium | Palette | `Color(.secondarySystemFill)` used instead of brand surface token |
-| V3 | Low | Palette | `.yellow` used for cataloging state -- no brand `warningColor` token |
-| V4 | Low | Palette | `Color.secondary.opacity(...)` used for chips and tips bg -- should use brand surface tokens |
-| V5 | High | Accessibility | Cataloged checkmark icon missing `.accessibilityLabel` |
-| V6 | Medium | Accessibility | ProgressView spinners missing descriptive accessibility labels |
-| V7 | High | Animations | Raw `.easeInOut(duration: 0.2)` used instead of `.brandPress` / `.brandReducedMotion` tokens |
-| V8 | High | Animations | `accessibilityReduceMotion` not checked -- animations ignore Reduce Motion preference |
-| V9 | Medium | Liquid Glass | No glass treatments applied -- should use `adaptiveGlass()` for bottom action bar |
-| V10 | Low | Haptics | No haptic feedback on any user interaction |
-| V11 | Low | Accessibility | Retake overlay capsule may be under 44x44pt minimum touch target |
+| # | Severity | Category | Status | Description |
+|---|----------|----------|--------|-------------|
+| V1 | Medium | Palette | Open | `Color(.systemBackground)` and `Color(.secondarySystemBackground)` used instead of brand tokens |
+| V2 | Medium | Palette | Open | `Color(.secondarySystemFill)` used instead of brand surface token |
+| V3 | Low | Palette | **Fixed** | ~~`.yellow` used for cataloging state~~ Now uses `Color.cream` |
+| V4 | Low | Palette | Open | `Color.secondary.opacity(...)` used for chips and tips bg -- should use brand surface tokens |
+| V5 | High | Accessibility | **Fixed** | ~~Cataloged checkmark icon missing `.accessibilityLabel`~~ Now has "Cataloged" label |
+| V6 | Medium | Accessibility | **Fixed** | ~~ProgressView spinners missing descriptive accessibility labels~~ Now has "Cataloging in progress" label |
+| V7 | High | Animations | **Fixed** | ~~Raw `.easeInOut(duration: 0.2)`~~ Now uses `.brandPress` |
+| V8 | High | Animations | **Fixed** | ~~`accessibilityReduceMotion` not checked~~ Now reads and respects reduce-motion |
+| V9 | Medium | Liquid Glass | **Fixed** | ~~No glass treatments~~ Bottom action bar uses `.adaptiveGlass(in: Rectangle())`, retake overlay uses `.glassEffect` |
+| V10 | Low | Haptics | Open | No haptic feedback on any user interaction |
+| V11 | Low | Accessibility | Open | Retake overlay capsule may be under 44x44pt minimum touch target |

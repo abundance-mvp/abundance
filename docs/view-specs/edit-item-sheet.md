@@ -3,7 +3,7 @@
 **Source:** `Sources/CollectionFeature/EditFlow/EditItemSheet.swift`
 **Module:** CollectionFeature
 **Priority:** P1
-**Last updated:** 2026-02-06
+**Last updated:** 2026-02-08
 
 ---
 
@@ -13,24 +13,26 @@
 |---------|-------|-----|-------|
 | Section header text | `.primary` | — | System primary text (Form section headers) |
 | Text field labels | `.primary` | — | System primary (TextField title) |
-| Validation error text | `.red` | — | **Violation:** `.foregroundStyle(.red)` — should use `Color.errorColor` |
-| Photo error text | `.red` | — | **Violation:** `.foregroundStyle(.red)` — should use `Color.errorColor` |
+| Validation error text | `Color.errorColor` | — | `.foregroundStyle(Color.errorColor)` |
+| Photo error text | `Color.errorColor` | — | `.foregroundStyle(Color.errorColor)` |
 | Upload progress text | `.secondary` | — | System secondary text |
 | Save button tint | `successColor` | `#9DC4A8` | `.tint(Color.successColor)` — maps to `mutedSage` |
 | Currency "$" prefix | `.secondary` | — | System secondary text |
-| AI confidence high | `.green` | — | **Violation:** raw `.green` — should use `mutedSage` |
-| AI confidence medium | `.orange` | — | **Violation:** raw `.orange` — should use `peach` |
-| AI confidence low | `.red` | — | **Violation:** raw `.red` — should use `salmon` |
-| Delete photo icon | `.white` / `.red` | — | **Violation:** `.red` should use `Color.errorColor` |
-| Add photo button bg | `.gray.opacity(0.1)` | — | **Violation:** raw `.gray` — should use `Color.cream` |
+| AI confidence high | `successColor` | `#9DC4A8` | `.successColor` (maps to `mutedSage`) |
+| AI confidence medium | `accentSecondary` | — | `.accentSecondary` |
+| AI confidence low | `errorColor` | — | `.errorColor` |
+| Delete photo icon | `.white` / `Color.errorColor` | — | `.foregroundStyle(.white, Color.errorColor)` via palette rendering |
+| Add photo button bg | `Color.secondary.opacity(0.1)` | — | Secondary system color at 10% opacity |
 | Saving overlay bg | `black.opacity(0.3)` | — | Scrim layer |
 | Saving overlay card | `cream` + `peach` | — | Via `.abundanceCardStyle()` |
 
 **Known violations:**
-- Validation/photo errors use `.foregroundStyle(.red)` — should use `Color.errorColor`
-- `confidenceColor()` returns raw `.green`, `.orange`, `.red` — should use `mutedSage`, `peach`, `salmon`
-- Add photo button uses `.gray.opacity(0.1)` — should use `Color.cream`
-- Delete icon uses `.red` — should use `Color.errorColor`
+- Add photo button uses `Color.secondary.opacity(0.1)` — could use `Color.cream` for brand consistency
+
+**Previously fixed:**
+- ~~Validation/photo errors~~ now use `Color.errorColor`
+- ~~`confidenceColor()`~~ now uses `.successColor`, `.accentSecondary`, `.errorColor`
+- ~~Delete icon~~ now uses `Color.errorColor`
 
 ## 2. Accessibility
 
@@ -108,7 +110,7 @@
 
 ### EditableTextField
 - VStack: TextField + optional error Text
-- Error text: `.font(.caption)`, `.foregroundStyle(.red)` — **violation**
+- Error text: `.font(.caption)`, `.foregroundStyle(Color.errorColor)`
 
 ### EditableNumberField
 - Stepper(in: 1...1000) + optional error Text

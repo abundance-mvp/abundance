@@ -138,12 +138,12 @@ Store every Layer 2 result as a history entry, enabling:
 
 | Field | Purpose |
 |-------|---------|
-| `timestamp` | When this catalog attempt occurred |
-| `modelId` | Which Gemini model was used (e.g., `gemini-3-pro-preview`) |
+| `catalogedAt` | Server timestamp when this catalog attempt occurred |
+| `model` | Which Gemini model was used (e.g., `gemini-3-pro-preview`) |
 | `imageUrls` | Array of image URLs processed in this attempt |
-| `toolCalls` | Record of all tool calls made and their results |
-| `result` | The CatalogItem output from this attempt |
-| `metadata` | Processing stats (duration, token usage, etc.) |
+| `toolCalls` | Record of all tool calls made with `{ name, args, result, success }` |
+| `result` | CatalogResultSnapshot (name, brand, model, category, subCategory, confidence, estimatedValue, condition) |
+| `metadata` | Processing stats (`totalTokens`, `durationMs`, `usedContextCache`) |
 
 ### Retention Policy
 
@@ -211,71 +211,64 @@ For an item cataloged 5 times: saves ~$0.02 per item.
 When history exists, inject it as a prefix to the user message:
 
 ```
-PREVIOUS CATALOG CONTEXT:
-========================
-
-Last identification (2026-01-18T10:30:00Z, confidence: high):
+PREVIOUS CATALOG INFORMATION:
+This item was previously cataloged with the following information:
 - Name: Apple Mac Mini M2 Pro
 - Brand: Apple
 - Model: Mac Mini M2 Pro 512GB
-- Category: Electronics > Computers > Desktop
-- Condition: like-new
+- Category: Electronics
+- Confidence: high
 - Estimated Value: $899
+- Condition: like-new
 
-Tool results from previous attempt:
-- barcode_lookup(036000291452): {found: true, title: "Apple Mac Mini M2 Pro 512GB"}
-- google_lens_search: {exact_matches: true, products: [...]}
-- web_search("Apple Mac Mini M2 Pro like-new price"): {prices: [{source: "eBay", price: 899}]}
+Previous tool calls:
+- google_lens_search: Success
+- barcode_lookup: Success
+- web_search: Success
 
-User corrections applied:
-- condition: "good" → "like-new" (user override)
-
-========================
-
-Now analyze the NEW image(s) below. You may:
-- Confirm the previous identification if new images match
-- Update specific fields if you see new information
-- Skip redundant tool calls (e.g., same barcode)
-- Correct errors if new visual evidence contradicts previous
+Use this context to maintain consistency. If new images provide clearer information,
+you may update the identification, but explain why in your reasoning.
 ```
 
 ### Injection Logic
 
 ```typescript
-function buildContextPrefix(history: CatalogHistoryEntry[]): string {
-  if (history.length === 0) return '';
-
-  const latest = history[0];  // Most recent
-  const parts: string[] = [];
-
-  parts.push('PREVIOUS CATALOG CONTEXT:');
-  parts.push('========================\n');
-
-  // Last identification
-  parts.push(`Last identification (${latest.timestamp}, confidence: ${latest.result.confidence}):`);
-  parts.push(`- Name: ${latest.result.name}`);
-  parts.push(`- Brand: ${latest.result.brand || 'Unknown'}`);
-  parts.push(`- Model: ${latest.result.model || 'N/A'}`);
-  // ... more fields
-
-  // Tool call history (deduplicated)
-  parts.push('\nTool results from previous attempt:');
-  for (const call of latest.toolCalls) {
-    parts.push(`- ${call.name}(${JSON.stringify(call.args)}): ${summarize(call.result)}`);
+export function formatHistoryForPrompt(history: CatalogHistoryEntry[]): string {
+  if (history.length === 0) {
+    return '';
   }
 
-  // User corrections (if any)
-  if (latest.userCorrections?.length > 0) {
-    parts.push('\nUser corrections applied:');
-    for (const correction of latest.userCorrections) {
-      parts.push(`- ${correction.field}: "${correction.oldValue}" → "${correction.newValue}" (user override)`);
-    }
+  const latest = history[0];
+  const result = latest.result;
+
+  const lines = [
+    'PREVIOUS CATALOG INFORMATION:',
+    'This item was previously cataloged with the following information:',
+    `- Name: ${result.name}`,
+    `- Brand: ${result.brand || 'Unknown'}`,
+    `- Model: ${result.model || 'Unknown'}`,
+    `- Category: ${result.category}`,
+    `- Confidence: ${result.confidence}`
+  ];
+
+  if (result.estimatedValue) {
+    lines.push(`- Estimated Value: $${result.estimatedValue}`);
+  }
+  if (result.condition) {
+    lines.push(`- Condition: ${result.condition}`);
   }
 
-  parts.push('========================\n');
-  parts.push('Now analyze the NEW image(s) below...');
+  lines.push('');
+  lines.push('Previous tool calls:');
+  for (const tc of latest.toolCalls) {
+    lines.push(`- ${tc.name}: ${tc.success ? 'Success' : 'Failed'}`);
+  }
 
-  return parts.join('\n');
+  lines.push('');
+  lines.push('Use this context to maintain consistency. If new images provide clearer information,');
+  lines.push('you may update the identification, but explain why in your reasoning.');
+
+  return lines.join('\n');
 }
 ```
 
@@ -287,41 +280,40 @@ function buildContextPrefix(history: CatalogHistoryEntry[]): string {
 
 ```typescript
 /**
- * A single catalog history entry for an item.
- * Stored in: items/{itemId}/catalogHistory/{historyId}
+ * Represents a single catalog history entry for an item.
+ * Stored in Firestore subcollection: items/{itemId}/catalogHistory/{entryId}
  */
 interface CatalogHistoryEntry {
-  /** Document ID (auto-generated) */
+  /** Firestore document ID */
   id: string;
 
-  /** When this catalog attempt occurred */
-  timestamp: FirebaseFirestore.Timestamp;
+  /** Timestamp when this catalog was performed */
+  catalogedAt: Timestamp;
 
-  /** Gemini model used for this attempt */
-  modelId: string;  // e.g., 'gemini-3-pro-preview'
+  /** Gemini model used (e.g., 'gemini-3-pro-preview') */
+  model: string;
 
-  /** Image URLs processed in this attempt */
+  /** Image URLs processed in this catalog session */
   imageUrls: string[];
 
-  /** All tool calls made during this attempt */
+  /** Tool calls made during this session */
   toolCalls: ToolCallRecord[];
 
-  /** The CatalogItem result from this attempt */
+  /** Final catalog result */
   result: CatalogResultSnapshot;
 
   /** Processing metadata */
   metadata: CatalogMetadata;
-
-  /** User corrections applied after this attempt (for tracking) */
-  userCorrections?: UserCorrection[];
 }
 ```
+
+**Note:** The design originally included `userCorrections` for tracking user overrides, but this field was not included in the initial implementation. User correction tracking may be added in a future iteration.
 
 ### ToolCallRecord
 
 ```typescript
 /**
- * Record of a single tool call made during cataloging.
+ * Record of a tool call made during cataloging
  */
 interface ToolCallRecord {
   /** Tool name (google_lens_search, barcode_lookup, web_search) */
@@ -333,14 +325,8 @@ interface ToolCallRecord {
   /** Result returned by the tool */
   result: Record<string, unknown>;
 
-  /** Duration of tool execution in milliseconds */
-  durationMs: number;
-
-  /** Whether this call was skipped due to cache */
-  skipped?: boolean;
-
-  /** If skipped, which history entry provided the cached result */
-  cachedFromHistoryId?: string;
+  /** Whether the call succeeded */
+  success: boolean;
 }
 ```
 
@@ -348,22 +334,18 @@ interface ToolCallRecord {
 
 ```typescript
 /**
- * Snapshot of catalog result at time of cataloging.
- * Mirrors CatalogItem but with explicit null handling.
+ * Snapshot of catalog result at a point in time.
+ * A subset of CatalogItem fields relevant for history context.
  */
 interface CatalogResultSnapshot {
   name: string;
-  category: string;
-  subCategory: string;
   brand: string | null;
   model: string | null;
-  color: string;
-  condition: 'new' | 'like-new' | 'good' | 'fair' | 'poor';
-  dimensions: string | null;
-  quantity: number;
+  category: string;
+  subCategory: string | null;
+  confidence: Confidence;
   estimatedValue: number | null;
-  confidence: 'high' | 'medium' | 'low';
-  processingNotes: string | null;
+  condition: Condition | null;
 }
 ```
 
@@ -371,50 +353,30 @@ interface CatalogResultSnapshot {
 
 ```typescript
 /**
- * Processing metadata for debugging and analytics.
+ * Processing metadata for a catalog session
  */
 interface CatalogMetadata {
-  /** Total processing duration in milliseconds */
-  totalDurationMs: number;
+  /** Total tokens used across all iterations */
+  totalTokens: number;
 
-  /** Number of tool calling iterations */
-  toolIterations: number;
-
-  /** Token usage breakdown */
-  tokenUsage: {
-    promptTokens: number;
-    completionTokens: number;
-    cachedTokens: number;
-  };
+  /** Processing duration in milliseconds */
+  durationMs: number;
 
   /** Whether context cache was used */
-  contextCacheHit: boolean;
-
-  /** Context cache key if used */
-  contextCacheKey?: string;
-
-  /** Trigger source */
-  triggerSource: 'user_request' | 'photo_added' | 'initial_catalog';
+  usedContextCache: boolean;
 }
 ```
 
-### UserCorrection
+### UserCorrection (Not Yet Implemented)
+
+The original design included a `UserCorrection` interface for tracking when users manually correct catalog data. This has not been implemented yet but remains a future consideration:
 
 ```typescript
-/**
- * Record of a user correction to catalog data.
- */
+// FUTURE: Not yet implemented
 interface UserCorrection {
-  /** Field that was corrected */
   field: keyof CatalogResultSnapshot;
-
-  /** Original value from AI */
   oldValue: unknown;
-
-  /** User-provided value */
   newValue: unknown;
-
-  /** When the correction was made */
   correctedAt: FirebaseFirestore.Timestamp;
 }
 ```
@@ -425,34 +387,34 @@ interface UserCorrection {
 
 ### Task 1: Create Data Model
 
-**File:** `functions/src/ai-pipeline/models/catalog-history.ts`
+**File:** `functions/src/ai-pipeline/gemini/schemas/catalog-history.ts`
 
-- Define TypeScript interfaces (above)
-- Create Zod schemas for validation
-- Export type guards
+- Define TypeScript interfaces (`CatalogHistoryEntry`, `ToolCallRecord`, `CatalogResultSnapshot`, `CatalogMetadata`)
+- Export types for use by history and gemini services
 
 **Estimated effort:** 2 hours
 
 ### Task 2: Create History Service
 
-**File:** `functions/src/ai-pipeline/services/history-service.ts`
+**File:** `functions/src/ai-pipeline/gemini/catalog-history-service.ts`
 
-- `getHistory(itemId: string, limit?: number): Promise<CatalogHistoryEntry[]>`
-- `saveHistory(itemId: string, entry: Omit<CatalogHistoryEntry, 'id'>): Promise<string>`
-- `getUserCorrections(itemId: string): Promise<UserCorrection[]>`
-- `pruneHistory(itemId: string, keepCount: number): Promise<void>`
+- `saveCatalogHistory(itemId, entry)` - Persist catalog result to history
+- `getRecentCatalogHistory(itemId, limit)` - Retrieve recent history entries
+- `catalogItemToSnapshot(item)` - Convert CatalogItem to snapshot
+- `formatHistoryForPrompt(history)` - Format history for prompt injection
+- Auto-cleanup of entries beyond `MAX_HISTORY_ENTRIES` (10)
 
 **Estimated effort:** 4 hours
 
 ### Task 3: Create Context Cache Service
 
-**File:** `functions/src/ai-pipeline/services/context-cache-service.ts`
+**File:** `functions/src/ai-pipeline/gemini/context-cache-service.ts`
 
-- `getOrCreateCache(config: ContextCacheConfig): Promise<CacheHandle>`
-- `getCacheKey(systemPrompt: string, tools: Tool[]): string`
-- `invalidateCache(cacheKey: string): Promise<void>`
-
-**Note:** Requires Vertex AI SDK update for caching API support.
+- `getOrCreateContextCache()` - Get/create cached context for system prompt + tools
+- `listContextCaches()` - List existing caches (debugging)
+- `deleteContextCache(name)` - Delete specific cache
+- `estimateTokenSavings()` - Cost analysis utility
+- In-memory cache reference with TTL tracking
 
 **Estimated effort:** 6 hours
 
@@ -460,10 +422,11 @@ interface UserCorrection {
 
 **File:** `functions/src/ai-pipeline/gemini/gemini-service.ts`
 
-- Add `historyContext?: CatalogHistoryEntry[]` parameter to `processItemWithGemini()`
-- Inject history context prefix into user message
-- Record tool calls for history storage
-- Support context cache usage
+- Added `processItemWithGeminiPersistent()` as new entry point with persistence
+- History context injection into user prompt
+- Tool call recording with `success` flag
+- Token tracking via `response.usageMetadata`
+- Context cache integration via `getOrCreateContextCache()`
 
 **Estimated effort:** 4 hours
 
@@ -471,10 +434,10 @@ interface UserCorrection {
 
 **File:** `functions/src/ai-pipeline/gemini/orchestrator.ts`
 
-- Fetch history before calling gemini-service
-- Save history after successful cataloging
-- Handle user correction tracking
-- Add metadata collection
+- Now calls `processItemWithGeminiPersistent()` instead of `processItemWithGemini()`
+- Passes `itemId` for history tracking
+- Passes `additionalImageUrls` for multi-image support
+- Flattens catalog results to top-level Firestore fields
 
 **Estimated effort:** 3 hours
 
@@ -606,19 +569,20 @@ For an item cataloged 3 times: First: $0.044 + 2×$0.016 = **$0.076**
 ### Key Functions
 
 **catalog-history-service.ts:**
-- `saveCatalogHistory(itemId, entry)` - Persist catalog result to history
-- `getRecentCatalogHistory(itemId, limit)` - Retrieve recent history entries
-- `catalogItemToSnapshot(item)` - Convert CatalogItem to snapshot
-- `formatHistoryForPrompt(history)` - Format history for prompt injection
+- `saveCatalogHistory(itemId, entry: SaveCatalogHistoryInput)` - Persist catalog result to history (auto-adds `catalogedAt`, auto-prunes old entries)
+- `getRecentCatalogHistory(itemId, limit = 1)` - Retrieve recent history entries, newest first
+- `catalogItemToSnapshot(item: CatalogItem)` - Convert CatalogItem to CatalogResultSnapshot
+- `formatHistoryForPrompt(history: CatalogHistoryEntry[])` - Format history as prompt prefix text
 
 **context-cache-service.ts:**
-- `getOrCreateContextCache()` - Get/create cached context for system prompt
-- `listContextCaches()` - List existing caches (debugging)
-- `deleteContextCache(name)` - Delete specific cache
-- `estimateTokenSavings()` - Cost analysis utility
+- `getOrCreateContextCache()` - Get/create cached context for system prompt + tools (1-hour TTL)
+- `listContextCaches()` - List existing caches (debugging/monitoring)
+- `deleteContextCache(name)` - Delete specific cache by name
+- `estimateTokenSavings()` - Cost analysis utility (~2300 tokens, 90% savings)
+- `clearCacheReference()` - Clear in-memory cache (testing/force refresh)
 
 **gemini-service.ts:**
-- `processItemWithGeminiPersistent(imageUrl, itemId?, useContextCache?)` - Main entry point with persistence
+- `processItemWithGeminiPersistent(imageUrl, itemId?, useContextCache?, additionalImageUrls?)` - Main entry point with persistence and multi-image support
 
 ### Firestore Path
 
@@ -628,9 +592,10 @@ items/{itemId}/catalogHistory/{entryId}
 
 ### Configuration
 
-- **MAX_HISTORY_ENTRIES:** 10 (auto-cleanup of older entries, matches retention policy)
-- **CACHE_TTL_SECONDS:** 3600 (1 hour)
-- **Estimated token savings:** 90% on cached system prompt (~2300 tokens)
+- **MAX_HISTORY_ENTRIES:** 10 (auto-cleanup of older entries via `cleanupOldEntries()`)
+- **CACHE_TTL_SECONDS:** 3600 (1 hour, with in-memory reference tracking)
+- **Estimated token savings:** 90% on cached system prompt + tools (~2300 tokens)
+- **History fetch limit:** Default 1 (most recent entry only for prompt injection)
 
 ---
 

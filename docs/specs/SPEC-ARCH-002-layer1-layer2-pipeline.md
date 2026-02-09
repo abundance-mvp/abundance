@@ -23,23 +23,23 @@ This document specifies the two-layer AI cataloging pipeline architecture for th
 | Setting | Value | Reference |
 |---------|-------|-----------|
 | Model ID | `gemini-3-flash-preview` | `functions/src/ai-pipeline/layer1/prompts.ts:14` |
-| Thinking Level | `LOW` | `functions/src/ai-pipeline/layer1/prompts.ts:66` |
-| Temperature | 0.1 | `functions/src/ai-pipeline/layer1/prompts.ts:60` |
-| Response Format | JSON (schema-constrained) | `functions/src/ai-pipeline/layer1/prompts.ts:63-64` |
-| Max Output Tokens | 4096 | `functions/src/ai-pipeline/layer1/prompts.ts:62` |
-| API Timeout | 30 seconds | `functions/src/ai-pipeline/layer1/prompts.ts:92` |
-| Max Retries | 2 (exponential backoff) | `functions/src/ai-pipeline/layer1/prompts.ts:95` |
+| Thinking Level | `LOW` | `functions/src/ai-pipeline/layer1/prompts.ts:73` |
+| Temperature | 0 | `functions/src/ai-pipeline/layer1/prompts.ts:67` |
+| Response Format | JSON (schema-constrained) | `functions/src/ai-pipeline/layer1/prompts.ts:70-71` |
+| Max Output Tokens | 4096 | `functions/src/ai-pipeline/layer1/prompts.ts:69` |
+| API Timeout | 30 seconds | `functions/src/ai-pipeline/layer1/prompts.ts:99` |
+| Max Retries | 4 (exponential backoff) | `functions/src/ai-pipeline/layer1/prompts.ts:102` |
 
 ### Layer 2: Gemini 3 Pro
 
 | Setting | Value | Reference |
 |---------|-------|-----------|
-| Model ID | `gemini-3-pro-preview` | `functions/src/ai-pipeline/gemini/prompts.ts:141` |
+| Model ID | `gemini-3-pro-preview` | `functions/src/ai-pipeline/gemini/prompts.ts:142` |
 | Temperature | 0.1 | `functions/src/ai-pipeline/gemini/prompts.ts:133` |
-| Response Format | JSON (schema-constrained) | `functions/src/ai-pipeline/gemini/prompts.ts:137-138` |
-| Max Output Tokens | 8192 | `functions/src/ai-pipeline/gemini/prompts.ts:136` |
+| Response Format | JSON (schema-constrained) | `functions/src/ai-pipeline/gemini/prompts.ts:138-139` |
+| Max Output Tokens | 32768 | `functions/src/ai-pipeline/gemini/prompts.ts:137` |
 | Tool Calling | Enabled (3 tools) | `functions/src/ai-pipeline/gemini/prompts.ts:70-130` |
-| Max Tool Iterations | 10 | `functions/src/ai-pipeline/gemini/gemini-service.ts:65` |
+| Max Tool Iterations | 10 | `functions/src/ai-pipeline/gemini/gemini-service.ts:84` |
 
 ---
 
@@ -48,7 +48,7 @@ This document specifies the two-layer AI cataloging pipeline architecture for th
 ### Standard Tier (Layer 1 Only)
 
 **Trigger:** Automatic on capture session completion
-**Firestore Trigger:** `onSessionCreated` (`functions/src/triggers/onSessionCreated.ts:138`)
+**Firestore Trigger:** `onSessionCreated` (`functions/src/triggers/onSessionCreated.ts:279`)
 **Cost:** ~$0.002/item
 
 **Capabilities:**
@@ -66,7 +66,7 @@ This document specifies the two-layer AI cataloging pipeline architecture for th
 ### Premium Tier (Layer 2)
 
 **Trigger:** User taps "Catalog" button OR item created with status `pending`
-**Firestore Trigger:** `onItemCreatedGemini3` (`functions/src/triggers/onItemCreatedGemini3.ts:28`)
+**Firestore Trigger:** `onItemCreatedGemini3` (`functions/src/triggers/onItemCreatedGemini3.ts:28`) + `onItemFromSession` (`functions/src/triggers/onItemFromSession.ts:23`)
 **Cost:** ~$0.04/item (includes tool calls)
 
 **Capabilities (additive to Layer 1):**
@@ -97,7 +97,7 @@ This document specifies the two-layer AI cataloging pipeline architecture for th
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  2. Firestore Trigger: onSessionCreated                                      │
-│     Reference: functions/src/triggers/onSessionCreated.ts:138                │
+│     Reference: functions/src/triggers/onSessionCreated.ts:279                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  Trigger conditions (either):                                                │
 │  - Status changes from "uploading" to "detecting"                           │
@@ -111,15 +111,15 @@ This document specifies the two-layer AI cataloging pipeline architecture for th
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  3. Layer 1 Detection Service                                                │
-│     Reference: functions/src/ai-pipeline/layer1/layer1-service.ts:172        │
+│     Reference: functions/src/ai-pipeline/layer1/layer1-service.ts:235        │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  1. Fetch images from GCS → convert to base64                               │
 │  2. Call Gemini 3 Flash with retry logic (exponential backoff)              │
 │  3. Parse detection response (objects array with bounding boxes)            │
 │  4. Validate response against schema                                        │
 │  5. Crop detected objects with sharp (5% padding)                           │
-│  6. Upload crops to permanent bucket: users/{userId}/items/{groupId}_crop_N │
-│  7. Generate signed URLs (24-hour expiration)                               │
+│  6. Upload crops: users/{userId}/sessions/{sessionId}/crops/{groupId}_crop_N│
+│  7. Generate Firebase download URLs (permanent, token-based)                │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -171,7 +171,7 @@ This document specifies the two-layer AI cataloging pipeline architecture for th
                                     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  4. Gemini 3 Pro Service (with Tool Calling Loop)                            │
-│     Reference: functions/src/ai-pipeline/gemini/gemini-service.ts:30         │
+│     Reference: functions/src/ai-pipeline/gemini/gemini-service.ts:40         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  Initial call with image + tool declarations                                │
 │                                                                              │
@@ -331,7 +331,7 @@ interface WebSearchResult {
 
 Gemini 3 models require `thought_signature` preservation when using function calling. Without it, the API returns a 400 error.
 
-**Reference:** `functions/src/ai-pipeline/gemini/gemini-service.ts:90-100`
+**Reference:** `functions/src/ai-pipeline/gemini/gemini-service.ts:109-112`
 
 ### Implementation
 
@@ -342,7 +342,7 @@ Gemini 3 models require `thought_signature` preservation when using function cal
 const modelParts = getModelPartsWithThoughtSignature(response);
 ```
 
-**Reference:** `functions/src/ai-pipeline/gemini/gemini-service.ts:145-157`
+**Reference:** `functions/src/ai-pipeline/gemini/gemini-service.ts:207-219`
 
 ```typescript
 function getModelPartsWithThoughtSignature(response: GenerateContentResponse): Part[] {
@@ -453,7 +453,7 @@ Override: `GOOGLE_CLOUD_LOCATION` env var
 
 ### Layer 1 Error Codes
 
-**Reference:** `functions/src/triggers/onSessionCreated.ts:273-281`
+**Reference:** `functions/src/triggers/onSessionCreated.ts:555-564`
 
 | Code | Meaning |
 |------|---------|
@@ -469,7 +469,7 @@ Override: `GOOGLE_CLOUD_LOCATION` env var
 
 ### Layer 1 Retryable Errors
 
-**Reference:** `functions/src/ai-pipeline/layer1/layer1-service.ts:36-42`
+**Reference:** `functions/src/ai-pipeline/layer1/layer1-service.ts:37-43`
 
 ```typescript
 const RETRYABLE_ERROR_CODES = [
@@ -481,11 +481,11 @@ const RETRYABLE_ERROR_CODES = [
 ];
 ```
 
-Retry strategy: Exponential backoff (1s, 2s, 4s) with max 2 retries.
+Retry strategy: Exponential backoff (1s, 2s, 4s, 8s) with max 4 retries. Rate limit errors (429) use longer backoff (15s, 30s, 60s) with a circuit breaker after 3 consecutive 429s.
 
 ### Layer 2 Error Handling
 
-**Reference:** `functions/src/ai-pipeline/gemini/orchestrator.ts:96-110`
+**Reference:** `functions/src/ai-pipeline/gemini/orchestrator.ts:106-121`
 
 On failure:
 - Update document with `status: 'failed'`
@@ -525,7 +525,7 @@ The "Catalog" button (Layer 2 trigger) lives in the **Catalog View**, not Camera
 |---------|------------------|-----------|
 | Original captures | GCS temp bucket | Deleted after Layer 1 |
 | Cropped objects | Firebase Storage | Permanent (user's inventory) |
-| Signed URLs | Firestore (item doc) | 24-hour expiration |
+| Download URLs | Firestore (item doc) | Permanent (Firebase token-based) |
 | Layer 1 metadata | Firestore (session doc) | Permanent |
 | Layer 2 metadata | Firestore (item doc) | Permanent |
 
@@ -533,7 +533,7 @@ The "Catalog" button (Layer 2 trigger) lives in the **Catalog View**, not Camera
 
 ```
 gs://abundance-mvp.firebasestorage.app/
-└── users/{userId}/items/
+└── users/{userId}/sessions/{sessionId}/crops/
     ├── {groupId}_crop_0.jpg    (cropped object, angle 1)
     ├── {groupId}_crop_1.jpg    (cropped object, angle 2)
     └── ...
@@ -557,7 +557,7 @@ When user captures multiple angles of the same scene:
 
 ### Bounding Box Format
 
-**Reference:** `functions/src/ai-pipeline/layer1/prompts.ts:36-39`
+**Reference:** `functions/src/ai-pipeline/layer1/prompts.ts:43-46`
 
 ```
 box_2d: [ymin, xmin, ymax, xmax]
@@ -588,7 +588,7 @@ box_2d: [ymin, xmin, ymax, xmax]
 | Web Search (grounded) | ~$0.014/call |
 | **Total (typical)** | ~$0.04/item |
 
-**Reference:** `functions/src/ai-pipeline/gemini/orchestrator.ts:137-152`
+**Reference:** `functions/src/ai-pipeline/gemini/orchestrator.ts:160-181`
 
 ---
 

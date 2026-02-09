@@ -3,7 +3,7 @@
 **Source:** `Sources/CollectionFeature/ItemDetailView.swift`
 **Module:** CollectionFeature
 **Priority:** P0
-**Last updated:** 2026-02-06
+**Last updated:** 2026-02-08
 
 ---
 
@@ -16,11 +16,12 @@
 | Brand/model text | `.secondary` / `.tertiary` | — | System secondary text |
 | Category badge (category) | `peach` | `#EDBE9E` | `CategoryBadge(color: .peach)` |
 | Category badge (sub) | `softTeal` | `#8ECAC0` | `CategoryBadge(color: .softTeal)` |
-| Processing banner bg | `.ultraThinMaterial` | — | Material background |
+| Processing banner bg | `Color.cream.opacity(0.8)` | — | RoundedRectangle(cornerRadius: 12) background |
 | Estimated value | `mutedSage` | `#9DC4A8` | `.foregroundStyle(Color.mutedSage)` |
 | Metadata card | `cream` / `peach` | — | `.abundanceCardStyle(cornerRadius: 24)` |
 | Card shadow | `black.opacity(0.15)` | — | Drop shadow |
-| Refresh icon | `softTeal` | `#8ECAC0` | `Color.softTeal` for refresh feature |
+| Refresh button icon | `.primary` / `.secondary` | — | `.primary` when idle, `.secondary` when processing |
+| Refresh details icon | `softTeal` | `#8ECAC0` | `Color.softTeal` in refresh details section |
 | Confidence high | `mutedSage` | `#9DC4A8` | ConfidenceRow |
 | Confidence medium | `peach` | `#EDBE9E` | ConfidenceRow |
 | Confidence low | `salmon` | `#E8907A` | ConfidenceRow |
@@ -35,7 +36,7 @@
 | Hero image (single) | "Detail photo of {displayName}" | — | — | — |
 | Hero image (multi) | "Photos of {displayName}, N photos" | — | — | — |
 | Item name | `detail.itemName` | `.isHeader` | — | Title bold |
-| Refresh button | "Refresh item" / "Refresh in progress" | `.isButton` | 44×44pt | — |
+| Refresh button | "Refresh item" / "Refreshing in progress" | `.isButton` | 44×44pt | — |
 | Edit button | "Edit item" | `.isButton` | 44×44pt | — |
 | Estimated value | "Estimated value: $X.XX" | `.combine` | — | Title3 bold |
 | AI Confidence | "AI Confidence: {level}" | `.combine` | — | Subheadline |
@@ -50,7 +51,7 @@
 | Element | Treatment | Tint | Fallback (< iOS 26) |
 |---------|-----------|------|---------------------|
 | Navigation bar | System inline | — | System |
-| Processing banner | `.ultraThinMaterial` | — | Material stays |
+| Processing banner | `Color.cream.opacity(0.8)` | — | Cream background (no glass) |
 | Metadata card | `.abundanceCardStyle()` | — | Cream + peach stroke |
 | Page indicator (carousel) | `.ultraThinMaterial` in `Capsule()` | — | Material stays |
 

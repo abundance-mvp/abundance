@@ -3,7 +3,7 @@
 **Source:** `Sources/CollectionFeature/Components/PhotoCarouselView.swift`
 **Module:** CollectionFeature
 **Priority:** P1
-**Last updated:** 2026-02-06
+**Last updated:** 2026-02-08
 
 ---
 
@@ -15,13 +15,13 @@
 | Photo error bg | `gray.opacity(0.2)` | — | Via `ItemImage` error placeholder |
 | Delete button icon fg | `.white` | `#FFFFFF` | `xmark.circle.fill` primary layer |
 | Delete button icon bg | `deepPlum.opacity(0.8)` | `#3B2E3A` | `xmark.circle.fill` secondary layer |
-| Page dot (active) | `.white` | `#FFFFFF` | Overlay on photo content |
-| Page dot (inactive) | `.white.opacity(0.5)` | `#FFFFFF` @ 50% | Overlay on photo content |
-| Page indicator capsule bg | `.ultraThinMaterial` | — | Material background |
+| Page dot (active) | `Color.salmon` | `#E8907A` | Brand accent on photo content |
+| Page dot (inactive) | `Color.salmon.opacity(0.4)` | `#E8907A` @ 40% | Muted accent on photo content |
+| Page indicator capsule bg | `.adaptiveGlass(in: Capsule())` | — | Adaptive glass; `Color.black.opacity(0.5)` when reduce-transparency |
 
 **Known violations:**
 - `ItemImage` placeholders use `Color.gray` — tracked in ItemImage component scope
-- `.white` on page dots is intentional for overlay-on-photo contrast
+- `Color.salmon` on page dots is intentional brand accent on photo content
 
 ## 2. Accessibility
 
@@ -44,10 +44,10 @@
 
 | Element | Treatment | Tint | Fallback (< iOS 26) |
 |---------|-----------|------|---------------------|
-| Page indicator capsule | `.ultraThinMaterial` in `Capsule()` | — | Material stays |
+| Page indicator capsule | `.adaptiveGlass(in: Capsule())` | — | Adaptive glass; `Color.black.opacity(0.5)` reduce-transparency fallback |
 
-**Opportunities:**
-- Page indicator could use `adaptiveGlass(in: Capsule())` for iOS 26+ glass
+**Notes:**
+- Page indicator already uses `adaptiveGlass(in: Capsule())` with reduce-transparency check
 
 ## 4. Layout
 
@@ -73,12 +73,15 @@
 | Trigger | Animation | Haptic | Duration |
 |---------|-----------|--------|----------|
 | Page swipe | System `TabView` page transition | None | System |
+| Page dot state change | `.brandPress` / `.brandReducedMotion` | None | 300ms spring |
 | Delete confirmation | System `.confirmationDialog` | None | System |
 | Photo load retry | `ItemImage` loadId swap | None | 1s delay |
 
 **Known gaps:**
 - No haptic feedback on page swipe — consider `.sensoryFeedback(.selection, trigger: selectedIndex)`
-- No animation on page dot state change — consider `.animation(.brandPress, value: selectedIndex)`
+
+**Notes:**
+- Page dot state change is animated with `.brandPress` (respects `reduceMotion` via `.brandReducedMotion`)
 - `TabView` page animation is system-managed and respects `accessibilityReduceMotion` automatically
 
 ---
@@ -90,4 +93,5 @@
 - Uses `Color.gray` placeholders — tracked separately
 
 ### Color+Brand (Core)
-- Only `deepPlum` used directly (delete button icon background)
+- `deepPlum` used for delete button icon background
+- `salmon` used for page indicator dots

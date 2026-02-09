@@ -3,7 +3,7 @@
 **Source:** `Sources/CameraFeature/Views/CaptureView.swift`
 **Module:** CameraFeature
 **Priority:** P0
-**Last updated:** 2026-02-06
+**Last updated:** 2026-02-08
 
 ---
 
@@ -49,13 +49,13 @@
 
 | Element | Treatment | Tint | Fallback (< iOS 26) |
 |---------|-----------|------|---------------------|
-| Mode indicator | `.glassEffect(in: Capsule())` | None | `Capsule().fill(.ultraThickMaterial)` |
-| Instruction label | `.glassEffect(in: Capsule())` | None | `Capsule().fill(.ultraThickMaterial)` |
+| Mode indicator | `Color.clear.glassEffect(in: Capsule())` | None | `Capsule().fill(.ultraThickMaterial)` |
+| Instruction label | `Color.clear.glassEffect(in: Capsule())` | None | `Capsule().fill(.ultraThickMaterial)` |
 | Navigation bar | Hidden (`.navigationBarHidden(true)`) | — | — |
 
 **Notes:**
 - Both glass effects properly gated with `if #available(iOS 26.0, macOS 26.0, *)`
-- Both respect `@Environment(\.accessibilityReduceTransparency)` — solid `black.opacity(0.6)` fallback
+- Both respect `@Environment(\.accessibilityReduceTransparency)` — solid `Color.black.opacity(0.6).clipShape(Capsule())` fallback
 - Could use `adaptiveGlass(in: Capsule())` from `LiquidGlassHelpers.swift` instead of inline checks
 
 ## 4. Layout
@@ -93,6 +93,7 @@
 ```
 idle → capturing(count) → uploading(progress) → analyzing → results
                                                           → error
+idle → sweep mode (triple-tap or mode toggle)
 ```
 
 - `idle`: Live camera preview, gestures enabled
@@ -101,6 +102,7 @@ idle → capturing(count) → uploading(progress) → analyzing → results
 - `analyzing`: Analysis overlay
 - `results`: Detection results or "no objects" view
 - `error`: Error overlay with retry
+- `sweep`: AR sweep capture mode (via triple-tap or `SweepModeToggle`)
 
 ## Subviews (referenced)
 
@@ -114,3 +116,8 @@ idle → capturing(count) → uploading(progress) → analyzing → results
 - `ErrorOverlay` — Inline error display
 - `OfflineModeIndicator` — Network status chip
 - `CaptureButtonStyle` — Primary/secondary button styling
+- `SweepCaptureView` — AR sweep capture mode overlay
+- `SweepModeToggle` — Toggle between single and sweep capture modes
+- `SegmentOverlayView` — Segment visualization overlay
+- `SegmentSelectionTray` — Segment selection tray UI
+- `SparkleAnimation` — Visual sparkle effect

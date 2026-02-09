@@ -175,11 +175,12 @@ User Captures Photo
 |--------|------|-------------|------------------|
 | **AbundanceApp** | `App/` | Main app entry point, Firebase initialization | All feature modules, FirebaseCore |
 | **OnboardingFeature** | `Sources/OnboardingFeature/` | Authentication flow (Apple Sign-In, email), first-launch experience | FirebaseAuth, CameraFeature, Core |
-| **CameraFeature** | `Sources/CameraFeature/` | Camera capture (single tap, burst mode), photo upload, detection results display | VisionCore, Persistence, FirebaseAuth |
-| **CollectionFeature** | `Sources/CollectionFeature/` | Item list, search, detail view, edit flow, rescan functionality | Core, CameraFeature, Persistence |
+| **CameraFeature** | `Sources/CameraFeature/` | Camera capture (single tap, burst mode, sweep), photo upload, detection results display | VisionCore, EdgeTAMFeature, Persistence, FirebaseAuth |
+| **CollectionFeature** | `Sources/CollectionFeature/` | Item list, search, detail view, edit flow, rescan functionality | Core, CameraFeature, Persistence, VisionCore, FirebaseAuth |
 | **ProfileFeature** | `Sources/ProfileFeature/` | User profile, settings, subscription management | Core, Persistence, FirebaseAuth |
 | **Persistence** | `Sources/Persistence/` | Firebase services (ItemService, StorageService), Keychain, data models | FirebaseFirestore, FirebaseStorage |
 | **VisionCore** | `Sources/VisionCore/` | On-device vision: barcode detection, subject masking, image quality assessment | Vision.framework |
+| **EdgeTAMFeature** | `Sources/EdgeTAMFeature/` | On-device CoreML segmentation (EdgeTAM) for sweep capture mode | VisionCore |
 | **Core** | `Sources/Core/` | Design system (colors, typography, animations), logging utilities | None |
 
 ### 4.2 Key iOS Components
@@ -206,9 +207,11 @@ User Captures Photo
 | `getItemHTTP` | `index.ts` | HTTP GET | Fetch single item by ID |
 | `listItemsHTTP` | `index.ts` | HTTP GET | List items for authenticated user |
 | **Firestore Triggers** | | | |
-| `onSessionCreated` | `triggers/onSessionCreated.ts` | Document create: `sessions/{id}` | Initiates Layer 1 detection for new capture sessions |
+| `onSessionCreated` | `triggers/onSessionCreated.ts` | Document update: `sessions/{id}` | Initiates Layer 1 detection when session status transitions to detecting |
 | `onItemCreatedGemini3` | `triggers/onItemCreatedGemini3.ts` | Document create: `items/{id}` | Runs Layer 2 cataloging with Gemini 3 Pro |
-| `onItemFromSession` | `triggers/onItemFromSession.ts` | Document create | Creates items from detected objects in session |
+| `onItemFromSession` | `triggers/onItemFromSession.ts` | Document create: `items/{id}` | Runs Layer 2 cataloging for items created from session detection |
+| `onItemUpdatedRescan` | `triggers/onItemUpdatedRescan.ts` | Document update: `items/{id}` | Re-catalogs item when status transitions to pending (rescan) |
+| `onItemUpdatedDeepScan` | `triggers/onItemUpdatedDeepScan.ts` | Document update: `items/{id}` | Extended catalog with all tools when deepScanRequested=true |
 | `onItemDeleted` | `triggers/onItemDeleted.ts` | Document delete: `items/{id}` | Cleans up GCS images when item deleted |
 | **Scheduled Jobs** | | | |
 | `cleanupDeletedItemsScheduled` | `scheduled/cleanupDeletedItems.ts` | Cron: daily | Permanently removes soft-deleted items |

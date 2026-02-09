@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-09T06:28:35Z",
+  "generated": "2026-02-08T00:00:00Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -15,8 +15,8 @@
             "functions/"
           ],
           "code_ref_hashes": {
-            "Sources/": "6ce2eb2fcf482a90",
-            "functions/": "aaabb45e9d5683ae"
+            "Sources/": "a8889ca612190f61",
+            "functions/": "5f73cb4d0a8893e9"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -29,7 +29,7 @@
           ],
           "code_ref_hashes": {
             "functions/src/ai-pipeline/": "83750a98f9053a5a",
-            "Sources/CameraFeature/": "32eb7c3cdfe96aa7"
+            "Sources/CameraFeature/": "19529824f95dfc78"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -53,7 +53,7 @@
             "functions/src/"
           ],
           "code_ref_hashes": {
-            "functions/src/": "ccd5741e8e2030d1"
+            "functions/src/": "e981ae90b420c9bc"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -65,7 +65,7 @@
             "Sources/Core/"
           ],
           "code_ref_hashes": {
-            "functions/src/": "ccd5741e8e2030d1",
+            "functions/src/": "e981ae90b420c9bc",
             "Sources/Core/": "4862099466d15069"
           },
           "last_verified": "2026-02-08",
@@ -78,8 +78,8 @@
             "Sources/"
           ],
           "code_ref_hashes": {
-            "functions/src/": "ccd5741e8e2030d1",
-            "Sources/": "6ce2eb2fcf482a90"
+            "functions/src/": "e981ae90b420c9bc",
+            "Sources/": "a8889ca612190f61"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -522,7 +522,7 @@
             "functions/src/"
           ],
           "code_ref_hashes": {
-            "functions/src/": "ccd5741e8e2030d1"
+            "functions/src/": "e981ae90b420c9bc"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-14"
@@ -533,7 +533,7 @@
             "functions/src/"
           ],
           "code_ref_hashes": {
-            "functions/src/": "ccd5741e8e2030d1"
+            "functions/src/": "e981ae90b420c9bc"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-14"
@@ -544,7 +544,7 @@
             ".github/workflows/"
           ],
           "code_ref_hashes": {
-            ".github/workflows/": "c59d65528e5c75a3"
+            ".github/workflows/": "bbf7a3dc0b5c2cf7"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-14"
@@ -588,7 +588,7 @@
             "functions/src/"
           ],
           "code_ref_hashes": {
-            "functions/src/": "ccd5741e8e2030d1"
+            "functions/src/": "e981ae90b420c9bc"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-14"
@@ -657,9 +657,9 @@
             "functions/src/"
           ],
           "code_ref_hashes": {
-            "Sources/CameraFeature/": "32eb7c3cdfe96aa7",
+            "Sources/CameraFeature/": "19529824f95dfc78",
             "functions/src/ai-pipeline/": "83750a98f9053a5a",
-            "functions/src/": "ccd5741e8e2030d1"
+            "functions/src/": "e981ae90b420c9bc"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-02-07"
@@ -678,7 +678,7 @@
             "Sources/CameraFeature/Views/"
           ],
           "code_ref_hashes": {
-            "Sources/CameraFeature/Views/": "5e29fdb9a5d1f957"
+            "Sources/CameraFeature/Views/": "b3f5e77873bf1a91"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -689,7 +689,7 @@
             "Sources/CameraFeature/Views/"
           ],
           "code_ref_hashes": {
-            "Sources/CameraFeature/Views/": "5e29fdb9a5d1f957"
+            "Sources/CameraFeature/Views/": "b3f5e77873bf1a91"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -700,7 +700,7 @@
             "Sources/CollectionFeature/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/": "4bffc70f33e5e836"
+            "Sources/CollectionFeature/": "328856a210e7e841"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -733,7 +733,7 @@
             "Sources/CollectionFeature/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/": "4bffc70f33e5e836"
+            "Sources/CollectionFeature/": "328856a210e7e841"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -744,7 +744,7 @@
             "Sources/CollectionFeature/Components/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/Components/": "f6f7a676073089c0"
+            "Sources/CollectionFeature/Components/": "9552cd7eab5fed07"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
@@ -798,9 +798,9 @@
             "Sources/CameraFeature/Views/"
           ],
           "code_ref_hashes": {
-            "Sources/CollectionFeature/": "4bffc70f33e5e836",
+            "Sources/CollectionFeature/": "328856a210e7e841",
             "Sources/ProfileFeature/": "7a0a468f4b163e79",
-            "Sources/CameraFeature/Views/": "5e29fdb9a5d1f957"
+            "Sources/CameraFeature/Views/": "b3f5e77873bf1a91"
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-20"
