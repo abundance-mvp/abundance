@@ -49,6 +49,9 @@ Carthage/Build
 uv.lock
 .venv/
 scripts/__pycache__/
+
+# EdgeTAM export working directory
+.edgetam-export/
 # Debug directory - all contents are git-ignored
 .debug/*
 !.debug/.gitkeep

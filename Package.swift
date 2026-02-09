@@ -135,7 +135,9 @@ let package: Package = Package(
             name: "EdgeTAMFeature",
             dependencies: ["VisionCore"],
             resources: [
-                .process("Resources")
+                .copy("Resources/edgetam_image_encoder.mlpackage"),
+                .copy("Resources/edgetam_prompt_encoder.mlpackage"),
+                .copy("Resources/edgetam_mask_decoder.mlpackage"),
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")

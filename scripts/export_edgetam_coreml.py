@@ -126,10 +126,10 @@ def run_export(repo_dir: Path, checkpoint: Path, output_dir: Path) -> None:
 
     run_cmd(
         [
-            sys.executable, str(export_script),
-            "--sam2_cfg", str(config_file),
-            "--sam2_checkpoint", str(checkpoint),
-            "--output_dir", str(output_dir),
+            sys.executable, str(export_script.resolve()),
+            "--sam2_cfg", str(config_file.resolve()),
+            "--sam2_checkpoint", str(checkpoint.resolve()),
+            "--output_dir", str(output_dir.resolve()),
         ],
         cwd=repo_dir,
         env=env,

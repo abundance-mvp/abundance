@@ -78,24 +78,15 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
         let config = MLModelConfiguration()
         config.computeUnits = .all // CPU + GPU + Neural Engine
 
-        guard let encoderURL = Bundle.module.url(
-            forResource: configuration.imageEncoderName,
-            withExtension: "mlmodelc"
-        ) else {
+        guard let encoderURL = try Self.findModel(named: configuration.imageEncoderName) else {
             throw SweepError.modelLoadFailed("Image encoder not found in bundle")
         }
 
-        guard let promptURL = Bundle.module.url(
-            forResource: configuration.promptEncoderName,
-            withExtension: "mlmodelc"
-        ) else {
+        guard let promptURL = try Self.findModel(named: configuration.promptEncoderName) else {
             throw SweepError.modelLoadFailed("Prompt encoder not found in bundle")
         }
 
-        guard let decoderURL = Bundle.module.url(
-            forResource: configuration.maskDecoderName,
-            withExtension: "mlmodelc"
-        ) else {
+        guard let decoderURL = try Self.findModel(named: configuration.maskDecoderName) else {
             throw SweepError.modelLoadFailed("Mask decoder not found in bundle")
         }
 
@@ -267,6 +258,22 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
         maskDecoder = nil
         featureCache.removeAll()
         logger.info("Models unloaded")
+    }
+
+    // MARK: - Model Discovery
+
+    /// Find a CoreML model in the bundle by name.
+    /// Checks .mlmodelc (Xcode-compiled) first, then compiles .mlpackage on the fly.
+    private static func findModel(named name: String) throws -> URL? {
+        // Prefer pre-compiled .mlmodelc (Xcode builds produce this)
+        if let url = Bundle.module.url(forResource: name, withExtension: "mlmodelc") {
+            return url
+        }
+        // Fall back to .mlpackage (SPM .copy() preserves these) — compile at runtime
+        if let packageURL = Bundle.module.url(forResource: name, withExtension: "mlpackage") {
+            return try MLModel.compileModel(at: packageURL)
+        }
+        return nil
     }
 
     // MARK: - Prediction Helper

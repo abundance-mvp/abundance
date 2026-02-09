@@ -22,6 +22,7 @@ struct EdgeTAMBenchmarkTests {
         let names = [config.imageEncoderName, config.promptEncoderName, config.maskDecoderName]
         let allPresent = names.allSatisfy { name in
             Bundle.module.url(forResource: name, withExtension: "mlmodelc") != nil
+            || Bundle.module.url(forResource: name, withExtension: "mlpackage") != nil
         }
         try #require(allPresent, "Benchmark requires CoreML models. Run scripts/export_edgetam_coreml.py first.")
     }

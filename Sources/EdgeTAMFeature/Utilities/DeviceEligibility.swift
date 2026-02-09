@@ -44,6 +44,7 @@ public enum DeviceEligibility: Sendable {
         let names = [config.imageEncoderName, config.promptEncoderName, config.maskDecoderName]
         return names.allSatisfy { name in
             Bundle.module.url(forResource: name, withExtension: "mlmodelc") != nil
+            || Bundle.module.url(forResource: name, withExtension: "mlpackage") != nil
         }
         #endif
     }
