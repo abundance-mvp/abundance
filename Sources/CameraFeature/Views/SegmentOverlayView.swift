@@ -47,7 +47,10 @@ struct SegmentOverlayView: View {
                     .padding(4)
             }
         }
+        .frame(width: frame.width, height: frame.height)
+        .contentShape(Rectangle())
         .position(x: frame.midX, y: frame.midY)
+        .animation(.linear(duration: 0.15), value: segment.boundingBox)
         .onTapGesture {
             onTap()
         }

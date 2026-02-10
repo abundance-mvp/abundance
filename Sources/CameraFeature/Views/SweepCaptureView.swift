@@ -233,14 +233,14 @@ public struct SweepCaptureView: View {
             Button {
                 onCatalog()
             } label: {
-                Label("Catalog \(viewModel.selectedSegments.count)", systemImage: "checkmark.circle")
+                Label("Add \(viewModel.selectedSegments.count)", systemImage: "plus.circle")
                     .font(.system(.body, design: .rounded, weight: .semibold))
             }
             .buttonStyle(.borderedProminent)
             .tint(Color.salmon)
             .disabled(!viewModel.canCatalog)
-            .accessibilityLabel("Catalog \(viewModel.selectedSegments.count) items")
-            .accessibilityHint(viewModel.canCatalog ? "Double tap to catalog selected items" : "Select items first")
+            .accessibilityLabel("Add \(viewModel.selectedSegments.count) items to collection")
+            .accessibilityHint(viewModel.canCatalog ? "Double tap to add selected items" : "Select items first")
         }
         .padding(.horizontal, horizontalPadding)
     }

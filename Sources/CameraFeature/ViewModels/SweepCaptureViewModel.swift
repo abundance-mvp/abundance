@@ -3,6 +3,7 @@ import Foundation
 @preconcurrency import CoreVideo
 import QuartzCore
 import os.log
+import Core
 import EdgeTAMFeature
 import VisionCore
 import Persistence
@@ -115,6 +116,98 @@ public final class SweepCaptureViewModel {
     /// Retained EdgeTAM service reference for model unloading on stop
     private var edgeTAMService: (any EdgeTAMServiceProtocol)?
 
+    // MARK: - Persistent Segment Tracking
+
+    /// Tracks a segment across frames with a stable identity
+    struct PersistentSegment {
+        var segment: SegmentedObject
+        var lastSeenFrame: Int
+        var firstSeenFrame: Int
+    }
+
+    /// All segments tracked across frames, keyed by stable UUID
+    private var persistentSegments: [UUID: PersistentSegment] = [:]
+
+    /// Frames a segment can be absent before eviction
+    private let segmentTTLFrames = 10
+
+    /// Monotonic frame counter
+    private var frameCounter: Int = 0
+
+    /// Intersection over Union for two rectangles
+    nonisolated static func iou(_ a: CGRect, _ b: CGRect) -> CGFloat {
+        let intersection = a.intersection(b)
+        guard !intersection.isNull else { return 0 }
+        let intersectionArea = intersection.width * intersection.height
+        let unionArea = a.width * a.height + b.width * b.height - intersectionArea
+        guard unionArea > 0 else { return 0 }
+        return intersectionArea / unionArea
+    }
+
+    /// Match new frame segments to persistent store via IoU, add new, evict stale.
+    private func mergeSegments(_ newSegments: [SegmentedObject]) {
+        frameCounter += 1
+
+        for newSeg in newSegments {
+            // Find best IoU match among existing persistent segments
+            var bestId: UUID?
+            var bestIoU: CGFloat = 0.3 // minimum threshold
+
+            for (id, persistent) in persistentSegments {
+                let overlap = Self.iou(newSeg.boundingBox, persistent.segment.boundingBox)
+                if overlap > bestIoU {
+                    bestIoU = overlap
+                    bestId = id
+                }
+            }
+
+            if let matchedId = bestId {
+                // Update existing segment — reconstruct with stable UUID (id is let)
+                let stableId = persistentSegments[matchedId]!.segment.id
+                let updated = SegmentedObject(
+                    id: stableId,
+                    boundingBox: newSeg.boundingBox,
+                    maskData: newSeg.maskData,
+                    maskWidth: newSeg.maskWidth,
+                    maskHeight: newSeg.maskHeight,
+                    iouScore: newSeg.iouScore,
+                    frameIndex: newSeg.frameIndex,
+                    timestamp: newSeg.timestamp
+                )
+                persistentSegments[matchedId]!.segment = updated
+                persistentSegments[matchedId]!.lastSeenFrame = frameCounter
+            } else {
+                // New segment — assign fresh stable identity
+                let id = newSeg.id
+                persistentSegments[id] = PersistentSegment(
+                    segment: newSeg,
+                    lastSeenFrame: frameCounter,
+                    firstSeenFrame: frameCounter
+                )
+                AppLogger.log(.sweepSegmentAppeared(
+                    segmentId: String(id.uuidString.prefix(8)),
+                    frameIndex: frameCounter
+                ))
+            }
+        }
+
+        // Evict stale segments
+        let staleIds = persistentSegments.filter { $0.value.lastSeenFrame < frameCounter - segmentTTLFrames }.map(\.key)
+        for id in staleIds {
+            let framesVisible = persistentSegments[id].map { $0.lastSeenFrame - $0.firstSeenFrame + 1 } ?? 0
+            selectedSegmentIds.remove(id)
+            persistentSegments.removeValue(forKey: id)
+            AppLogger.log(.sweepSegmentLost(
+                segmentId: String(id.uuidString.prefix(8)),
+                framesVisible: framesVisible
+            ))
+        }
+
+        // Update published segments array
+        self.segments = persistentSegments.values.map(\.segment)
+        canCatalog = !selectedSegmentIds.isEmpty
+    }
+
     // MARK: - Initialization
 
     public init(haptics: HapticFeedbackProviding? = nil) {
@@ -129,8 +222,10 @@ public final class SweepCaptureViewModel {
         let wasSelected = selectedSegmentIds.contains(segmentId)
         if wasSelected {
             selectedSegmentIds.remove(segmentId)
+            AppLogger.log(.sweepSegmentDeselected(segmentId: String(segmentId.uuidString.prefix(8))))
         } else {
             selectedSegmentIds.insert(segmentId)
+            AppLogger.log(.sweepSegmentSelected(segmentId: String(segmentId.uuidString.prefix(8))))
         }
         canCatalog = !selectedSegmentIds.isEmpty
 
@@ -145,15 +240,22 @@ public final class SweepCaptureViewModel {
 
     /// Reset entire sweep state
     public func reset() {
+        let totalSeen = persistentSegments.count
+        let totalSelected = selectedSegmentIds.count
         stopScanning()
         sweepState = .inactive
         segments = []
+        persistentSegments = [:]
+        frameCounter = 0
         selectedSegmentIds = []
         duplicateSegmentIds = []
         canCatalog = false
         measuredFPS = 0
         keyframeBuffers.removeAll()
         memoryWarningCount = 0
+        if totalSeen > 0 {
+            AppLogger.log(.sweepStopped(totalSegmentsSeen: totalSeen, totalSelected: totalSelected))
+        }
     }
 
     // MARK: - Lifecycle
@@ -226,6 +328,7 @@ public final class SweepCaptureViewModel {
 
             self.sweepState = .scanning(segmentCount: 0)
             self.logger.info("Sweep scanning started")
+            AppLogger.log(.sweepStarted)
 
             // Subscribe to frames
             self.frameSubscription = framePublisher
@@ -378,11 +481,11 @@ public final class SweepCaptureViewModel {
             let frameTime = CACurrentMediaTime() - startTime
             let fps = 1.0 / frameTime
 
-            // Update state on MainActor
+            // Accumulate segments across frames with stable IDs
             self.measuredFPS = fps
-            self.segments = newSegments
             self.duplicateSegmentIds = duplicates
-            self.sweepState = .scanning(segmentCount: newSegments.count)
+            mergeSegments(newSegments)
+            self.sweepState = .scanning(segmentCount: self.segments.count)
 
             // Throttled haptic on new segments
             let uniqueCount = newSegments.count - duplicates.count
@@ -394,10 +497,16 @@ public final class SweepCaptureViewModel {
                 }
             }
 
-            logger.debug("Frame processed: \(newSegments.count) segments (\(duplicates.count) dupes) at \(String(format: "%.1f", fps)) FPS")
+            logger.info("Frame processed: \(self.segments.count) segments (\(duplicates.count) dupes) at \(String(format: "%.1f", fps)) FPS")
+            AppLogger.log(.sweepFrameProcessed(
+                segmentCount: self.segments.count,
+                duplicateCount: duplicates.count,
+                fps: fps
+            ))
 
         } catch {
             logger.error("Frame processing failed: \(error.localizedDescription)")
+            AppLogger.log(.sweepError(error: error.localizedDescription))
         }
     }
 
@@ -416,6 +525,7 @@ public final class SweepCaptureViewModel {
         let selected = selectedSegments
         guard !selected.isEmpty else { return }
 
+        AppLogger.log(.sweepCatalogStarted(selectedCount: selected.count))
         sweepState = .uploading(progress: 0)
 
         do {
