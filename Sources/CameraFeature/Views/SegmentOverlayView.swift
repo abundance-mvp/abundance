@@ -128,7 +128,7 @@ struct SegmentOverlayView: View {
     private var overlayFill: Color {
         if reduceTransparency {
             if isSelected { return Color.salmon.opacity(0.5) }
-            if isDuplicate { return Color.yellow.opacity(0.4) }
+            if isDuplicate { return Color.cream.opacity(0.4) }
             return Color.white.opacity(0.4)
         } else {
             if isSelected { return Color.salmon.opacity(0.3) }
