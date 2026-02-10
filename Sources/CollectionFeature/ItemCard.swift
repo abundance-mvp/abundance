@@ -155,8 +155,8 @@ struct ItemCard: View {
         // Pad inward so shadow renders within the grid cell's allocated space,
         // preventing bleed into the adjacent column's card
         .padding(4)
-        // Fill grid cell height and align content to top for uniform card sizing
-        .frame(maxHeight: .infinity, alignment: .top)
+        // Fixed height ensures uniform grid sizing across all rows
+        .frame(height: cardHeight, alignment: .top)
     }
 
     // MARK: - Selection Indicator
@@ -186,6 +186,12 @@ struct ItemCard: View {
 
     private var imageHeight: CGFloat {
         dynamicTypeSize >= .xxxLarge ? 120 : 160
+    }
+
+    /// Fixed card height ensures uniform grid sizing across all rows,
+    /// regardless of metadata content (brand/color/condition presence).
+    private var cardHeight: CGFloat {
+        dynamicTypeSize >= .xxxLarge ? 230 : 280
     }
 
     private var outerShape: RoundedRectangle {
