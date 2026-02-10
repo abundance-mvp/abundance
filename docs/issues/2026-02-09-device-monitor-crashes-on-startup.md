@@ -10,6 +10,7 @@ related-files:
 screenshots: []
 axiom-agent: null
 branch: claude/pedantic-bhabha
+fix-commit: 6e299a4
 design-doc: null
 ---
 

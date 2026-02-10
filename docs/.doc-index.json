@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-09T00:00:00Z",
+  "generated": "2026-02-10T05:51:48Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -413,6 +413,16 @@
         },
         "2026-02-08-unsafe-task-captures-missing-weak-self.md": {
           "status": "Closed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-09-sign-out-does-not-redirect-to-login.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-09-device-monitor-crashes-on-startup.md": {
+          "status": "Fixed",
           "related_branch": null,
           "merged": null
         }
