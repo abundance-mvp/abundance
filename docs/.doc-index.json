@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-02-10T05:51:48Z",
+  "generated": "2026-02-10T00:00:00Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -118,6 +118,38 @@
           },
           "last_verified": "2026-02-08",
           "updated": "2026-01-18"
+        },
+        "SPEC-PIPE-004-camera-sweep-option-a-edgetam.md": {
+          "status": "Draft",
+          "code_refs": [
+            "Sources/EdgeTAMFeature/",
+            "Sources/CameraFeature/ViewModels/SweepCaptureViewModel.swift",
+            "Sources/CameraFeature/Views/SweepCaptureView.swift",
+            "Sources/CameraFeature/Views/SegmentOverlayView.swift",
+            "Sources/CameraFeature/Views/SegmentSelectionTray.swift",
+            "functions/src/ai-pipeline/layer1/sweep-labeling.ts"
+          ],
+          "code_ref_hashes": {
+            "Sources/EdgeTAMFeature/": "1130a305e33a9705",
+            "Sources/CameraFeature/ViewModels/SweepCaptureViewModel.swift": "f13f6fd2ea882138",
+            "Sources/CameraFeature/Views/SweepCaptureView.swift": "1d81fe5375e65831",
+            "Sources/CameraFeature/Views/SegmentOverlayView.swift": "c65f7535d3e6571d",
+            "Sources/CameraFeature/Views/SegmentSelectionTray.swift": "131a4525442a2bbd",
+            "functions/src/ai-pipeline/layer1/sweep-labeling.ts": "f6f1a8bd9cbb7705"
+          },
+          "last_verified": "2026-02-10",
+          "updated": "2026-02-07"
+        },
+        "SPEC-PIPE-004-camera-sweep-option-b-apple-native.md": {
+          "status": "Draft",
+          "code_refs": [
+            "Sources/VisionCore/"
+          ],
+          "code_ref_hashes": {
+            "Sources/VisionCore/": "31cc22d4add5f3af"
+          },
+          "last_verified": "2026-02-10",
+          "updated": "2026-02-07"
         },
         "SPEC-UI-001-camera-capture-flow.md": {
           "status": "Active",
@@ -299,6 +331,11 @@
         "2026-02-08-doc-freshness-system.md": {
           "status": "Active",
           "related_branch": null,
+          "merged": null
+        },
+        "2026-02-10-pr34-doc-updates.md": {
+          "status": "Not Started",
+          "related_branch": "claude/pedantic-bhabha",
           "merged": null
         }
       }
