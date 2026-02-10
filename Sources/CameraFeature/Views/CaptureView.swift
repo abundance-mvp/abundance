@@ -12,6 +12,7 @@ public struct CaptureView: View {
     @State private var viewModel: CaptureSessionViewModel
     @StateObject private var networkMonitor = NetworkMonitor.shared
     private let cameraService: CameraService
+    private let hapticService: HapticFeedbackProviding?
     private let onDone: () -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -35,10 +36,16 @@ public struct CaptureView: View {
     public init(
         viewModel: CaptureSessionViewModel = CaptureSessionViewModel(),
         cameraService: CameraService = CameraService(),
+        hapticService: HapticFeedbackProviding? = nil,
         onDone: @escaping () -> Void = {}
     ) {
         _viewModel = State(initialValue: viewModel)
         self.cameraService = cameraService
+        #if os(iOS)
+        self.hapticService = hapticService ?? HapticService()
+        #else
+        self.hapticService = hapticService
+        #endif
         self.onDone = onDone
     }
 
@@ -118,6 +125,9 @@ public struct CaptureView: View {
             }
             .onDisappear {
                 captureTask?.cancel()
+                if captureMode == .sweep {
+                    sweepViewModel.stopScanning()
+                }
                 teardownCamera()
             }
             .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -131,7 +141,10 @@ public struct CaptureView: View {
                             await restartCameraIfNeeded()
                         }
                     case .background:
-                        // App going to background - stop camera to save battery
+                        // App going to background - stop camera and sweep to save battery
+                        if captureMode == .sweep {
+                            sweepViewModel.stopScanning()
+                        }
                         teardownCamera()
                     case .inactive:
                         // Transitioning state - do nothing
@@ -259,9 +272,7 @@ public struct CaptureView: View {
                         frozenFrameImage = nil
                     },
                     onDone: {
-                        #if os(iOS)
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        #endif
+                        hapticService?.playImpact(style: .medium)
                         viewModel.retake()
                         onDone()
                     }
@@ -441,9 +452,7 @@ public struct CaptureView: View {
                     .accessibilityHint("Retakes the photo and returns to camera")
 
                     Button("Done") {
-                        #if os(iOS)
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        #endif
+                        hapticService?.playImpact(style: .medium)
                         viewModel.retake()
                         onDone()
                     }
@@ -631,9 +640,7 @@ public struct CaptureView: View {
                 frozenFrameImage = ImageDecoding.decodeToSwiftUIImage(photoData)
 
                 // Haptic feedback
-                #if os(iOS)
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                #endif
+                hapticService?.playImpact(style: .medium)
 
                 // Process
                 await viewModel.handleDoubleTap(photoData: photoData)

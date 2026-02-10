@@ -112,6 +112,9 @@ public final class SweepCaptureViewModel {
     private var memoryWarningSubscription: AnyCancellable?
     private var memoryWarningCount = 0
 
+    /// Retained EdgeTAM service reference for model unloading on stop
+    private var edgeTAMService: (any EdgeTAMServiceProtocol)?
+
     // MARK: - Initialization
 
     public init(haptics: HapticFeedbackProviding? = nil) {
@@ -199,6 +202,7 @@ public final class SweepCaptureViewModel {
         arSessionManager: SweepARSessionManager? = nil
     ) {
         stopScanning()
+        self.edgeTAMService = edgeTAMService
         sweepState = .loading
 
         // Start AR tracking if available
@@ -252,6 +256,12 @@ public final class SweepCaptureViewModel {
         memoryWarningSubscription?.cancel()
         memoryWarningSubscription = nil
         isProcessingFrame = false
+
+        // Unload CoreML models to free Neural Engine resources (~50-100 MB)
+        if let service = edgeTAMService {
+            Task { await service.unload() }
+            edgeTAMService = nil
+        }
     }
 
     // MARK: - Memory Pressure
@@ -318,8 +328,8 @@ public final class SweepCaptureViewModel {
             let frameIndex = await frameScheduler.currentFrameIndex
             keyframeBuffers[frameIndex] = pixelBuffer
             // Evict oldest if over limit
-            if keyframeBuffers.count > maxKeyframeBuffers {
-                let oldest = keyframeBuffers.keys.sorted().first!
+            if keyframeBuffers.count > maxKeyframeBuffers,
+               let oldest = keyframeBuffers.keys.min() {
                 keyframeBuffers.removeValue(forKey: oldest)
             }
 

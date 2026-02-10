@@ -194,6 +194,16 @@ public final class CameraService: NSObject, ObservableObject, @preconcurrency Ca
                 continuation.resume()
             }
         }
+
+        // Deactivate audio session to release audio pipeline resources
+        #if os(iOS)
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            // Best-effort; camera stop is not gated on audio session
+        }
+        #endif
+
         sessionStateSubject.send(.stopped)
     }
 

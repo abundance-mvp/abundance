@@ -224,10 +224,11 @@ public actor EdgeTAMService: @preconcurrency EdgeTAMServiceProtocol {
     }
 
     public func autoSegment(featureToken: String) async throws -> [SegmentedObject] {
-        var segments: [SegmentedObject] = []
-
         let rows = configuration.gridRows
         let cols = configuration.gridColumns
+
+        var segments: [SegmentedObject] = []
+        segments.reserveCapacity(rows * cols)
 
         for row in 0..<rows {
             for col in 0..<cols {
