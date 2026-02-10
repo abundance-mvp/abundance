@@ -93,16 +93,23 @@ public final class CaptureSessionViewModel {
 
     private let haptics: HapticFeedbackProviding?
 
+    /// Injected closure to get the current user ID.
+    /// Defaults to `getUserId()`.
+    /// Inject a custom closure in tests to avoid requiring Firebase configuration.
+    private let getUserId: @MainActor () -> String?
+
     public init(
         sessionService: SessionServiceProtocol = SessionService(),
         storageService: StorageServiceProtocol = StorageService(),
         catalogService: CatalogServiceProtocol = CatalogService(),
-        haptics: HapticFeedbackProviding? = nil
+        haptics: HapticFeedbackProviding? = nil,
+        getUserId: @escaping @MainActor () -> String? = { Auth.auth().currentUser?.uid }
     ) {
         self.sessionService = sessionService
         self.storageService = storageService
         self.catalogService = catalogService
         self.haptics = haptics
+        self.getUserId = getUserId
     }
 
     // MARK: - Single Photo Capture (Double-Tap)
@@ -115,7 +122,7 @@ public final class CaptureSessionViewModel {
             return
         }
 
-        guard let userId = Auth.auth().currentUser?.uid else {
+        guard let userId = getUserId() else {
             uiState = .error(.notAuthenticated)
             return
         }
@@ -212,7 +219,7 @@ public final class CaptureSessionViewModel {
         // rather than erroring — the server handles any image count.
         logger.info("Burst ended: \(self.capturedPhotos.count) photos in \(duration, format: .fixed(precision: 1))s")
 
-        guard let userId = Auth.auth().currentUser?.uid else {
+        guard let userId = getUserId() else {
             isCapturing = false
             uiState = .error(.notAuthenticated)
             capturedPhotos = []
@@ -220,7 +227,15 @@ public final class CaptureSessionViewModel {
             return
         }
 
-        await processCapture(userId: userId, captureMode: .burst)
+        // Run processCapture in a fresh unstructured Task to isolate from
+        // burst task cancellation. When endBurstCapture() is called from
+        // within the burst task (auto-end on max duration/photos), the
+        // burst task is already cancelled above. A new Task does not
+        // inherit that cancellation, preventing CancellationError from
+        // propagating to Firestore/Storage async calls.
+        await Task { @MainActor [weak self] in
+            await self?.processCapture(userId: userId, captureMode: .burst)
+        }.value
     }
 
     /// Cancel burst capture
@@ -439,7 +454,7 @@ public final class CaptureSessionViewModel {
     /// Catalog a single detected object
     /// - Parameter object: The detected object to catalog
     public func catalogObject(_ object: ServerDetectedObject) async {
-        guard let userId = Auth.auth().currentUser?.uid,
+        guard let userId = getUserId(),
               let sessionId = currentSession?.id else {
             logger.error("Cannot catalog: missing user or session")
             return

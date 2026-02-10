@@ -147,15 +147,20 @@ public struct CaptureView: View {
         #endif
     }
 
-    /// Only enable gestures in idle state to prevent blocking UI elements
+    /// Enable gestures in idle and capturing states.
+    /// Capturing must stay enabled so DragGesture.onEnded fires on finger-lift
+    /// to end burst capture. Removing the gesture mid-burst forces auto-end
+    /// from within the burst task, which self-cancels and causes CancellationError.
     private var gesturesEnabled: Bool {
         guard captureMode != .sweep else { return false }
         guard !showingCameraError else { return false }
         guard !isCaptureInProgress else { return false }  // Synchronous race prevention
-        if case .idle = viewModel.uiState {
+        switch viewModel.uiState {
+        case .idle, .capturing:
             return true
+        default:
+            return false
         }
-        return false
     }
 
     // MARK: - Main Content Layout
