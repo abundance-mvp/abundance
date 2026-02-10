@@ -2,6 +2,8 @@ import SwiftUI
 import AVFoundation
 import Core
 import EdgeTAMFeature
+@preconcurrency import FirebaseAuth
+import Persistence
 
 /// Main capture view with double-tap and long-press gestures
 /// Uses server-side Gemini detection - no local YOLO detection
@@ -172,7 +174,21 @@ public struct CaptureView: View {
                     SweepCaptureView(
                         viewModel: sweepViewModel,
                         onCatalog: {
-                            // TODO Phase 4: crop, upload, and trigger pipeline
+                            guard networkMonitor.isConnected else {
+                                sweepViewModel.sweepState = .error(.catalogFailed("No network connection"))
+                                return
+                            }
+                            Task {
+                                guard let userId = Auth.auth().currentUser?.uid else {
+                                    sweepViewModel.sweepState = .error(.catalogFailed("Not signed in"))
+                                    return
+                                }
+                                await sweepViewModel.catalogSelectedSegments(
+                                    userId: userId,
+                                    sessionService: SessionService(),
+                                    storageService: StorageService()
+                                )
+                            }
                         },
                         onCancel: {
                             captureMode = .single

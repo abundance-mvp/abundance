@@ -19,6 +19,7 @@ public struct SweepCaptureView: View {
     @ScaledMetric(relativeTo: .body) private var horizontalPadding: CGFloat = 16
     @ScaledMetric(relativeTo: .body) private var verticalPadding: CGFloat = 8
     @ScaledMetric(relativeTo: .body) private var bottomPadding: CGFloat = 16
+    @ScaledMetric(relativeTo: .largeTitle) private var errorIconSize: CGFloat = 40
 
     public init(
         viewModel: SweepCaptureViewModel,
@@ -109,7 +110,7 @@ public struct SweepCaptureView: View {
         VStack(spacing: 16) {
             if case .modelsNotBundled = error {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 40))
+                    .font(.system(size: errorIconSize))
                     .foregroundStyle(Color.softTeal)
 
                 Text("Sweep Mode Coming Soon")
@@ -122,7 +123,7 @@ public struct SweepCaptureView: View {
                     .foregroundStyle(.secondary)
             } else {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 40))
+                    .font(.system(size: errorIconSize))
                     .foregroundStyle(.secondary)
 
                 Text(error.errorDescription ?? "Sweep mode unavailable")
