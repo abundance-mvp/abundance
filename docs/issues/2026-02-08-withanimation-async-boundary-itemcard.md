@@ -1,6 +1,6 @@
 ---
 date: 2026-02-08
-status: Open
+status: Closed
 priority: P0
 type: bug
 component: ios

@@ -35,9 +35,31 @@
       "mcp__xcode__RenderPreview",
       "mcp__xcode__ExecuteSnippet",
       "mcp__xcode__DocumentationSearch",
-      "mcp__xcode__XcodeListWindows"
+      "mcp__xcode__XcodeListWindows",
+      "Bash(swift test:*)",
+      "Bash(swift build:*)",
+      "Bash(gh pr create:*)",
+      "Bash(uv run:*)",
+      "Bash(gh pr list:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "mcp__XcodeBuildMCP__session-set-defaults"
     ],
     "deny": [],
     "ask": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -qE '\"command\".*git (merge|push|pull|rebase)'; then uv run scripts/check_doc_status_drift.py --quiet 2>/dev/null || echo '⚠️  Doc status drift detected. Run: uv run scripts/check_doc_status_drift.py'; fi; true"
+          }
+        ]
+      }
+    ]
   }
 }

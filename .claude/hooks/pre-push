@@ -11,11 +11,11 @@ if [[ "$BRANCH" != "main" ]]; then
     exit 0
 fi
 
-echo "📚 Validating documentation health before push to main..."
+echo "Validating documentation health before push to main..."
 
 # Check if uv is available
 if ! command -v uv &> /dev/null; then
-    echo "⚠️  Warning: 'uv' not found. Skipping doc validation."
+    echo "Warning: 'uv' not found. Skipping doc validation."
     exit 0
 fi
 
@@ -24,10 +24,10 @@ result=0
 uv run scripts/validate_docs.py || result=$?
 
 if [[ $result -eq 0 ]]; then
-    echo "✅ Documentation validated"
+    echo "Documentation validated"
 elif [[ $result -eq 2 ]]; then
     echo ""
-    echo "❌ Documentation validation failed: Archive required"
+    echo "Documentation validation failed: Archive required"
     echo ""
     echo "To fix:"
     echo "  ./scripts/archive_doc.py --all"
@@ -35,14 +35,44 @@ elif [[ $result -eq 2 ]]; then
     exit 1
 elif [[ $result -eq 1 ]]; then
     echo ""
-    echo "❌ Documentation validation failed"
+    echo "Documentation validation failed"
     echo ""
     echo "To fix:"
-    echo "  • Broken links: Update or remove the reference"
-    echo "  • Status drift: Update doc status in .doc-index.json"
-    echo "  • Run: uv run scripts/validate_docs.py --verbose"
+    echo "  - Broken links: Update or remove the reference"
+    echo "  - Status drift: Update doc status in .doc-index.json"
+    echo "  - Run: uv run scripts/validate_docs.py --verbose"
     echo ""
     exit 1
+fi
+
+# Check doc status drift (branch drift = blocking, frontmatter mismatch = warning)
+echo ""
+echo "Checking doc status drift..."
+drift_result=0
+drift_output=$(uv run scripts/check_doc_status_drift.py --format json 2>/dev/null) || drift_result=$?
+
+if [[ $drift_result -eq 1 ]]; then
+    branch_errors=$(echo "$drift_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('total_errors',0))" 2>/dev/null || echo "0")
+    fm_warnings=$(echo "$drift_output" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('total_warnings',0))" 2>/dev/null || echo "0")
+
+    if [[ "$branch_errors" -gt 0 ]]; then
+        echo ""
+        echo "Doc status drift: $branch_errors merged branch(es) with stale status"
+        echo ""
+        echo "To fix:"
+        echo "  uv run scripts/check_doc_status_drift.py"
+        echo "  Update doc status and index for each merged branch"
+        echo ""
+        exit 1
+    fi
+
+    if [[ "$fm_warnings" -gt 0 ]]; then
+        echo ""
+        echo "  $fm_warnings frontmatter/index mismatch(es) detected."
+        echo "  Run: uv run scripts/check_doc_status_drift.py --fix"
+        echo ""
+        # Non-blocking — push continues
+    fi
 fi
 
 # Check documentation freshness (warning only, non-blocking)
@@ -53,13 +83,13 @@ uv run scripts/check_doc_freshness.py --quiet || freshness_result=$?
 
 if [[ $freshness_result -eq 1 ]]; then
     echo ""
-    echo "⚠️  Some documentation may be stale (code changed since last verification)."
+    echo "Some documentation may be stale (code changed since last verification)."
     echo "  Run: uv run scripts/check_doc_freshness.py"
     echo "  To review and update: uv run scripts/check_doc_freshness.py --update <doc>"
     echo ""
     # Non-blocking — push continues
 elif [[ $freshness_result -eq 2 ]]; then
-    echo "  ℹ️  No freshness baselines stored. Run: uv run scripts/check_doc_freshness.py --init"
+    echo "  No freshness baselines stored. Run: uv run scripts/check_doc_freshness.py --init"
 fi
 
 exit 0

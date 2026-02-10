@@ -36,11 +36,11 @@ If health check reveals environment issues (dead simulators, stale Derived Data,
 
 Match the issue description to one of three top-level domains. First match wins.
 
-| Domain | Patterns | Delegates To |
-|--------|----------|-------------|
-| **gemini** | Gemini, thought signature, tool calling, 400/429 error, cataloging failed, JSON parse, truncated, AI pipeline, Layer 1, Layer 2, detection, rate limit, prompt, token | `gemini-integration` via `backend-superpowers` |
-| **backend** | Firestore, Cloud Function, deploy, trigger, timeout, cold start, 403, 500, auth, permission denied, token, sign-in, Storage, upload, download URL, bucket, CORS, Firebase, GCP | `backend-superpowers` |
-| **ios** | Swift, iOS, SwiftUI, camera, AVCapture, BUILD FAILED, module not found, compile, linker, @MainActor, Sendable, data race, layout, navigation, accessibility, memory leak, slow, frame drop, crash, EXC_BAD_ACCESS | `ios-superpowers` |
+| Domain      | Patterns                                                                                                                                                                                                          | Delegates To                                   |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **gemini**  | Gemini, thought signature, tool calling, 400/429 error, cataloging failed, JSON parse, truncated, AI pipeline, Layer 1, Layer 2, detection, rate limit, prompt, token                                             | `gemini-integration` via `backend-superpowers` |
+| **backend** | Firestore, Cloud Function, deploy, trigger, timeout, cold start, 403, 500, auth, permission denied, token, sign-in, Storage, upload, download URL, bucket, CORS, Firebase, GCP                                    | `backend-superpowers`                          |
+| **ios**     | Swift, iOS, SwiftUI, camera, AVCapture, BUILD FAILED, module not found, compile, linker, @MainActor, Sendable, data race, layout, navigation, accessibility, memory leak, slow, frame drop, crash, EXC_BAD_ACCESS | `ios-superpowers`                              |
 
 **Multi-domain detection:** If the issue spans multiple domains (e.g., "upload 403 on client, Cloud Function never fires"), classify ALL matching domains and dispatch parallel agents in Phase 3.
 
@@ -97,6 +97,15 @@ MCP: list_log_entries(resourceNames=["projects/abundance-mvp"], filter="severity
 Read: functions/src/ai-pipeline/gemini/prompts.ts
 Read: functions/src/ai-pipeline/layer1/prompts.ts
 ```
+
+## Phase 2.5: DOC STATUS UPDATE (if working from a filed issue)
+
+If the issue being debugged has a corresponding doc in `docs/issues/`, update its status:
+
+1. Update frontmatter `status: In Progress` in the `.md` file
+2. Run: `uv run scripts/update_doc_index.py update docs/issues/<filename>.md --status "In Progress"`
+
+This keeps both frontmatter and index in sync as work begins.
 
 ## Phase 3: DEBUG
 
@@ -174,11 +183,11 @@ Skip any step = unverified claim. Do not proceed.
 
 ### Verification Commands
 
-| Domain | Verify Build | Verify Tests | Verify Runtime |
-|--------|-------------|-------------|----------------|
-| iOS | `mcp__xcode__BuildProject` or `swift build` | `mcp__xcode__RunAllTests` or `swift test` | Optional: `Skill(skill="sim-test")` or `Skill(skill="device-tester")` |
-| Backend | `cd functions && npx tsc --noEmit` | `cd functions && npm test` | Optional: deploy + `functions_get_logs` |
-| Gemini | Same as Backend | Same as Backend | Optional: test with sample input |
+| Domain  | Verify Build                                | Verify Tests                              | Verify Runtime                                                        |
+| ------- | ------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------- |
+| iOS     | `mcp__xcode__BuildProject` or `swift build` | `mcp__xcode__RunAllTests` or `swift test` | Optional: `Skill(skill="sim-test")` or `Skill(skill="device-tester")` |
+| Backend | `cd functions && npx tsc --noEmit`          | `cd functions && npm test`                | Optional: deploy + `functions_get_logs`                               |
+| Gemini  | Same as Backend                             | Same as Backend                           | Optional: test with sample input                                      |
 
 ### Retry Loop
 
@@ -204,6 +213,14 @@ if attempt > 3:
 
 **Do NOT retry infinitely.** 3 attempts maximum. After that, the issue needs human investigation.
 
+### Post-Verify Doc Status Update
+
+If verification passes and the issue has a corresponding doc in `docs/issues/`:
+
+1. Update frontmatter `status: Fixed` in the `.md` file
+2. Run: `uv run scripts/update_doc_index.py update docs/issues/<filename>.md --status Fixed`
+3. Set `related_branch` if known: `--branch <current-branch-name>`
+
 ### Runtime Verification (Optional)
 
 Only run sim/device testing when the issue is runtime-observable (UI bugs, crashes, interaction failures):
@@ -224,6 +241,7 @@ Skill(skill="ios-superpowers", args="tdd <description-of-what-was-fixed>")
 ```
 
 This invokes `superpowers:test-driven-development` with Apple docs grounding. The test should:
+
 - Reproduce the original failure condition
 - Verify the fix handles it correctly
 - Live in the appropriate `Tests/` directory
@@ -231,6 +249,7 @@ This invokes `superpowers:test-driven-development` with Apple docs grounding. Th
 ### Backend
 
 Write a test in `functions/src/**/__tests__/` that:
+
 - Sets up the failure condition
 - Verifies the fix handles it
 - Uses existing test patterns from the codebase
@@ -238,6 +257,7 @@ Write a test in `functions/src/**/__tests__/` that:
 ### Skip Conditions
 
 Skip test writing when:
+
 - The fix is a configuration change (not testable in code)
 - The fix is in a `.md` or non-code file
 - The original issue was environmental (Derived Data, SPM cache)
@@ -266,45 +286,63 @@ This handles cross-domain review with the appropriate skill routing.
 ### Skip Conditions
 
 Skip review when:
+
 - Fix is a single-line change (typo, config value)
 - Fix is reverting a previous change
 - All 3 retry attempts failed (Phase 4 → issue filed, nothing to review)
 
 ## Phase 7: REPORT
 
-Generate a structured report summarizing all phases.
+Generate a structured report summarizing all phases to docs/issues/reports/<date mm-dd-yy>_troubleshoot_report_<0-9><0-9><0-9>.md
+
+```
+docs/issues/reports/02-09-26_troubleshoot_report_001.md
+docs/issues/reports/02-09-26_troubleshoot_report_002.md
+docs/issues/reports/02-10-26_troubleshoot_report_001.md
+docs/issues/reports/02-10-26_troubleshoot_report_002.md
+...
+```
 
 ```markdown
 ## Troubleshooting Report
 
 ### Issue
+
 <original description>
 
 ### Domain Classification
+
 <domain(s)> — routed to <skill(s)>
 
 ### Health Check
+
 <axiom:status results — PASS/issues found>
 
 ### Root Cause
+
 <what caused the issue>
 
 ### Fix Applied
+
 <files changed and what was done>
 
 ### Verification (evidence required — `superpowers:verification-before-completion`)
+
 - Build: PASS/FAIL — exit code, command used
 - Tests: PASS/FAIL — N/N passed, command used
 - Runtime: PASS/FAIL/SKIPPED — observation details
 - Attempts: N/3
 
 ### Regression Test
+
 <test file and what it covers, or SKIPPED with reason>
 
 ### Code Review
+
 <review summary — clean/findings, or SKIPPED with reason>
 
 ### Status
+
 RESOLVED / UNRESOLVED (issue filed: <path>)
 ```
 
@@ -322,44 +360,44 @@ If review reveals additional issues beyond the original fix, offer to file them:
 
 ## Error Handling
 
-| Condition | Action |
-|-----------|--------|
-| Domain not detected | Ask user for more specific description |
-| `/axiom:status` fails | Note in report, proceed with Phase 2 |
-| Logs unavailable (MCP error) | Proceed with code-only analysis, note missing context |
-| Multi-domain conflict | Dispatch agents for ALL matching domains in parallel |
-| Fix verification fails 3x | File issue, report as UNRESOLVED |
-| Agent returns no fix | Escalate with full context dump, suggest manual investigation |
-| Test writing fails | Note as TODO in report, do not block pipeline |
-| Review finds critical issues | Report them, offer to file as separate issues |
+| Condition                    | Action                                                        |
+| ---------------------------- | ------------------------------------------------------------- |
+| Domain not detected          | Ask user for more specific description                        |
+| `/axiom:status` fails        | Note in report, proceed with Phase 2                          |
+| Logs unavailable (MCP error) | Proceed with code-only analysis, note missing context         |
+| Multi-domain conflict        | Dispatch agents for ALL matching domains in parallel          |
+| Fix verification fails 3x    | File issue, report as UNRESOLVED                              |
+| Agent returns no fix         | Escalate with full context dump, suggest manual investigation |
+| Test writing fails           | Note as TODO in report, do not block pipeline                 |
+| Review finds critical issues | Report them, offer to file as separate issues                 |
 
 ## Red Flags — STOP and Re-read This Skill
 
-| Thought | Reality |
-|---------|---------|
-| "I'll route to specific Axiom agents myself" | Delegate to `ios-superpowers debug`. It handles agent selection for 28 domains. |
-| "Skip the health check, the user described the issue" | Health check catches environmental issues that masquerade as code bugs. Always run it. |
-| "Fix looks good, skip verification" | The verify loop is the whole point. `BuildProject` + `RunAllTests` (or `swift build && swift test`) minimum. |
-| "No test needed, it's a simple fix" | Simple fixes regress. Write the test unless skip conditions apply. |
-| "Skip review, I already reviewed while fixing" | Fresh review catches what tunnel vision misses. Run it. |
-| "Fix looks good, should work now" | "Should" is not evidence. Run the command. Read the output. THEN claim it works. |
-| "Agent reported success" | Agent reports are unverified claims. Check the VCS diff. Run build/test yourself. |
-| "Retry a 4th time, I'm close" | 3 attempts max. File the issue. Fresh eyes will solve it faster. |
-| "I'll investigate all domains sequentially" | Multi-domain issues get parallel agents. One message, multiple Task calls. |
-| "Backend issue, no need for Apple docs" | Correct — only iOS issues need Apple docs. But iOS issues ALWAYS go through `ios-superpowers` which handles that. |
+| Thought                                               | Reality                                                                                                           |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| "I'll route to specific Axiom agents myself"          | Delegate to `ios-superpowers debug`. It handles agent selection for 28 domains.                                   |
+| "Skip the health check, the user described the issue" | Health check catches environmental issues that masquerade as code bugs. Always run it.                            |
+| "Fix looks good, skip verification"                   | The verify loop is the whole point. `BuildProject` + `RunAllTests` (or `swift build && swift test`) minimum.      |
+| "No test needed, it's a simple fix"                   | Simple fixes regress. Write the test unless skip conditions apply.                                                |
+| "Skip review, I already reviewed while fixing"        | Fresh review catches what tunnel vision misses. Run it.                                                           |
+| "Fix looks good, should work now"                     | "Should" is not evidence. Run the command. Read the output. THEN claim it works.                                  |
+| "Agent reported success"                              | Agent reports are unverified claims. Check the VCS diff. Run build/test yourself.                                 |
+| "Retry a 4th time, I'm close"                         | 3 attempts max. File the issue. Fresh eyes will solve it faster.                                                  |
+| "I'll investigate all domains sequentially"           | Multi-domain issues get parallel agents. One message, multiple Task calls.                                        |
+| "Backend issue, no need for Apple docs"               | Correct — only iOS issues need Apple docs. But iOS issues ALWAYS go through `ios-superpowers` which handles that. |
 
 ## Token Budget
 
-| Phase | Budget | Notes |
-|-------|--------|-------|
-| 1. Triage | ~5K | Health check + classification |
-| 2. Context | ~10K | Log gathering, file reads |
-| 3. Debug | ~40K | Delegated to superpowers skill |
-| 4. Verify | ~15K | Build/test output (×3 max) |
-| 5. Test | ~20K | Test writing via TDD workflow |
-| 6. Review | ~20K | Delegated to review skill |
-| 7. Report | ~5K | Structured output |
-| **Total** | **~115K** | Well under 128K context limit |
+| Phase      | Budget    | Notes                          |
+| ---------- | --------- | ------------------------------ |
+| 1. Triage  | ~5K       | Health check + classification  |
+| 2. Context | ~10K      | Log gathering, file reads      |
+| 3. Debug   | ~40K      | Delegated to superpowers skill |
+| 4. Verify  | ~15K      | Build/test output (×3 max)     |
+| 5. Test    | ~20K      | Test writing via TDD workflow  |
+| 6. Review  | ~20K      | Delegated to review skill      |
+| 7. Report  | ~5K       | Structured output              |
+| **Total**  | **~115K** | Well under 128K context limit  |
 
 If context is running low (>100K used), skip Phase 5 (test) and Phase 6 (review), note as TODO in report.
 

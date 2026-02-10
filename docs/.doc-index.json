@@ -267,7 +267,7 @@
           "merged": null
         },
         "2026-01-18-background-processing-ux-implementation.md": {
-          "status": "Active",
+          "status": "Draft",
           "related_branch": null,
           "merged": null
         },
@@ -277,22 +277,22 @@
           "merged": null
         },
         "PLAN-axe-test-followups.md": {
-          "status": "Active",
+          "status": "Completed",
           "related_branch": null,
           "merged": null
         },
         "2026-01-20-comprehensive-test-suite-plan.md": {
-          "status": "Active",
+          "status": "Draft",
           "related_branch": null,
           "merged": null
         },
         "2026-02-05-iteration-workflow-modernization-design.md": {
-          "status": "Active",
+          "status": "Implemented",
           "related_branch": null,
           "merged": null
         },
         "2026-02-06-brand-bible-revision-design-system-specs.md": {
-          "status": "Active",
+          "status": "Draft",
           "related_branch": "feature/brand-design-system",
           "merged": null
         },
@@ -312,7 +312,7 @@
       ],
       "docs": {
         "2026-01-18-background-processing-ux-redesign.md": {
-          "status": "Open",
+          "status": "open",
           "related_branch": null,
           "merged": null
         },
@@ -372,7 +372,7 @@
           "merged": null
         },
         "2026-02-08-burst-mode-error-on-capture-completion.md": {
-          "status": "Open",
+          "status": "Fixed",
           "related_branch": null,
           "merged": null
         },
@@ -382,12 +382,12 @@
           "merged": null
         },
         "2026-02-08-retake-photo-not-cropped.md": {
-          "status": "Open",
+          "status": "Fixed",
           "related_branch": null,
           "merged": null
         },
         "2026-02-08-collection-view-non-uniform-item-sizes.md": {
-          "status": "Open",
+          "status": "Fixed",
           "related_branch": null,
           "merged": null
         },
@@ -397,12 +397,12 @@
           "merged": null
         },
         "2026-02-08-mainactor-on-haptic-protocol.md": {
-          "status": "Open",
+          "status": "Fixed",
           "related_branch": null,
           "merged": null
         },
         "2026-02-08-withanimation-async-boundary-itemcard.md": {
-          "status": "Open",
+          "status": "Closed",
           "related_branch": null,
           "merged": null
         },
@@ -412,7 +412,7 @@
           "merged": null
         },
         "2026-02-08-unsafe-task-captures-missing-weak-self.md": {
-          "status": "Open",
+          "status": "Closed",
           "related_branch": null,
           "merged": null
         }
@@ -657,11 +657,11 @@
             "functions/src/"
           ],
           "code_ref_hashes": {
-            "Sources/CameraFeature/": "19529824f95dfc78",
-            "functions/src/ai-pipeline/": "83750a98f9053a5a",
-            "functions/src/": "e981ae90b420c9bc"
+            "Sources/CameraFeature/": "21c751b35b914204",
+            "functions/src/ai-pipeline/": "e68b7584e47c5ea8",
+            "functions/src/": "e07207985d3cefea"
           },
-          "last_verified": "2026-02-08",
+          "last_verified": "2026-02-09",
           "updated": "2026-02-07"
         }
       }

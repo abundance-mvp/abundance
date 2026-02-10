@@ -333,10 +333,16 @@ When code review finds critical issues (P0/P1 severity):
 
 ```
 1. domain = DETECT(context)
-2. IF domain == test:
+2. IF context references a plan doc in docs/plans/:
+   a. Update frontmatter status: "In Progress"
+   b. Run: uv run scripts/update_doc_index.py update docs/plans/<filename>.md --status "In Progress"
+3. IF domain == test:
    Task(subagent_type="axiom:test-runner")
-3. Skill(skill="superpowers:executing-plans")
-4. VERIFY()
+4. Skill(skill="superpowers:executing-plans")
+5. VERIFY()
+6. IF plan doc was tracked in step 2 AND verification passed:
+   a. Update frontmatter status: "Completed"
+   b. Run: uv run scripts/update_doc_index.py update docs/plans/<filename>.md --status Completed
 ```
 
 ### brainstorm Execution
@@ -671,6 +677,19 @@ After the `review` action completes:
    - Print: "Documentation may need updating. Stale docs detected for iOS scope."
    - Print: "Run `/doc-superpowers review-pr ios` for details."
 3. If exit code 0: no action needed.
+
+---
+
+## 8b. Post-Merge: Doc Status Drift Resolution
+
+After merging a branch to main (e.g., via `finishing-a-development-branch`):
+
+1. Run: `uv run scripts/check_doc_status_drift.py --format json`
+2. For each `branch_merged` drift item:
+   - Plans: Update frontmatter and index status to `Completed`
+   - Issues: Update frontmatter and index status to `Fixed`
+   - Run: `uv run scripts/update_doc_index.py update <doc-path> --status <terminal-status>`
+3. Run: `./scripts/archive_doc.py --all` to archive any docs now in terminal status
 
 ---
 

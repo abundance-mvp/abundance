@@ -50,7 +50,7 @@ The system consists of five component groups:
 - **Camera Capture** — AVFoundation-based capture with single (double-tap) and burst (long-press) modes
 - **EdgeTAMFeature** — On-device CoreML segmentation module for sweep capture mode (A17 Pro+ devices). Runs EdgeTAM image encoder on keyframes, prompt encoder + mask decoder on user taps for real-time segment selection.
 - **Detection Results View** — Displays bounding boxes over photos, allows object selection for cataloging
-- **Inventory Grid** — LazyVGrid display of cataloged items with status indicators
+- **Collection Grid** — LazyVGrid display of cataloged items with status indicators
 - **Item Detail View** — Full item detail with re-catalog and deep scan actions
 
 ### Firebase
@@ -64,8 +64,9 @@ The system consists of five component groups:
 | Function | Trigger | Purpose |
 |----------|---------|---------|
 | `onSessionCreated` | `sessions/{id}` updated, status=detecting | Layer 1 detection pipeline (sweep branch: skips detection, labeling only) |
-| `onItemFromSession` | `items/{id}` created, fromDetection=true | Layer 2 cataloging pipeline |
-| `onItemUpdatedRescan` | `items/{id}` updated, status→pending | Re-catalog with history context |
+| `onItemFromSession` | `items/{id}` created (guards: fromDetection + sessionId + status=pending) | Layer 2 cataloging pipeline |
+| `onItemCreatedGemini3` | `items/{id}` created (non-session items) | Layer 2 cataloging for direct items |
+| `onItemUpdatedRescan` | `items/{id}` updated, status→pending (guards: before.status!=pending, deepScanRequested==false) | Re-catalog with history context |
 | `onItemUpdatedDeepScan` | `items/{id}` updated, deepScanRequested=true | Extended catalog with all tools |
 | `onItemDeleted` | `items/{id}` deleted | Storage cleanup (crop files) |
 
@@ -90,8 +91,8 @@ Sweep mode adds an on-device segmentation step that runs **before** the cloud pi
                         ON-DEVICE                          CLOUD (existing)
                     +---------------------+          +---------------------+
                     |   Sweep Mode        |          |   Layer 1           |
-Camera frames ----> |   EdgeTAM CoreML    |--crops-->|   Gemini 3 Flash    |
-  (30 FPS)          |   (1-16 FPS)        |          |   (labeling only)   |
+Camera frames ----> |   EdgeTAM CoreML    |--crops-->|   Gemini 2.5 Flash  |
+  (30 FPS)          |   (encode ~2 FPS)   |          |   Lite (labeling)   |
                     +---------------------+          +---------------------+
                               |                                |
                         User taps to                     +---------------------+
@@ -101,7 +102,7 @@ Camera frames ----> |   EdgeTAM CoreML    |--crops-->|   Gemini 3 Flash    |
                                                          +---------------------+
 ```
 
-When `captureMode === "sweep"`, the `onSessionCreated` Cloud Function skips Layer 1 bounding box detection (crops are pre-provided by EdgeTAM) and runs Gemini Flash for **labeling only**, reducing Layer 1 cost by ~50%.
+When `captureMode === "sweep"`, the `onSessionCreated` Cloud Function skips Layer 1 bounding box detection (crops are pre-provided by EdgeTAM) and runs **Gemini 2.5 Flash Lite** (via `sweep-labeling.ts`) for **labeling only**, reducing Layer 1 cost by ~50%.
 
 ### EdgeTAM CoreML Architecture
 
@@ -119,16 +120,19 @@ All models load with `computeUnits = .all` to leverage CPU + GPU + Neural Engine
 
 ### Device Eligibility
 
-Sweep mode requires A17 Pro Neural Engine (35 TOPS) or later. `DeviceEligibility.isSweepModeAvailable` checks the hardware identifier:
+Sweep mode requires A18 Neural Engine or later. `DeviceEligibility.isSweepModeAvailable` checks the hardware identifier:
 
 | Device | Machine ID | Eligible |
 |--------|-----------|----------|
 | iPhone 15 Pro | iPhone16,1 | Yes |
 | iPhone 15 Pro Max | iPhone16,2 | Yes |
-| iPhone 16 Pro | iPhone17,1 / iPhone17,3 | Yes |
-| iPhone 16 Pro Max | iPhone17,2 / iPhone17,4 | Yes |
+| iPhone 16 | iPhone17,1 | Yes |
+| iPhone 16 Plus | iPhone17,2 | Yes |
+| iPhone 16 Pro | iPhone17,3 | Yes |
+| iPhone 16 Pro Max | iPhone17,4 | Yes |
+| iPhone 16e | iPhone17,5 | Yes (A18, 8GB) |
 | Future iPhone 18+ | iPhone18,x+ | Yes (future-proofed) |
-| Non-Pro iPhones | any other | No |
+| A16 and earlier non-Pro | any other | No |
 | Simulator | any | Yes (for testing) |
 
 The `SweepModeToggle` view only shows the sweep option on eligible devices.
@@ -142,6 +146,8 @@ The `SweepModeToggle` view only shows the sweep option on eligible devices.
 3. Between keyframes, cached features from the most recent `encodeFrame()` call are reused for mask decoding.
 4. The scheduler tracks a `currentFrameIndex` for associating segments with their source keyframe.
 
+`MotionKeyframeDetector` complements the time-based scheduler with gyroscope-based stabilization detection. When camera rotation rate drops below 0.1 rad/s, it triggers a keyframe encode for sharp, representative frames during panning pauses.
+
 The feature cache in `EdgeTAMService` is capped at 3 entries (FIFO eviction).
 
 ### Sweep State Machine
@@ -149,20 +155,21 @@ The feature cache in `EdgeTAMService` is capped at 3 entries (FIFO eviction).
 `SweepCaptureViewModel` (`@MainActor @Observable`) manages the sweep lifecycle:
 
 ```
-inactive -> loading -> scanning -> reviewing -> uploading -> processing -> complete
-                                                                       -> error
+inactive -> loading -> ready -> scanning -> reviewing -> uploading -> processing -> complete
+                                                                                -> error
 ```
 
 | State | Description |
 |-------|-------------|
 | `inactive` | Sweep mode not active |
 | `loading` | EdgeTAM models loading (~200ms) |
+| `ready` | EdgeTAM models verified available, awaiting camera frame publisher |
 | `scanning` | Camera feed active, segments appearing as user pans |
 | `reviewing` | User tapping segments to select/deselect |
 | `uploading(progress)` | Cropping and uploading selected segments to GCS |
 | `processing` | Firestore session created, waiting for cloud pipeline |
 | `complete` | All items cataloged |
-| `error` | Model load or upload failure |
+| `error` | Model load, upload, or memory pressure failure |
 
 Selection management provides haptic feedback: `.medium` impact on select, `.light` on deselect. The `canCatalog` flag enables the catalog button when at least one segment is selected.
 
@@ -172,7 +179,7 @@ When the user pans across a shelf and back, the same object may appear in multip
 
 **Tier 1 -- VNFeaturePrint (visual similarity):**
 - Uses `VNGenerateImageFeaturePrintRequest` (iOS 17+) to generate perceptual hashes.
-- Compares fingerprints using `computeDistance()`. Objects within 10% distance (i.e., `similarityThreshold = 0.90`) are considered duplicates.
+- Compares fingerprints using `computeDistance()`. Objects within distance threshold 0.10 (i.e., `1.0 - similarityThreshold` where `similarityThreshold = 0.90`) are considered duplicates.
 - Cache: Up to 50 entries, 2-minute TTL, automatic FIFO eviction.
 
 **Tier 2 -- ARKit spatial position (3D world coordinates):**
@@ -187,7 +194,7 @@ If ARKit is unavailable, the system falls back gracefully to visual-only dedupli
 `SweepARSessionManager` (`@MainActor`, `ARSessionDelegate`) manages an optional `ARWorldTrackingConfiguration` during sweep mode:
 
 - Starts tracking on sweep mode entry with horizontal + vertical plane detection.
-- Publishes `cameraTransform` (6DOF pose) and `trackingState` via `@Published` properties.
+- Exposes `cameraTransform` (6DOF pose) and `trackingState` as public properties on the `@MainActor`-isolated class.
 - Provides `worldPosition(for:)` to project normalized 2D points to 3D world coordinates using raycasting against estimated planes.
 - Extracts only lightweight primitives (`simd_float4x4`, tracking state enum) from `ARFrame` delegate callbacks -- never retains the full `ARFrame` (~1-4 MB) across isolation boundaries.
 - Stops and releases the AR session on sweep mode exit.
@@ -207,12 +214,19 @@ The sweep UI degrades gracefully based on measured EdgeTAM inference FPS:
 
 ### Memory Pressure Handling
 
-`EdgeTAMService` monitors `UIApplication.didReceiveMemoryWarningNotification` via an async notification stream:
+Two layers of memory pressure handling:
+
+**EdgeTAMService** monitors `UIApplication.didReceiveMemoryWarningNotification` via an async notification stream:
 
 - **On memory warning:** Clears the feature cache (up to 3 entries) but keeps models loaded. This releases cached `MLMultiArray` data while preserving the ability to encode new frames.
-- **Feature cache budget:** 3 entries maximum, 200 MB memory cap.
+- **Feature cache budget:** 3 entries maximum (count-limited, no byte cap).
 - **On sweep mode exit:** `unload()` releases all three models and clears the cache entirely.
 - **On `deinit`:** The memory monitoring task is cancelled.
+
+**SweepCaptureViewModel** has a 2-warning escalation:
+
+- **First memory warning:** Evicts all but the newest keyframe buffer.
+- **Second memory warning:** Stops scanning entirely, transitions to `.error(.memoryPressure)`.
 
 ---
 
@@ -373,7 +387,7 @@ For each detected object:
 ```
 
 ### Error Handling
-- Exponential backoff: 1s, 2s, 4s delays
+- Exponential backoff: 1s, 2s, 4s, 8s delays (with jitter, capped at 60s) for transient errors; 15s, 30s, 60s, 120s for rate limit errors
 - Max 4 retries
 - On permanent failure: `status = "failed"`, `failureReason` populated
 
@@ -390,7 +404,7 @@ For each detected object:
 
 ### Implementation
 
-**Idempotency guard:** `submittedCatalogRequests` set tracks previously submitted groupIds to prevent duplicates.
+**Idempotency guard:** `submittedCatalogRequests` set tracks previously submitted `sessionId:groupId` composite keys to prevent duplicates.
 
 For each selected `groupId`:
 
@@ -416,7 +430,7 @@ For each selected `groupId`:
 }
 ```
 
-3. The combination `fromDetection: true` + `status: "pending"` routes to `onItemFromSession`
+3. Document creation triggers `onItemFromSession` (which guards on `sessionId` + `fromDetection: true` + `status: "pending"`)
 4. Start realtime listener on `items/{itemId}`
 5. On `status == "complete"`: move from `catalogingObjectIds` to `catalogedObjectIds`, show green checkmark
 6. On `status == "failed"`: remove from `catalogingObjectIds`, show error indicator
@@ -429,7 +443,7 @@ For each selected `groupId`:
 
 ### Cloud Function: `onItemFromSession`
 - **Runtime:** 512MiB memory, 120s timeout
-- **Trigger:** `items/{id}` created with `fromDetection: true`, `status: "pending"`
+- **Trigger:** `onDocumentCreated` for `items/{id}` — guards internally on `sessionId`, `fromDetection: true`, `status: "pending"`
 
 ### Model Configuration
 ```
@@ -486,7 +500,7 @@ Return valid JSON matching the CatalogItem schema.
 ```
 
 ### Context Caching
-- **Key:** `sha256(systemPrompt + toolDefinitions + outputSchema)`
+- **Key:** Managed by Gemini caching API (server-assigned `cachedContent.name`)
 - **TTL:** 3600s (1 hour)
 - **Savings:** ~90% token reduction on cached system context
 - Re-catalog with warm cache: $0.016 vs $0.04 cold
@@ -608,7 +622,10 @@ User taps re-catalog button in Item Detail View → confirmation dialog → `Ite
 ```
 
 ### Cloud Function: `onItemUpdatedRescan`
-- **Guard:** `before.status != "pending"` (prevents re-trigger loops)
+- **Guards (all three required):**
+  1. `after.status === "pending"` — item was set to pending
+  2. `before.status !== "pending"` — prevents re-trigger loops
+  3. `after.deepScanRequested !== true` — handled by `onItemUpdatedDeepScan` instead
 - **Image:** Uses existing `imageUrl` — no new photo required
 - **Pipeline:** Same Layer 2 tool calling loop
 
@@ -679,7 +696,7 @@ User taps sparkles button in Item Detail View → confirmation dialog → `ItemS
   "...standard CatalogItem fields",
   "productUrl": "string|null",
   "upcCode": "string|null",
-  "marketPriceRange": { "low": 0, "high": 0 },
+  "marketPriceRange": "string|null",
   "originalRetailPrice": "number|null",
   "deepScanCompletedAt": "timestamp"
 }
@@ -734,23 +751,29 @@ Deep scan is a one-time operation per item. After completion:
 | `imageUrl` | string | Primary cropped image URL |
 | `imagePath` | string | GCS path for the image |
 | `additionalImageUrls` | array[string] | Additional crop URLs |
-| `status` | string | `pending`, `complete`, `failed`, `failed_layer2a`, `failed_layer2b` |
+| `status` | string | Firestore: `pending`, `complete`, `failed`, `failed_layer2a`, `failed_layer2b`. iOS `ItemStatus` enum maps these to 3 values: `.processing` (pending), `.complete`, `.failed` (all failure variants) |
+| `layer1Label` | string? | Detection label from Layer 1 |
+| `layer1Category` | string? | Detection category from Layer 1 |
 | `name` | string | Cataloged product name |
 | `category` | string | Product category |
 | `subCategory` | string | Product sub-category |
 | `brand` | string? | Brand name |
 | `model` | string? | Model identifier |
 | `color` | string? | Color description |
+| `material` | string? | Material description |
 | `condition` | string | `new`, `like-new`, `good`, `fair`, `poor` |
 | `quantity` | int | Item count |
 | `estimatedValue` | float? | Estimated market value (USD) |
 | `confidence` | string | `high`, `medium`, `low` |
-| `deepScanRequested` | boolean | Whether deep scan was requested |
-| `deepScanCompletedAt` | timestamp? | Deep scan completion time |
+| `deepScanRequested` | boolean | Whether deep scan was requested (Swift: `refreshRequested` per ADR-027) |
+| `deepScanCompletedAt` | timestamp? | Deep scan completion time (Swift: `refreshCompletedAt` per ADR-027) |
 | `productUrl` | string? | Product page URL (deep scan) |
 | `upcCode` | string? | UPC/barcode (deep scan) |
+| `marketPriceRange` | string? | Price range string, e.g. "$50-$80" (deep scan) |
+| `userEditedFields` | array[string]? | Fields manually edited by user |
+| `photoMetadata` | object? | EXIF and location metadata from capture |
 | `createdAt` | timestamp | Item creation time |
-| `completedAt` | timestamp? | Catalog completion time |
+| `completedAt` | timestamp? | Catalog completion time (cloud-side only, not decoded by iOS) |
 
 ### `items/{itemId}/catalogHistory/{entryId}`
 | Field | Type | Description |
@@ -829,6 +852,15 @@ Deep scan is a one-time operation per item. After completion:
 | → `failed` | Layer 1 error — max retries exceeded |
 
 ### Item Status Transitions
+
+Firestore stores granular statuses; the iOS `ItemStatus` enum maps them to 3 values:
+
+| Firestore Status | iOS `ItemStatus` |
+|-----------------|-----------------|
+| `pending` | `.processing` |
+| `complete` | `.complete` |
+| `failed`, `failed_layer2a`, `failed_layer2b` | `.failed` |
+
 ```
 [created] → pending → complete → pending (rescan/deep scan)
                     → failed   → pending (retry)
@@ -850,8 +882,8 @@ Deep scan is a one-time operation per item. After completion:
 | Function | Trigger Condition |
 |----------|-----------------|
 | `onSessionCreated` | `status` changed TO `"detecting"` |
-| `onItemFromSession` | Document created with `fromDetection: true` AND `status: "pending"` |
-| `onItemUpdatedRescan` | `status` changed TO `"pending"` AND `before.status != "pending"` AND `deepScanRequested == false` |
+| `onItemFromSession` | `onDocumentCreated` for `items/{id}`, guards: `sessionId` + `fromDetection: true` + `status: "pending"` |
+| `onItemUpdatedRescan` | `status` changed TO `"pending"` AND `before.status != "pending"` AND `deepScanRequested != true` |
 | `onItemUpdatedDeepScan` | `deepScanRequested` changed TO `true` AND `status == "pending"` |
 
 ---
@@ -879,7 +911,7 @@ Deep scan is a one-time operation per item. After completion:
 
 ### Context Cache Savings
 - System prompt + tool definitions + output schema are cached
-- Cache key: `sha256(prompt + tools + schema)`
+- Cache key: Managed by Gemini caching API (server-assigned `cachedContent.name`)
 - TTL: 1 hour
 - Token savings: ~90% on cached content
 - Over 3 consecutive catalogs: **37% total cost reduction**
@@ -895,36 +927,61 @@ Deep scan is a one-time operation per item. After completion:
 
 ## Appendix: Key Source Files
 
+### iOS App
+
 | Component | Source File |
 |-----------|------------|
 | Capture flow | `Sources/CameraFeature/ViewModels/CaptureSessionViewModel.swift` |
+| Camera session actor | `Sources/CameraFeature/Services/CameraSessionActor.swift` |
+| Camera view model | `Sources/CameraFeature/ViewModels/CameraViewModel.swift` |
 | Detection results UI | `Sources/CameraFeature/Views/DetectionResultsView.swift` |
 | Catalog service | `Sources/CameraFeature/Services/CatalogService.swift` |
 | Session service | `Sources/CameraFeature/Services/SessionService.swift` |
+| Haptic service | `Sources/CameraFeature/Services/HapticService.swift` |
+| Image decoding | `Sources/CameraFeature/Services/ImageDecoding.swift` |
+| Photo metadata extractor | `Sources/CameraFeature/Services/PhotoMetadataExtractor.swift` |
 | Storage service | `Sources/Persistence/Firebase/StorageService.swift` |
 | Item service | `Sources/Persistence/Firebase/ItemService.swift` |
 | Item model | `Sources/Persistence/Models/Item.swift` |
 | Session model | `Sources/CameraFeature/Models/CaptureSession.swift` |
+| EdgeTAM service | `Sources/EdgeTAMFeature/Services/EdgeTAMService.swift` |
+| EdgeTAM service protocol | `Sources/EdgeTAMFeature/Services/EdgeTAMServiceProtocol.swift` |
+| EdgeTAM config | `Sources/EdgeTAMFeature/Models/EdgeTAMConfiguration.swift` |
+| Sweep session state | `Sources/EdgeTAMFeature/Models/SweepSessionState.swift` |
+| Segmented object model | `Sources/EdgeTAMFeature/Models/SegmentedObject.swift` |
+| Frame scheduler | `Sources/EdgeTAMFeature/Services/FrameScheduler.swift` |
+| Motion keyframe detector | `Sources/EdgeTAMFeature/Services/MotionKeyframeDetector.swift` |
+| Device eligibility | `Sources/EdgeTAMFeature/Utilities/DeviceEligibility.swift` |
+| Sweep view model | `Sources/CameraFeature/ViewModels/SweepCaptureViewModel.swift` |
+| Sweep capture view | `Sources/CameraFeature/Views/SweepCaptureView.swift` |
+| Sweep mode toggle | `Sources/CameraFeature/Views/SweepModeToggle.swift` |
+| Segment overlay view | `Sources/CameraFeature/Views/SegmentOverlayView.swift` |
+| Segment selection tray | `Sources/CameraFeature/Views/SegmentSelectionTray.swift` |
+| Mask contour shape | `Sources/CameraFeature/Views/MaskContourShape.swift` |
+| Object deduplicator | `Sources/VisionCore/Services/ObjectDeduplicator.swift` |
+| Pixel buffer cropper | `Sources/VisionCore/Utilities/PixelBufferCropper.swift` |
+| Sweep AR session | `Sources/CameraFeature/Services/SweepARSessionManager.swift` |
+
+### Cloud Functions
+
+| Component | Source File |
+|-----------|------------|
+| Session trigger | `functions/src/triggers/onSessionCreated.ts` |
+| Item trigger (session) | `functions/src/triggers/onItemFromSession.ts` |
+| Item trigger (direct) | `functions/src/triggers/onItemCreatedGemini3.ts` |
+| Rescan trigger | `functions/src/triggers/onItemUpdatedRescan.ts` |
+| Deep scan trigger | `functions/src/triggers/onItemUpdatedDeepScan.ts` |
 | Layer 1 prompts | `functions/src/ai-pipeline/layer1/prompts.ts` |
-| Layer 2 prompts | `functions/src/ai-pipeline/gemini/prompts.ts` |
 | Layer 1 service | `functions/src/ai-pipeline/layer1/layer1-service.ts` |
+| Sweep labeling | `functions/src/ai-pipeline/layer1/sweep-labeling.ts` |
+| Layer 2 prompts | `functions/src/ai-pipeline/gemini/prompts.ts` |
+| Layer 2 service | `functions/src/ai-pipeline/gemini/gemini-service.ts` |
 | Layer 2 orchestrator | `functions/src/ai-pipeline/gemini/orchestrator.ts` |
+| Gemini provider | `functions/src/ai-pipeline/providers/GeminiProvider.ts` |
 | Tool: Google Lens | `functions/src/ai-pipeline/tools/google-lens.ts` |
 | Tool: Barcode | `functions/src/ai-pipeline/tools/barcode-lookup.ts` |
 | Tool: Web Search | `functions/src/ai-pipeline/tools/web-search.ts` |
 | Context cache | `functions/src/ai-pipeline/gemini/context-cache-service.ts` |
 | Catalog history | `functions/src/ai-pipeline/gemini/catalog-history-service.ts` |
-| Session trigger | `functions/src/triggers/onSessionCreated.ts` |
-| Item trigger | `functions/src/triggers/onItemFromSession.ts` |
-| Rescan trigger | `functions/src/triggers/onItemUpdatedRescan.ts` |
-| Deep scan trigger | `functions/src/triggers/onItemUpdatedDeepScan.ts` |
 | Vertex AI config | `functions/src/ai-pipeline/gemini/vertexai-config.ts` |
-| EdgeTAM service | `Sources/EdgeTAMFeature/Services/EdgeTAMService.swift` |
-| EdgeTAM config | `Sources/EdgeTAMFeature/Models/EdgeTAMConfiguration.swift` |
-| Frame scheduler | `Sources/EdgeTAMFeature/Services/FrameScheduler.swift` |
-| Device eligibility | `Sources/EdgeTAMFeature/Utilities/DeviceEligibility.swift` |
-| Sweep view model | `Sources/CameraFeature/ViewModels/SweepCaptureViewModel.swift` |
-| Sweep capture view | `Sources/CameraFeature/Views/SweepCaptureView.swift` |
-| Sweep mode toggle | `Sources/CameraFeature/Views/SweepModeToggle.swift` |
-| Object deduplicator | `Sources/VisionCore/Services/ObjectDeduplicator.swift` |
-| Sweep AR session | `Sources/CameraFeature/Services/SweepARSessionManager.swift` |
+| Cost tracking | `functions/src/ai-pipeline/cost-tracking/CostLogger.ts` |

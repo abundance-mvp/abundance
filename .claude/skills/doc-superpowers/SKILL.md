@@ -18,13 +18,17 @@ Scopes: all | ios | backend | architecture | adr | brand | specs | testing | vie
 
 ## 0. Prerequisites
 
-Before ANY action, run the hash engine to get a deterministic staleness baseline:
+Before ANY action, run both checks to get a deterministic baseline:
 
 ```bash
+# 1. Hash-based staleness (code_refs changed)
 uv run scripts/check_doc_freshness.py --format json
+
+# 2. Status drift (frontmatter/index mismatches, merged branches with stale status)
+uv run scripts/check_doc_status_drift.py --format json
 ```
 
-Parse the JSON output. This gives you the list of docs where `code_refs` have changed since last verification. Use this to prioritize agent work — don't waste agents on docs the hash engine already confirms are fresh.
+Parse both JSON outputs. The freshness check gives you docs where `code_refs` have changed. The status drift check gives you docs where frontmatter disagrees with the index, or where a branch merged but the status wasn't updated. Use both to prioritize agent work.
 
 ---
 
@@ -93,8 +97,9 @@ Match scope argument against these categories. If scope is `all`, run ALL catego
 ### `sync` — Sync Doc Index with Filesystem
 
 1. Run `uv run scripts/update_doc_index.py sync` to add untracked files / remove deleted entries.
-2. Run `uv run scripts/check_doc_freshness.py` to report freshness status.
-3. Output summary of changes made.
+2. Run `uv run scripts/check_doc_status_drift.py --fix` to sync index statuses from frontmatter.
+3. Run `uv run scripts/check_doc_freshness.py` to report freshness status.
+4. Output summary of changes made.
 
 ---
 
