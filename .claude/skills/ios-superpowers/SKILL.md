@@ -252,9 +252,13 @@ When changed files match `*View.swift`, `*Sheet.swift`, `*Card.swift`, `*Badge.s
 5. DEDUP phase2_agents (remove any already in Phase 1)
 
 6. IF changed_files match *View.swift, *Sheet.swift, *Card.swift, etc.:
-     phase2_agents += [axiom:liquid-glass-auditor]
-     phase2_agents += [general-purpose(palette-auditor), general-purpose(hig-auditor)]
+     // Delegate UI design review to the `polish` skill instead of inline auditors.
+     // Polish runs axiom:accessibility-auditor + axiom:liquid-glass-auditor,
+     // loads axiom-hig + axiom-haptics, reads brand bible, and does creative
+     // design synthesis + spec reconciliation. See polish/SKILL.md.
      polish_covered = true
+     // Note: polish agents (accessibility, liquid-glass) may overlap with
+     // Phase 1 agents — polish handles dedup internally.
 
 7. Launch Phase 2 agents in parallel (single message):
    FOR agent IN phase2_agents:
@@ -277,7 +281,7 @@ When changed files match `*View.swift`, `*Sheet.swift`, `*Card.swift`, `*Badge.s
     OFFER_ISSUE_FILING(findings)
 
 13. IF polish_covered:
-    Report: "Polish auditors ran as part of review (palette, HIG, liquid-glass)."
+    Skill(skill="polish")  // Full design review: brand, HIG, accessibility, glass, specs
 
 14. VERIFY()
 ```
@@ -645,14 +649,15 @@ Phase 2 (dynamic):
    - `axiom:swiftui-performance-analyzer` (CollectionFeature)
    - `axiom:swiftui-nav-auditor` (CollectionFeature)
 5. UI file detected (`ItemDetailView.swift`):
-   - `axiom:liquid-glass-auditor`
-   - palette auditor, HIG auditor
+   - Delegate to `polish` skill (runs accessibility + liquid-glass agents,
+     loads axiom-hig + axiom-haptics, reads brand bible, does design synthesis
+     + spec reconciliation)
 6. Launch all Phase 2 agents in parallel
 
 Phase 3 (synthesis):
 7. Load skills (top 3 by file count): `axiom-camera-capture`, `axiom-codable`, `axiom-swiftui-performance`
 8. Superpowers: `requesting-code-review` (with all audit results + skill context)
-9. Polish covered — skip separate `/polish`
+9. Polish ran as part of review — includes design recommendations + spec updates
 
 ### Example 4: Debug Build Failure
 

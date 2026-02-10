@@ -1,6 +1,6 @@
 ---
 name: polish
-description: Run 4 parallel UI auditors (palette, accessibility, glass, HIG) against changed view files, auto-fix safe violations, build-verify, and report.
+description: Design review — audits UI against brand bible and Apple HIG, recommends creative UX improvements, and reconciles view spec documents with implemented code.
 ---
 
 # Polish
@@ -10,11 +10,12 @@ description: Run 4 parallel UI auditors (palette, accessibility, glass, HIG) aga
 ## Quick Reference
 
 ```
-diff → audit (4 parallel) → fix → build → report
+context → Axiom audits → design synthesis → spec reconciliation → apply + build → report
 ```
 
 **Arguments:**
-- `/polish` — Full pipeline on changed view files
-- `/polish --with-specs` — Include view spec cross-referencing
+- `/polish` — Full design review pipeline on changed view files
 
 **Skill location:** `.claude/skills/polish/SKILL.md`
+
+**Replaces:** The individual auditor commands (`auditors/palette-auditor`, `auditors/hig-auditor`, `auditors/accessibility-auditor`, `auditors/liquid-glass-auditor`) are deprecated. Polish now maps directly to Axiom agents and skills with brand bible grounding.
