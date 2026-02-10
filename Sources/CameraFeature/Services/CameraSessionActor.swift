@@ -15,6 +15,10 @@ actor CameraSessionActor {
 
     private var videoInput: AVCaptureDeviceInput?
 
+    /// Rotation coordinator for device-orientation-aware capture and preview (iOS 17+).
+    /// Reads current device orientation to compute horizon-level rotation angles.
+    private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
+
     // MARK: - Initialization
 
     /// Creates a session actor with the specified configuration
@@ -52,6 +56,12 @@ actor CameraSessionActor {
 
             captureSession.addInput(input)
             videoInput = input
+
+            // Create rotation coordinator for orientation-aware capture
+            rotationCoordinator = AVCaptureDevice.RotationCoordinator(
+                device: camera,
+                previewLayer: nil
+            )
         }
 
         // Only add photo output if not already present
@@ -140,19 +150,30 @@ actor CameraSessionActor {
 
     // MARK: - Photo Capture Settings
 
-    /// Ensure the photo output connection rotation matches portrait orientation.
-    /// Without this, the captured photo uses the sensor's native landscape orientation,
-    /// causing a mismatch with the preview layer which auto-rotates to portrait.
+    /// Update photo output connection rotation to match current device orientation.
+    /// Uses RotationCoordinator (iOS 17+) to compute the horizon-level angle so
+    /// captured photos match the physical orientation of the device.
     func configurePhotoOutputRotation() {
         guard let connection = photoOutput.connection(with: .video) else { return }
-        // 90° = portrait orientation on iOS (sensor is natively landscape-right)
-        if connection.isVideoRotationAngleSupported(90) {
-            connection.videoRotationAngle = 90
+
+        let angle: CGFloat
+        if let coordinator = rotationCoordinator {
+            angle = coordinator.videoRotationAngleForHorizonLevelCapture
+        } else {
+            // Fallback: portrait (sensor is natively landscape-right)
+            angle = 90
+        }
+
+        if connection.isVideoRotationAngleSupported(angle) {
+            connection.videoRotationAngle = angle
         }
     }
 
     /// Create photo settings for capture
     func createPhotoSettings() -> AVCapturePhotoSettings {
+        // Refresh rotation angle to match current device orientation
+        configurePhotoOutputRotation()
+
         var settings = AVCapturePhotoSettings()
 
         // Use HEIF format when available for better compression
