@@ -88,7 +88,7 @@ struct SegmentOverlayView: View {
                 .frame(width: frame.width, height: frame.height)
                 .opacity(pulseOpacity)
                 .animation(
-                    isPulsing ? .easeInOut(duration: 2).repeatForever(autoreverses: true) : .default,
+                    isPulsing ? .brandPulse : .default,
                     value: isPulsing
                 )
         } else {
@@ -105,7 +105,7 @@ struct SegmentOverlayView: View {
                 .frame(width: frame.width, height: frame.height)
                 .opacity(pulseOpacity)
                 .animation(
-                    isPulsing ? .easeInOut(duration: 2).repeatForever(autoreverses: true) : .default,
+                    isPulsing ? .brandPulse : .default,
                     value: isPulsing
                 )
         }

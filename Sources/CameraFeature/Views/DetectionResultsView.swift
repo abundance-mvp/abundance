@@ -163,13 +163,7 @@ public struct DetectionResultsView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background {
-                    if #available(iOS 26.0, macOS 26.0, *) {
-                        Color.clear.glassEffect(.regular.interactive(), in: Capsule())
-                    } else {
-                        Capsule().fill(.black.opacity(0.5))
-                    }
-                }
+                .adaptiveGlass(in: Capsule(), interactive: true)
             }
             .padding(12)
             .accessibilityIdentifier("detection.retakeOverlayButton")
@@ -293,33 +287,19 @@ public struct DetectionResultsView: View {
 
             Spacer()
 
-            if #available(iOS 26.0, macOS 26.0, *) {
-                Button {
-                    onCatalogSelected(selectedObjectIds)
-                } label: {
-                    Label("Catalog", systemImage: "plus.circle.fill")
-                        .font(.body.weight(.semibold))
-                }
-                .buttonStyle(.borderedProminent)
-                .glassEffect(.regular.interactive())
-                .disabled(selectedCount == 0)
-                .opacity(selectedCount == 0 ? 0.5 : 1.0)
-                .accessibilityIdentifier("detection.catalogSelectedButton")
-                .accessibilityLabel("Catalog \(selectedCount) items")
-                .accessibilityHint(selectedCount == 0 ? "No items selected" : "Double tap to catalog selected items")
-            } else {
-                Button {
-                    onCatalogSelected(selectedObjectIds)
-                } label: {
-                    Label("Catalog", systemImage: "plus.circle.fill")
-                        .font(.body.weight(.semibold))
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(selectedCount == 0)
-                .opacity(selectedCount == 0 ? 0.5 : 1.0)
-                .accessibilityIdentifier("detection.catalogSelectedButton")
-                .accessibilityLabel("Catalog \(selectedCount) items")
+            Button {
+                onCatalogSelected(selectedObjectIds)
+            } label: {
+                Label("Catalog", systemImage: "plus.circle.fill")
+                    .font(.body.weight(.semibold))
             }
+            .buttonStyle(.borderedProminent)
+            .adaptiveGlass(interactive: true)
+            .disabled(selectedCount == 0)
+            .opacity(selectedCount == 0 ? 0.5 : 1.0)
+            .accessibilityIdentifier("detection.catalogSelectedButton")
+            .accessibilityLabel("Catalog \(selectedCount) items")
+            .accessibilityHint(selectedCount == 0 ? "No items selected" : "Double tap to catalog selected items")
 
             Button(action: onDone) {
                 Text("Done")
