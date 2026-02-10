@@ -18,7 +18,6 @@ public struct ProfileView: View {
     // MARK: - State
 
     @State private var showingSignOutConfirmation = false
-    @State private var showingEditProfile = false
 
     // MARK: - Initializer
 
@@ -40,8 +39,7 @@ public struct ProfileView: View {
                     UserInfoCard(
                         displayName: viewModel.displayName,
                         email: viewModel.email,
-                        itemCount: viewModel.itemCount,
-                        onEdit: { showingEditProfile = true }
+                        itemCount: viewModel.itemCount
                     )
 
                     // Settings Section
@@ -71,10 +69,6 @@ public struct ProfileView: View {
             } message: {
                 Text("Are you sure you want to sign out?")
             }
-            .sheet(isPresented: $showingEditProfile) {
-                EditProfileSheet(viewModel: viewModel)
-                    .presentationDetents([.medium, .large])
-            }
             .overlay {
                 if viewModel.isLoading {
                     loadingOverlay
@@ -90,49 +84,35 @@ public struct ProfileView: View {
             sectionHeader("Settings")
 
             VStack(spacing: 0) {
-                NavigationLink {
-                    NotificationsSettingsView()
-                } label: {
-                    settingsRowContent(icon: "bell", title: "Notifications")
-                }
+                SettingsRow(
+                    icon: "bell",
+                    title: "Notifications",
+                    action: { /* Navigate to notifications settings */ }
+                )
                 .accessibilityIdentifier("profile.notifications")
 
-                Divider().padding(.leading, 48)
+                Divider()
+                    .padding(.leading, 48)
 
-                NavigationLink {
-                    PrivacySettingsView()
-                } label: {
-                    settingsRowContent(icon: "lock.shield", title: "Privacy")
-                }
+                SettingsRow(
+                    icon: "lock.shield",
+                    title: "Privacy",
+                    action: { /* Navigate to privacy settings */ }
+                )
                 .accessibilityIdentifier("profile.privacy")
 
-                Divider().padding(.leading, 48)
+                Divider()
+                    .padding(.leading, 48)
 
-                NavigationLink {
-                    HelpView()
-                } label: {
-                    settingsRowContent(icon: "questionmark.circle", title: "Help")
-                }
+                SettingsRow(
+                    icon: "questionmark.circle",
+                    title: "Help",
+                    action: { /* Navigate to help */ }
+                )
                 .accessibilityIdentifier("profile.help")
             }
             .abundanceCardStyle()
         }
-    }
-
-    private func settingsRowContent(icon: String, title: String) -> some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.body)
-                .foregroundStyle(Color.salmon)
-                .frame(width: 24)
-            Text(title)
-                .font(.body)
-                .foregroundStyle(Color.textPrimary)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .contentShape(Rectangle())
     }
 
     // MARK: - Export Section
@@ -141,47 +121,34 @@ public struct ProfileView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Export Data")
 
-            if let doc = viewModel.csvDocument {
-                ShareLink(
-                    item: doc,
-                    preview: SharePreview("Abundance Collection", image: Image(systemName: "tablecells"))
-                ) {
-                    exportButtonLabel
+            Button {
+                Task {
+                    await viewModel.exportData(format: .csv)
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("profile.shareCSV")
-                .accessibilityLabel("Share CSV export")
-            } else {
-                Button {
-                    Task { await viewModel.exportData(format: .csv) }
-                } label: {
-                    exportButtonLabel
+            } label: {
+                HStack {
+                    Image(systemName: "tablecells")
+                        .font(.title3)
+                        .foregroundStyle(Color.salmon)
+                    Text("Export as CSV")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Color.textPrimary)
+                    Spacer()
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("profile.exportCSV")
-                .accessibilityLabel("Export as CSV")
-                .accessibilityHint("Double tap to generate a CSV file of your collection")
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .abundanceCardStyle()
             }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
+            .accessibilityIdentifier("profile.exportCSV")
+            .accessibilityLabel("Export as CSV")
+            .accessibilityHint("Double tap to export your inventory data as a CSV file")
         }
-    }
-
-    private var exportButtonLabel: some View {
-        HStack {
-            Image(systemName: "tablecells")
-                .font(.title3)
-                .foregroundStyle(Color.salmon)
-            Text(viewModel.csvDocument != nil ? "Share CSV" : "Export as CSV")
-                .font(.body.weight(.medium))
-                .foregroundStyle(Color.textPrimary)
-            Spacer()
-            Image(systemName: "square.and.arrow.up")
-                .font(.body)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity, minHeight: 44)
-        .abundanceCardStyle()
     }
 
     // MARK: - Sign Out Button
@@ -226,6 +193,42 @@ public struct ProfileView: View {
             .font(.headline)
             .foregroundStyle(Color.textPrimary)
             .padding(.leading, 4)
+    }
+}
+
+// MARK: - Settings Row
+
+private struct SettingsRow: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: icon)
+                    .font(.body)
+                    .foregroundStyle(Color.salmon)
+                    .frame(width: 24)
+
+                Text(title)
+                    .font(.body)
+                    .foregroundStyle(Color.textPrimary)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityHint("Double tap to open \(title.lowercased()) settings")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
