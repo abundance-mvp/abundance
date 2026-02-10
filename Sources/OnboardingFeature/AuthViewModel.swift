@@ -11,10 +11,20 @@ public final class AuthViewModel {
     public var error: Error?
 
     private let keychain: KeychainManager
+    @ObservationIgnored
+    private var authStateHandle: AuthStateDidChangeListenerHandle?
 
     public init(keychain: KeychainManager = KeychainManager()) {
         self.keychain = keychain
+        // Synchronous initial check avoids a flash of SignInView
         checkAuthState()
+        // Reactively track Firebase auth state — ensures sign-out from any
+        // code path (e.g. ProfileViewModel) propagates to the root view gate
+        authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            Task { @MainActor in
+                self?.isAuthenticated = user != nil
+            }
+        }
     }
 
     /// Check if user is already authenticated
@@ -70,8 +80,12 @@ public final class AuthViewModel {
         }
     }
 
-    /// Handle error (for testing)
+    /// Handle error from sign-in flow
     func handleError(_ error: Error) {
+        // User cancellation of Apple Sign In is not a real error
+        if let asError = error as? ASAuthorizationError, asError.code == .canceled {
+            return
+        }
         self.error = error
     }
 }

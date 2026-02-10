@@ -121,7 +121,7 @@ public struct SignInView: View {
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
 
-            Text("Your catalog syncs across devices")
+            Text("Your collection syncs across devices")
                 .font(.system(.body, design: .rounded))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -174,7 +174,7 @@ public struct SignInView: View {
                 Image(systemName: errorIcon(for: error))
                     .foregroundStyle(Color.errorColor)
 
-                Text(error.localizedDescription)
+                Text(userFacingMessage(for: error))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.errorColor)
                     .lineLimit(2)
@@ -210,6 +210,23 @@ public struct SignInView: View {
             return "wifi.exclamationmark"
         }
         return "exclamationmark.triangle.fill"
+    }
+
+    private func userFacingMessage(for error: Error) -> String {
+        if let asError = error as? ASAuthorizationError {
+            switch asError.code {
+            case .notHandled:
+                return "Sign in was interrupted. Please try again."
+            case .invalidResponse:
+                return "Apple returned an invalid response. Please try again."
+            default:
+                return "Sign in failed. Please try again."
+            }
+        }
+        if isNetworkError(error) {
+            return "Network error. Check your connection and try again."
+        }
+        return error.localizedDescription
     }
 
     private func isNetworkError(_ error: Error) -> Bool {

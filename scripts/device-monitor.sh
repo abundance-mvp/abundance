@@ -14,7 +14,11 @@ set -euo pipefail
 
 DEVICE="${1:-w-16e}"
 BUNDLE_ID="com.abundance.mvp"
-SCREENSHOTS_DIR="/Users/w/Library/Mobile Documents/com~apple~CloudDocs/02 - screenshots"
+# Resolve symlink so we watch the actual iCloud folder
+SCREENSHOTS_DIR="$(cd "$(dirname "$0")/.." && pwd)/screenshots"
+if [[ -L "$SCREENSHOTS_DIR" ]]; then
+    SCREENSHOTS_DIR="$(readlink "$SCREENSHOTS_DIR")"
+fi
 ISSUES_DIR="/Users/w/code/abundance-mvp/.debug/issues"
 LOG_CACHE_DIR="/Users/w/code/abundance-mvp/.debug/device-logs"
 POLL_INTERVAL=5  # seconds between log pulls
@@ -76,20 +80,9 @@ pull_device_logs() {
     rm -rf "$tmp_dir"
 }
 
-# Background log puller
-(
-    while true; do
-        pull_device_logs
-        sleep "$POLL_INTERVAL"
-    done
-) &
-LOG_PULLER_PID=$!
-
 cleanup() {
     echo ""
     echo -e "${YELLOW}Stopping monitor...${NC}"
-    kill "$LOG_PULLER_PID" 2>/dev/null || true
-    wait "$LOG_PULLER_PID" 2>/dev/null || true
     echo -e "${GREEN}Done.${NC}"
     exit 0
 }
@@ -103,7 +96,8 @@ PROCESSED_MARKERS_FILE="$LOG_CACHE_DIR/.processed-markers"
 touch "$PROCESSED_MARKERS_FILE"
 
 # Count of screenshot markers seen so far (for dedup)
-LAST_MARKER_COUNT=0
+# Initialize after first log pull so we skip stale markers from previous sessions
+LAST_MARKER_COUNT=-1
 
 process_screenshot_marker() {
     local marker_timestamp="$1"  # ISO8601 from device
@@ -148,13 +142,13 @@ except: pass
     while [[ $attempts -lt 12 ]]; do
         # Look for files modified within 60s of the marker
         local candidate
-        candidate=$(find "$SCREENSHOTS_DIR" -maxdepth 1 \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.heic" -o -name "*.PNG" \) -newer "$PROCESSED_MARKERS_FILE" 2>/dev/null | head -1)
+        candidate=$(find "$SCREENSHOTS_DIR" -maxdepth 1 \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.heic" -o -name "*.PNG" \) -newer "$PROCESSED_MARKERS_FILE" -print -quit 2>/dev/null || true)
         if [[ -n "$candidate" ]]; then
             screenshot_path="$candidate"
             break
         fi
         sleep 5
-        ((attempts++))
+        attempts=$((attempts + 1))
     done
 
     local filename="no-screenshot-synced"
@@ -219,16 +213,21 @@ while true; do
 
     if [[ -f "$CURRENT_LOG_FILE" ]]; then
         # Count SCREENSHOT_MARKER lines
-        local_marker_count=$(grep -c "SCREENSHOT_MARKER" "$CURRENT_LOG_FILE" 2>/dev/null || echo "0")
+        marker_count=$(grep -c "SCREENSHOT_MARKER" "$CURRENT_LOG_FILE" 2>/dev/null || true)
+        marker_count=${marker_count:-0}
 
-        if [[ "$local_marker_count" -gt "$LAST_MARKER_COUNT" ]]; then
+        # On first iteration, seed the count so we don't reprocess stale markers
+        if [[ "$LAST_MARKER_COUNT" -eq -1 ]]; then
+            LAST_MARKER_COUNT=$marker_count
+            echo -e "${CYAN}Skipping $marker_count existing marker(s) from previous sessions${NC}"
+        fi
+
+        if [[ "$marker_count" -gt "$LAST_MARKER_COUNT" ]]; then
             # New markers found — process each new one
-            local new_markers
-            new_markers=$(grep "SCREENSHOT_MARKER" "$CURRENT_LOG_FILE" | tail -n $((local_marker_count - LAST_MARKER_COUNT)))
+            new_markers=$(grep "SCREENSHOT_MARKER" "$CURRENT_LOG_FILE" | tail -n $((marker_count - LAST_MARKER_COUNT)))
 
             while IFS= read -r marker_line; do
                 # Parse timestamp and screen from the JSON line
-                local parsed
                 parsed=$(echo "$marker_line" | python3 -c "
 import sys, json
 try:
@@ -239,13 +238,13 @@ try:
 except: print('unknown|unknown')
 " 2>/dev/null)
 
-                local ts="${parsed%%|*}"
-                local screen="${parsed##*|}"
+                ts="${parsed%%|*}"
+                screen="${parsed##*|}"
 
                 process_screenshot_marker "$ts" "$screen"
             done <<< "$new_markers"
 
-            LAST_MARKER_COUNT=$local_marker_count
+            LAST_MARKER_COUNT=$marker_count
         fi
     fi
 
