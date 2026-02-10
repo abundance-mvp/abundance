@@ -2,6 +2,7 @@ import SwiftUI
 @preconcurrency import FirebaseCore
 import FirebaseAuth
 import OnboardingFeature
+import Core
 
 @main
 struct AbundanceApp: App {
@@ -11,6 +12,10 @@ struct AbundanceApp: App {
         // Configure Firebase BEFORE creating AuthViewModel (which calls Auth.auth())
         Self.configureFirebase()
         _authViewModel = State(initialValue: AuthViewModel())
+
+        #if DEBUG && canImport(UIKit)
+        ScreenshotMonitor.shared.startMonitoring()
+        #endif
     }
 
     /// Configure Firebase with SPM resource bundle. Must be called before any Firebase API usage.

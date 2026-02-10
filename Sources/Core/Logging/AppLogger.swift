@@ -76,6 +76,9 @@ public enum LogEvent: @unchecked Sendable {
     // MARK: - Image Loading Events
     case imageLoadFailed(url: String, itemId: String?, context: String)
 
+    // MARK: - Device Testing Events
+    case screenshotTaken(screen: String)
+
     // MARK: - Private Helpers
 
     /// Sanitizes user IDs for logging to prevent PII exposure.
@@ -112,6 +115,8 @@ public enum LogEvent: @unchecked Sendable {
             return "silent-failure"
         case .imageLoadFailed:
             return "image"
+        case .screenshotTaken:
+            return "device-testing"
         }
     }
 
@@ -126,6 +131,8 @@ public enum LogEvent: @unchecked Sendable {
             return sev == .critical ? .fault : .error
         case .silentFailure:
             return .error
+        case .screenshotTaken:
+            return .info
         default:
             return .info
         }
@@ -187,6 +194,8 @@ public enum LogEvent: @unchecked Sendable {
         case .imageLoadFailed(let url, let itemId, let context):
             let truncatedUrl = url.count > 60 ? "\(url.prefix(60))..." : url
             return "Image load failed: \(truncatedUrl) (item: \(itemId ?? "unknown"), context: \(context))"
+        case .screenshotTaken(let screen):
+            return "SCREENSHOT_MARKER: \(screen)"
         }
     }
 
@@ -229,6 +238,9 @@ public enum LogEvent: @unchecked Sendable {
             meta["url"] = url
             meta["itemId"] = itemId ?? "unknown"
             meta["context"] = context
+        case .screenshotTaken(let screen):
+            meta["screen"] = screen
+            meta["marker"] = "SCREENSHOT"
         default:
             break
         }
