@@ -12,6 +12,7 @@ struct SegmentSelectionTray: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @ScaledMetric(relativeTo: .body) private var thumbnailSize: CGFloat = 56
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -22,7 +23,7 @@ struct SegmentSelectionTray: View {
             }
             .padding(.horizontal, 16)
         }
-        .frame(height: selectedSegments.isEmpty ? 0 : 72)
+        .frame(height: selectedSegments.isEmpty ? 0 : thumbnailSize + 16)
         .animation(reduceMotion ? .brandReducedMotion : .brandDefault, value: selectedSegments.count)
         .accessibilityLabel("\(selectedSegments.count) items selected")
     }
@@ -32,7 +33,7 @@ struct SegmentSelectionTray: View {
         ZStack(alignment: .topTrailing) {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(thumbnailFill)
-                .frame(width: 56, height: 56)
+                .frame(width: thumbnailSize, height: thumbnailSize)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(Color.salmon, lineWidth: 1.5)

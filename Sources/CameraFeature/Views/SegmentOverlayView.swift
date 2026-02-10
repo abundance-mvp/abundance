@@ -43,7 +43,7 @@ struct SegmentOverlayView: View {
                     .foregroundStyle(.black)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Capsule().fill(Color.yellow.opacity(0.9)))
+                    .background(Capsule().fill(Color.cream.opacity(0.9)))
                     .padding(4)
             }
         }
@@ -51,7 +51,7 @@ struct SegmentOverlayView: View {
         .onTapGesture {
             onTap()
         }
-        .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+        .transition(.opacity.animation(.brandReducedMotion))
         .accessibilityLabel(isDuplicate ? "Duplicate object" : isSelected ? "Selected object" : "Detected object")
         .accessibilityHint(isDuplicate ? "Already scanned in this sweep" : isSelected ? "Double tap to deselect" : "Double tap to select for cataloging")
         .accessibilityAddTraits(.isButton)
@@ -120,7 +120,7 @@ struct SegmentOverlayView: View {
     /// Stroke color based on selection/duplicate state
     private var strokeColor: Color {
         if isSelected { return Color.salmon }
-        if isDuplicate { return Color.yellow.opacity(0.6) }
+        if isDuplicate { return Color.cream.opacity(0.6) }
         return Color.white.opacity(0.6)
     }
 
@@ -132,7 +132,7 @@ struct SegmentOverlayView: View {
             return Color.white.opacity(0.4)
         } else {
             if isSelected { return Color.salmon.opacity(0.3) }
-            if isDuplicate { return Color.yellow.opacity(0.2) }
+            if isDuplicate { return Color.cream.opacity(0.2) }
             return Color.white.opacity(0.2)
         }
     }

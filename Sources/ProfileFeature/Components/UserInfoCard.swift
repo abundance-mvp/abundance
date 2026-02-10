@@ -15,13 +15,17 @@ public struct UserInfoCard: View {
     let displayName: String
     let email: String
     let itemCount: Int
+    var onEdit: (() -> Void)?
+
+    @ScaledMetric(relativeTo: .title) private var avatarSize: CGFloat = 80
 
     // MARK: - Initializer
 
-    public init(displayName: String, email: String, itemCount: Int) {
+    public init(displayName: String, email: String, itemCount: Int, onEdit: (() -> Void)? = nil) {
         self.displayName = displayName
         self.email = email
         self.itemCount = itemCount
+        self.onEdit = onEdit
     }
 
     // MARK: - Body
@@ -43,6 +47,18 @@ public struct UserInfoCard: View {
                     .foregroundStyle(.secondary)
             }
 
+            // Edit Button
+            if onEdit != nil {
+                Button {
+                    onEdit?()
+                } label: {
+                    Label("Edit Profile", systemImage: "pencil")
+                        .font(.callout)
+                        .foregroundStyle(Color.salmon)
+                }
+                .accessibilityIdentifier("profile.editButton")
+            }
+
             // Item Count Badge
             itemCountBadge
         }
@@ -60,7 +76,7 @@ public struct UserInfoCard: View {
         ZStack {
             Circle()
                 .fill(Color.accentPrimary.opacity(0.2))
-                .frame(width: 80, height: 80)
+                .frame(width: avatarSize, height: avatarSize)
 
             Text(avatarInitials)
                 .font(.title)
