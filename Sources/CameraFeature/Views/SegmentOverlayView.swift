@@ -50,7 +50,7 @@ struct SegmentOverlayView: View {
         .frame(width: frame.width, height: frame.height)
         .contentShape(Rectangle())
         .position(x: frame.midX, y: frame.midY)
-        .animation(.linear(duration: 0.15), value: segment.boundingBox)
+        .animation(reduceMotion ? .brandReducedMotion : .linear(duration: 0.15), value: segment.boundingBox)
         .onTapGesture {
             onTap()
         }

@@ -145,8 +145,12 @@ public final class SweepCaptureViewModel {
     }
 
     /// Match new frame segments to persistent store via IoU, add new, evict stale.
-    private func mergeSegments(_ newSegments: [SegmentedObject]) {
+    /// Returns mapping from new segment UUID → persistent segment UUID
+    @discardableResult
+    private func mergeSegments(_ newSegments: [SegmentedObject]) -> [UUID: UUID] {
         frameCounter += 1
+        var matched = Set<UUID>()
+        var ephemeralToPersistent: [UUID: UUID] = [:]
 
         for newSeg in newSegments {
             // Find best IoU match among existing persistent segments
@@ -154,6 +158,7 @@ public final class SweepCaptureViewModel {
             var bestIoU: CGFloat = 0.3 // minimum threshold
 
             for (id, persistent) in persistentSegments {
+                guard !matched.contains(id) else { continue }
                 let overlap = Self.iou(newSeg.boundingBox, persistent.segment.boundingBox)
                 if overlap > bestIoU {
                     bestIoU = overlap
@@ -176,9 +181,12 @@ public final class SweepCaptureViewModel {
                 )
                 persistentSegments[matchedId]!.segment = updated
                 persistentSegments[matchedId]!.lastSeenFrame = frameCounter
+                matched.insert(matchedId)
+                ephemeralToPersistent[newSeg.id] = stableId
             } else {
                 // New segment — assign fresh stable identity
                 let id = newSeg.id
+                ephemeralToPersistent[newSeg.id] = id
                 persistentSegments[id] = PersistentSegment(
                     segment: newSeg,
                     lastSeenFrame: frameCounter,
@@ -206,6 +214,7 @@ public final class SweepCaptureViewModel {
         // Update published segments array
         self.segments = persistentSegments.values.map(\.segment)
         canCatalog = !selectedSegmentIds.isEmpty
+        return ephemeralToPersistent
     }
 
     // MARK: - Initialization
@@ -213,6 +222,10 @@ public final class SweepCaptureViewModel {
     public init(haptics: HapticFeedbackProviding? = nil) {
         self.haptics = haptics
     }
+
+    // Note: No deinit needed — AnyCancellable subscriptions auto-cancel on dealloc.
+    // scanningTask is cancelled via stopScanning() which is called by reset() and
+    // the owning view's onDisappear. Cannot access @MainActor properties from nonisolated deinit.
 
     // MARK: - Selection Management
 
@@ -335,7 +348,8 @@ public final class SweepCaptureViewModel {
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] pixelBuffer in
                     guard let self else { return }
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
                         await self.processFrame(
                             pixelBuffer,
                             edgeTAMService: edgeTAMService,
@@ -483,8 +497,8 @@ public final class SweepCaptureViewModel {
 
             // Accumulate segments across frames with stable IDs
             self.measuredFPS = fps
-            self.duplicateSegmentIds = duplicates
-            mergeSegments(newSegments)
+            let idMapping = mergeSegments(newSegments)
+            self.duplicateSegmentIds = Set(duplicates.compactMap { idMapping[$0] })
             self.sweepState = .scanning(segmentCount: self.segments.count)
 
             // Throttled haptic on new segments
@@ -497,12 +511,15 @@ public final class SweepCaptureViewModel {
                 }
             }
 
-            logger.info("Frame processed: \(self.segments.count) segments (\(duplicates.count) dupes) at \(String(format: "%.1f", fps)) FPS")
-            AppLogger.log(.sweepFrameProcessed(
-                segmentCount: self.segments.count,
-                duplicateCount: duplicates.count,
-                fps: fps
-            ))
+            logger.debug("Frame processed: \(self.segments.count) segments (\(duplicates.count) dupes) at \(String(format: "%.1f", fps)) FPS")
+            // Log every 10th frame to reduce disk I/O (4-10 FPS → 0.4-1 log/s)
+            if frameCounter % 10 == 0 {
+                AppLogger.log(.sweepFrameProcessed(
+                    segmentCount: self.segments.count,
+                    duplicateCount: duplicates.count,
+                    fps: fps
+                ))
+            }
 
         } catch {
             logger.error("Frame processing failed: \(error.localizedDescription)")

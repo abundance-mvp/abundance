@@ -6,7 +6,7 @@ import EdgeTAMFeature
 ///
 /// Renders on top of the camera preview when sweep mode is active.
 /// Shows detected segments as tappable overlays, a selection tray at bottom,
-/// and a "Catalog" action button when items are selected.
+/// and an "Add" action button when items are selected.
 public struct SweepCaptureView: View {
     @Bindable var viewModel: SweepCaptureViewModel
     let onCatalog: () -> Void
@@ -174,7 +174,7 @@ public struct SweepCaptureView: View {
                     Text("Analyzing...")
                 }
             case .complete(let count):
-                Label("\(count) items cataloged", systemImage: "checkmark.circle")
+                Label("\(count) items added", systemImage: "checkmark.circle")
             default:
                 EmptyView()
             }
@@ -211,7 +211,7 @@ public struct SweepCaptureView: View {
         case .processing:
             return "Analyzing items"
         case .complete(let count):
-            return "\(count) items cataloged"
+            return "\(count) items added"
         default:
             return "Sweep mode"
         }
@@ -240,7 +240,7 @@ public struct SweepCaptureView: View {
             .tint(Color.salmon)
             .disabled(!viewModel.canCatalog)
             .accessibilityLabel("Add \(viewModel.selectedSegments.count) items to collection")
-            .accessibilityHint(viewModel.canCatalog ? "Double tap to add selected items" : "Select items first")
+            .accessibilityHint("Double tap to add selected items to your collection")
         }
         .padding(.horizontal, horizontalPadding)
     }
