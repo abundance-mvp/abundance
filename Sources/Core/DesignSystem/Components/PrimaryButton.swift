@@ -9,6 +9,7 @@ public struct PrimaryButton: View {
 
     // MARK: - State
     @State private var isPressed: Bool = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Initializer
     public init(title: String, action: @escaping () -> Void, isEnabled: Bool = true, isLoading: Bool = false) {
@@ -24,35 +25,25 @@ public struct PrimaryButton: View {
             ZStack {
                 Text(title)
                     .font(.system(.body, design: .rounded, weight: .semibold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.deepPlum)
                     .opacity(isLoading ? 0 : 1)
 
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(.circular)
-                        .tint(.primary)
+                        .tint(Color.deepPlum)
                 }
             }
             .padding(.horizontal, 32)
             .padding(.vertical, 16)
             .frame(minHeight: 44) // Accessibility tap target
-            .adaptiveGlass(in: Capsule())
-            .shadow(
-                color: Color.brandBrightBlue.opacity(isEnabled ? 0.5 : 0.2),
-                radius: isPressed ? 8 : 12,
-                x: 0,
-                y: 4
-            )
-            .overlay {
-                Capsule()
-                    .stroke(Color.brandBrightBlue.opacity(isEnabled ? 1.0 : 0.3), lineWidth: 2)
-            }
-            .scaleEffect(isPressed ? 0.96 : 1.0)
+            .background(Color.salmon.opacity(isEnabled ? 1.0 : 0.4), in: Capsule())
+            .scaleEffect(isPressed ? 0.97 : 1.0)
             .opacity(isEnabled ? 1.0 : 0.5)
         }
         .disabled(!isEnabled || isLoading)
         .sensoryFeedback(.impact(weight: .medium), trigger: isPressed)
-        .animation(.brandSnappy, value: isPressed)
+        .animation(reduceMotion ? .brandReducedMotion : .brandPress, value: isPressed)
         .accessibilityLabel(title)
         .accessibilityAddTraits(.isButton)
         .accessibilityRemoveTraits(isEnabled ? [] : .isButton)
@@ -65,7 +56,7 @@ public struct PrimaryButton: View {
         action()
 
         // Reset pressed state after animation
-        Task {
+        Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.2))
             isPressed = false
         }

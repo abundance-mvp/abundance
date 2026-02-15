@@ -1,4 +1,5 @@
 import SwiftUI
+import Core
 @preconcurrency import Vision
 import CoreImage
 import os.log
@@ -23,18 +24,14 @@ struct OrganicBorderShape: Shape {
     func path(in rect: CGRect) -> Path {
         // If no mask, return rounded rectangle as fallback
         guard let mask = mask else {
-            Self.logger.debug("🔲 OrganicBorderShape: No mask provided, using fallback rectangle")
             return Path(roundedRect: rect, cornerRadius: fallbackCornerRadius)
         }
 
-        // Extract contour from mask
+        // Extract contour from mask; fall back to rounded rectangle on failure
         guard let contourPath = extractContour(from: mask, in: rect) else {
-            Self.logger.warning("⚠️ OrganicBorderShape: Contour extraction failed, using fallback rectangle")
             return Path(roundedRect: rect, cornerRadius: fallbackCornerRadius)
         }
 
-        Self.logger.info("🌀 OrganicBorderShape: Successfully extracted organic contour!")
-        print("🌀 [ABUNDANCE] OrganicBorderShape: Successfully extracted organic contour!")
         return contourPath
     }
 
@@ -73,16 +70,16 @@ struct OrganicBorderShape: Shape {
         do {
             try handler.perform([request])
         } catch {
-            Self.logger.error("❌ Contour detection failed: \(error.localizedDescription)")
+            Self.logger.error("Contour detection failed: \(error.localizedDescription)")
             return nil
         }
 
         guard let contoursObservation = request.results?.first else {
-            Self.logger.warning("⚠️ No contours found in mask")
+            Self.logger.warning("No contours found in mask")
             return nil
         }
 
-        Self.logger.debug("📐 Found \(contoursObservation.topLevelContourCount) top-level contours")
+        Self.logger.debug("Found \(contoursObservation.topLevelContourCount) top-level contours")
 
         // Build path from detected contours
         return buildPath(from: contoursObservation, in: rect)
@@ -121,19 +118,19 @@ struct OrganicBorderShape: Shape {
         }
 
         guard let contour = largestContour, contour.pointCount >= 3 else {
-            Self.logger.warning("⚠️ No valid contour found (need >= 3 points)")
+            Self.logger.warning("No valid contour found (need >= 3 points)")
             return nil
         }
 
-        Self.logger.debug("📏 Largest contour has \(contour.pointCount) points")
+        Self.logger.debug("Largest contour has \(contour.pointCount) points")
 
         // Simplify the contour to reduce jaggedness while preserving shape
         let simplifiedContour: VNContour
         if let simplified = try? contour.polygonApproximation(epsilon: simplificationEpsilon) {
-            Self.logger.debug("✂️ Simplified contour: \(contour.pointCount) → \(simplified.pointCount) points")
+            Self.logger.debug("Simplified contour: \(contour.pointCount) → \(simplified.pointCount) points")
             simplifiedContour = simplified
         } else {
-            Self.logger.debug("⚠️ Simplification failed, using original contour")
+            Self.logger.debug("Simplification failed, using original contour")
             simplifiedContour = contour
         }
 
@@ -211,7 +208,7 @@ struct OrganicBorderShape: Shape {
         Color.black.ignoresSafeArea()
 
         OrganicBorderShape(mask: nil)
-            .stroke(Color.mint, lineWidth: 3)
+            .stroke(Color.salmon, lineWidth: 3)
             .frame(width: 200, height: 250)
     }
 }

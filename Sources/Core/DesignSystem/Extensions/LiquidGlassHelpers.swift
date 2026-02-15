@@ -143,13 +143,15 @@ public struct AdaptiveGlassModifier: ViewModifier {
     let cornerRadius: CGFloat
     let shape: AnyShape?
     let tint: Color?
+    let interactive: Bool
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    public init(cornerRadius: CGFloat = 16, shape: AnyShape? = nil, tint: Color? = nil) {
+    public init(cornerRadius: CGFloat = 16, shape: AnyShape? = nil, tint: Color? = nil, interactive: Bool = false) {
         self.cornerRadius = cornerRadius
         self.shape = shape
         self.tint = tint
+        self.interactive = interactive
     }
 
     public func body(content: Content) -> some View {
@@ -173,15 +175,23 @@ public struct AdaptiveGlassModifier: ViewModifier {
         if #available(iOS 26.0, macOS 26.0, *) {
             if let shape = shape {
                 if let tint = tint {
-                    content.glassEffect(.regular.tint(tint), in: shape)
+                    if interactive {
+                        content.glassEffect(.regular.tint(tint).interactive(), in: shape)
+                    } else {
+                        content.glassEffect(.regular.tint(tint), in: shape)
+                    }
                 } else {
-                    content.glassEffect(in: shape)
+                    if interactive {
+                        content.glassEffect(.regular.interactive(), in: shape)
+                    } else {
+                        content.glassEffect(in: shape)
+                    }
                 }
             } else {
                 if let tint = tint {
-                    content.brandGlass(cornerRadius: cornerRadius, tint: tint)
+                    content.brandGlass(cornerRadius: cornerRadius, tint: tint, interactive: interactive)
                 } else {
-                    content.brandGlass(cornerRadius: cornerRadius)
+                    content.brandGlass(cornerRadius: cornerRadius, interactive: interactive)
                 }
             }
         } else {
@@ -199,26 +209,29 @@ public extension View {
     /// - Parameters:
     ///   - cornerRadius: Corner radius for the glass shape (default: 16)
     ///   - tint: Optional color tint for iOS 26+ glass effect
+    ///   - interactive: Whether the glass reacts to touch (iOS 26+ only, default: false)
     /// - Returns: View with glass effect (iOS 26+) or material fallback (iOS 17-25)
-    func adaptiveGlass(cornerRadius: CGFloat = 16, tint: Color? = nil) -> some View {
-        modifier(AdaptiveGlassModifier(cornerRadius: cornerRadius, tint: tint))
+    func adaptiveGlass(cornerRadius: CGFloat = 16, tint: Color? = nil, interactive: Bool = false) -> some View {
+        modifier(AdaptiveGlassModifier(cornerRadius: cornerRadius, tint: tint, interactive: interactive))
     }
 
     /// Apply adaptive glass background with custom shape
     /// - Parameters:
     ///   - shape: Custom shape for the glass effect
     ///   - tint: Optional color tint for iOS 26+ glass effect
+    ///   - interactive: Whether the glass reacts to touch (iOS 26+ only, default: false)
     /// - Returns: View with glass effect in custom shape
-    func adaptiveGlass<S: Shape>(in shape: S, tint: Color? = nil) -> some View {
-        modifier(AdaptiveGlassModifier(shape: AnyShape(shape), tint: tint))
+    func adaptiveGlass<S: Shape>(in shape: S, tint: Color? = nil, interactive: Bool = false) -> some View {
+        modifier(AdaptiveGlassModifier(shape: AnyShape(shape), tint: tint, interactive: interactive))
     }
 
     /// Apply adaptive glass using design tokens
     /// - Parameters:
     ///   - radius: Corner radius token (default: .medium)
     ///   - tint: Optional color tint for iOS 26+ glass effect
+    ///   - interactive: Whether the glass reacts to touch (iOS 26+ only, default: false)
     /// - Returns: View with glass effect using design system tokens
-    func adaptiveGlass(radius: GlassCornerRadius, tint: Color? = nil) -> some View {
-        modifier(AdaptiveGlassModifier(cornerRadius: radius.rawValue, tint: tint))
+    func adaptiveGlass(radius: GlassCornerRadius, tint: Color? = nil, interactive: Bool = false) -> some View {
+        modifier(AdaptiveGlassModifier(cornerRadius: radius.rawValue, tint: tint, interactive: interactive))
     }
 }

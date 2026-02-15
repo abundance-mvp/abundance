@@ -53,7 +53,11 @@ public final class CatalogService: CatalogServiceProtocol {
             throw CatalogError.missingImageUrl
         }
 
-        let data: [String: Any] = [
+        // Extract GCS storage path from Firebase download URL
+        // This enables refreshImageUrl() to regenerate expired URLs
+        let imagePath = Self.extractStoragePath(from: imageUrl)
+
+        var data: [String: Any] = [
             "id": itemId,
             "userId": userId,
             "sessionId": sessionId,
@@ -70,9 +74,29 @@ public final class CatalogService: CatalogServiceProtocol {
             "updatedAt": FieldValue.serverTimestamp()
         ]
 
+        if let imagePath {
+            data["imagePath"] = imagePath
+        }
+
         try await itemRef.setData(data)
         logger.info("Created item \(itemId) from session \(sessionId) detection \(object.groupId)")
         return itemId
+    }
+
+    /// Extract GCS storage path from a Firebase Storage download URL
+    ///
+    /// Firebase download URLs have the format:
+    /// `https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{encodedPath}?alt=media&token={token}`
+    ///
+    /// This extracts and decodes `{encodedPath}` to get the GCS path like:
+    /// `users/{userId}/sessions/{sessionId}/crops/{groupId}_crop_0.jpg`
+    static func extractStoragePath(from url: String) -> String? {
+        guard let urlComponents = URLComponents(string: url),
+              urlComponents.host == "firebasestorage.googleapis.com",
+              let path = urlComponents.path.split(separator: "/o/").last else {
+            return nil
+        }
+        return String(path).removingPercentEncoding
     }
 
     /// Observe item cataloging status

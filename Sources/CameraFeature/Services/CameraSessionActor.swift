@@ -15,6 +15,10 @@ actor CameraSessionActor {
 
     private var videoInput: AVCaptureDeviceInput?
 
+    /// Rotation coordinator for device-orientation-aware capture and preview (iOS 17+).
+    /// Reads current device orientation to compute horizon-level rotation angles.
+    private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
+
     // MARK: - Initialization
 
     /// Creates a session actor with the specified configuration
@@ -25,7 +29,8 @@ actor CameraSessionActor {
 
     // MARK: - Session Configuration
 
-    /// Configure the capture session with proper isolation
+    /// Configure the capture session with proper isolation.
+    /// Idempotent: safe to call multiple times (skips inputs/outputs already added).
     func configure() async throws {
         captureSession.beginConfiguration()
         defer { captureSession.commitConfiguration() }
@@ -33,44 +38,62 @@ actor CameraSessionActor {
         // Set session preset from configuration
         captureSession.sessionPreset = configuration.sessionPreset
 
-        // Add video input (camera)
-        guard let camera = AVCaptureDevice.default(
-            configuration.preferredDeviceType,
-            for: .video,
-            position: configuration.preferredCameraPosition
-        ) else {
-            throw CameraError.deviceNotAvailable
+        // Only add video input if not already present
+        if captureSession.inputs.isEmpty {
+            guard let camera = AVCaptureDevice.default(
+                configuration.preferredDeviceType,
+                for: .video,
+                position: configuration.preferredCameraPosition
+            ) else {
+                throw CameraError.deviceNotAvailable
+            }
+
+            let input = try AVCaptureDeviceInput(device: camera)
+
+            guard captureSession.canAddInput(input) else {
+                throw CameraError.cannotAddInput
+            }
+
+            captureSession.addInput(input)
+            videoInput = input
+
+            // Create rotation coordinator for orientation-aware capture
+            rotationCoordinator = AVCaptureDevice.RotationCoordinator(
+                device: camera,
+                previewLayer: nil
+            )
         }
 
-        let input = try AVCaptureDeviceInput(device: camera)
+        // Only add photo output if not already present
+        if !captureSession.outputs.contains(where: { $0 is AVCapturePhotoOutput }) {
+            guard captureSession.canAddOutput(photoOutput) else {
+                throw CameraError.cannotAddOutput
+            }
 
-        guard captureSession.canAddInput(input) else {
-            throw CameraError.cannotAddInput
+            captureSession.addOutput(photoOutput)
         }
 
-        captureSession.addInput(input)
-        videoInput = input
-
-        // Configure photo output
-        guard captureSession.canAddOutput(photoOutput) else {
-            throw CameraError.cannotAddOutput
-        }
-
-        captureSession.addOutput(photoOutput)
-
-        // Configure for photo quality from configuration
+        // Configure photo quality (always apply in case settings changed)
         photoOutput.maxPhotoQualityPrioritization = configuration.photoQualityPrioritization
 
-        // Configure video output for live preview
-        guard captureSession.canAddOutput(videoOutput) else {
-            throw CameraError.cannotAddOutput
+        // Only add video output if not already present
+        if !captureSession.outputs.contains(where: { $0 is AVCaptureVideoDataOutput }) {
+            guard captureSession.canAddOutput(videoOutput) else {
+                throw CameraError.cannotAddOutput
+            }
+
+            captureSession.addOutput(videoOutput)
         }
 
-        captureSession.addOutput(videoOutput)
+        // Configure video output (always apply in case settings changed)
         videoOutput.alwaysDiscardsLateVideoFrames = configuration.alwaysDiscardsLateVideoFrames
         videoOutput.videoSettings = [
             kCVPixelBufferPixelFormatTypeKey as String: Int(configuration.pixelFormat)
         ]
+
+        // Set photo output connection to portrait orientation so captured photos
+        // match the preview layer's display (fixes photo shifting right of center)
+        configurePhotoOutputRotation()
     }
 
     // MARK: - Session Control
@@ -127,8 +150,30 @@ actor CameraSessionActor {
 
     // MARK: - Photo Capture Settings
 
+    /// Update photo output connection rotation to match current device orientation.
+    /// Uses RotationCoordinator (iOS 17+) to compute the horizon-level angle so
+    /// captured photos match the physical orientation of the device.
+    func configurePhotoOutputRotation() {
+        guard let connection = photoOutput.connection(with: .video) else { return }
+
+        let angle: CGFloat
+        if let coordinator = rotationCoordinator {
+            angle = coordinator.videoRotationAngleForHorizonLevelCapture
+        } else {
+            // Fallback: portrait (sensor is natively landscape-right)
+            angle = 90
+        }
+
+        if connection.isVideoRotationAngleSupported(angle) {
+            connection.videoRotationAngle = angle
+        }
+    }
+
     /// Create photo settings for capture
     func createPhotoSettings() -> AVCapturePhotoSettings {
+        // Refresh rotation angle to match current device orientation
+        configurePhotoOutputRotation()
+
         var settings = AVCapturePhotoSettings()
 
         // Use HEIF format when available for better compression

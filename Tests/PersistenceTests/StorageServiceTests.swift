@@ -491,6 +491,16 @@ private final class TestStorageServiceMock: StorageServiceProtocol, @unchecked S
         return urlToReturn
     }
 
+    func uploadAdditionalPhoto(
+        _ image: PlatformImage,
+        itemId: String,
+        photoIndex: Int,
+        userId: String
+    ) async throws -> URL {
+        if let error = errorToThrow { throw error }
+        return urlToReturn
+    }
+
     // MARK: - Test Helpers
 
     func reset() {

@@ -10,6 +10,10 @@ import UIKit
 class CameraPreviewUIView: UIView {
     let previewLayer: AVCaptureVideoPreviewLayer
 
+    /// Rotation coordinator for device-orientation-aware preview (iOS 17+)
+    private var rotationCoordinator: AVCaptureDevice.RotationCoordinator?
+    private var rotationObservation: NSKeyValueObservation?
+
     init(session: AVCaptureSession) {
         self.previewLayer = AVCaptureVideoPreviewLayer(session: session)
         super.init(frame: .zero)
@@ -17,10 +21,41 @@ class CameraPreviewUIView: UIView {
         backgroundColor = .black
         previewLayer.videoGravity = .resizeAspectFill
         layer.addSublayer(previewLayer)
+
+        setupRotationCoordinator(session: session)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupRotationCoordinator(session: AVCaptureSession) {
+        guard let device = (session.inputs.first as? AVCaptureDeviceInput)?.device else { return }
+
+        let coordinator = AVCaptureDevice.RotationCoordinator(
+            device: device,
+            previewLayer: previewLayer
+        )
+        self.rotationCoordinator = coordinator
+
+        // Apply initial rotation
+        if let connection = previewLayer.connection {
+            connection.videoRotationAngle = coordinator.videoRotationAngleForHorizonLevelPreview
+        }
+
+        // Observe rotation changes as device orientation shifts
+        rotationObservation = coordinator.observe(
+            \.videoRotationAngleForHorizonLevelPreview,
+            options: .new
+        ) { [weak self] coord, _ in
+            // Capture value before crossing async boundary to avoid accessing
+            // coordinator properties from a different execution context
+            let angle = coord.videoRotationAngleForHorizonLevelPreview
+            DispatchQueue.main.async { [weak self] in
+                guard let self, let connection = self.previewLayer.connection else { return }
+                connection.videoRotationAngle = angle
+            }
+        }
     }
 
     override func layoutSubviews() {
@@ -51,7 +86,10 @@ public struct CameraPreviewView: UIViewRepresentable {
     }
 
     public func updateUIView(_ uiView: UIView, context: Context) {
-        // Layout is handled by CameraPreviewUIView.layoutSubviews()
+        // Force a layout pass so the preview layer frame matches current bounds.
+        // After a session stop/restart cycle the layer may retain stale geometry
+        // (zoomed-in/offset) if no layout invalidation occurred.
+        uiView.setNeedsLayout()
     }
 }
 

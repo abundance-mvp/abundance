@@ -23,7 +23,7 @@ export {
 } from './prompts';
 
 // Service exports
-export { processItemWithGemini } from './gemini-service';
+export { processItemWithGemini, processItemWithGeminiPersistent } from './gemini-service';
 
 // Orchestrator exports
 export { handleItemCreated, logCosts } from './orchestrator';

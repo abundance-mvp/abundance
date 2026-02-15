@@ -89,6 +89,7 @@ public struct ProfileView: View {
                     title: "Notifications",
                     action: { /* Navigate to notifications settings */ }
                 )
+                .accessibilityIdentifier("profile.notifications")
 
                 Divider()
                     .padding(.leading, 48)
@@ -98,6 +99,7 @@ public struct ProfileView: View {
                     title: "Privacy",
                     action: { /* Navigate to privacy settings */ }
                 )
+                .accessibilityIdentifier("profile.privacy")
 
                 Divider()
                     .padding(.leading, 48)
@@ -107,8 +109,9 @@ public struct ProfileView: View {
                     title: "Help",
                     action: { /* Navigate to help */ }
                 )
+                .accessibilityIdentifier("profile.help")
             }
-            .adaptiveGlass(cornerRadius: 16)
+            .abundanceCardStyle()
         }
     }
 
@@ -118,18 +121,33 @@ public struct ProfileView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Export Data")
 
-            HStack(spacing: 12) {
-                ForEach(ExportFormat.allCases, id: \.self) { format in
-                    ExportButton(
-                        format: format,
-                        action: {
-                            Task {
-                                await viewModel.exportData(format: format)
-                            }
-                        }
-                    )
+            Button {
+                Task {
+                    await viewModel.exportData(format: .csv)
                 }
+            } label: {
+                HStack {
+                    Image(systemName: "tablecells")
+                        .font(.title3)
+                        .foregroundStyle(Color.salmon)
+                    Text("Export as CSV")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Color.textPrimary)
+                    Spacer()
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .abundanceCardStyle()
             }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
+            .accessibilityIdentifier("profile.exportCSV")
+            .accessibilityLabel("Export as CSV")
+            .accessibilityHint("Double tap to export your inventory data as a CSV file")
         }
     }
 
@@ -147,8 +165,9 @@ public struct ProfileView: View {
             .foregroundStyle(Color.errorColor)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .adaptiveGlass(cornerRadius: 16)
+            .abundanceCardStyle()
         }
+        .accessibilityIdentifier("profile.signOutButton")
         .accessibilityLabel("Sign out")
         .accessibilityHint("Double tap to sign out of your account")
     }
@@ -189,7 +208,7 @@ private struct SettingsRow: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.body)
-                    .foregroundStyle(Color.textBrightBlue)
+                    .foregroundStyle(Color.salmon)
                     .frame(width: 24)
 
                 Text(title)
@@ -208,45 +227,8 @@ private struct SettingsRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+        .accessibilityHint("Double tap to open \(title.lowercased()) settings")
         .accessibilityAddTraits(.isButton)
-    }
-}
-
-// MARK: - Export Button
-
-private struct ExportButton: View {
-    let format: ExportFormat
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: iconName)
-                    .font(.title2)
-                    .foregroundStyle(Color.textBrightBlue)
-
-                Text(format.rawValue)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundStyle(Color.textPrimary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .adaptiveGlass(cornerRadius: 16)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Export as \(format.rawValue)")
-    }
-
-    private var iconName: String {
-        switch format {
-        case .csv:
-            return "tablecells"
-        case .json:
-            return "doc.text"
-        case .pdf:
-            return "doc.richtext"
-        }
     }
 }
 

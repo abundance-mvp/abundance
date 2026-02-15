@@ -27,16 +27,6 @@ iOS-aware orchestrator that ensures Apple documentation is fetched via `/axiom:a
 
 ---
 
-#### `/project:ios-debug <issue>`
-
-Debug iOS issues using Axiom skills and Apple documentation.
-
-**Example**: `/project:ios-debug "camera preview freezing"`
-
-**See**: `.claude/commands/ios-debug.md`
-
----
-
 #### `/project:device-tester`
 
 Iterative testing on physical device with crash analysis and screenshot debugging.
@@ -44,6 +34,21 @@ Iterative testing on physical device with crash analysis and screenshot debuggin
 **Example**: `/project:device-tester`
 
 **See**: `.claude/commands/device-tester.md`
+
+---
+
+### Troubleshooting
+
+#### `/project:troubleshoot <issue-description>`
+
+End-to-end troubleshooting pipeline: triage, debug via superpowers skills, verify fix, write regression test, code review, and report.
+
+**Examples:**
+- `/project:troubleshoot "camera crash on tab switch"` — iOS domain, routes to `ios-superpowers debug`
+- `/project:troubleshoot "Cloud Function 403"` — Backend domain, routes to `backend-superpowers`
+- `/project:troubleshoot "upload 403 + function never fires"` — Multi-domain, parallel agents
+
+**See:** `.claude/skills/troubleshoot/SKILL.md`
 
 ---
 
@@ -56,20 +61,6 @@ Deploy Cloud Functions with verification.
 **Example**: `/project:gcp-deploy catalogItem`
 
 **See**: `.claude/commands/gcp-deploy.md`
-
----
-
-### Agent Commands
-
-#### `/project:dispatch`
-
-Dispatch parallel agents for independent tasks.
-
-**Example**: `/project:dispatch`
-
-**Note**: Agents use ios-superpowers which auto-detects iOS context.
-
-**See**: `.claude/commands/dispatch.md`
 
 ---
 

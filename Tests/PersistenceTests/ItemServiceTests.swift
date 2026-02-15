@@ -167,7 +167,7 @@ final class ItemServiceIntegrationTests: XCTestCase {
         let item = items[0]
         XCTAssertEqual(item.userId, userId)
         XCTAssertEqual(item.imageUrl, imageUrl)
-        XCTAssertEqual(item.status, .pending, "Status should be pending for Layer 2 processing")
+        XCTAssertEqual(item.status, .processing, "Status should be processing (mapped from pending)")
     }
 
     /// Test that created items have non-empty id field

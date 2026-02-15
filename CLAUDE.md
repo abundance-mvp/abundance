@@ -18,17 +18,41 @@ Never use `grep` - Use `rg`
 ```bash
 # iOS Development
 /project:ios-superpowers <action> <context>  # Axiom-powered iOS workflows
-/project:ios-debug <issue>                   # Debug iOS issue with Axiom skills
+/project:fresh-deploy                        # Wipe data + deploy functions + build device
 /project:device-tester                       # Iterative testing on physical device w-16e
+/project:sim-test                            # Simulator-based testing
 /axiom:apple-docs-research                   # Fetch Apple Developer documentation
+
+# Xcode MCP Bridge (requires Xcode running + macOS 26)
+mcp__xcode__BuildProject                     # Build via Xcode (structured errors)
+mcp__xcode__RenderPreview                    # Render SwiftUI preview snapshot
+mcp__xcode__DocumentationSearch              # Search Apple docs + WWDC transcripts
+mcp__xcode__XcodeListNavigatorIssues         # Mirror Xcode Issue Navigator
+mcp__xcode__ExecuteSnippet                   # Swift REPL in project context
 
 # Issue Tracking
 /project:file-issue [description]            # File standardized issue (bug, feature, etc.)
-/project:dispatch                            # Dispatch open issues to agents
+/project:troubleshoot <issue>                # End-to-end debug → verify → test → review
 
 # Backend Operations
-/project:backend-superpowers                 # Firebase + GCP unified skill (59 MCP tools)
 /project:gcp-deploy <fn>                     # Deploy Cloud Function with verification
+
+# Code Quality
+/project:review-commit                       # Review commit before pushing
+/project:polish                              # Polish UI/code quality
+
+# Design Auditors
+/project:auditors/accessibility-auditor      # Audit accessibility compliance
+/project:auditors/hig-auditor               # Audit HIG compliance
+/project:auditors/liquid-glass-auditor       # Audit Liquid Glass adoption
+/project:auditors/palette-auditor            # Audit brand color palette usage
+
+# Documentation Health
+/project:doc-superpowers audit [scope]       # Audit docs for staleness across scopes
+/project:doc-superpowers review-pr           # Check if PR makes docs stale
+/project:doc-superpowers update              # Execute doc updates from audit
+/project:doc-superpowers diagram             # Regenerate architecture diagrams
+/project:doc-superpowers sync                # Sync doc-index + freshness check
 ```
 
 ---
@@ -97,11 +121,20 @@ Skill(skill="backend-superpowers")
 ```
 ├── .claude/           # Claude automation (agents, commands, hooks, docs)
 ├── .github/           # CI/CD workflows (10 workflows)
-├── Sources/           # Swift source (MVVM modules)
+├── App/               # SwiftUI app entry point (AbundanceApp target)
+├── Sources/           # Swift source modules:
+│   ├── CameraFeature/     # Camera capture and scanning
+│   ├── CollectionFeature/ # Item collection views (formerly InventoryFeature)
+│   ├── Core/              # Design system, shared utilities
+│   ├── EdgeTAMFeature/    # Edge TAM video segmentation
+│   ├── OnboardingFeature/ # Auth and onboarding flows
+│   ├── Persistence/       # Firebase services, Keychain, data layer
+│   ├── ProfileFeature/    # User profile
+│   └── VisionCore/        # On-device vision processing
 ├── Tests/             # XCTest suites
 ├── functions/         # Firebase Cloud Functions (TypeScript)
-├── docs/              # Symlink to spec-kit/docs/ (ADRs, specs, plans)
-└── scripts/           # Setup and validation
+├── docs/              # Documentation (ADRs, specs, plans, issues, brand)
+└── scripts/           # Setup, validation, and doc tooling
 ```
 
 ---
@@ -110,6 +143,7 @@ Skill(skill="backend-superpowers")
 
 - **iOS Superpowers:** Use `/project:ios-superpowers` for ALL iOS work - **P0 requirement** (ensures Apple docs grounding)
 - **ADR-010:** SwiftUI-only - `import UIKit` in Views/ViewModels is **P0 violation** (infrastructure OK)
+- **ADR-027 Terminology:** See [`docs/GLOSSARY.md`](docs/GLOSSARY.md) — "Collection" (not inventory/catalog), "Scan" (not camera), "Refresh" (not deep scan/re-catalog)
 - **Apple Docs:** iOS code changes require `axiom:` verification (auto-invoked by ios-superpowers)
 - **Branch naming:** `feature/`, `fix/`, `docs/`, `chore/`, `test/`, `refactor/` only
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
@@ -164,12 +198,11 @@ git checkout -b feature/your-feature
 - Follow MVVM pattern (ViewModels in `Sources/`)
 - TDD: Write failing test → implement → verify → commit
 - SwiftUI only, no UIKit for UI (infrastructure exceptions per ADR-010)
-- \*\*
 
 ### If Build Fails
 
 ```bash
-/project:ios-debug <issue>
+/project:ios-superpowers debug <issue>
 /axiom:axiom-xcode-debugging
 /axiom:axiom-build-debugging
 ```
@@ -187,6 +220,19 @@ swiftlint              # Zero warnings required
 
 **Required checks:** ios-build-check, backend-validation, security-pr-review
 **Debug:** Comment `@claude` in PR
+
+## MCP Servers
+
+| Server | Transport | Tools | Requires | Purpose |
+|--------|-----------|-------|----------|---------|
+| `xcode` (mcpbridge) | stdio | 20 | Xcode running, macOS 26 | Builds, previews, diagnostics, Apple docs, project-aware file ops |
+| `XcodeBuildMCP` | stdio | 60+ | None (headless) | Simulators, devices, UI automation, debugging |
+| Firebase | plugin | 29 | Firebase project | Firestore, Functions, Auth, FCM, etc. |
+| Observability | plugin | 13 | GCP project | Logging, metrics, tracing |
+
+**Both Xcode servers run simultaneously.** Skills route to the right server:
+- Builds/diagnostics/previews/docs → mcpbridge (when available)
+- Simulator/device/UI automation → XcodeBuildMCP (always)
 
 ## Common Tasks
 
@@ -220,11 +266,15 @@ firebase deploy --only firestore:rules
 | `SPEC-PIPE-001-layer1-detection.md` | Gemini 3 Flash object detection and cropping |
 | `SPEC-PIPE-002-layer2-cataloging.md` | Gemini 3 Pro cataloging with tools (Lens, barcode, web search) |
 | `SPEC-PIPE-003-session-persistence.md` | Context caching, catalog history, cost optimization |
+| `SPEC-PIPE-004-camera-sweep-option-a-edgetam.md` | Camera sweep: EdgeTAM video segmentation approach |
+| `SPEC-PIPE-004-camera-sweep-option-b-apple-native.md` | Camera sweep: Apple-native approach |
 | **User Interface (SPEC-UI)** | |
 | `SPEC-UI-001-camera-capture-flow.md` | Single/burst capture, state machine, haptics |
 | `SPEC-UI-002-catalog-inventory-flow.md` | List/detail/edit views, status indicators |
+| `SPEC-UI-003-design-system.md` | Design system implementation, color migration, component restyling |
+| `SPEC-UI-004-liquid-glass-adoption.md` | Liquid Glass navigation adoption (tab bar, nav bar, sheets) |
 | **Operations (SPEC-OPS)** | |
-| `SPEC-OPS-001-cicd-workflows.md` | GitHub Actions workflows (9 workflows) |
+| `SPEC-OPS-001-cicd-workflows.md` | GitHub Actions workflows (10 workflows) |
 | `SPEC-OPS-002-dev-workflow.md` | Setup, branching, commits, Claude Code integration |
 | `SPEC-OPS-003-cost-model.md` | AI, storage, Firebase costs with projections |
 
@@ -254,8 +304,24 @@ uv run scripts/validate_docs.py
 ./scripts/update_doc_index.py sync          # Sync with filesystem
 ```
 
+### Freshness Checking
+
+```bash
+# Check which docs are stale (code changed since last verification)
+uv run scripts/check_doc_freshness.py
+
+# Initialize hash baselines (run once or after major refactor)
+uv run scripts/check_doc_freshness.py --init
+
+# Mark a doc as verified after review
+uv run scripts/check_doc_freshness.py --update docs/specs/SPEC-UI-001-camera-capture-flow.md
+```
+
 **Pre-push hook blocks if:**
 - Docs have archival-ready status but aren't archived
 - Markdown links are broken
 - Code refs in specs point to deleted paths
+
+**Pre-push hook warns (non-blocking) if:**
+- Code referenced by docs has changed since last verification
 

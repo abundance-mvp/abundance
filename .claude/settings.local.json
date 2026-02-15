@@ -6,9 +6,60 @@
       "Bash(git commit:*)",
       "Bash(git remote set-url:*)",
       "Bash(git push:*)",
-      "Skill(apple-docs-fetcher)"
+      "Skill(apple-docs-fetcher)",
+      "mcp__XcodeBuildMCP__get_device_app_path",
+      "mcp__XcodeBuildMCP__install_app_device",
+      "mcp__XcodeBuildMCP__launch_app_device",
+      "mcp__XcodeBuildMCP__start_device_log_cap",
+      "mcp__plugin_firebase_firebase__functions_list_functions",
+      "mcp__plugin_firebase_firebase__functions_get_logs",
+      "Bash(python3:*)",
+      "mcp__XcodeBuildMCP__stop_device_log_cap",
+      "Bash(claude plugins add:*)",
+      "mcp__xcode__XcodeRead",
+      "mcp__xcode__XcodeWrite",
+      "mcp__xcode__XcodeUpdate",
+      "mcp__xcode__XcodeLS",
+      "mcp__xcode__XcodeGlob",
+      "mcp__xcode__XcodeGrep",
+      "mcp__xcode__XcodeMakeDir",
+      "mcp__xcode__XcodeRM",
+      "mcp__xcode__XcodeMV",
+      "mcp__xcode__BuildProject",
+      "mcp__xcode__GetBuildLog",
+      "mcp__xcode__RunAllTests",
+      "mcp__xcode__RunSomeTests",
+      "mcp__xcode__GetTestList",
+      "mcp__xcode__XcodeListNavigatorIssues",
+      "mcp__xcode__XcodeRefreshCodeIssuesInFile",
+      "mcp__xcode__RenderPreview",
+      "mcp__xcode__ExecuteSnippet",
+      "mcp__xcode__DocumentationSearch",
+      "mcp__xcode__XcodeListWindows",
+      "Bash(swift test:*)",
+      "Bash(swift build:*)",
+      "Bash(gh pr create:*)",
+      "Bash(uv run:*)",
+      "Bash(gh pr list:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "mcp__XcodeBuildMCP__session-set-defaults"
     ],
     "deny": [],
     "ask": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -qE '\"command\".*git (merge|push|pull|rebase)'; then uv run scripts/check_doc_status_drift.py --quiet 2>/dev/null || echo '⚠️  Doc status drift detected. Run: uv run scripts/check_doc_status_drift.py'; fi; true"
+          }
+        ]
+      }
+    ]
   }
 }

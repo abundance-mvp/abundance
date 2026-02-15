@@ -90,6 +90,14 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
     /// Processing notes from AI (issues, assumptions made)
     public var processingNotes: String?
 
+    // MARK: - Layer 1 Fallback Data
+
+    /// Label from Layer 1 detection (fallback when Layer 2 fails)
+    public var layer1Label: String?
+
+    /// Category from Layer 1 detection (fallback when Layer 2 fails)
+    public var layer1Category: String?
+
     // MARK: - Edit Tracking
 
     /// Fields that user has manually edited (for training data)
@@ -97,6 +105,46 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
 
     /// Timestamp of last rescan (for edit flow)
     public var lastRescanAt: Date?
+
+    // MARK: - Additional Photos
+
+    /// URLs for additional photos beyond the primary imageUrl
+    public var additionalImageUrls: [String]?
+
+    /// Display name with full fallback chain: name → layer1Label → category → layer1Category
+    public var displayName: String {
+        name ?? layer1Label ?? category ?? layer1Category ?? "Unknown Item"
+    }
+
+    /// All image URLs: primary + additional
+    public var allImageUrls: [String] {
+        [imageUrl] + (additionalImageUrls ?? [])
+    }
+
+    /// Total number of photos
+    public var photoCount: Int {
+        1 + (additionalImageUrls?.count ?? 0)
+    }
+
+    // MARK: - Refresh (Firestore fields: deepScanRequested, deepScanCompletedAt)
+
+    /// Whether a refresh has been requested (Firestore field: deepScanRequested)
+    public var refreshRequested: Bool?
+
+    /// When refresh completed (Firestore field: deepScanCompletedAt)
+    public var refreshCompletedAt: Date?
+
+    /// Product URL from refresh
+    public var productUrl: String?
+
+    /// UPC/barcode from refresh
+    public var upcCode: String?
+
+    /// Market price range from refresh (e.g., "$50-$80")
+    public var marketPriceRange: String?
+
+    /// Original retail price from refresh
+    public var originalRetailPrice: Double?
 
     // MARK: - Photo Metadata
 
@@ -128,8 +176,17 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         estimatedValue: Double? = nil,
         confidence: ItemConfidence? = nil,
         processingNotes: String? = nil,
+        layer1Label: String? = nil,
+        layer1Category: String? = nil,
         userEditedFields: [String]? = nil,
         lastRescanAt: Date? = nil,
+        additionalImageUrls: [String]? = nil,
+        refreshRequested: Bool? = nil,
+        refreshCompletedAt: Date? = nil,
+        productUrl: String? = nil,
+        upcCode: String? = nil,
+        marketPriceRange: String? = nil,
+        originalRetailPrice: Double? = nil,
         photoMetadata: PhotoMetadata? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
@@ -151,22 +208,47 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
         self.estimatedValue = estimatedValue
         self.confidence = confidence
         self.processingNotes = processingNotes
+        self.layer1Label = layer1Label
+        self.layer1Category = layer1Category
         self.userEditedFields = userEditedFields
         self.lastRescanAt = lastRescanAt
+        self.additionalImageUrls = additionalImageUrls
+        self.refreshRequested = refreshRequested
+        self.refreshCompletedAt = refreshCompletedAt
+        self.productUrl = productUrl
+        self.upcCode = upcCode
+        self.marketPriceRange = marketPriceRange
+        self.originalRetailPrice = originalRetailPrice
         self.photoMetadata = photoMetadata
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
 }
 
-/// Item processing status matching Firestore trigger states
+/// Item processing status — simplified to 3 states
+/// Legacy Firestore values (pending, layer2a_complete, etc.) are mapped on decode
 public enum ItemStatus: String, Codable, Sendable {
-    case pending = "pending"
-    case layer2aComplete = "layer2a_complete"
-    case layer2bScheduled = "layer2b_scheduled"
-    case layer2bComplete = "layer2b_complete"
+    case processing = "processing"
     case complete = "complete"
     case failed = "failed"
-    case failedLayer2a = "failed_layer2a"
-    case failedLayer2b = "failed_layer2b"
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = ItemStatus.fromFirestoreValue(rawValue)
+    }
+
+    /// Maps Firestore status strings (including legacy values) to the 3-state enum
+    public static func fromFirestoreValue(_ value: String) -> ItemStatus {
+        switch value {
+        case "complete":
+            return .complete
+        case "failed", "failed_layer2a", "failed_layer2b":
+            return .failed
+        case "processing", "pending", "layer2a_complete", "layer2b_scheduled", "layer2b_complete":
+            return .processing
+        default:
+            return .processing
+        }
+    }
 }

@@ -2,6 +2,7 @@ import Foundation
 import Vision
 @preconcurrency import CoreVideo
 import CryptoKit
+import simd
 import os.log
 
 /// Actor responsible for detecting and preventing duplicate object detections
@@ -17,6 +18,13 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         let timestamp: Date
     }
 
+    /// Cached spatial position entry for 3D deduplication
+    private struct SpatialEntry {
+        let position: SIMD3<Float>
+        let identifier: String
+        let timestamp: Date
+    }
+
     // MARK: - Properties
 
     private let logger = Logger(subsystem: "com.abundance.visioncore", category: "ObjectDeduplicator")
@@ -24,12 +32,21 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
     /// Cache of recently seen fingerprints with timestamps
     private var cache: [String: CacheEntry] = [:]
 
-    /// Time-to-live for cached fingerprints (5 minutes)
-    private let cacheTTL: TimeInterval = 300.0 // 5 minutes in seconds
+    /// Maximum number of fingerprint cache entries
+    private let maxCacheEntries = 50
+
+    /// Time-to-live for cached fingerprints (2 minutes)
+    private let cacheTTL: TimeInterval = 120.0 // 2 minutes in seconds
 
     /// Similarity threshold for considering two objects as duplicates
     /// 0.90 = 90% similar (higher = more strict)
     private let similarityThreshold: Float = 0.90
+
+    /// Cache of recently seen 3D world positions
+    private var spatialCache: [SpatialEntry] = []
+
+    /// Maximum number of spatial cache entries
+    private let maxSpatialEntries = 200
 
     // MARK: - Initialization
 
@@ -86,7 +103,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
     /// - Note: For the primary perceptual similarity API, use `isSimilarToRecent()` which caches observations automatically
     public func isDuplicate(_ fingerprint: String) async -> Bool {
         // Clean expired entries first
-        await cleanCache()
+        cleanCacheSync()
 
         // Fast path: Check for exact match
         guard let queryEntry = cache[fingerprint] else {
@@ -126,11 +143,12 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
                     continue
                 }
             }
+
+            // Had observation data but no perceptual match found
+            return false
         }
 
-        // Exact match found (entry exists in cache)
-        // If we had an observation, we already did similarity comparison above
-        // If we don't have an observation, this is still a valid exact string match
+        // No observation data — exact string key match counts as duplicate
         return true
     }
 
@@ -156,7 +174,7 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         }
 
         // Clean old entries
-        await cleanCache()
+        cleanCacheSync()
     }
 
     /// Checks if a new fingerprint is similar to any cached fingerprints
@@ -230,16 +248,20 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         return false
     }
 
-    /// Removes expired entries from the cache
-    private func cleanCache() async {
-        cleanCacheSync()
-    }
-
-    /// Synchronous cache cleaning (for use in nonisolated contexts)
+    /// Removes expired entries from the cache and evicts oldest if over limit
     private func cleanCacheSync() {
         let now = Date()
         cache = cache.filter { _, entry in
             now.timeIntervalSince(entry.timestamp) < cacheTTL
+        }
+
+        // Size-based eviction: if still over limit, remove oldest entries
+        if cache.count > maxCacheEntries {
+            let sorted = cache.sorted { $0.value.timestamp < $1.value.timestamp }
+            let toRemove = cache.count - maxCacheEntries
+            for (key, _) in sorted.prefix(toRemove) {
+                cache.removeValue(forKey: key)
+            }
         }
     }
 
@@ -267,6 +289,54 @@ public actor ObjectDeduplicator: ObjectDeduplicatorProtocol {
         cache[identifier] = entry
 
         // Clean old entries
-        await cleanCache()
+        cleanCacheSync()
+    }
+
+    // MARK: - Spatial Deduplication
+
+    /// Add a 3D world position to the spatial cache
+    /// - Parameters:
+    ///   - position: World position from ARKit raycast
+    ///   - identifier: Unique identifier for the segment
+    public func addSpatialEntry(position: SIMD3<Float>, identifier: String) {
+        cleanSpatialCache()
+        spatialCache.append(SpatialEntry(
+            position: position,
+            identifier: identifier,
+            timestamp: Date()
+        ))
+    }
+
+    /// Check if a position is within threshold distance of any cached position
+    /// - Parameters:
+    ///   - position: World position to check
+    ///   - threshold: Distance threshold in meters (default 0.15 = 15cm)
+    /// - Returns: true if any cached position is within threshold distance
+    public func isSpatialDuplicate(position: SIMD3<Float>, threshold: Float = 0.15) -> Bool {
+        cleanSpatialCache()
+        for entry in spatialCache {
+            let distance = simd_distance(position, entry.position)
+            if distance <= threshold {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Reset spatial cache (call on sweep mode exit)
+    public func clearSpatialCache() {
+        spatialCache.removeAll()
+    }
+
+    /// Remove expired entries from the spatial cache
+    private func cleanSpatialCache() {
+        let now = Date()
+        spatialCache = spatialCache.filter { now.timeIntervalSince($0.timestamp) < cacheTTL }
+
+        // Size-based eviction: if still over limit, remove oldest entries
+        if spatialCache.count > maxSpatialEntries {
+            spatialCache.sort { $0.timestamp < $1.timestamp }
+            spatialCache = Array(spatialCache.suffix(maxSpatialEntries))
+        }
     }
 }

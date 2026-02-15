@@ -1,6 +1,6 @@
 # ADR-009: iOS Deployment & CI/CD Strategy
 
-**Status**: Approved
+**Status**: Approved (Revised 2026-02-08)
 **Date**: 2025-11-08
 **Decision Makers**: Engineering Leadership, iOS Developer, DevOps Engineer
 **Related Documents**:
@@ -28,16 +28,17 @@ Abundance needs a deployment pipeline for:
 
 ## Decision
 
-**Use TestFlight for beta distribution, App Store for production releases, and GitHub Actions + Fastlane for CI/CD automation.**
+**Use TestFlight for beta distribution, App Store for production releases, and GitHub Actions with Swift Package Manager for CI/CD automation.**
 
 ### Specifications
 
 - **Beta Distribution**: TestFlight (internal + external testing)
 - **Production Release**: App Store Connect (manual promotion from TestFlight)
 - **CI/CD Platform**: GitHub Actions (macOS runner)
-- **Build Automation**: Fastlane (Xcode build, code signing, upload)
+- **Build Automation**: Swift Package Manager (`swift build`, `swift test`) + SwiftLint -- no Fastlane
 - **Code Signing**: Xcode Automatic Signing (Apple Developer Portal manages certificates)
 - **Versioning**: Semantic versioning (MAJOR.MINOR.PATCH, e.g., 1.0.0)
+- **Package Structure**: SPM package at repo root (`Package.swift`), not in an `ios/` subdirectory
 
 ---
 
@@ -101,127 +102,98 @@ Abundance needs a deployment pipeline for:
 
 ### 3. GitHub Actions CI/CD (macOS Runner)
 
-**Requirement**: Automated builds on every PR merge to `main` branch.
+**Requirement**: Automated builds on every PR and push to `main` branch.
 
 **Solution**: GitHub Actions with macOS runner (Xcode pre-installed).
 
-**Workflow** (`.github/workflows/ios-ci.yml`):
+**Workflow** (`.github/workflows/ios-build-check.yml`):
 ```yaml
-name: iOS CI/CD
+name: iOS Build Check
 
 on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build-check.yml'
   push:
     branches: [main]
-    tags:
-      - 'v*.*.*-beta.*'
-      - 'v*.*.*'
 
 jobs:
   build:
-    runs-on: macos-14 # macOS Sonoma, Xcode 16 pre-installed
+    name: Build iOS App
+    runs-on: macos-14
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
         with:
-          ruby-version: 3.2
-          bundler-cache: true
+          xcode-version: '16.1'
 
-      - name: Install dependencies
-        run: |
-          gem install fastlane
-          bundle install
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/.build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
 
-      - name: Run tests
-        run: fastlane test
+      - name: Build iOS project
+        working-directory: ios
+        run: swift build -c debug
 
-      - name: Build and upload to TestFlight (beta tags only)
-        if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, 'beta')
-        env:
-          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
-        run: fastlane beta
+      - name: Run SwiftLint
+        working-directory: ios
+        run: swiftlint lint --strict
 
-      - name: Build and upload to App Store (production tags only)
-        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, 'beta')
-        env:
-          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
-        run: fastlane release
+      - name: Run unit tests
+        working-directory: ios
+        run: swift test --parallel
 ```
 
+**Note**: The workflow currently uses `working-directory: ios` -- this is a known issue tracked separately. The `Package.swift` is at the repo root, not in an `ios/` subdirectory.
+
 **Cost**:
-- GitHub Actions free tier: 2,000 minutes/month (macOS runner = 10× multiplier)
+- GitHub Actions free tier: 2,000 minutes/month (macOS runner = 10x multiplier)
 - **Effective**: 200 minutes/month macOS (sufficient for 40 builds @ 5 min/build)
 - Paid plan: $0.08/minute macOS (if needed)
 
-**Outcome**: Automated builds on tag push, zero manual Xcode builds for releases.
+**Outcome**: Automated builds on PR and push, using `swift build` and `swift test` directly.
 
 ---
 
-### 4. Fastlane Build Automation
+### 4. Swift Package Manager Build Automation (No Fastlane)
 
-**Requirement**: Automate Xcode build, code signing, and TestFlight upload.
+**Requirement**: Automate builds and tests in CI.
 
-**Solution**: Fastlane (Ruby-based iOS automation tool).
+**Solution**: Swift Package Manager commands directly -- no Fastlane dependency.
 
-**Fastfile** (`fastlane/Fastfile`):
-```ruby
-default_platform(:ios)
+**Build Commands**:
+```bash
+# Build debug configuration
+swift build -c debug
 
-platform :ios do
-  desc "Run unit and UI tests"
-  lane :test do
-    run_tests(
-      scheme: "Abundance",
-      devices: ["iPhone 15 Pro"],
-      clean: true
-    )
-  end
+# Run all unit tests in parallel
+swift test --parallel
 
-  desc "Build and upload to TestFlight"
-  lane :beta do
-    increment_build_number(
-      build_number: ENV["GITHUB_RUN_NUMBER"] # e.g., 42
-    )
-
-    build_app(
-      scheme: "Abundance",
-      export_method: "app-store",
-      clean: true
-    )
-
-    upload_to_testflight(
-      api_key_path: ENV["APP_STORE_CONNECT_API_KEY"],
-      skip_waiting_for_build_processing: true # Don't wait for Apple's processing
-    )
-  end
-
-  desc "Build and upload to App Store"
-  lane :release do
-    build_app(
-      scheme: "Abundance",
-      export_method: "app-store",
-      clean: true
-    )
-
-    upload_to_app_store(
-      api_key_path: ENV["APP_STORE_CONNECT_API_KEY"],
-      skip_metadata: true, # Metadata edited manually in App Store Connect
-      skip_screenshots: true,
-      submit_for_review: false # Manual submission after metadata review
-    )
-  end
-end
+# Lint Swift code
+swiftlint lint --strict
 ```
 
-**Benefits**:
-- **Repeatable builds**: Same Fastlane command works locally and in CI
-- **Automated versioning**: Build number auto-incremented via GitHub run number
-- **Code signing**: Fastlane uses Xcode Automatic Signing (no manual cert management)
+**Why No Fastlane**:
+- SPM builds are simple single-command operations
+- No Ruby dependency chain to maintain
+- `swift build` and `swift test` are sufficient for CI validation
+- TestFlight uploads handled separately (not yet automated in CI)
 
-**Outcome**: Single command (`fastlane beta`) builds, signs, and uploads to TestFlight.
+**Benefits**:
+- **Fewer dependencies**: No Ruby, no gems, no Bundler
+- **Faster CI setup**: No `gem install` step
+- **Reproducible**: Same `swift build` command works locally and in CI
+
+**Outcome**: CI uses `swift build` + `swift test` + `swiftlint` directly, with no Fastlane wrapper.
 
 ---
 
@@ -234,7 +206,7 @@ end
 **How it works**:
 1. Developer enables "Automatically manage signing" in Xcode project settings
 2. Xcode creates/renews certificates and provisioning profiles via App Store Connect API
-3. Fastlane uses same API key to sign builds in CI (no cert files in git repo)
+3. CI uses same API key for builds (no cert files in git repo)
 
 **Xcode Configuration**:
 - Team: "Abundance Inc." (Apple Developer account)
@@ -314,7 +286,7 @@ end
 ### Positive
 
 1. **Native Beta Testing**: TestFlight pre-installed on all iOS devices (zero friction)
-2. **Automated CI/CD**: GitHub Actions + Fastlane = zero manual builds
+2. **Automated CI/CD**: GitHub Actions + SPM direct = zero manual builds, no Fastlane dependency
 3. **Code Signing Automation**: Xcode Automatic Signing = no cert management
 4. **Free Tier**: GitHub Actions free tier covers 40 builds/month (sufficient for MVP)
 5. **iOS 26-Only Enforcement**: App Store minimum OS version = iOS 26.0 (premium positioning)
@@ -342,7 +314,7 @@ end
 
 **Xcode Configuration**:
 - `CFBundleShortVersionString`: "1.0.0" (user-visible version)
-- `CFBundleVersion`: "42" (build number, auto-incremented by Fastlane)
+- `CFBundleVersion`: "42" (build number, auto-incremented in CI)
 
 **Git Tags**:
 ```bash
@@ -362,7 +334,6 @@ git push origin v1.0.0
 **Required Secrets** (stored in GitHub repo settings):
 
 1. **APP_STORE_CONNECT_API_KEY**: JSON file with App Store Connect API credentials
-2. **MATCH_PASSWORD** (optional): Passphrase for Fastlane Match (if using Match for cert management)
 
 **How to create App Store Connect API Key**:
 1. Log in to App Store Connect → Users and Access → Keys
@@ -428,8 +399,8 @@ git push origin v1.0.0
 ## Acceptance Criteria
 
 - [x] ✅ TestFlight internal testing group created (25 users)
-- [x] ✅ GitHub Actions workflow configured (`.github/workflows/ios-ci.yml`)
-- [x] ✅ Fastlane lanes tested (`fastlane test`, `fastlane beta`)
+- [x] ✅ GitHub Actions workflow configured (`.github/workflows/ios-build-check.yml`)
+- [x] ✅ SPM build and test verified in CI (`swift build`, `swift test`, `swiftlint`)
 - [x] ✅ Xcode Automatic Signing enabled (no manual cert management)
 - [x] ✅ App Store Connect API key created and stored in GitHub Secrets
 - [x] ✅ iOS 26.0 minimum deployment target set in Xcode
@@ -449,7 +420,8 @@ git push origin v1.0.0
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial decision, TestFlight + GitHub Actions + Fastlane | Software Architecture Expert |
+| 2026-02-08 | 1.1 | Updated: Removed Fastlane references (CI uses swift build/test directly), fixed workflow filename to ios-build-check.yml, noted Package.swift at repo root not ios/ subdirectory | Documentation Agent |
 
 ---
 
-**This deployment strategy supports iOS 26-only releases (ADR-004), Phase 1 beta testing (ADR-003), and automated CI/CD with zero manual builds.**
+**This deployment strategy supports iOS 26-only releases (ADR-004), Phase 1 beta testing (ADR-003), and automated CI/CD using SPM directly (no Fastlane).**

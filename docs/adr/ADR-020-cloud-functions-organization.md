@@ -1,6 +1,6 @@
 # ADR-020: Cloud Functions Organization
 
-**Status**: Approved
+**Status**: Approved (Revised 2026-02-08)
 **Date**: 2025-11-08
 **Decision Makers**: Cloud Backend Architect
 **Related Documents**:
@@ -26,10 +26,31 @@ Also need to decide:
 
 Use **Cloud Functions 2nd gen** with **one function per endpoint** and **Firestore triggers** for AI pipeline.
 
-**Categories**:
-1. HTTP endpoints (8 functions) - REST API
-2. Firestore triggers (3 functions) - AI pipeline
-3. Scheduled jobs (2 functions) - Maintenance
+**Categories** (14 functions total):
+1. HTTP endpoints (4 functions) - REST API and health check
+2. Callable functions (1 function) - Firebase SDK callable
+3. Firestore triggers (6 functions) - AI pipeline and cleanup
+4. Scheduled jobs (2 functions) - Maintenance
+5. Migrations (1 function) - Schema migrations
+
+**Full Inventory** (from `functions/src/index.ts`):
+
+| Function | Type | Trigger |
+|----------|------|---------|
+| `health` | HTTP (onRequest) | GET request |
+| `createItemHTTP` | HTTP (onRequest) | POST request |
+| `getItemHTTP` | HTTP (onRequest) | GET request |
+| `listItemsHTTP` | HTTP (onRequest) | GET request |
+| `getUserProfile` | Callable (onCall) | Firebase SDK |
+| `onItemCreatedGemini3` | Firestore onCreate | `items/{itemId}` created |
+| `onItemFromSession` | Firestore onCreate | `items/{itemId}` created (session items) |
+| `onSessionCreated` | Firestore onUpdate | `sessions/{sessionId}` updated |
+| `onItemUpdatedDeepScan` | Firestore onUpdate | `items/{itemId}` updated (deepScanRequested) |
+| `onItemUpdatedRescan` | Firestore onUpdate | `items/{itemId}` updated (status->pending) |
+| `onItemDeleted` | Firestore onDelete | `items/{itemId}` deleted |
+| `cleanupDeletedItemsScheduled` | Scheduled | Cron schedule |
+| `checkSubscriptionExpiryScheduled` | Scheduled | Cron schedule |
+| `backfillFlattenedSchema` | HTTP (migration) | Manual invocation |
 
 ---
 
@@ -70,12 +91,19 @@ Use **Cloud Functions 2nd gen** with **one function per endpoint** and **Firesto
 
 ### Why Firestore Triggers for AI Pipeline
 
-**Decision**: `onItemCreated`, `onLayer2aComplete`, `onLayer2bComplete`
+**Decision**: Use Firestore triggers to orchestrate the AI pipeline:
+- `onItemCreatedGemini3` - Triggers Gemini 3 Pro cataloging when a new item is created (non-session items)
+- `onItemFromSession` - Triggers Gemini 3 Pro cataloging for items created from session detections
+- `onSessionCreated` - Triggers Gemini 3 Flash detection when a capture session's images are ready
+- `onItemUpdatedDeepScan` - Triggers enhanced deep scan when `deepScanRequested` transitions to true
+- `onItemUpdatedRescan` - Triggers re-cataloging when item status transitions to pending (without deep scan)
+- `onItemDeleted` - Cleans up Cloud Storage files when an item is deleted
 
 **Rationale**:
 - Automatic invocation (no polling)
 - Guaranteed execution (at-least-once delivery)
-- Decoupled architecture (layers don't call each other directly)
+- Decoupled architecture (triggers don't call each other directly)
+- Guard conditions prevent re-triggering (status checks, transaction-based claiming)
 
 **Alternative**: Pub/Sub triggers (more complex setup, not needed for MVP)
 
@@ -134,3 +162,4 @@ Use **Cloud Functions 2nd gen** with **one function per endpoint** and **Firesto
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial ADR, Cloud Functions organization rationale | Cloud Backend Architect |
+| 2026-02-08 | 1.1 | Updated function inventory (14 functions), replaced old trigger names with actual Gemini 3 trigger names | Documentation Agent |

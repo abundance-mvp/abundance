@@ -38,6 +38,7 @@ We will implement a **multi-layered privacy firewall validation strategy** combi
 
 ```swift
 /// Service enforcing privacy firewall (full photo deletion)
+/// Note: Uses UIImage as this is infrastructure code (allowed per ADR-010)
 final class PrivacyFirewall {
     func processPhoto(_ photo: UIImage) async throws -> [CroppedObject] {
         // 1. Save full photo to temporary storage (encrypted)
@@ -302,31 +303,32 @@ func testNetworkTraffic_NoLargeUploads() async throws {
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+    // Users can upload to their items folder (original images from iOS app)
+    // Matches both flat files (items/{itemId}.jpg) and nested paths (items/{itemId}/motion.mov)
+    match /users/{userId}/items/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024  // 10MB limit
+                   && request.resource.contentType.matches('image/.*|video/.*');
     }
 
-    // User-uploaded cropped objects: users/{userId}/items/{itemId}/objects/*.jpg
-    match /users/{userId}/items/{itemId}/objects/{fileName} {
-      allow read: if isOwner(userId);
-
-      allow write: if isOwner(userId)
-        && request.resource.size < 10 * 1024 * 1024 // 10MB limit (blocks full photos)
-        && request.resource.contentType.matches('image/.*'); // Images only
-
-      allow delete: if isOwner(userId);
-    }
-
-    // Block all other paths (no full photo uploads)
-    match /{allPaths=**} {
-      allow read, write: if false;
+    // Session crops are written by backend Cloud Functions (service account)
+    // and read by authenticated users who own the session
+    // Note: Cloud Functions bypass rules, but users need read access
+    match /users/{userId}/sessions/{sessionId}/crops/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Write is handled by Cloud Functions service account (bypasses rules)
     }
   }
 }
 ```
 
-**Security Guarantee**: Firebase Storage rules enforce 10MB max upload size, blocking full photos (typically 3-5MB) if they somehow bypass client-side validation.
+**Security Guarantee**: Firebase Storage rules enforce 10MB max upload size. The wildcard path `{allPaths=**}` allows both flat files and nested paths within the user's items folder.
+
+**Note on content types**: Video uploads (e.g., Live Photo motion clips as `.mov` files) are also allowed via the `video/.*` content type match. This supports the Live Photo capture feature.
+
+**Note on session crops**: Session crops follow the path `users/{userId}/sessions/{sessionId}/crops/` and are written by Cloud Functions (which bypass security rules). Users have read-only access to their own session crops.
 
 ---
 
@@ -478,3 +480,4 @@ Use this checklist before releasing any feature that processes photos:
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-09 | 1.0 | Initial photo privacy protection validation strategy | Privacy & Security Architect |
+| 2026-02-08 | 1.1 | Update storage rules to match actual `storage.rules` (wildcard paths, session crops, video support), note UIImage as infrastructure code (ADR-010) | Documentation Update |

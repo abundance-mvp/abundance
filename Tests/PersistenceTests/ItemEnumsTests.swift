@@ -156,11 +156,11 @@ final class ItemEnumsTests: XCTestCase {
             id: "test-id",
             userId: "user-123",
             imageUrl: "https://example.com/image.jpg",
-            status: .pending
+            status: .processing
         )
 
         XCTAssertEqual(item.id, "test-id")
-        XCTAssertEqual(item.status, .pending)
+        XCTAssertEqual(item.status, .processing)
         XCTAssertNil(item.name)
         XCTAssertNil(item.category)
         XCTAssertNil(item.brand)
@@ -175,7 +175,7 @@ final class ItemEnumsTests: XCTestCase {
             id: "test-id",
             userId: "user-123",
             imageUrl: "https://example.com/image.jpg",
-            status: .pending,
+            status: .processing,
             name: "Test Item",
             createdAt: fixedDate,
             updatedAt: fixedDate
@@ -184,7 +184,7 @@ final class ItemEnumsTests: XCTestCase {
             id: "test-id",
             userId: "user-123",
             imageUrl: "https://example.com/image.jpg",
-            status: .pending,
+            status: .processing,
             name: "Test Item",
             createdAt: fixedDate,
             updatedAt: fixedDate
@@ -198,9 +198,79 @@ final class ItemEnumsTests: XCTestCase {
             id: "test-id",
             userId: "user-123",
             imageUrl: "https://example.com/image.jpg",
-            status: .pending
+            status: .processing
         )
         let _: any Sendable = item
         XCTAssertNotNil(item)
+    }
+
+    // MARK: - ItemStatus Legacy Mapping Tests
+
+    func testItemStatus_legacyMapping_pending() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("pending"), .processing)
+    }
+
+    func testItemStatus_legacyMapping_layer2aComplete() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("layer2a_complete"), .processing)
+    }
+
+    func testItemStatus_legacyMapping_layer2bScheduled() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("layer2b_scheduled"), .processing)
+    }
+
+    func testItemStatus_legacyMapping_layer2bComplete() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("layer2b_complete"), .processing)
+    }
+
+    func testItemStatus_legacyMapping_complete() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("complete"), .complete)
+    }
+
+    func testItemStatus_legacyMapping_failed() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("failed"), .failed)
+    }
+
+    func testItemStatus_legacyMapping_failedLayer2a() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("failed_layer2a"), .failed)
+    }
+
+    func testItemStatus_legacyMapping_failedLayer2b() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("failed_layer2b"), .failed)
+    }
+
+    func testItemStatus_legacyMapping_unknownDefaultsToProcessing() {
+        XCTAssertEqual(ItemStatus.fromFirestoreValue("unknown_value"), .processing)
+    }
+
+    func testItemStatus_codableRoundtrip() throws {
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+
+        for status in [ItemStatus.processing, .complete, .failed] {
+            let encoded = try encoder.encode(status)
+            let decoded = try decoder.decode(ItemStatus.self, from: encoded)
+            XCTAssertEqual(decoded, status)
+        }
+    }
+
+    func testItemStatus_decodesLegacyPendingAsProcessing() throws {
+        let decoder = JSONDecoder()
+        let json = "\"pending\"".data(using: .utf8)!
+        let status = try decoder.decode(ItemStatus.self, from: json)
+        XCTAssertEqual(status, .processing)
+    }
+
+    func testItemStatus_decodesLegacyLayer2aAsProcessing() throws {
+        let decoder = JSONDecoder()
+        let json = "\"layer2a_complete\"".data(using: .utf8)!
+        let status = try decoder.decode(ItemStatus.self, from: json)
+        XCTAssertEqual(status, .processing)
+    }
+
+    func testItemStatus_decodesLegacyFailedLayer2aAsFailed() throws {
+        let decoder = JSONDecoder()
+        let json = "\"failed_layer2a\"".data(using: .utf8)!
+        let status = try decoder.decode(ItemStatus.self, from: json)
+        XCTAssertEqual(status, .failed)
     }
 }

@@ -84,7 +84,7 @@ This directory contains technical specifications for the Abundance MVP applicati
 ## Quick Links
 
 ### For iOS Developers
-- [System Overview](./SPEC-ARCH-001-system-overview.md#technology-stack) - Tech stack
+- [System Overview](./SPEC-ARCH-001-system-overview.md) - Tech stack
 - [Camera Capture Flow](./SPEC-UI-001-camera-capture-flow.md) - Capture UX
 - [Catalog Flow](./SPEC-UI-002-catalog-inventory-flow.md) - Inventory UX
 - [Dev Workflow](./SPEC-OPS-002-dev-workflow.md) - Setup guide

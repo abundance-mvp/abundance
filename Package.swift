@@ -7,10 +7,11 @@ let package: Package = Package(
     products: [
         .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
         .library(name: "CameraFeature", targets: ["CameraFeature"]),
-        .library(name: "InventoryFeature", targets: ["InventoryFeature"]),
+        .library(name: "CollectionFeature", targets: ["CollectionFeature"]),
         .library(name: "ProfileFeature", targets: ["ProfileFeature"]),
         .library(name: "Persistence", targets: ["Persistence"]),
         .library(name: "VisionCore", targets: ["VisionCore"]),
+        .library(name: "EdgeTAMFeature", targets: ["EdgeTAMFeature"]),
         .library(name: "Core", targets: ["Core"]),
         .executable(name: "AbundanceApp", targets: ["AbundanceApp"])
     ],
@@ -42,8 +43,10 @@ let package: Package = Package(
         .target(
             name: "CameraFeature",
             dependencies: [
+                "Core",
                 "Persistence",
                 "VisionCore",
+                "EdgeTAMFeature",
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             swiftSettings: [
@@ -60,11 +63,12 @@ let package: Package = Package(
             ]
         ),
         .target(
-            name: "InventoryFeature",
+            name: "CollectionFeature",
             dependencies: [
                 "Core",
                 "CameraFeature",
                 "Persistence",
+                "VisionCore",
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             swiftSettings: [
@@ -72,9 +76,9 @@ let package: Package = Package(
             ]
         ),
         .testTarget(
-            name: "InventoryFeatureTests",
+            name: "CollectionFeatureTests",
             dependencies: [
-                "InventoryFeature",
+                "CollectionFeature",
                 "Persistence",
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
             ]
@@ -128,6 +132,22 @@ let package: Package = Package(
             ]
         ),
         .target(
+            name: "EdgeTAMFeature",
+            dependencies: ["VisionCore"],
+            resources: [
+                .copy("Resources/edgetam_image_encoder.mlpackage"),
+                .copy("Resources/edgetam_prompt_encoder.mlpackage"),
+                .copy("Resources/edgetam_mask_decoder.mlpackage"),
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency")
+            ]
+        ),
+        .testTarget(
+            name: "EdgeTAMFeatureTests",
+            dependencies: ["EdgeTAMFeature"]
+        ),
+        .target(
             name: "Core",
             dependencies: [],
             swiftSettings: [
@@ -138,6 +158,14 @@ let package: Package = Package(
             name: "CoreTests",
             dependencies: ["Core"]
         ),
+        .testTarget(
+            name: "AXeTests",
+            dependencies: ["Core"]
+        ),
+        .testTarget(
+            name: "PipelineTests",
+            dependencies: ["Core", "CameraFeature", "Persistence", "CollectionFeature"]
+        ),
 
         // App
         .executableTarget(
@@ -145,7 +173,8 @@ let package: Package = Package(
             dependencies: [
                 "OnboardingFeature",
                 "CameraFeature",
-                "InventoryFeature",
+                "CollectionFeature",
+                "ProfileFeature",
                 "Persistence",
                 "VisionCore",
                 .product(name: "FirebaseCore", package: "firebase-ios-sdk"),
@@ -154,9 +183,11 @@ let package: Package = Package(
                 .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
             ],
             path: "App",
+            exclude: ["Info.plist"],
             resources: [
                 .process("GoogleService-Info.plist"),
-                .process("Assets.xcassets")
+                .process("Assets.xcassets"),
+                .process("DebugResources")
             ],
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")

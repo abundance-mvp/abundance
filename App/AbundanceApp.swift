@@ -2,13 +2,26 @@ import SwiftUI
 @preconcurrency import FirebaseCore
 import FirebaseAuth
 import OnboardingFeature
+import Core
 
 @main
 struct AbundanceApp: App {
-    @StateObject private var authViewModel = AuthViewModel()
+    @State private var authViewModel: AuthViewModel
 
     init() {
-        // Configure Firebase with SPM resource bundle
+        // Configure Firebase BEFORE creating AuthViewModel (which calls Auth.auth())
+        Self.configureFirebase()
+        _authViewModel = State(initialValue: AuthViewModel())
+
+        #if DEBUG && canImport(UIKit)
+        ScreenshotMonitor.shared.startMonitoring()
+        #endif
+    }
+
+    /// Configure Firebase with SPM resource bundle. Must be called before any Firebase API usage.
+    private static func configureFirebase() {
+        guard FirebaseApp.app() == nil else { return }
+
         #if DEBUG
         print("DEBUG: Looking for Firebase config...")
         print("DEBUG: Main bundle path: \(Bundle.main.bundlePath)")
@@ -57,12 +70,36 @@ struct AbundanceApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if authViewModel.isAuthenticated {
-                    MainTabView()
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("--e2e-test-mode") {
+                    E2ETestMainTabView()
+                } else if isSimulator {
+                    DebugMainTabView()
                 } else {
-                    SignInView(viewModel: authViewModel)
+                    authContent
                 }
+                #else
+                authContent
+                #endif
             }
         }
+    }
+
+    @ViewBuilder
+    private var authContent: some View {
+        if authViewModel.isAuthenticated {
+            MainTabView()
+        } else {
+            SignInView(viewModel: authViewModel)
+        }
+    }
+
+    /// Check if running on simulator at runtime
+    private var isSimulator: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return false
+        #endif
     }
 }

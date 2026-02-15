@@ -29,21 +29,23 @@ public protocol SessionServiceProtocol: Sendable {
 
     /// Delete a session
     func deleteSession(sessionId: String) async throws
+
+    /// Create a sweep mode session with pre-cropped segments
+    func createSweepSession(
+        userId: String,
+        sweepCrops: [SweepCropInfo],
+        originalFrameUrls: [String]
+    ) async throws -> String
 }
 
 /// Concrete implementation of SessionService for Firestore
-public final class SessionService: SessionServiceProtocol {
-    /// Firestore database reference.
-    ///
-    /// SAFETY: Marked `nonisolated(unsafe)` because:
-    /// 1. Firestore is documented as thread-safe
-    ///    (see Firebase offline persistence docs)
-    /// 2. All Firestore operations are internally synchronized
-    /// 3. We only perform read/write operations, never mutate the reference itself
-    /// 4. This pattern is recommended by Firebase for Swift 6 compatibility
-    ///
-    /// If Firebase SDK changes threading guarantees in future versions,
-    /// this should be wrapped in an actor.
+///
+/// Thread Safety: `db` is marked `nonisolated(unsafe)` because `Firestore` is
+/// documented as thread-safe but does not conform to `Sendable`. All other stored
+/// properties (`logger`) are themselves `Sendable`. Per-property annotation is
+/// preferred over class-wide `@unchecked Sendable` so the compiler still checks
+/// any new properties added in the future.
+public final class SessionService: SessionServiceProtocol, @unchecked Sendable {
     nonisolated(unsafe) private let db: Firestore
     private let logger = Logger(subsystem: "com.abundance.camerafeature", category: "SessionService")
 
@@ -102,6 +104,43 @@ public final class SessionService: SessionServiceProtocol {
         ])
 
         logger.info("Session \(sessionId) marked ready for detection")
+    }
+
+    // MARK: - Sweep Session
+
+    public func createSweepSession(
+        userId: String,
+        sweepCrops: [SweepCropInfo],
+        originalFrameUrls: [String]
+    ) async throws -> String {
+        let sessionRef = db.collection("sessions").document()
+        let sessionId = sessionRef.documentID
+
+        let cropsData: [[String: Any]] = sweepCrops.map { crop in
+            [
+                "cropUrl": crop.cropUrl,
+                "boundingBox": crop.boundingBox,
+                "frameIndex": crop.frameIndex,
+                "groupId": crop.groupId
+            ]
+        }
+
+        let data: [String: Any] = [
+            "id": sessionId,
+            "userId": userId,
+            "captureMode": CaptureMode.sweep.rawValue,
+            "status": CaptureSessionStatus.detecting.rawValue,
+            "createdAt": FieldValue.serverTimestamp(),
+            "originalImageUrls": originalFrameUrls,
+            "sweepCrops": cropsData,
+            "imagesUploaded": sweepCrops.count,
+            "expectedImageCount": sweepCrops.count,
+            "detectedObjects": []
+        ]
+
+        try await sessionRef.setData(data)
+        logger.info("Created sweep session \(sessionId) with \(sweepCrops.count) crops")
+        return sessionId
     }
 
     // MARK: - Observe Session
@@ -193,6 +232,21 @@ public final class SessionService: SessionServiceProtocol {
             detectedObjects = []
         }
 
+        let sweepCrops: [SweepCropInfo]
+        if let cropsArray = data["sweepCrops"] as? [[String: Any]] {
+            sweepCrops = cropsArray.compactMap { cropData in
+                guard let cropUrl = cropData["cropUrl"] as? String,
+                      let boundingBox = cropData["boundingBox"] as? [Int],
+                      let frameIndex = cropData["frameIndex"] as? Int,
+                      let groupId = cropData["groupId"] as? String else {
+                    return nil
+                }
+                return SweepCropInfo(cropUrl: cropUrl, boundingBox: boundingBox, frameIndex: frameIndex, groupId: groupId)
+            }
+        } else {
+            sweepCrops = []
+        }
+
         return CaptureSession(
             id: id,
             userId: data["userId"] as? String ?? "",
@@ -206,7 +260,8 @@ public final class SessionService: SessionServiceProtocol {
             detectedObjects: detectedObjects,
             reasoning: data["reasoning"] as? String,
             error: data["error"] as? String,
-            errorCode: data["errorCode"] as? String
+            errorCode: data["errorCode"] as? String,
+            sweepCrops: sweepCrops
         )
     }
 }

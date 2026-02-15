@@ -108,10 +108,17 @@
 
 ### device-tester
 
-**Purpose:** Iterative testing on physical iOS device.
+**Purpose:** Iterative testing on physical iOS device and simulators.
 
 **Device:** w-16e (iPhone)
 **Bundle ID:** com.abundance.mvp
+
+**Tools:**
+
+| Tool | Purpose |
+|------|---------|
+| **XcodeBuildMCP** | 72 MCP tools for build, deploy, test, inspect |
+| **AXe** | Accessibility tree inspection + UI automation (simulator) |
 
 **Workflows:**
 
@@ -122,9 +129,36 @@
 | Performance issues | Launch `axiom:performance-profiler` |
 | Build failed | Launch `axiom:build-fixer` |
 | Backend errors | Check Cloud Functions logs via MCP |
-| UI bug | Read screenshot from `./screenshots/` |
+| UI bug (simulator) | AXe `describe-ui` + XcodeBuildMCP `snapshot_ui` |
+| UI bug (device) | Read screenshot from `./screenshots/` |
 
-**Key Commands:**
+**XcodeBuildMCP Tools (Primary):**
+
+| Task | MCP Tool |
+|------|----------|
+| Build for device | `build_device` |
+| Build for simulator | `build_sim` |
+| Launch on device | `launch_app_device` |
+| Launch on simulator | `launch_app_sim` |
+| Inspect UI (sim) | `snapshot_ui` |
+| Screenshot (sim) | `screenshot` |
+| Test on device | `test_device` |
+
+**AXe Commands (Simulator UI Inspection):**
+
+```bash
+# Get accessibility tree (structured element data)
+axe describe-ui --udid $UDID
+
+# Tap by accessibility identifier (stable)
+axe tap --id "captureButton" --udid $UDID
+
+# Type text
+axe tap --id "searchField" --udid $UDID
+axe type "kitchen items" --udid $UDID
+```
+
+**Fallback Commands:**
 
 ```bash
 # Build and install

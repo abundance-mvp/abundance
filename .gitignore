@@ -1,6 +1,9 @@
 # Xcode - generated project (regenerate with: xcodegen generate)
 Abundance.xcodeproj/
 
+# XcodeBuildMCP (machine-local session config)
+.xcodebuildmcp/
+
 # Xcode user data (always ignored)
 *.xcworkspace/
 xcuserdata/
@@ -21,6 +24,14 @@ Generated/
 *.backup
 scratch/
 
+# Environment variables / secrets
+.env
+.env.*
+!.env.template
+!.env.example
+!.env.*.template
+!.env.*.example
+
 # Firebase
 GoogleService-Info.plist
 GoogleService-Info-*.plist
@@ -38,6 +49,9 @@ Carthage/Build
 uv.lock
 .venv/
 scripts/__pycache__/
+
+# EdgeTAM export working directory
+.edgetam-export/
 # Debug directory - all contents are git-ignored
 .debug/*
 !.debug/.gitkeep

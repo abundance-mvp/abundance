@@ -14,6 +14,7 @@ final class MockSessionService: SessionServiceProtocol, @unchecked Sendable {
     var getSessionCallCount = 0
     var deleteSessionCallCount = 0
     var observeSessionCallCount = 0
+    var createSweepSessionCallCount = 0
 
     // MARK: - Captured Parameters
 
@@ -22,6 +23,8 @@ final class MockSessionService: SessionServiceProtocol, @unchecked Sendable {
     var capturedExpectedImageCount: Int?
     var capturedSessionIds: [String] = []
     var capturedImageUrls: [String] = []
+    var capturedSweepCrops: [SweepCropInfo] = []
+    var capturedOriginalFrameUrls: [String] = []
 
     // MARK: - Stubbed Responses
 
@@ -98,6 +101,23 @@ final class MockSessionService: SessionServiceProtocol, @unchecked Sendable {
         }
     }
 
+    func createSweepSession(
+        userId: String,
+        sweepCrops: [SweepCropInfo],
+        originalFrameUrls: [String]
+    ) async throws -> String {
+        createSweepSessionCallCount += 1
+        capturedUserId = userId
+        capturedSweepCrops = sweepCrops
+        capturedOriginalFrameUrls = originalFrameUrls
+
+        if let error = errorToThrow {
+            throw error
+        }
+
+        return stubbedSessionId
+    }
+
     // MARK: - Test Helpers
 
     /// Simulate a session update for observers
@@ -137,12 +157,15 @@ final class MockSessionService: SessionServiceProtocol, @unchecked Sendable {
         getSessionCallCount = 0
         deleteSessionCallCount = 0
         observeSessionCallCount = 0
+        createSweepSessionCallCount = 0
 
         capturedUserId = nil
         capturedCaptureMode = nil
         capturedExpectedImageCount = nil
         capturedSessionIds = []
         capturedImageUrls = []
+        capturedSweepCrops = []
+        capturedOriginalFrameUrls = []
 
         stubbedSessionId = "test-session-id"
         stubbedSession = nil

@@ -118,4 +118,12 @@ final class TestItemRepository: ItemRepository, @unchecked Sendable {
     func rescanItem(_ item: Item) async throws {
         // Mock implementation
     }
+
+    func refreshImageUrl(id: String) async throws -> String? {
+        nil
+    }
+
+    func refreshItem(id: String) async throws {}
+
+    func recatalogWithPhotos(id: String) async throws {}
 }

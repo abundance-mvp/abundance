@@ -86,7 +86,7 @@ BOOTED_SIMULATORS=$(xcrun simctl list devices | grep "Booted" | wc -l | xargs)
 if [ "$BOOTED_SIMULATORS" -gt 0 ]; then
     add_check "simulator" "OK" "$BOOTED_SIMULATORS simulator(s) running"
 else
-    add_check "simulator" "WARN" "No simulators running (run ./scripts/sim.sh)"
+    add_check "simulator" "WARN" "No simulators running (use XcodeBuildMCP boot_sim or xcrun simctl boot)"
 fi
 
 # Check 5: Xcode project status
@@ -104,7 +104,7 @@ RECENT_LOGS=$(find "$PROJECT_ROOT/.debug/logs" -name "*.log" -mtime -1 2>/dev/nu
 if [ "$RECENT_LOGS" -gt 0 ]; then
     add_check "recent_logs" "OK" "$RECENT_LOGS log file(s) from last 24 hours"
 else
-    add_check "recent_logs" "WARN" "No recent logs (haven't run sim.sh recently?)"
+    add_check "recent_logs" "WARN" "No recent logs (haven't run device-tester recently?)"
 fi
 
 # Check 7: Open issues

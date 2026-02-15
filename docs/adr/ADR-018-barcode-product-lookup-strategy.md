@@ -4,12 +4,13 @@
 **Date**: 2025-11-06
 **Updated**: 2026-01-13
 **Decision Makers**: Product Leadership, Tech Lead, ML/AI
-**Related**: ADR-013 (Vision Framework Strategy), ADR-015 (AI Reasoning Layer), DESIGN-004 (Computer Vision Pipeline), RESEARCH-BARCODE-API-2025-11-06 (API Selection Research)
+**Related**: ADR-013 (Dependency Injection Strategy, archived), ADR-025 (Vision Framework Strategy, archived), ADR-015 (AI Reasoning Layer, archived), DESIGN-004 (Computer Vision Pipeline), RESEARCH-BARCODE-API-2025-11-06 (API Selection Research)
 
 > **⚠️ PARTIALLY SUPERSEDED (2026-01-13)**:
-> - **Layer 1 barcode detection**: Disabled for MVP. Gemini 3 Pro handles barcode detection.
+> - **Layer 1 barcode detection**: On-device barcode detection exists in `Sources/VisionCore/Services/BarcodeDetector.swift` using `VNDetectBarcodesRequest`, but is not integrated into the main capture flow for MVP. Gemini 3 Pro handles barcode detection as part of the AI pipeline.
 > - **Barcode API**: Consolidated to UPCitemdb only. OpenFoodFacts removed.
-> - **Architecture**: Barcode lookup is now a tool called by Gemini 3 Pro.
+> - **Architecture**: Barcode lookup is now a tool called by Gemini 3 Pro (see `functions/src/ai-pipeline/tools/barcode-lookup.ts`). The original Claude Sonnet-based synthesis described in the body below has been replaced by Gemini 3 Pro.
+> - **Layer 3 references to Claude Sonnet 4.5**: Now handled by Gemini 3 Pro. SerpAPI references in the body may also be outdated -- see current pipeline specs.
 > See `docs/plans/2026-01-13-gemini-3-pipeline-design.md`.
 
 ---
@@ -772,9 +773,9 @@ _[Pending approval]_
 
 **Related Documents**:
 - RESEARCH-BARCODE-API-2025-11-06: Barcode API Comparison (NEW - comprehensive research)
-- [ADR-025-vision-framework-strategy](ADR-025-vision-framework-strategy.md): Vision Framework Strategy
-- [ADR-015-ai-reasoning-layer-architecture](ADR-015-ai-reasoning-layer-architecture.md): AI Reasoning Layer Architecture (UPDATED with barcode validation tasks)
-- [DESIGN-004-computer-vision-pipeline](../design/DESIGN-004-computer-vision-pipeline.md): Computer Vision Pipeline (UPDATED with barcode workflow)
+- ADR-025: Vision Framework Strategy (document not yet created)
+- [ADR-015-ai-reasoning-layer-architecture](../archive/adr/ADR-015-ai-reasoning-layer-architecture.md): AI Reasoning Layer Architecture (Superseded; UPDATED with barcode validation tasks)
+- DESIGN-004: Computer Vision Pipeline (document not yet created)
 - SCHEMA-001: Enriched Item Metadata (UPDATED with barcode fields)
 - PLAN-SUMMARY-barcode-scanning-feature: Implementation Roadmap
 

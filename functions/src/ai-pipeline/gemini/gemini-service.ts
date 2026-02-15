@@ -9,6 +9,7 @@
  */
 
 import { Content, Part, FunctionCall, GenerateContentResponse, CachedContent } from '@google/genai';
+import { getStorage } from 'firebase-admin/storage';
 import { createVertexAIClient } from './vertexai-config';
 import { CatalogItem } from './schemas/catalog-item';
 import { SYSTEM_PROMPT, CATALOG_TOOLS, GENERATION_CONFIG, GEMINI_MODEL_ID } from './prompts';
@@ -32,29 +33,39 @@ import { ToolCallRecord } from './schemas/catalog-history';
  * 4. Returns the final catalog item(s)
  *
  * @param imageUrl - Public URL of the image to process
+ * @param additionalImageUrls - Optional additional image URLs for multi-angle analysis
  * @returns CatalogItem or array of CatalogItems
  * @throws Error if Vertex AI config is missing, image fetch fails, or Gemini returns no response
  */
 export async function processItemWithGemini(
-  imageUrl: string
+  imageUrl: string,
+  additionalImageUrls?: string[]
 ): Promise<CatalogItem | CatalogItem[]> {
-  const imageBase64 = await fetchImageBase64(imageUrl);
+  // Fetch all images in parallel
+  const allImageUrls = [imageUrl, ...(additionalImageUrls || [])];
+  const allImagesBase64 = await Promise.all(allImageUrls.map(url => fetchImageBase64(url)));
 
   // Gemini 3 models require Vertex AI (not API keys)
   const ai = createVertexAIClient();
 
   const toolDeclarations = CATALOG_TOOLS.flatMap(t => t.functionDeclarations || []);
 
+  // Build user prompt based on image count
+  const imageCount = allImagesBase64.length;
+  const userPrompt = imageCount > 1
+    ? `Analyze these ${imageCount} images of the same object from different angles. Use all images to provide the most accurate catalog entry.`
+    : 'Analyze this image and create catalog entry(ies).';
+
+  // Build image parts
+  const imageParts: Part[] = allImagesBase64.map(data => ({
+    inlineData: { mimeType: 'image/jpeg', data }
+  }));
+
   let contents: Content[] = [{
     role: 'user',
     parts: [
-      { text: 'Analyze this image and create catalog entry(ies).' },
-      {
-        inlineData: {
-          mimeType: 'image/jpeg',
-          data: imageBase64
-        }
-      }
+      { text: userPrompt },
+      ...imageParts
     ]
   }];
 
@@ -137,7 +148,50 @@ export async function processItemWithGemini(
     throw new Error(`No text response from Gemini after ${iterations} iterations`);
   }
 
-  return JSON.parse(text) as CatalogItem | CatalogItem[];
+  return parseGeminiJson(text);
+}
+
+/**
+ * Parse JSON from Gemini, attempting repair if truncated.
+ * Gemini may exhaust output tokens mid-response, producing invalid JSON.
+ */
+function parseGeminiJson(text: string): CatalogItem | CatalogItem[] {
+  try {
+    return JSON.parse(text) as CatalogItem | CatalogItem[];
+  } catch (firstError) {
+    console.warn('JSON parse failed, attempting repair:', (firstError as Error).message);
+
+    // Try to repair truncated JSON by closing open structures
+    let repaired = text.trimEnd();
+
+    // Remove trailing incomplete key-value pair (e.g. `"key": "unterminated`)
+    repaired = repaired.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"{}[\]]*$/, '');
+
+    // Close open strings, arrays, objects
+    const openBraces = (repaired.match(/{/g) || []).length - (repaired.match(/}/g) || []).length;
+    const openBrackets = (repaired.match(/\[/g) || []).length - (repaired.match(/]/g) || []).length;
+
+    // Close any open string
+    const quoteCount = (repaired.match(/(?<!\\)"/g) || []).length;
+    if (quoteCount % 2 !== 0) {
+      repaired += '"';
+    }
+
+    for (let i = 0; i < openBrackets; i++) repaired += ']';
+    for (let i = 0; i < openBraces; i++) repaired += '}';
+
+    try {
+      const result = JSON.parse(repaired) as CatalogItem | CatalogItem[];
+      console.log('JSON repair succeeded');
+      return result;
+    } catch {
+      // Repair failed — throw original error with context
+      throw new Error(
+        `Failed to parse Gemini response as JSON: ${(firstError as Error).message}. ` +
+        `Response length: ${text.length} chars`
+      );
+    }
+  }
 }
 
 /**
@@ -182,6 +236,11 @@ async function fetchImageBase64(url: string): Promise<string> {
     throw new Error('Invalid data URL format');
   }
 
+  // Use Admin SDK for Firebase Storage URLs (bypasses security rules, no token needed)
+  if (url.includes('firebasestorage.googleapis.com')) {
+    return fetchImageFromStorage(url);
+  }
+
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -198,18 +257,43 @@ async function fetchImageBase64(url: string): Promise<string> {
 }
 
 /**
+ * Fetch image from Firebase Storage using Admin SDK.
+ * Bypasses security rules and download tokens — always works from Cloud Functions.
+ *
+ * @param url - Firebase Storage download URL
+ * @returns Base64-encoded image data
+ */
+async function fetchImageFromStorage(url: string): Promise<string> {
+  const parsedUrl = new URL(url);
+  const bucketMatch = parsedUrl.pathname.match(/\/v0\/b\/([^/]+)\/o\/(.+)/);
+  if (!bucketMatch) {
+    throw new Error(`Invalid Firebase Storage URL: ${url}`);
+  }
+
+  const bucket = bucketMatch[1];
+  const path = decodeURIComponent(bucketMatch[2]);
+
+  const storage = getStorage();
+  const file = storage.bucket(bucket).file(path);
+  const [buffer] = await file.download();
+  return buffer.toString('base64');
+}
+
+/**
  * Process an image with session persistence.
  * Uses previous catalog history for context continuity.
  *
  * @param imageUrl - Public URL of the image to process
  * @param itemId - Optional item ID for history lookup (enables persistence)
  * @param useContextCache - Whether to use cached system prompt (default: true)
+ * @param additionalImageUrls - Optional additional image URLs for multi-angle analysis
  * @returns CatalogItem or array of CatalogItems
  */
 export async function processItemWithGeminiPersistent(
   imageUrl: string,
   itemId?: string,
-  useContextCache: boolean = true
+  useContextCache: boolean = true,
+  additionalImageUrls?: string[]
 ): Promise<CatalogItem | CatalogItem[]> {
   const startTime = Date.now();
   const toolCallRecords: ToolCallRecord[] = [];
@@ -222,19 +306,34 @@ export async function processItemWithGeminiPersistent(
     historyContext = formatHistoryForPrompt(history);
   }
 
-  const imageBase64 = await fetchImageBase64(imageUrl);
+  // Fetch all images in parallel
+  const allImageUrls = [imageUrl, ...(additionalImageUrls || [])];
+  const allImagesBase64 = await Promise.all(allImageUrls.map(url => fetchImageBase64(url)));
   const ai = createVertexAIClient();
 
-  // Build user prompt with optional history context
-  const userPrompt = historyContext
-    ? `${historyContext}\n\nAnalyze this NEW image and update/confirm the catalog entry.`
-    : 'Analyze this image and create catalog entry(ies).';
+  // Build user prompt with optional history context and multi-image awareness
+  const imageCount = allImagesBase64.length;
+  let userPrompt: string;
+  if (historyContext) {
+    userPrompt = imageCount > 1
+      ? `${historyContext}\n\nAnalyze these ${imageCount} NEW images of the same object from different angles. Use all images to update/confirm the catalog entry.`
+      : `${historyContext}\n\nAnalyze this NEW image and update/confirm the catalog entry.`;
+  } else {
+    userPrompt = imageCount > 1
+      ? `Analyze these ${imageCount} images of the same object from different angles. Use all images to provide the most accurate catalog entry.`
+      : 'Analyze this image and create catalog entry(ies).';
+  }
+
+  // Build image parts
+  const imageParts: Part[] = allImagesBase64.map(data => ({
+    inlineData: { mimeType: 'image/jpeg', data }
+  }));
 
   let contents: Content[] = [{
     role: 'user',
     parts: [
       { text: userPrompt },
-      { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } }
+      ...imageParts
     ]
   }];
 
@@ -325,7 +424,7 @@ export async function processItemWithGeminiPersistent(
     throw new Error(`No text response from Gemini after ${iterations} iterations`);
   }
 
-  const catalogResult = JSON.parse(text) as CatalogItem | CatalogItem[];
+  const catalogResult = parseGeminiJson(text);
   const durationMs = Date.now() - startTime;
 
   // Save to history if itemId provided
@@ -333,7 +432,7 @@ export async function processItemWithGeminiPersistent(
     const resultItem = Array.isArray(catalogResult) ? catalogResult[0] : catalogResult;
     await saveCatalogHistory(itemId, {
       model: GEMINI_MODEL_ID,
-      imageUrls: [imageUrl],
+      imageUrls: allImageUrls,
       toolCalls: toolCallRecords,
       result: catalogItemToSnapshot(resultItem),
       metadata: {

@@ -4,7 +4,7 @@
 **Date**: 2025-11-08
 **Decision Makers**: Engineering Leadership, Backend Developer, Data Architect
 **Related Documents**:
-- docs/adr/ADR-002-platform-strategy.md (GCP/Firebase platform)
+- docs/adr/ADR-002-platform-strategy.md (product strategy)
 - docs/adr/ADR-003-mvp-scope-phasing.md (Phase 2 PWA requirement)
 - docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md
 
@@ -22,7 +22,7 @@ Abundance needs a database for:
 - Real-time sync (catalog changes instantly visible on all devices)
 - Offline-first (Phase 2 PWA works without internet)
 - Document model (catalog items = flexible schema, nested attributes)
-- GCP platform (ADR-002): Native Firebase integration
+- GCP platform: Native Firebase integration
 - Cost-efficient free tier (85% of users should cost $0)
 
 ---
@@ -37,7 +37,7 @@ Abundance needs a database for:
 - **Deployment**: GCP project `abundance-prod` (multi-region: `nam5`)
 - **Pricing**: $0.18/GB storage, $0.06/100K reads, $0.20/100K writes
 - **Free Tier**: 1 GB storage, 50K reads/day, 20K writes/day, 10GB network egress/month
-- **Schema**: Document-based (collections: `items`, `users`, `subscriptions`)
+- **Schema**: Document-based (collections: `items`, `users`, `sessions`)
 
 ---
 
@@ -141,7 +141,7 @@ firebase.firestore().enablePersistence()
 
 ### 4. GCP Integration (Native Firebase Service)
 
-**Requirement** (ADR-002): GCP platform for backend infrastructure.
+**Requirement**: GCP platform for backend infrastructure.
 
 **Solution**: Firestore is a native GCP service, deeply integrated with Firebase ecosystem.
 
@@ -250,7 +250,7 @@ exports.synthesizeMetadata = functions.firestore
 - **Cost**: $25/month for 8GB database (vs $0 Firestore free tier)
 - **Ecosystem fragmentation**: AI stack (Vertex AI) on GCP, database on Supabase cloud
 
-**Why Rejected**: Contradicts GCP platform decision (ADR-002), higher cost.
+**Why Rejected**: Contradicts GCP platform decision, higher cost.
 
 ---
 
@@ -284,7 +284,7 @@ exports.synthesizeMetadata = functions.firestore
 **Collections**:
 - `users/`: User profiles (userId, email, subscriptionStatus, createdAt)
 - `items/`: Catalog items (itemId, userId, name, category, images, metadata, aiAnalysis)
-- `subscriptions/`: Premium subscriptions (subscriptionId, userId, status, stripeCustomerId)
+- `sessions/`: Capture sessions (sessionId, userId, status, createdAt) -- tracks multi-item capture workflows
 
 **Indexes** (auto-created by Firestore):
 - `items` collection: Composite index on `(userId, createdAt)` for user's catalog sorted by date
@@ -299,17 +299,20 @@ exports.synthesizeMetadata = functions.firestore
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /items/{itemId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /subscriptions/{subscriptionId} {
+    match /items/{itemId} {
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow write: if false; // Only Cloud Functions can write subscriptions
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
   }
 }
@@ -344,7 +347,7 @@ gcloud firestore export gs://abundance-prod-backups/$(date +%Y%m%d)
 
 ## Related Decisions
 
-- **ADR-002**: Platform strategy (GCP) → Firestore native GCP service
+- **ADR-002**: Platform strategy (product strategy) → Firestore native GCP service
 - **ADR-003**: MVP scope (Phase 2 PWA) → Firestore offline persistence required
 - **ADR-005**: Authentication (Firebase Auth) → Firestore Security Rules use `request.auth.uid`
 - **ADR-008**: Image storage (GCS) → Firestore stores image URLs, GCS stores files
@@ -356,7 +359,8 @@ gcloud firestore export gs://abundance-prod-backups/$(date +%Y%m%d)
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial decision, Cloud Firestore (Native mode) | Software Architecture Expert |
+| 2026-02-08 | 1.1 | Fix collections (`sessions` not `subscriptions`), update security rules to match actual `firestore.rules`, fix ADR-002 cross-reference | Documentation Update |
 
 ---
 
-**This database selection supports real-time sync, offline-first PWA (ADR-003), GCP platform integration (ADR-002), and cost-efficient freemium model (ADR-003).**
+**This database selection supports real-time sync, offline-first PWA (ADR-003), GCP platform integration, and cost-efficient freemium model (ADR-003).**

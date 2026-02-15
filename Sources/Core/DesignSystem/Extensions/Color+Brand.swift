@@ -28,102 +28,78 @@ public extension Color {
         )
     }
 
-    // MARK: - Brand Colors (Decorative & Large Text Only)
+    // MARK: - Primary Brand Colors
 
-    /// Bright Blue - Primary brand color for interactive elements and large text
-    /// - Contrast: 3.77:1 (WCAG AA large text only)
-    /// - Usage: Button backgrounds, glows, large headings (24pt+), borders
-    static let brandBrightBlue = Color(hex: "#4381DF")
+    /// Salmon - Primary accent, CTA buttons, active states
+    static let salmon = Color(hex: "E8907A")
 
-    /// Coral Orange - Secondary brand color for decorative elements
-    /// - Contrast: 2.03:1 (Fails all WCAG standards for text)
-    /// - Usage: Decorative only (badges, backgrounds, icons, category highlights)
-    static let brandCoralOrange = Color(hex: "#FF9A6F")
+    /// Peach - Secondary accent, borders, card strokes
+    static let peach = Color(hex: "EDBE9E")
 
-    /// Salmon Pink - Tertiary brand color for subtle accents
-    /// - Contrast: 2.45:1 (Fails all WCAG standards for text)
-    /// - Usage: Decorative only (subtle backgrounds, decorative glows)
-    static let brandSalmonPink = Color(hex: "#FFC4B4")
+    /// Cream - Card backgrounds, content surfaces
+    static let cream = Color(hex: "F0DCC0")
 
-    /// Cream Yellow - Accent color for positive feedback
-    /// - Contrast: 1.18:1 (Fails all WCAG standards for text)
-    /// - Usage: Decorative only (accent fields, positive feedback glows)
-    static let brandCreamYellow = Color(hex: "#FFEDB9")
+    /// Soft Teal - Decorative accent, leaf icon
+    static let softTeal = Color(hex: "8ECAC0")
 
-    /// Mint Green - Success color for validation and price displays
-    /// - Contrast: 1.43:1 (Fails all WCAG standards for text)
-    /// - Usage: Decorative only (success glows, price tags - use textMintGreen for text)
-    static let brandMintGreen = Color(hex: "#B3FFE1")
+    /// Muted Sage - Success states, positive feedback
+    static let mutedSage = Color(hex: "9DC4A8")
 
-    // MARK: - Text-Safe Variants (WCAG AA Compliant)
+    // MARK: - Text Colors
 
-    /// Text Bright Blue - Accessible variant for body text
-    /// - Contrast: 7.2:1 (WCAG AAA compliant)
-    /// - Usage: Links, interactive text, navigation labels, small buttons
-    static let textBrightBlue = Color(hex: "#2D5FA3")
+    /// Deep Plum - Primary body text
+    static let deepPlum = Color(hex: "3B2E3A")
 
-    /// Text Coral Orange - Accessible variant for warning text
-    /// - Contrast: 5.1:1 (WCAG AA compliant)
-    /// - Usage: Warning messages, alert text, destructive action labels
-    static let textCoralOrange = Color(hex: "#CC5D3A")
+    /// Dark Plum - High-emphasis text
+    static let darkPlum = Color(hex: "2D2226")
 
-    /// Text Mint Green - Accessible variant for success text
-    /// - Contrast: 4.8:1 (WCAG AA compliant)
-    /// - Usage: Success messages, validation feedback, price values
-    static let textMintGreen = Color(hex: "#008057")
+    /// Ultra Dark Plum - Maximum contrast text
+    static let ultraDarkPlum = Color(hex: "1A1218")
 
-    // MARK: - Semantic Tokens
+    // MARK: - Background Colors
 
-    // MARK: Interaction Colors
+    /// Background Teal - Decorative background accent
+    static let backgroundTeal = Color(hex: "5BB8C9")
+
+    /// Warm White - Default screen background
+    static let warmWhite = Color(hex: "FAF6F0")
+
+    // MARK: - Behind-Glass Pre-Saturated Variants
+
+    /// Salmon pre-saturated for use behind glass effects
+    static let salmonBehindGlass = Color(hex: "E87A60")
+
+    /// Peach pre-saturated for use behind glass effects
+    static let peachBehindGlass = Color(hex: "EDB085")
+
+    /// Teal pre-saturated for use behind glass effects
+    static let tealBehindGlass = Color(hex: "7AC4B8")
+
+    // MARK: - Increase Contrast Variants
+
+    /// Salmon variant for increased contrast accessibility
+    static let salmonHighContrast = Color(hex: "C0705A")
+
+    /// Deep plum variant for increased contrast accessibility
+    static let deepPlumHighContrast = Color.ultraDarkPlum
+
+    // MARK: - Semantic Aliases
+
     /// Primary accent color for interactive elements
-    /// - Light mode: Bright Blue (#4381DF, 3.77:1)
-    /// - Usage: Button backgrounds, borders, active states, large headings
-    static let accentPrimary = Color.brandBrightBlue
+    static let accentPrimary = Color.salmon
 
-    /// Secondary accent color for notifications and badges
-    /// - Light mode: Coral Orange (#FF9A6F, 2.03:1)
-    /// - Usage: Notification badges, category highlights, secondary actions
-    static let accentSecondary = Color.brandCoralOrange
+    /// Secondary accent color for borders and highlights
+    static let accentSecondary = Color.peach
 
-    /// Tertiary accent color for subtle backgrounds
-    /// - Light mode: Salmon Pink (#FFC4B4, 2.45:1)
-    /// - Usage: Subtle backgrounds, decorative accents, hover states
-    static let accentTertiary = Color.brandSalmonPink
+    /// Primary text color
+    static let textPrimary = Color.deepPlum
 
-    // MARK: Feedback Colors
-    /// Success color for positive feedback (text-safe)
-    /// - Contrast: 4.8:1 (WCAG AA compliant)
-    /// - Usage: Success messages, validation, save confirmations
-    static let successColor = Color.textMintGreen
+    /// Success color for positive feedback
+    static let successColor = Color.mutedSage
 
-    /// Success glow for decorative success elements
-    /// - Contrast: 1.43:1 (Decorative only)
-    /// - Usage: Success glows, price tag backgrounds (with text-safe text)
-    static let successGlow = Color.brandMintGreen
+    /// Error color for validation failures
+    static let errorColor = Color.salmon
 
-    /// Warning color for caution messages (text-safe)
-    /// - Contrast: 5.1:1 (WCAG AA compliant)
-    /// - Usage: Warning messages, caution text, alert labels
-    static let warningColor = Color.textCoralOrange
-
-    /// Error color for validation failures (text-safe)
-    /// - Contrast: 5.1:1 (WCAG AA compliant)
-    /// - Usage: Error messages, validation failures, destructive confirmations
-    static let errorColor = Color.textCoralOrange
-
-    // MARK: Text Colors
-    /// Primary text color (AAA compliant)
-    /// - Contrast: 12.52:1 (WCAG AAA compliant)
-    /// - Usage: All body text, headlines, descriptions, primary labels
-    static let textPrimary = Color(hex: "#3B2E3A")
-
-    /// Link color for interactive text (AAA compliant)
-    /// - Contrast: 7.2:1 (WCAG AAA compliant)
-    /// - Usage: Links, interactive text, navigation labels
-    static let textLink = Color.textBrightBlue
-
-    // MARK: Surface Colors
-    /// Default background color (off-white)
-    /// - Usage: Base screen background, Reduce Transparency fallback
-    static let backgroundDefault = Color(hex: "#FCFCFF")
+    /// Default background color
+    static let backgroundDefault = Color.warmWhite
 }

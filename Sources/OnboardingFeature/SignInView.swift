@@ -4,12 +4,15 @@ import Core
 import CameraFeature
 
 public struct SignInView: View {
-    @ObservedObject var viewModel: AuthViewModel
+    var viewModel: AuthViewModel
     @StateObject private var networkMonitor = NetworkMonitor.shared
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var showingNetworkError = false
+
+    @ScaledMetric(relativeTo: .largeTitle) private var leafIconSize: CGFloat = 80
 
     public init(viewModel: AuthViewModel) {
         self.viewModel = viewModel
@@ -45,7 +48,7 @@ public struct SignInView: View {
                     .padding(.bottom, 32)
             }
             .padding(.horizontal, 24)
-            .animation(.easeInOut(duration: 0.2), value: networkMonitor.isConnected)
+            .animation(reduceMotion ? nil : .brandReducedMotion, value: networkMonitor.isConnected)
         }
     }
 
@@ -59,21 +62,21 @@ public struct SignInView: View {
             Text("No internet connection")
                 .font(.subheadline)
         }
-        .foregroundStyle(Color.warningColor)
+        .foregroundStyle(Color.salmon)
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background {
             if #available(iOS 26.0, macOS 26.0, *) {
                 if !reduceTransparency {
-                    Color.warningColor.opacity(0.15)
+                    Color.salmon.opacity(0.15)
                         .glassEffect(in: Capsule())
                 } else {
                     Capsule()
-                        .fill(Color.warningColor.opacity(0.15))
+                        .fill(Color.salmon.opacity(0.15))
                 }
             } else {
                 Capsule()
-                    .fill(Color.warningColor.opacity(0.15))
+                    .fill(Color.salmon.opacity(0.15))
             }
         }
         .accessibilityLabel("No internet connection. Sign in requires internet access.")
@@ -88,8 +91,8 @@ public struct SignInView: View {
         } else {
             LinearGradient(
                 colors: [
-                    Color.brandMintGreen.opacity(0.3),
-                    Color.brandBrightBlue.opacity(0.2)
+                    Color.peach.opacity(0.3),
+                    Color.salmon.opacity(0.2)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -101,10 +104,10 @@ public struct SignInView: View {
 
     private var leafIcon: some View {
         Image(systemName: "leaf.fill")
-            .font(.system(size: 80).leading(.tight))
+            .font(.system(size: leafIconSize).leading(.tight))
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
-            .foregroundStyle(Color.brandMintGreen)
-            .shadow(color: Color.brandMintGreen.opacity(0.4), radius: 16, x: 0, y: 8)
+            .foregroundStyle(Color.softTeal)
+            .shadow(color: Color.softTeal.opacity(0.4), radius: 16, x: 0, y: 8)
             .accessibilityHidden(true)
     }
 
@@ -118,7 +121,7 @@ public struct SignInView: View {
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
 
-            Text("Your catalog syncs across devices")
+            Text("Your collection syncs across devices")
                 .font(.system(.body, design: .rounded))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -171,7 +174,7 @@ public struct SignInView: View {
                 Image(systemName: errorIcon(for: error))
                     .foregroundStyle(Color.errorColor)
 
-                Text(error.localizedDescription)
+                Text(userFacingMessage(for: error))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.errorColor)
                     .lineLimit(2)
@@ -197,7 +200,7 @@ public struct SignInView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .adaptiveGlass(cornerRadius: 12)
+        .abundanceCardStyle(cornerRadius: 12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(error.localizedDescription)")
     }
@@ -207,6 +210,23 @@ public struct SignInView: View {
             return "wifi.exclamationmark"
         }
         return "exclamationmark.triangle.fill"
+    }
+
+    private func userFacingMessage(for error: Error) -> String {
+        if let asError = error as? ASAuthorizationError {
+            switch asError.code {
+            case .notHandled:
+                return "Sign in was interrupted. Please try again."
+            case .invalidResponse:
+                return "Apple returned an invalid response. Please try again."
+            default:
+                return "Sign in failed. Please try again."
+            }
+        }
+        if isNetworkError(error) {
+            return "Network error. Check your connection and try again."
+        }
+        return error.localizedDescription
     }
 
     private func isNetworkError(_ error: Error) -> Bool {

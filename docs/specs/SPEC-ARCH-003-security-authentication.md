@@ -37,9 +37,9 @@ Abundance implements a **privacy-first security architecture** built on the foll
 +-------------------+     +-------------------+     +-------------------+
 |   iOS Client      |     |   Firebase/GCP    |     |   AI Services     |
 +-------------------+     +-------------------+     +-------------------+
-| - Apple Sign-In   |     | - Security Rules  |     | - Vertex AI       |
-| - Keychain (AES)  | --> | - Row-level ACL   | --> | - SerpAPI         |
-| - Privacy Firewall|     | - AES-256 at rest |     | - Anthropic       |
+| - Apple Sign-In   |     | - Security Rules  |     | - Gemini 3 Pro    |
+| - Keychain (AES)  | --> | - Row-level ACL   | --> | - Gemini 3 Flash  |
+| - Privacy Firewall|     | - AES-256 at rest |     | - SerpAPI         |
 | - TLS 1.3         |     | - Secret Manager  |     | - Signed URLs     |
 +-------------------+     +-------------------+     +-------------------+
 ```
@@ -81,12 +81,25 @@ User Device                    Apple                      Firebase
 
 ```swift
 @MainActor
-public class AuthViewModel: ObservableObject {
-    @Published public var isAuthenticated: Bool = false
-    @Published public var isLoading: Bool = false
-    @Published public var error: Error?
+@Observable
+public final class AuthViewModel {
+    public var isAuthenticated: Bool = false
+    public var isLoading: Bool = false
+    public var error: Error?
 
     private let keychain: KeychainManager
+
+    public init(keychain: KeychainManager = KeychainManager()) {
+        self.keychain = keychain
+        checkAuthState()
+    }
+
+    /// Check if user is already authenticated
+    private func checkAuthState() {
+        if Auth.auth().currentUser != nil {
+            isAuthenticated = true
+        }
+    }
 
     /// Sign in with Apple (called after ASAuthorization completes)
     public func signInWithApple(credential: ASAuthorizationAppleIDCredential) async {
@@ -123,6 +136,8 @@ public class AuthViewModel: ObservableObject {
     }
 }
 ```
+
+**Note:** `AuthViewModel` uses `@Observable` (iOS 17+ Observation framework), not the older `ObservableObject`/`@Published` pattern.
 
 ### 2.2 Sign-In Methods Supported
 
@@ -252,7 +267,7 @@ Firebase Storage enforces **user-scoped paths** with size and content type restr
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Users can only upload to their own folder
+    // Users can upload to their items folder (original images from iOS app)
     // Matches both flat files (items/{itemId}.jpg) and nested paths (items/{itemId}/motion.mov)
     match /users/{userId}/items/{allPaths=**} {
       allow read: if request.auth != null && request.auth.uid == userId;
@@ -260,6 +275,14 @@ service firebase.storage {
                    && request.auth.uid == userId
                    && request.resource.size < 10 * 1024 * 1024  // 10MB limit
                    && request.resource.contentType.matches('image/.*|video/.*');
+    }
+
+    // Session crops are written by backend Cloud Functions (service account)
+    // and read by authenticated users who own the session
+    // Note: Cloud Functions bypass rules, but users need read access
+    match /users/{userId}/sessions/{sessionId}/crops/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Write is handled by Cloud Functions service account (bypasses rules)
     }
   }
 }
@@ -269,18 +292,20 @@ service firebase.storage {
 
 | Constraint | Value | Purpose |
 |------------|-------|---------|
-| **Path Pattern** | `users/{userId}/items/{allPaths=**}` | User isolation |
+| **Items Path** | `users/{userId}/items/{allPaths=**}` | User isolation for item images |
+| **Session Crops Path** | `users/{userId}/sessions/{sessionId}/crops/{allPaths=**}` | User read access for AI-generated crops |
 | **Authentication** | `request.auth != null` | Require sign-in |
 | **Ownership** | `request.auth.uid == userId` | User can only access own folder |
-| **Size Limit** | 10 MB | Block large files (privacy protection) |
-| **Content Type** | `image/.*\|video/.*` | Only images and videos |
+| **Size Limit** | 10 MB (items only) | Block large files (privacy protection) |
+| **Content Type** | `image/.*\|video/.*` (items only) | Only images and videos |
+| **Session Crops Write** | Cloud Functions service account | Bypasses rules; users have read-only access |
 
 ### 3.3 User Data Isolation
 
 **Implementation Pattern** (`Sources/Persistence/Firebase/ItemService.swift`):
 
 ```swift
-/// Creates a new item document with Layer 1 metadata
+/// Creates a new item document with Layer 1 metadata for Layer 1→2 handoff
 /// Triggers Layer 2a extraction via onItemCreated cloud function
 public func createItemWithLayer1Metadata(
     itemId: String,
@@ -297,10 +322,16 @@ public func createItemWithLayer1Metadata(
             "layer1": [
                 "detectedClass": layer1Metadata.detectedClass,
                 "confidence": layer1Metadata.confidence,
-                // ... additional metadata
+                "boundingBox": [
+                    "x": layer1Metadata.boundingBox.origin.x,
+                    "y": layer1Metadata.boundingBox.origin.y,
+                    "width": layer1Metadata.boundingBox.size.width,
+                    "height": layer1Metadata.boundingBox.size.height
+                ],
+                "qualityScore": layer1Metadata.qualityScore
             ]
         ],
-        "status": ItemStatus.pending.rawValue,
+        "status": "pending",  // Triggers Cloud Function for Layer 2a
         "createdAt": FieldValue.serverTimestamp(),
         "updatedAt": FieldValue.serverTimestamp()
     ]
@@ -509,11 +540,12 @@ allow write: if request.auth != null
 #### Firestore Validation
 
 ```javascript
-// Ownership cannot be changed after creation
-allow update: if request.auth != null
-              && resource.data.userId == request.auth.uid
-              && request.resource.data.userId == resource.data.userId;
+// Items: owner can update/delete their own documents
+allow update, delete: if request.auth != null
+                      && request.auth.uid == resource.data.userId;
 ```
+
+**Note:** The current rules verify that the authenticated user owns the document (`resource.data.userId == request.auth.uid`) but do not explicitly prevent changing the `userId` field on update. Ownership immutability should be enforced in a future rules update by adding `request.resource.data.userId == resource.data.userId` to the update rule.
 
 ### 6.2 Rate Limiting
 
@@ -543,21 +575,27 @@ User enumeration protection: ENABLED
 
 #### Cloud Logging Integration
 
+Cloud Functions log security-relevant events during processing. The deployed functions include:
+
+- **`onItemCreatedGemini3`** - Logs item creation with userId, itemId, triggers AI pipeline
+- **`onItemDeleted`** - Logs item deletion, handles Cloud Storage cleanup
+- **`onSessionCreated`** - Logs session creation for capture workflows
+- **`onItemUpdatedDeepScan`** / **`onItemUpdatedRescan`** - Logs refresh/rescan requests
+
+All HTTP endpoints (`createItemHTTP`, `getItemHTTP`, `listItemsHTTP`) verify Firebase Auth tokens and log authentication failures:
+
 ```javascript
-// Cloud Function logging for security events
-exports.auditUploadedImages = functions.storage.object().onFinalize(async (object) => {
-  const filePath = object.name;
-  const fileSize = parseInt(object.size);
-
-  // Log all uploads
-  console.log(`Upload: ${filePath}, size: ${fileSize} bytes`);
-
-  // Alert if file size exceeds expected threshold (potential privacy violation)
-  if (fileSize > 500 * 1024) {
-    console.error(`PRIVACY ALERT: Large file uploaded (${fileSize} bytes): ${filePath}`);
-    // Trigger security alert
-  }
-});
+// Cloud Function auth pattern (from index.ts)
+const authHeader = req.headers.authorization;
+if (!authHeader?.startsWith("Bearer ")) {
+  res.status(401).json({
+    error: { code: "unauthenticated", message: "User must be signed in" }
+  });
+  return;
+}
+const token = authHeader.split("Bearer ")[1];
+const decodedToken = await admin.auth().verifyIdToken(token);
+const userId = decodedToken.uid;
 ```
 
 #### Logged Events
@@ -573,6 +611,8 @@ exports.auditUploadedImages = functions.storage.object().onFinalize(async (objec
 
 #### Secret Access Auditing
 
+API keys for external services (SerpAPI, Gemini) are stored in Google Cloud Secret Manager. All accesses are automatically logged via Cloud Audit Logs:
+
 ```javascript
 // All Secret Manager accesses are logged via Cloud Audit Logs
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
@@ -582,6 +622,8 @@ const [version] = await client.accessSecretVersion({
 });
 // Access logged in Cloud Audit Logs automatically
 ```
+
+**Note:** The AI pipeline uses Gemini 3 Flash (Layer 1 detection) and Gemini 3 Pro (Layer 2 cataloging) via Vertex AI. API credentials are managed through GCP service accounts, not stored secrets.
 
 ### 6.4 Token Security
 
@@ -605,7 +647,8 @@ const [url] = await bucket.file(imagePath).getSignedUrl({
 ### 6.5 Session Management
 
 ```swift
-// AuthViewModel.swift - Session lifecycle
+// AuthViewModel.swift - Session lifecycle (@Observable, not ObservableObject)
+/// Sign out
 public func signOut() {
     do {
         try Auth.auth().signOut()
@@ -667,3 +710,4 @@ public func signOut() {
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2026-01-18 | 1.0 | Initial security specification | Claude Code Audit |
+| 2026-02-08 | 1.1 | Update AI services (Anthropic to Gemini 3), fix AuthViewModel to @Observable, add session crops storage rule, fix code snippets to match actual implementation, update Cloud Functions auth patterns | Doc Freshness Audit |

@@ -11,7 +11,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.integration.config.js --runInBand"
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.integration.config.js --runInBand",
+    "test:e2e": "jest --testPathPatterns=e2e-catalog-pipeline --runInBand --testTimeout=180000"
   },
   "engines": {
     "node": "20"

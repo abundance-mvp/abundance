@@ -120,8 +120,25 @@ public final class CameraService: NSObject, ObservableObject, @preconcurrency Ca
                     continuation.resume()
                 }
             }
-            self.sessionStateSubject.send(.running)
+            // Only report running if session actually restarted
+            if captureSession.isRunning {
+                self.sessionStateSubject.send(.running)
+            }
         }
+    }
+
+    // MARK: - Audio Session Configuration
+
+    private func configureAudioSession() {
+        #if os(iOS)
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, options: [.duckOthers, .defaultToSpeaker])
+            try audioSession.setActive(true)
+        } catch {
+            // Audio session config is best-effort; camera works without it
+        }
+        #endif
     }
 
     // MARK: - Public Methods
@@ -142,6 +159,9 @@ public final class CameraService: NSObject, ObservableObject, @preconcurrency Ca
 
     public func startSession() async throws {
         sessionStateSubject.send(.configuring)
+
+        // Configure audio session before capture session to prevent conflicts
+        configureAudioSession()
 
         do {
             try await sessionActor.configure()
@@ -174,6 +194,16 @@ public final class CameraService: NSObject, ObservableObject, @preconcurrency Ca
                 continuation.resume()
             }
         }
+
+        // Deactivate audio session to release audio pipeline resources
+        #if os(iOS)
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            // Best-effort; camera stop is not gated on audio session
+        }
+        #endif
+
         sessionStateSubject.send(.stopped)
     }
 

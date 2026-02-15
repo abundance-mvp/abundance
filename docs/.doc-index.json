@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "generated": "2026-01-19T17:31:13Z",
+  "generated": "2026-02-10T00:00:00Z",
   "directories": {
     "specs": {
       "path": "docs/specs/",
@@ -14,6 +14,11 @@
             "Sources/",
             "functions/"
           ],
+          "code_ref_hashes": {
+            "Sources/": "9743c28cda86c6ca",
+            "functions/": "0ab66d2c9d6bda67"
+          },
+          "last_verified": "2026-02-09",
           "updated": "2026-01-18"
         },
         "SPEC-ARCH-002-layer1-layer2-pipeline.md": {
@@ -22,6 +27,11 @@
             "functions/src/ai-pipeline/",
             "Sources/CameraFeature/"
           ],
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a",
+            "Sources/CameraFeature/": "19529824f95dfc78"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-ARCH-003-security-authentication.md": {
@@ -30,6 +40,11 @@
             "Sources/OnboardingFeature/",
             "functions/"
           ],
+          "code_ref_hashes": {
+            "Sources/OnboardingFeature/": "31f2abf4898e1ae4",
+            "functions/": "5f73cb4d0a8893e9"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-API-001-cloud-functions.md": {
@@ -37,6 +52,10 @@
           "code_refs": [
             "functions/src/"
           ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-DATA-001-firestore-schema.md": {
@@ -45,6 +64,11 @@
             "functions/src/",
             "Sources/Core/"
           ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc",
+            "Sources/Core/": "4862099466d15069"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-DATA-002-storage-architecture.md": {
@@ -53,6 +77,11 @@
             "functions/src/",
             "Sources/"
           ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc",
+            "Sources/": "a8889ca612190f61"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-PIPE-001-layer1-detection.md": {
@@ -61,6 +90,11 @@
             "functions/src/ai-pipeline/gemini/",
             "functions/src/ai-pipeline/layer1/"
           ],
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/gemini/": "58f52e8282d9e940",
+            "functions/src/ai-pipeline/layer1/": "5db4b6fc077534a0"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-PIPE-002-layer2-cataloging.md": {
@@ -68,6 +102,10 @@
           "code_refs": [
             "functions/src/ai-pipeline/"
           ],
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-PIPE-003-session-persistence.md": {
@@ -75,27 +113,107 @@
           "code_refs": [
             "functions/src/ai-pipeline/"
           ],
+          "code_ref_hashes": {
+            "functions/src/ai-pipeline/": "83750a98f9053a5a"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
+        },
+        "SPEC-PIPE-004-camera-sweep-option-a-edgetam.md": {
+          "status": "Draft",
+          "code_refs": [
+            "Sources/EdgeTAMFeature/",
+            "Sources/CameraFeature/ViewModels/SweepCaptureViewModel.swift",
+            "Sources/CameraFeature/Views/SweepCaptureView.swift",
+            "Sources/CameraFeature/Views/SegmentOverlayView.swift",
+            "Sources/CameraFeature/Views/SegmentSelectionTray.swift",
+            "functions/src/ai-pipeline/layer1/sweep-labeling.ts"
+          ],
+          "code_ref_hashes": {
+            "Sources/EdgeTAMFeature/": "1130a305e33a9705",
+            "Sources/CameraFeature/ViewModels/SweepCaptureViewModel.swift": "f13f6fd2ea882138",
+            "Sources/CameraFeature/Views/SweepCaptureView.swift": "1d81fe5375e65831",
+            "Sources/CameraFeature/Views/SegmentOverlayView.swift": "c65f7535d3e6571d",
+            "Sources/CameraFeature/Views/SegmentSelectionTray.swift": "131a4525442a2bbd",
+            "functions/src/ai-pipeline/layer1/sweep-labeling.ts": "f6f1a8bd9cbb7705"
+          },
+          "last_verified": "2026-02-10",
+          "updated": "2026-02-07"
+        },
+        "SPEC-PIPE-004-camera-sweep-option-b-apple-native.md": {
+          "status": "Draft",
+          "code_refs": [
+            "Sources/VisionCore/"
+          ],
+          "code_ref_hashes": {
+            "Sources/VisionCore/": "31cc22d4add5f3af"
+          },
+          "last_verified": "2026-02-10",
+          "updated": "2026-02-07"
         },
         "SPEC-UI-001-camera-capture-flow.md": {
           "status": "Active",
           "code_refs": [
             "Sources/CameraFeature/"
           ],
+          "code_ref_hashes": {
+            "Sources/CameraFeature/": "dc0df987b1097a9e"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-UI-002-catalog-inventory-flow.md": {
           "status": "Active",
           "code_refs": [
-            "Sources/InventoryFeature/"
+            "Sources/CollectionFeature/"
           ],
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "328856a210e7e841"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
+        },
+        "SPEC-UI-003-design-system.md": {
+          "status": "Draft",
+          "code_refs": [
+            "Sources/Core/DesignSystem/",
+            "Sources/CollectionFeature/",
+            "Sources/CameraFeature/",
+            "Sources/ProfileFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/Core/DesignSystem/": "d2fbae0ada6944f7",
+            "Sources/CollectionFeature/": "d75fc5dbd343b0d2",
+            "Sources/CameraFeature/": "3a5773142e55c40f",
+            "Sources/ProfileFeature/": "7a0a468f4b163e79"
+          },
+          "last_verified": "2026-02-09",
+          "updated": "2026-02-06"
+        },
+        "SPEC-UI-004-liquid-glass-adoption.md": {
+          "status": "Draft",
+          "code_refs": [
+            "App/",
+            "Sources/Core/DesignSystem/",
+            "Sources/CollectionFeature/Components/"
+          ],
+          "code_ref_hashes": {
+            "App/": "736591c3fe2bfbf0",
+            "Sources/Core/DesignSystem/": "d2fbae0ada6944f7",
+            "Sources/CollectionFeature/Components/": "9552cd7eab5fed07"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-02-06"
         },
         "SPEC-OPS-001-cicd-workflows.md": {
           "status": "Active",
           "code_refs": [
             ".github/workflows/"
           ],
+          "code_ref_hashes": {
+            ".github/workflows/": "c59d65528e5c75a3"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-OPS-002-dev-workflow.md": {
@@ -104,6 +222,11 @@
             "scripts/",
             ".claude/"
           ],
+          "code_ref_hashes": {
+            "scripts/": "7404f3783a159d98",
+            ".claude/": "5b401005cfec49db"
+          },
+          "last_verified": "2026-02-08",
           "updated": "2026-01-18"
         },
         "SPEC-OPS-003-cost-model.md": {
@@ -176,13 +299,43 @@
           "merged": null
         },
         "2026-01-18-background-processing-ux-implementation.md": {
-          "status": "Active",
+          "status": "Draft",
           "related_branch": null,
           "merged": null
         },
         "brainstorm-burst-mode-dedup-fingerprinting.md": {
           "status": "Active",
           "related_branch": null,
+          "merged": null
+        },
+        "PLAN-axe-test-followups.md": {
+          "status": "Completed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-01-20-comprehensive-test-suite-plan.md": {
+          "status": "Draft",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-05-iteration-workflow-modernization-design.md": {
+          "status": "Implemented",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-06-brand-bible-revision-design-system-specs.md": {
+          "status": "Draft",
+          "related_branch": "feature/brand-design-system",
+          "merged": null
+        },
+        "2026-02-08-doc-freshness-system.md": {
+          "status": "Active",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-10-pr34-doc-updates.md": {
+          "status": "Not Started",
+          "related_branch": "claude/pedantic-bhabha",
           "merged": null
         }
       }
@@ -196,7 +349,7 @@
       ],
       "docs": {
         "2026-01-18-background-processing-ux-redesign.md": {
-          "status": "Open",
+          "status": "open",
           "related_branch": null,
           "merged": null
         },
@@ -205,10 +358,151 @@
           "related_branch": null,
           "merged": null
         },
-        "2026-01-16-frozen-camera-after-error-dismiss.md": {
+        "2026-01-20-camera-stops-working-after-tab-switch.md": {
+          "status": "In Progress",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-07-bounding-boxes-misaligned-from-detected-objects.md": {
           "status": "Open",
           "related_branch": null,
           "merged": null
+        },
+        "2026-02-07-camera-frozen-after-tab-navigation-post-capture.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-07-catalog-grid-first-row-card-overlap.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-sweep-mode-non-functional-on-device.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-sweep-mode-remove-helper-text.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-sweep-mode-status-indicator-reposition.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-add-sweep-mode-hint-to-camera-view.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-single-mode-bounding-boxes-still-offset-right.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-single-mode-photo-shifts-right-of-center.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-burst-mode-error-on-capture-completion.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-burst-mode-black-background.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-retake-photo-not-cropped.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-collection-view-non-uniform-item-sizes.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-missing-avaudiosession-configuration.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-mainactor-on-haptic-protocol.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-withanimation-async-boundary-itemcard.md": {
+          "status": "Closed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-session-interruption-handling-not-defensive.md": {
+          "status": "Open",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-08-unsafe-task-captures-missing-weak-self.md": {
+          "status": "Closed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-09-sign-out-does-not-redirect-to-login.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": null
+        },
+        "2026-02-09-device-monitor-crashes-on-startup.md": {
+          "status": "Fixed",
+          "related_branch": null,
+          "merged": null
+        }
+      }
+    },
+    "brand": {
+      "path": "docs/brand/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "abundance-brand-bible-v3-2026-02-06.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/Core/DesignSystem/"
+          ],
+          "code_ref_hashes": {
+            "Sources/Core/DesignSystem/": "d2fbae0ada6944f7"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-02-06"
+        }
+      }
+    },
+    "glossary": {
+      "path": "docs/",
+      "archive_on": [],
+      "docs": {
+        "GLOSSARY.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CollectionFeature/",
+            "Sources/CameraFeature/",
+            "App/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "4bffc70f33e5e836",
+            "Sources/CameraFeature/": "32eb7c3cdfe96aa7",
+            "App/": "9716378f78128986"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-02-08",
+          "related_adr": "ADR-027-terminology-standardization.md"
         }
       }
     },
@@ -222,6 +516,341 @@
           "status": "Active",
           "code_refs": [],
           "updated": "2026-01-18"
+        }
+      }
+    },
+    "adr": {
+      "path": "docs/adr/",
+      "archive_on": [
+        "Deprecated",
+        "Superseded"
+      ],
+      "docs": {
+        "ADR-001-strategic-positioning.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-002-platform-strategy.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-003-mvp-scope-phasing.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-005-authentication-strategy.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/OnboardingFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/OnboardingFeature/": "31f2abf4898e1ae4"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-006-database-selection.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-007-api-architecture.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-008-image-storage-architecture.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-009-ios-deployment-cicd.md": {
+          "status": "Approved",
+          "code_refs": [
+            ".github/workflows/"
+          ],
+          "code_ref_hashes": {
+            ".github/workflows/": "bbf7a3dc0b5c2cf7"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-016-image-hosting-strategy.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-018-barcode-product-lookup-strategy.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/CameraFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CameraFeature/": "dc0df987b1097a9e"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-019-firestore-data-model-rationale.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-020-cloud-functions-organization.md": {
+          "status": "Approved",
+          "code_refs": [
+            "functions/src/"
+          ],
+          "code_ref_hashes": {
+            "functions/src/": "e981ae90b420c9bc"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-021-data-encryption-approach.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/Core/"
+          ],
+          "code_ref_hashes": {
+            "Sources/Core/": "4862099466d15069"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-022-photo-privacy-protection.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/CameraFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CameraFeature/": "dc0df987b1097a9e"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-023-authentication-authorization-strategy.md": {
+          "status": "Approved",
+          "code_refs": [
+            "Sources/OnboardingFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/OnboardingFeature/": "31f2abf4898e1ae4"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-14"
+        },
+        "ADR-024-observability-stack.md": {
+          "status": "Approved",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-026-payment-strategy.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-01-14"
+        },
+        "ADR-027-terminology-standardization.md": {
+          "status": "Proposed",
+          "code_refs": [],
+          "updated": "2026-02-08"
+        }
+      }
+    },
+    "architecture": {
+      "path": "docs/architecture/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "catalog-pipeline.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CameraFeature/",
+            "functions/src/ai-pipeline/",
+            "functions/src/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CameraFeature/": "21c751b35b914204",
+            "functions/src/ai-pipeline/": "e68b7584e47c5ea8",
+            "functions/src/": "e07207985d3cefea"
+          },
+          "last_verified": "2026-02-09",
+          "updated": "2026-02-07"
+        }
+      }
+    },
+    "view-specs": {
+      "path": "docs/view-specs/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "capture-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CameraFeature/Views/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CameraFeature/Views/": "b3f5e77873bf1a91"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-18"
+        },
+        "detection-results-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CameraFeature/Views/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CameraFeature/Views/": "b3f5e77873bf1a91"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-18"
+        },
+        "edit-item-sheet.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CollectionFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "328856a210e7e841"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-18"
+        },
+        "collection-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CollectionFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "4bffc70f33e5e836"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-18"
+        },
+        "item-card.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CollectionFeature/Components/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/Components/": "f6f7a676073089c0"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-18"
+        },
+        "item-detail-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CollectionFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "328856a210e7e841"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-18"
+        },
+        "photo-carousel-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CollectionFeature/Components/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/Components/": "9552cd7eab5fed07"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-18"
+        },
+        "profile-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/ProfileFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/ProfileFeature/": "7a0a468f4b163e79"
+          },
+          "last_verified": "2026-02-09",
+          "updated": "2026-01-18"
+        },
+        "sign-in-view.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/OnboardingFeature/"
+          ],
+          "code_ref_hashes": {
+            "Sources/OnboardingFeature/": "8a7fda1671fad1db"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-18"
+        }
+      }
+    },
+    "testing": {
+      "path": "docs/testing/",
+      "archive_on": [
+        "Deprecated"
+      ],
+      "docs": {
+        "SIMULATOR-INTERACTION.md": {
+          "status": "Active",
+          "code_refs": [
+            "scripts/"
+          ],
+          "code_ref_hashes": {
+            "scripts/": "7404f3783a159d98"
+          },
+          "last_verified": "2026-02-08",
+          "updated": "2026-01-20"
+        },
+        "AXE-TEST-SCENARIOS.md": {
+          "status": "Active",
+          "code_refs": [
+            "Sources/CollectionFeature/",
+            "Sources/ProfileFeature/",
+            "Sources/CameraFeature/Views/"
+          ],
+          "code_ref_hashes": {
+            "Sources/CollectionFeature/": "d75fc5dbd343b0d2",
+            "Sources/ProfileFeature/": "7a0a468f4b163e79",
+            "Sources/CameraFeature/Views/": "ca1c38b2667ef964"
+          },
+          "last_verified": "2026-02-09",
+          "updated": "2026-01-20"
         }
       }
     }
@@ -381,6 +1010,82 @@
         "related_branch": null,
         "merged": "2026-01-18",
         "archived_at": "2026-01-19"
+      },
+      "2026-01-16-frozen-camera-after-error-dismiss.md": {
+        "status": "Fixed",
+        "related_branch": null,
+        "merged": null,
+        "archived_at": "2026-02-08"
+      },
+      "2026-01-20-multi-select-fails-silently.md": {
+        "status": "Fixed",
+        "related_branch": null,
+        "merged": null,
+        "archived_at": "2026-02-08"
+      },
+      "2026-01-20-item-images-missing-for-some-items.md": {
+        "status": "Fixed",
+        "related_branch": "fix/missing-item-images",
+        "merged": null,
+        "archived_at": "2026-02-08"
+      },
+      "2026-01-20-catalog-misidentification-swapped-crops.md": {
+        "status": "Fixed",
+        "related_branch": null,
+        "merged": null,
+        "archived_at": "2026-02-08"
+      },
+      "2026-01-20-thumbnail-orientation-breaks-layout.md": {
+        "status": "Fixed",
+        "related_branch": null,
+        "merged": null,
+        "archived_at": "2026-02-08"
+      }
+    },
+    "brand": {
+      "abundance-brand-bible_090125.md": {
+        "status": "Deprecated",
+        "superseded_by": "abundance-brand-bible-v3-2026-02-06.md",
+        "updated": "2026-01-09",
+        "archived_at": "2026-02-07"
+      }
+    },
+    "adr": {
+      "ADR-014-cloud-ai-provider-selection.md": {
+        "status": "Superseded",
+        "code_refs": [
+          "functions/src/ai-pipeline/"
+        ],
+        "code_ref_hashes": {
+          "functions/src/ai-pipeline/": "83750a98f9053a5a"
+        },
+        "last_verified": "2026-02-08",
+        "updated": "2026-01-14",
+        "archived_at": "2026-02-09"
+      },
+      "ADR-015-ai-reasoning-layer-architecture.md": {
+        "status": "Superseded",
+        "code_refs": [
+          "functions/src/ai-pipeline/"
+        ],
+        "code_ref_hashes": {
+          "functions/src/ai-pipeline/": "83750a98f9053a5a"
+        },
+        "last_verified": "2026-02-08",
+        "updated": "2026-01-14",
+        "archived_at": "2026-02-09"
+      },
+      "ADR-017-llm-parsing-architecture.md": {
+        "status": "Superseded",
+        "code_refs": [
+          "functions/src/ai-pipeline/"
+        ],
+        "code_ref_hashes": {
+          "functions/src/ai-pipeline/": "83750a98f9053a5a"
+        },
+        "last_verified": "2026-02-08",
+        "updated": "2026-01-14",
+        "archived_at": "2026-02-09"
       }
     }
   }

@@ -425,6 +425,299 @@ describe('onSessionCreated validation', () => {
       });
     });
 
+    describe('sweep mode validation', () => {
+      const validSweepCrop = {
+        cropUrl: 'gs://abundance-temp/crops/crop1.jpg',
+        boundingBox: [100, 200, 300, 400],
+        frameIndex: 0,
+        groupId: 'group-1'
+      };
+
+      it('accepts valid sweep session with sweepCrops', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [validSweepCrop]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
+      it('rejects sweep session without sweepCrops', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep'
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('SWEEP_NO_CROPS');
+      });
+
+      it('rejects sweep session with empty sweepCrops array', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: []
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('SWEEP_NO_CROPS');
+      });
+
+      it('sweep session does not require originalImageUrls', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [validSweepCrop]
+          // No originalImageUrls — should still pass
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
+      it('rejects sweep crop with missing cropUrl', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ boundingBox: [0, 0, 100, 100], frameIndex: 0, groupId: 'g1' }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop with non-string cropUrl', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ ...validSweepCrop, cropUrl: 12345 }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop with wrong-length boundingBox', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ ...validSweepCrop, boundingBox: [100, 200] }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop with non-number in boundingBox', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ ...validSweepCrop, boundingBox: [100, 'bad', 300, 400] }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop with NaN in boundingBox', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ ...validSweepCrop, boundingBox: [100, NaN, 300, 400] }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop with negative frameIndex', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ ...validSweepCrop, frameIndex: -1 }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop with non-integer frameIndex', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ ...validSweepCrop, frameIndex: 1.5 }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop with empty groupId', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ ...validSweepCrop, groupId: '' }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop with non-object entry', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: ['not-an-object']
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+
+      it('rejects sweep crop URL from unauthorized bucket', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [{ ...validSweepCrop, cropUrl: 'gs://evil-bucket/crop.jpg' }]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('UNAUTHORIZED_BUCKET');
+      });
+
+      it('rejects sweep session with more than 50 crops', async () => {
+        const manyCrops = Array.from({ length: 51 }, (_, i) => ({
+          ...validSweepCrop,
+          cropUrl: `gs://abundance-temp/crops/crop${i}.jpg`,
+          groupId: `group-${i}`
+        }));
+
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: manyCrops
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('SWEEP_TOO_MANY_CROPS');
+      });
+
+      it('accepts sweep session with exactly 50 crops', async () => {
+        const maxCrops = Array.from({ length: 50 }, (_, i) => ({
+          ...validSweepCrop,
+          cropUrl: `gs://abundance-temp/crops/crop${i}.jpg`,
+          groupId: `group-${i}`
+        }));
+
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: maxCrops
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(true);
+      });
+
+      it('validates second crop even if first is valid', async () => {
+        const sessionData = {
+          userId: 'user-123',
+          captureMode: 'sweep',
+          sweepCrops: [
+            validSweepCrop,
+            { cropUrl: 'gs://abundance-temp/crop2.jpg', boundingBox: 'bad', frameIndex: 0, groupId: 'g2' }
+          ]
+        };
+
+        const result = await validateSessionDocument(
+          sessionData,
+          mockSessionRef as unknown as FirebaseFirestore.DocumentReference
+        );
+
+        expect(result.valid).toBe(false);
+        expect(result.errorCode).toBe('INVALID_SWEEP_CROP');
+      });
+    });
+
     describe('complete validation flow', () => {
       it('validates in correct order (userId first, then images, then buckets)', async () => {
         // Missing both userId and images - should fail on userId first

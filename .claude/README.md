@@ -9,16 +9,15 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 ├── skills/                    # Auto-loaded context skills
 │   ├── ios-superpowers/       # iOS development orchestrator
 │   ├── backend-superpowers/   # Firebase + GCP unified skill (NEW)
-│   ├── device-tester.md       # Physical device testing
+│   ├── troubleshoot/          # End-to-end troubleshooting pipeline
+│   ├── device-tester/         # Physical device testing
 │   ├── gemini-integration/    # AI pipeline patterns
 │   ├── firebase-superpowers/  # DEPRECATED → use backend-superpowers
 │   └── gcp-superpowers/       # DEPRECATED → use backend-superpowers
 ├── commands/                  # User-invoked via /project:command-name
 │   ├── ios-superpowers.md     # /project:ios-superpowers
-│   ├── ios-debug.md           # /project:ios-debug
 │   ├── device-tester.md       # /project:device-tester
-│   ├── gcp-deploy.md          # /project:gcp-deploy
-│   └── dispatch.md            # /project:dispatch
+│   └── gcp-deploy.md          # /project:gcp-deploy
 ├── hooks/                     # Automatic triggers
 └── settings.json              # Plugin configuration
 ```
@@ -31,6 +30,7 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 |-------|---------|-------------|
 | `ios-superpowers` | iOS development orchestrator | ALL iOS/Swift work |
 | `backend-superpowers` | Firebase + GCP + Gemini operations | ALL backend work (auto-routes to gemini-integration) |
+| `troubleshoot` | End-to-end troubleshooting pipeline | Build failures, runtime crashes, test failures, production errors |
 | `device-tester` | Physical device testing | Device debugging |
 
 ### Sub-Skills (Auto-Routed)
@@ -54,11 +54,11 @@ This repo is **Claude Code–ready** with a complete skill and command system.
 /project:ios-superpowers <action> <context>
   Actions: debug | tdd | review | plan | execute | brainstorm | parallel
 
-/project:ios-debug <issue>
-  Quick debug shortcut
-
 /project:device-tester
   Physical device testing workflow
+
+/project:troubleshoot <issue-description>
+  End-to-end troubleshooting: triage → debug → verify → test → review → report
 ```
 
 ### Backend Operations
@@ -68,24 +68,22 @@ This repo is **Claude Code–ready** with a complete skill and command system.
   Flags: --staging | --production | --verify | --notify
 ```
 
-### Multi-Agent
-
-```bash
-/project:dispatch
-  Dispatch agents to work on triaged issues
-```
 
 ## MCP Integration
 
-This project uses official MCP servers for backend operations:
+This project uses MCP servers for iOS development and backend operations:
 
-| MCP Server | Tools | Purpose |
-|------------|-------|---------|
-| Firebase | 29 | Firestore, Functions, Auth, FCM, RemoteConfig, RTDB |
-| Observability | 13 | Logging, Metrics, Tracing, Alerts, Errors |
-| Storage | 17 | GCS buckets, objects, IAM |
-| GCloud | 1 | General gcloud CLI |
-| Sosumi | 2 | Apple Developer documentation |
+| MCP Server | Tools | Requires | Purpose |
+|------------|-------|----------|---------|
+| **Xcode Native Bridge** (`xcode`) | 20 | Xcode running, macOS 26 | Builds, SwiftUI previews, diagnostics, Apple docs, project-aware file ops |
+| **XcodeBuildMCP** | 60+ | None (headless) | Simulators, devices, UI automation, debugging, project scaffolding |
+| Firebase | 29 | Firebase project | Firestore, Functions, Auth, FCM, RemoteConfig, RTDB |
+| Observability | 13 | GCP project | Logging, Metrics, Tracing, Alerts, Errors |
+| Storage | 17 | GCS project | GCS buckets, objects, IAM |
+| GCloud | 1 | GCP project | General gcloud CLI |
+| Sosumi | 2 | None | Apple Developer documentation |
+
+**Xcode Native Bridge vs XcodeBuildMCP:** Both run simultaneously. mcpbridge requires Xcode GUI open (not usable in CI). XcodeBuildMCP works headless. Skills automatically route to the appropriate server.
 
 See `backend-superpowers` skill for complete MCP tool inventory.
 

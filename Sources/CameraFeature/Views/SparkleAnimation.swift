@@ -5,6 +5,7 @@ import SwiftUI
 public struct SparkleAnimation: View {
 
     let center: CGPoint
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var sparkles: [Sparkle] = []
 
     /// Individual sparkle particle
@@ -22,7 +23,7 @@ public struct SparkleAnimation: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color(red: 0.7, green: 1.0, blue: 0.85), // Mint green
+                                Color.softTeal, // Brand teal
                                 Color.white
                             ],
                             startPoint: .center,
@@ -59,7 +60,7 @@ public struct SparkleAnimation: View {
 
     /// Animate sparkles outward and fade
     private func animateSparkles() {
-        withAnimation(.easeOut(duration: 0.5)) {
+        withAnimation(reduceMotion ? nil : .brandDefault) {
             sparkles = sparkles.map { sparkle in
                 Sparkle(
                     offset: CGSize(

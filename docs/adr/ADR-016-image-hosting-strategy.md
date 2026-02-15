@@ -27,7 +27,7 @@ Layer 2b (SerpAPI Google Lens) requires publicly accessible HTTPS image URLs. Re
 1. **Upload**: iOS → cropped objects → GCS bucket (`gs://abundance-app-uploads/cropped/{itemId}.jpg`)
 2. **Access**: Cloud Function generates signed URLs (1-hour expiration)
 3. **CDN**: Cloud CDN caches images globally (fast SerpAPI access)
-4. **Lifecycle**: GCS lifecycle policy deletes images after 7 days
+4. **Lifecycle**: Images are deleted immediately when the associated item is deleted via the `onItemDeleted` Cloud Function trigger (see `functions/src/triggers/onItemDeleted.ts`)
 
 ## Rationale
 
@@ -64,27 +64,15 @@ GoogleAccessId=...&Expires=1699564800&Signature=...
 
 **Benefit**: SerpAPI requests hit nearest CDN node (50-100ms vs 200-500ms direct GCS access).
 
-### 4. Lifecycle Policies (Auto-Cleanup)
+### 4. Lifecycle Management (Trigger-Based Cleanup)
 
-**Privacy Concern**: Cropped objects should not persist indefinitely.
+**Privacy Concern**: Cropped objects should not persist after an item is deleted.
 
-**Solution**: GCS lifecycle policy automatically deletes objects after 7 days.
+**Solution**: The `onItemDeleted` Cloud Function trigger (`functions/src/triggers/onItemDeleted.ts`) immediately deletes all associated storage files when an item document is deleted from Firestore. This includes the primary image, cropped objects, additional photos, and Live Photo motion clips.
 
-**Configuration**:
-```json
-{
-  "lifecycle": {
-    "rule": [
-      {
-        "action": { "type": "Delete" },
-        "condition": { "age": 7 }
-      }
-    ]
-  }
-}
-```
+**Note**: The original design proposed a 7-day GCS lifecycle policy, but the implemented approach uses immediate deletion via Firestore triggers, which provides stronger privacy guarantees. ADR-008 documents the full image storage lifecycle.
 
-**Outcome**: Zero manual cleanup, privacy-friendly (images deleted automatically).
+**Outcome**: Zero orphaned files, privacy-friendly (images deleted immediately with their item).
 
 ## Alternatives Considered
 
@@ -132,7 +120,7 @@ GoogleAccessId=...&Expires=1699564800&Signature=...
 
 1. **GCP-Native**: No cross-cloud complexity, unified billing
 2. **Cloud CDN**: 50-100ms global access (vs 200-500ms direct GCS)
-3. **Lifecycle Policies**: Auto-delete after 7 days (privacy-friendly)
+3. **Lifecycle Management**: Immediate deletion via `onItemDeleted` trigger (privacy-friendly)
 4. **Signed URLs**: 1-hour expiration (security)
 
 ### Negative
@@ -158,12 +146,12 @@ GoogleAccessId=...&Expires=1699564800&Signature=...
 
 - [x] ✅ Signed URLs accessible via HTTPS
 - [x] ✅ SerpAPI successfully fetches images from GCS + CDN
-- [x] ✅ Lifecycle policies delete images after 7 days
+- [x] ✅ Images deleted immediately when item is deleted (via `onItemDeleted` trigger)
 - [x] ✅ Cloud CDN caching reduces latency (< 150ms access time)
 
 ## Related Decisions
 
-- **ADR-005**: GCP platform selection → GCS aligns with tech stack
+- **ADR-005**: Authentication strategy → GCS access controlled via Firebase Auth
 - **DESIGN-004**: 4-layer pipeline → GCS hosts cropped objects for Layer 2b
 
 ## Revision History
@@ -171,3 +159,4 @@ GoogleAccessId=...&Expires=1699564800&Signature=...
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial decision, GCS + Cloud CDN for image hosting | Cloud Backend Architect |
+| 2026-02-08 | 1.1 | Fix lifecycle policy (immediate deletion via trigger, not 7-day policy), fix ADR-005 cross-reference | Documentation Update |

@@ -1,12 +1,14 @@
 import SwiftUI
-import InventoryFeature
+import Core
+import CollectionFeature
+import ProfileFeature
 
 public struct MainTabView: View {
-    @State private var selectedTab: Tab = .catalog
+    @State private var selectedTab: Tab = .collection
 
     enum Tab {
-        case catalog
-        case camera
+        case collection
+        case scan
         case profile
     }
 
@@ -14,48 +16,32 @@ public struct MainTabView: View {
 
     public var body: some View {
         TabView(selection: $selectedTab) {
-            InventoryView(onOpenCamera: {
-                selectedTab = .camera
+            CollectionView(onOpenCamera: {
+                selectedTab = .scan
             })
+                .accessibilityIdentifier("tab.collection")
                 .tabItem {
-                    Label("Catalog", systemImage: "square.grid.2x2.fill")
+                    Label("Collection", systemImage: "square.grid.2x2.fill")
                 }
-                .tag(Tab.catalog)
+                .tag(Tab.collection)
 
-            CameraTabView(onNavigateToCatalog: {
-                selectedTab = .catalog
+            CameraTabView(onNavigateToCollection: {
+                selectedTab = .collection
             })
+                .accessibilityIdentifier("tab.scan")
                 .tabItem {
-                    Label("Camera", systemImage: "camera.fill")
+                    Label("Scan", systemImage: "camera.fill")
                 }
-                .tag(Tab.camera)
+                .tag(Tab.scan)
 
-            ProfilePlaceholderView()
+            ProfileView()
+                .accessibilityIdentifier("tab.profile")
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }
                 .tag(Tab.profile)
         }
-    }
-}
-
-// MARK: - Placeholder Views
-
-private struct ProfilePlaceholderView: View {
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(.orange)
-                Text("Profile")
-                    .font(.title)
-                Text("User profile and settings")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            .navigationTitle("Profile")
-        }
+        .tint(Color.salmon)
     }
 }
 

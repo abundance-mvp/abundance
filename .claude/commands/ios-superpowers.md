@@ -19,7 +19,7 @@ description: Deterministic iOS orchestrator that routes to Axiom agents and skil
 |--------|---------|---------|
 | `debug` | Debug iOS issues | `/ios-superpowers debug "@MainActor warning"` |
 | `tdd` | Test-driven development | `/ios-superpowers tdd add camera tests` |
-| `review` | Code review with audits | `/ios-superpowers review` |
+| `review` | Two-phase code review (horizontal + domain-specific auditors) | `/ios-superpowers review` |
 | `plan` | Plan implementation | `/ios-superpowers plan object detection` |
 | `execute` | Execute a plan | `/ios-superpowers execute docs/plans/...` |
 | `brainstorm` | Design exploration | `/ios-superpowers brainstorm auth flow` |
@@ -97,4 +97,7 @@ Routes to: `axiom-apple-docs-research` + `axiom-vision` skill + `writing-plans`
 /ios-superpowers review
 ```
 
-Routes to: Multiple Axiom auditors in parallel + `requesting-code-review`
+Routes to: Two-phase review:
+- **Phase 1:** 5 fixed horizontal auditors (concurrency, accessibility, architecture, security, memory)
+- **Phase 2:** Dynamic auditors based on changed modules (camera, codable, nav, energy, testing, polish)
+- **Phase 3:** Skill-enriched synthesis with `requesting-code-review`

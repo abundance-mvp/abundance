@@ -1,22 +1,32 @@
 import SwiftUI
 import AVFoundation
 import Core
+import EdgeTAMFeature
+@preconcurrency import FirebaseAuth
+import Persistence
 
 /// Main capture view with double-tap and long-press gestures
 /// Uses server-side Gemini detection - no local YOLO detection
 public struct CaptureView: View {
 
-    @StateObject private var viewModel: CaptureSessionViewModel
+    @State private var viewModel: CaptureSessionViewModel
     @StateObject private var networkMonitor = NetworkMonitor.shared
     private let cameraService: CameraService
+    private let hapticService: HapticFeedbackProviding?
     private let onDone: () -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var frozenFrame: Data?
+    @State private var frozenFrameImage: Image?
     @State private var longPressActive = false
     @State private var captureSession: AVCaptureSession?
     @State private var isCaptureInProgress = false  // Synchronous guard for race prevention
+    @State private var captureTask: Task<Void, Never>?  // Track in-flight capture for cancellation
+    @State private var teardownTask: Task<Void, Never>?  // Track in-flight teardown for serialization
+    @State private var sweepViewModel = SweepCaptureViewModel()
+    @State private var captureMode: CaptureMode = .single
 
     // Error recovery state
     @State private var cameraError: CameraError?
@@ -26,10 +36,16 @@ public struct CaptureView: View {
     public init(
         viewModel: CaptureSessionViewModel = CaptureSessionViewModel(),
         cameraService: CameraService = CameraService(),
+        hapticService: HapticFeedbackProviding? = nil,
         onDone: @escaping () -> Void = {}
     ) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        _viewModel = State(initialValue: viewModel)
         self.cameraService = cameraService
+        #if os(iOS)
+        self.hapticService = hapticService ?? HapticService()
+        #else
+        self.hapticService = hapticService
+        #endif
         self.onDone = onDone
     }
 
@@ -37,8 +53,24 @@ public struct CaptureView: View {
         GeometryReader { geometry in
             ZStack {
                 captureContent(geometry: geometry)
+                    // Triple-tap declared first so SwiftUI disambiguates from double-tap.
+                    // This adds ~300ms latency to double-tap as the system waits for a possible
+                    // third tap. Acceptable since SweepModeToggle provides a non-gesture alternative.
+                    .gesture(tripleTapEnabled ? tripleTapGesture : nil)
                     .gesture(gesturesEnabled ? doubleTapGesture : nil)
                     .gesture(gesturesEnabled ? longPressGesture : nil)
+                    .accessibilityAction(named: "Capture photo") {
+                        guard gesturesEnabled else { return }
+                        captureAndProcess()
+                    }
+                    .accessibilityAction(named: "Burst capture") {
+                        guard gesturesEnabled else { return }
+                        startBurstCapture()
+                    }
+                    .accessibilityAction(named: "Enter sweep mode") {
+                        guard tripleTapEnabled else { return }
+                        captureMode = .sweep
+                    }
 
                 // Offline mode indicator
                 if !networkMonitor.isConnected {
@@ -76,9 +108,12 @@ public struct CaptureView: View {
                     .transition(.scale.combined(with: .opacity))
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: showingCameraError)
-            .animation(.easeInOut(duration: 0.2), value: networkMonitor.isConnected)
+            .animation(reduceMotion ? .brandReducedMotion : .brandDefault, value: showingCameraError)
+            .animation(reduceMotion ? .brandReducedMotion : .brandPress, value: networkMonitor.isConnected)
             .onAppear {
+                // Clear frozen frame so live preview is visible on return
+                frozenFrame = nil
+                frozenFrameImage = nil
                 // Restart camera when returning to this tab
                 Task {
                     await restartCameraIfNeeded()
@@ -89,18 +124,27 @@ public struct CaptureView: View {
                 await checkCameraAuthorization()
             }
             .onDisappear {
+                captureTask?.cancel()
+                if captureMode == .sweep {
+                    sweepViewModel.stopScanning()
+                }
                 teardownCamera()
             }
             .onChange(of: scenePhase) { oldPhase, newPhase in
                 Task {
                     switch newPhase {
                     case .active:
-                        // App returning to foreground - restart camera if authorized
+                        // App returning to foreground - clear stale frozen frame and restart
+                        frozenFrame = nil
+                        frozenFrameImage = nil
                         if authorizationStatus == .authorized {
                             await restartCameraIfNeeded()
                         }
                     case .background:
-                        // App going to background - stop camera to save battery
+                        // App going to background - stop camera and sweep to save battery
+                        if captureMode == .sweep {
+                            sweepViewModel.stopScanning()
+                        }
                         teardownCamera()
                     case .inactive:
                         // Transitioning state - do nothing
@@ -116,14 +160,20 @@ public struct CaptureView: View {
         #endif
     }
 
-    /// Only enable gestures in idle state to prevent blocking UI elements
+    /// Enable gestures in idle and capturing states.
+    /// Capturing must stay enabled so DragGesture.onEnded fires on finger-lift
+    /// to end burst capture. Removing the gesture mid-burst forces auto-end
+    /// from within the burst task, which self-cancels and causes CancellationError.
     private var gesturesEnabled: Bool {
+        guard captureMode != .sweep else { return false }
         guard !showingCameraError else { return false }
         guard !isCaptureInProgress else { return false }  // Synchronous race prevention
-        if case .idle = viewModel.uiState {
+        switch viewModel.uiState {
+        case .idle, .capturing:
             return true
+        default:
+            return false
         }
-        return false
     }
 
     // MARK: - Main Content Layout
@@ -136,6 +186,42 @@ public struct CaptureView: View {
                 resultsView
             } else {
                 captureLayout(geometry: geometry)
+
+                // Sweep mode overlay (renders on top of camera preview)
+                if captureMode == .sweep {
+                    SweepCaptureView(
+                        viewModel: sweepViewModel,
+                        onCatalog: {
+                            guard networkMonitor.isConnected else {
+                                sweepViewModel.sweepState = .error(.catalogFailed("No network connection"))
+                                return
+                            }
+                            Task {
+                                guard let userId = Auth.auth().currentUser?.uid else {
+                                    sweepViewModel.sweepState = .error(.catalogFailed("Not signed in"))
+                                    return
+                                }
+                                await sweepViewModel.catalogSelectedSegments(
+                                    userId: userId,
+                                    sessionService: SessionService(),
+                                    storageService: StorageService()
+                                )
+                            }
+                        },
+                        onCancel: {
+                            captureMode = .single
+                            sweepViewModel.reset()
+                        }
+                    )
+                    .task {
+                        // Wire EdgeTAM scanning to camera frame publisher
+                        let edgeTAMService = EdgeTAMService()
+                        sweepViewModel.startScanning(
+                            framePublisher: cameraService.framePublisher,
+                            edgeTAMService: edgeTAMService
+                        )
+                    }
+                }
             }
         }
     }
@@ -166,6 +252,7 @@ public struct CaptureView: View {
                     onRetake: {
                         viewModel.retake()
                         frozenFrame = nil
+                        frozenFrameImage = nil
                     }
                 )
             } else {
@@ -174,24 +261,18 @@ public struct CaptureView: View {
                     detectedObjects: viewModel.detectedObjects,
                     catalogingObjectIds: viewModel.catalogingObjectIds,
                     catalogedObjectIds: viewModel.catalogedObjectIds,
-                    onCatalogObject: { object in
+                    onCatalogSelected: { selectedIds in
                         Task {
-                            await viewModel.catalogObject(object)
-                        }
-                    },
-                    onCatalogAll: {
-                        Task {
-                            await viewModel.catalogAllObjects()
+                            await viewModel.catalogSelectedObjects(selectedIds)
                         }
                     },
                     onRetake: {
                         viewModel.retake()
                         frozenFrame = nil
+                        frozenFrameImage = nil
                     },
                     onDone: {
-                        #if os(iOS)
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        #endif
+                        hapticService?.playImpact(style: .medium)
                         viewModel.retake()
                         onDone()
                     }
@@ -213,26 +294,28 @@ public struct CaptureView: View {
             }
 
             // Frozen frame during capture/processing
-            if let frameData = frozenFrame {
-                #if os(iOS)
-                if let image = UIImage(data: frameData) {
-                    Image(uiImage: image)
+            if frozenFrame != nil {
+                if let image = frozenFrameImage {
+                    image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .ignoresSafeArea()
+                        .accessibilityHidden(true)
                 }
-                #endif
             }
         }
     }
 
     private var shouldShowPreview: Bool {
-        switch viewModel.uiState {
-        case .idle, .capturing:
-            return frozenFrame == nil
-        default:
-            return false
+        // Show live preview when there's no valid frozen frame to display.
+        // Previously, non-idle states (uploading/analyzing) hid the preview even
+        // without a frozen frame, causing a black screen during burst processing.
+        if frozenFrameImage != nil {
+            return false // We have a frozen frame to show instead
         }
+        // No frozen frame — keep preview visible regardless of state
+        // to avoid black background during burst capture/processing
+        return true
     }
 
     // MARK: - Overlays
@@ -260,6 +343,7 @@ public struct CaptureView: View {
             ErrorOverlay(error: error) {
                 // Clear frozen frame first to unblock preview
                 frozenFrame = nil
+                frozenFrameImage = nil
                 viewModel.dismissError()
                 // Restart camera session to resume live feed
                 Task {
@@ -305,7 +389,7 @@ public struct CaptureView: View {
             case .analyzing:
                 return "Analyzing..."
             default:
-                return "Ready"
+                return captureMode == .sweep ? "Sweep" : "Ready"
             }
         }()
 
@@ -338,8 +422,23 @@ public struct CaptureView: View {
 
             switch viewModel.uiState {
             case .idle, .capturing:
-                instructionLabel
-                    .padding(.bottom, 40)
+                if captureMode != .sweep {
+                    VStack(spacing: 4) {
+                        instructionLabel
+
+                        if DeviceEligibility.isHardwareEligible {
+                            Text("triple tap to enter sweep mode")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary.opacity(0.7))
+                        }
+                    }
+                }
+
+                SweepModeToggle(
+                    selectedMode: $captureMode,
+                    isSweepAvailable: DeviceEligibility.isHardwareEligible
+                )
+                .padding(.bottom, 40)
 
             case .results:
                 // Show results action buttons
@@ -347,17 +446,18 @@ public struct CaptureView: View {
                     Button("Retake") {
                         viewModel.retake()
                         frozenFrame = nil
+                        frozenFrameImage = nil
                     }
                     .buttonStyle(CaptureButtonStyle(isPrimary: false))
+                    .accessibilityHint("Retakes the photo and returns to camera")
 
                     Button("Done") {
-                        #if os(iOS)
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        #endif
+                        hapticService?.playImpact(style: .medium)
                         viewModel.retake()
                         onDone()
                     }
                     .buttonStyle(CaptureButtonStyle(isPrimary: true))
+                    .accessibilityHint("Saves results and returns to catalog")
                 }
                 .padding(.bottom, 40)
 
@@ -388,9 +488,34 @@ public struct CaptureView: View {
                     Capsule().fill(.ultraThickMaterial)
                 }
             }
+            .accessibilityLabel(
+                longPressActive
+                    ? "Release to analyze"
+                    : "Use actions menu to capture photo or start burst capture"
+            )
+    }
+
+    /// Whether triple-tap to enter sweep mode is enabled
+    private var tripleTapEnabled: Bool {
+        guard DeviceEligibility.isHardwareEligible else { return false }
+        guard captureMode != .sweep else { return false }
+        guard !showingCameraError else { return false }
+        guard !isCaptureInProgress else { return false }
+        if case .idle = viewModel.uiState {
+            return true
+        }
+        return false
     }
 
     // MARK: - Gestures
+
+    private var tripleTapGesture: some Gesture {
+        TapGesture(count: 3)
+            .onEnded {
+                guard case .idle = viewModel.uiState else { return }
+                captureMode = .sweep
+            }
+    }
 
     private var doubleTapGesture: some Gesture {
         TapGesture(count: 2)
@@ -463,6 +588,14 @@ public struct CaptureView: View {
         // Only restart if we're authorized
         guard authorizationStatus == .authorized else { return }
 
+        // Wait for any in-flight teardown to complete before checking session state.
+        // Without this, isRunning may still be true (stopSession hasn't executed yet),
+        // causing us to skip the restart. Then teardown finishes and the session stays stopped.
+        if let teardown = teardownTask {
+            await teardown.value
+            teardownTask = nil
+        }
+
         // Get the CURRENT session from the service, not cached @State
         let currentSession = await cameraService.getCaptureSession()
 
@@ -478,7 +611,7 @@ public struct CaptureView: View {
 
     private func teardownCamera() {
         let service = cameraService  // Capture reference before Task
-        Task {
+        teardownTask = Task {
             await service.stopSession()
         }
     }
@@ -496,19 +629,18 @@ public struct CaptureView: View {
         guard !isCaptureInProgress else { return }
         isCaptureInProgress = true
 
-        Task {
+        captureTask = Task {
             defer { isCaptureInProgress = false }
             do {
                 // Capture photo
                 let photoData = try await cameraService.capturePhoto()
 
-                // Freeze frame
+                // Freeze frame - decode image once to avoid repeated decoding in body
                 frozenFrame = photoData
+                frozenFrameImage = ImageDecoding.decodeToSwiftUIImage(photoData)
 
                 // Haptic feedback
-                #if os(iOS)
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                #endif
+                hapticService?.playImpact(style: .medium)
 
                 // Process
                 await viewModel.handleDoubleTap(photoData: photoData)
@@ -541,6 +673,7 @@ public struct CaptureView: View {
             // Freeze on last captured frame - use lastCapturedPhoto from ViewModel
             if let lastPhoto = viewModel.lastCapturedPhoto {
                 frozenFrame = lastPhoto
+                frozenFrameImage = ImageDecoding.decodeToSwiftUIImage(lastPhoto)
             }
             await viewModel.endBurstCapture()
         }

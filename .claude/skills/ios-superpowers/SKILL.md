@@ -7,6 +7,19 @@ description: Deterministic iOS orchestrator that routes to Axiom agents and skil
 
 **CRITICAL:** Use this instead of raw superpowers skills for ALL iOS/Swift work.
 
+## 0. MCP Server Availability
+
+Two MCP servers provide build and documentation tools. Check availability at session start.
+
+| Server | Tool Prefix | Requires | Use For |
+|--------|-------------|----------|---------|
+| **Xcode Native Bridge** (`xcode`) | `mcp__xcode__*` | Xcode running with project open, macOS 26 | Builds, previews, diagnostics, Apple docs, project-aware file ops |
+| **XcodeBuildMCP** (`XcodeBuildMCP`) | `mcp__XcodeBuildMCP__*` | None (headless) | Simulators, devices, UI automation, debugging |
+
+**Availability check:** At session start, try `mcp__xcode__XcodeListWindows`. If it fails, mcpbridge is unavailable — fall back to `swift build` and `axiom-apple-docs-research` for all operations. Log: "mcpbridge unavailable — using CLI fallback."
+
+---
+
 ## Arguments
 
 ```
@@ -102,9 +115,49 @@ Deterministic mapping: `(action, domain) → (axiom_agent, axiom_skill, superpow
 
 ### review Action
 
-| Domain | Axiom Agents (parallel) | Superpowers |
-|--------|------------------------|-------------|
-| * (scan changed files) | `axiom:concurrency-auditor`, `axiom:accessibility-auditor`, `axiom:swiftui-architecture-auditor`, `axiom:security-privacy-scanner`, `axiom:memory-auditor` | `requesting-code-review` |
+**Two-phase architecture:** Phase 1 runs fixed horizontal auditors. Phase 2 detects modules/frameworks from changed files and dispatches domain-specific auditors + loads skills.
+
+#### Phase 1: Fixed Horizontal Auditors (always run)
+
+| Axiom Agents (parallel) | Superpowers |
+|------------------------|-------------|
+| `axiom:concurrency-auditor`, `axiom:accessibility-auditor`, `axiom:swiftui-architecture-auditor`, `axiom:security-privacy-scanner`, `axiom:memory-auditor` | `requesting-code-review` |
+
+#### Phase 2: Dynamic Domain Auditors (based on changed files)
+
+Detect modules from file paths, then dispatch additional agents and load skills.
+
+**Module → Additional Agents:**
+
+| Module (file path prefix) | Additional Agents | Additional Skills to Load |
+|---------------------------|-------------------|--------------------------|
+| `Sources/CameraFeature/` | `axiom:camera-auditor`, `axiom:energy-auditor` | `axiom-camera-capture`, `axiom-avfoundation-ref` |
+| `Sources/VisionCore/` | — | `axiom-vision`, `axiom-vision-ref` |
+| `Sources/EdgeTAMFeature/` | — | `axiom-ios-ml`, `axiom-foundation-models` |
+| `Sources/Persistence/` | `axiom:codable-auditor`, `axiom:networking-auditor` | `axiom-codable`, `axiom-networking`, `axiom-storage` |
+| `Sources/CollectionFeature/` | `axiom:swiftui-performance-analyzer`, `axiom:swiftui-nav-auditor` | `axiom-swiftui-performance`, `axiom-swiftui-nav` |
+| `Sources/OnboardingFeature/` | — | `axiom-privacy-ux` |
+| `Sources/Core/DesignSystem/` | — | `axiom-hig`, `axiom-liquid-glass` |
+| `Tests/` | `axiom:testing-auditor` | `axiom-ui-testing` |
+
+**Framework → Additional Agents (import-based, supplements module detection):**
+
+| Import detected in diff | Additional Agent |
+|--------------------------|-----------------|
+| `AVFoundation` or `Photos` | `axiom:camera-auditor` (if not already added) |
+| `Vision` or `CoreML` | — (load `axiom-vision` skill) |
+| `NavigationStack` or `NavigationPath` usage | `axiom:swiftui-nav-auditor` (if not already added) |
+| `Codable` conformance or `JSONDecoder`/`JSONEncoder` | `axiom:codable-auditor` (if not already added) |
+
+**UI file detection (integrates polish auditors):**
+
+When changed files match `*View.swift`, `*Sheet.swift`, `*Card.swift`, `*Badge.swift`, `*Button.swift`, `*Overlay.swift`:
+- Add `axiom:liquid-glass-auditor`
+- Add palette auditor (general-purpose with `palette-auditor.md` prompt)
+- Add HIG auditor (general-purpose with `hig-auditor.md` prompt)
+- Mark polish as covered — skip separate `/polish` invocation
+
+**Budget cap:** Load at most 3 additional skills in Phase 2 (prioritize by number of changed files per module). Phase 2 agents have no cap — they run in parallel with Phase 1.
 
 ### plan Action
 
@@ -173,16 +226,64 @@ Deterministic mapping: `(action, domain) → (axiom_agent, axiom_skill, superpow
 
 ```
 1. changed_files = `git diff --name-only`
-2. FOR file IN changed_files (parallel):
-   domain = DETECT(file_content)
-   agent = SELECT_AUDITOR(domain)
-   IF agent:
-     Task(subagent_type=agent)
-3. COMBINE audit_results
-4. Skill(skill="superpowers:requesting-code-review", context=audit_results)
-5. IF critical_findings (P0/P1):
-   OFFER_ISSUE_FILING(findings)
-6. VERIFY()
+
+--- Phase 1: Fixed Horizontal Auditors (always) ---
+
+2. Launch 5 agents in parallel (single message):
+   Task(subagent_type="axiom:concurrency-auditor",          prompt=changed_files)
+   Task(subagent_type="axiom:accessibility-auditor",         prompt=changed_files)
+   Task(subagent_type="axiom:swiftui-architecture-auditor",  prompt=changed_files)
+   Task(subagent_type="axiom:security-privacy-scanner",      prompt=changed_files)
+   Task(subagent_type="axiom:memory-auditor",                prompt=changed_files)
+
+--- Phase 2: Dynamic Domain Auditors (based on changed files) ---
+
+3. modules = EXTRACT_MODULES(changed_files)
+   // e.g., {"CameraFeature": [file1, file2], "Persistence": [file3]}
+
+4. phase2_agents = []
+   phase2_skills = []
+
+   FOR module IN modules:
+     route = MODULE_SKILL_MAP[module]
+     phase2_agents += route.agents
+     phase2_skills += route.skills
+
+5. DEDUP phase2_agents (remove any already in Phase 1)
+
+6. IF changed_files match *View.swift, *Sheet.swift, *Card.swift, etc.:
+     // Delegate UI design review to the `polish` skill instead of inline auditors.
+     // Polish runs axiom:accessibility-auditor + axiom:liquid-glass-auditor,
+     // loads axiom-hig + axiom-haptics, reads brand bible, and does creative
+     // design synthesis + spec reconciliation. See polish/SKILL.md.
+     polish_covered = true
+     // Note: polish agents (accessibility, liquid-glass) may overlap with
+     // Phase 1 agents — polish handles dedup internally.
+
+7. Launch Phase 2 agents in parallel (single message):
+   FOR agent IN phase2_agents:
+     Task(subagent_type=agent, prompt=relevant_files_for_module)
+
+--- Phase 3: Skill-Enriched Synthesis ---
+
+8. WAIT for all Phase 1 + Phase 2 agents
+
+9. COMBINE all audit_results (Phase 1 + Phase 2)
+
+10. Load domain skills for reviewer context (max 3):
+    phase2_skills = PRIORITIZE(phase2_skills, by=file_count_per_module)
+    FOR skill IN phase2_skills[:3]:
+      Skill(skill=skill)
+
+11. Skill(skill="superpowers:requesting-code-review", context=audit_results + domain_skills)
+
+12. IF critical_findings (P0/P1):
+    OFFER_ISSUE_FILING(findings)
+
+13. IF polish_covered:
+    Skill(skill="polish")  // Full design review: brand, HIG, accessibility, glass, specs
+
+14. VERIFY()
 ```
 
 ### Issue Filing from Review
@@ -223,7 +324,11 @@ When code review finds critical issues (P0/P1 severity):
 2. route = ROUTING_MATRIX[plan][domain]
 3. IF route.axiom_agent:
    Task(subagent_type=route.axiom_agent, prompt=context)
-4. Skill(skill=route.axiom_skill OR "axiom-apple-docs-research")
+4. APPLE_DOCS(context):
+   IF mcpbridge available:
+     mcp__xcode__DocumentationSearch(query=context)
+   ELSE:
+     Skill(skill=route.axiom_skill OR "axiom-apple-docs-research")
 5. Skill(skill="superpowers:writing-plans")
 6. VERIFY()
 ```
@@ -232,10 +337,16 @@ When code review finds critical issues (P0/P1 severity):
 
 ```
 1. domain = DETECT(context)
-2. IF domain == test:
+2. IF context references a plan doc in docs/plans/:
+   a. Update frontmatter status: "In Progress"
+   b. Run: uv run scripts/update_doc_index.py update docs/plans/<filename>.md --status "In Progress"
+3. IF domain == test:
    Task(subagent_type="axiom:test-runner")
-3. Skill(skill="superpowers:executing-plans")
-4. VERIFY()
+4. Skill(skill="superpowers:executing-plans")
+5. VERIFY()
+6. IF plan doc was tracked in step 2 AND verification passed:
+   a. Update frontmatter status: "Completed"
+   b. Run: uv run scripts/update_doc_index.py update docs/plans/<filename>.md --status Completed
 ```
 
 ### brainstorm Execution
@@ -246,7 +357,11 @@ When code review finds critical issues (P0/P1 severity):
    Skill(skill="axiom-hig")
    Skill(skill="axiom-swiftui-architecture")
 3. ELSE:
-   Skill(skill="axiom-apple-docs-research", args=context)
+   APPLE_DOCS(context):
+     IF mcpbridge available:
+       mcp__xcode__DocumentationSearch(query=context)
+     ELSE:
+       Skill(skill="axiom-apple-docs-research", args=context)
 4. Skill(skill="superpowers:brainstorming")
 ```
 
@@ -264,15 +379,31 @@ When code review finds critical issues (P0/P1 severity):
 
 ---
 
-## 4. Verification Checklist
+## 4. Verification (`superpowers:verification-before-completion`)
 
-After every execution, verify:
+**REQUIRED:** Every execution sequence ends with `VERIFY()`. This is the gate function from `superpowers:verification-before-completion`. No completion claims without fresh evidence.
 
-- [ ] No deprecated APIs introduced (check via `axiom-apple-docs-research`)
+### Gate Function (VERIFY)
+
+```
+1. IDENTIFY: What commands prove the work is correct?
+2. RUN: Execute FULL commands (fresh, not cached):
+   - Build: `mcp__xcode__BuildProject` (preferred) or `swift build` (fallback)
+   - Tests: `mcp__xcode__RunAllTests` (preferred) or `swift test` (fallback)
+3. READ: Full output — exit code, test counts, error messages
+4. VERIFY: Does output confirm the claim?
+   - If NO: State actual status with evidence. Do NOT claim success.
+   - If YES: State claim WITH evidence (exit code, N/N tests passed)
+5. ONLY THEN: Claim completion
+
+Skip any step = unverified claim. Do not proceed.
+```
+
+### Additional Checks (after build/test pass)
+
+- [ ] No deprecated APIs introduced (check via `mcp__xcode__DocumentationSearch` or `axiom-apple-docs-research`)
 - [ ] Swift 6 concurrency satisfied (actor isolation, Sendable)
 - [ ] API signatures match Apple documentation
-- [ ] Tests pass (if applicable): `swift test`
-- [ ] If backend changes deployed: verify via `backend-superpowers`
 
 ### Backend Verification (when applicable)
 
@@ -291,6 +422,18 @@ If iOS changes involve backend communication:
 3. Verify Firestore operations work:
    mcp__plugin_firebase_firebase__firestore_list_collections
 ```
+
+### Dispatched Agent Verification
+
+When dispatching Task agents (debug, review, tdd, parallel), include this instruction in every agent prompt:
+
+```
+VERIFICATION REQUIRED: Before claiming work is complete, you MUST run build/test
+commands, read full output, and report results WITH evidence (exit codes, test
+counts). No 'should work' or 'looks good' claims. Evidence before claims, always.
+```
+
+Agent reports without evidence are unverified — treat as unconfirmed and re-verify independently.
 
 ---
 
@@ -347,13 +490,18 @@ Cannot proceed without domain classification.
 ### Verification Failed
 
 ```
-ERROR: Post-execution verification failed.
+ERROR: Post-execution verification failed (superpowers:verification-before-completion).
+
+Evidence:
+- Command: {command_run}
+- Exit code: {exit_code}
+- Output: {relevant_output}
 
 Issues found:
 - [ ] {verification_issue_1}
 - [ ] {verification_issue_2}
 
-Fix these issues before proceeding.
+Fix these issues before proceeding. Do NOT claim success.
 ```
 
 ---
@@ -468,21 +616,48 @@ Execution:
 3. Skill: `axiom-vision`
 4. Superpowers: `writing-plans`
 
-### Example 3: Code Review
+### Example 3: Code Review (Camera + Persistence changes)
 
 ```
 /ios-superpowers review
 ```
 
+Changed files:
+- `Sources/CameraFeature/CameraService.swift`
+- `Sources/CameraFeature/PhotoProcessor.swift`
+- `Sources/Persistence/ItemService.swift`
+- `Sources/CollectionFeature/ItemDetailView.swift`
+
 Execution:
+
+Phase 1 (fixed):
 1. Get changed files: `git diff --name-only`
-2. Launch auditors in parallel:
+2. Launch 5 horizontal auditors in parallel:
    - `axiom:concurrency-auditor`
    - `axiom:accessibility-auditor`
    - `axiom:swiftui-architecture-auditor`
+   - `axiom:security-privacy-scanner`
    - `axiom:memory-auditor`
-3. Combine results
-4. Superpowers: `requesting-code-review`
+
+Phase 2 (dynamic):
+3. Detect modules: CameraFeature, Persistence, CollectionFeature
+4. Additional agents:
+   - `axiom:camera-auditor` (CameraFeature)
+   - `axiom:energy-auditor` (CameraFeature)
+   - `axiom:codable-auditor` (Persistence)
+   - `axiom:networking-auditor` (Persistence)
+   - `axiom:swiftui-performance-analyzer` (CollectionFeature)
+   - `axiom:swiftui-nav-auditor` (CollectionFeature)
+5. UI file detected (`ItemDetailView.swift`):
+   - Delegate to `polish` skill (runs accessibility + liquid-glass agents,
+     loads axiom-hig + axiom-haptics, reads brand bible, does design synthesis
+     + spec reconciliation)
+6. Launch all Phase 2 agents in parallel
+
+Phase 3 (synthesis):
+7. Load skills (top 3 by file count): `axiom-camera-capture`, `axiom-codable`, `axiom-swiftui-performance`
+8. Superpowers: `requesting-code-review` (with all audit results + skill context)
+9. Polish ran as part of review — includes design recommendations + spec updates
 
 ### Example 4: Debug Build Failure
 
@@ -498,13 +673,41 @@ Execution:
 
 ---
 
-## 8. Token Budget
+## 8. Post-Review: Documentation Check
+
+After the `review` action completes:
+
+1. Run: `uv run scripts/check_doc_freshness.py --quiet`
+2. If exit code 1 (stale docs):
+   - Print: "Documentation may need updating. Stale docs detected for iOS scope."
+   - Print: "Run `/doc-superpowers review-pr ios` for details."
+3. If exit code 0: no action needed.
+
+---
+
+## 8b. Post-Merge: Doc Status Drift Resolution
+
+After merging a branch to main (e.g., via `finishing-a-development-branch`):
+
+1. Run: `uv run scripts/check_doc_status_drift.py --format json`
+2. For each `branch_merged` drift item:
+   - Plans: Update frontmatter and index status to `Completed`
+   - Issues: Update frontmatter and index status to `Fixed`
+   - Run: `uv run scripts/update_doc_index.py update <doc-path> --status <terminal-status>`
+3. Run: `./scripts/archive_doc.py --all` to archive any docs now in terminal status
+
+---
+
+## 9. Token Budget
 
 | Component | Budget |
 |-----------|--------|
 | Domain detection | 0 (table lookup) |
-| Axiom agent | Agent-managed |
-| Axiom skill | 5K-15K per skill |
+| Axiom agent (Phase 1 + Phase 2) | Agent-managed (each agent has own context) |
+| Phase 2 domain skills (max 3) | 5K-15K per skill, 45K total |
 | Apple docs (via axiom-apple-docs-research) | 8K per API, 25K total |
 | Superpowers context | 5K |
-| **Total max** | **50K** |
+| **Total max (non-review)** | **50K** |
+| **Total max (review)** | **75K** (agents run in separate contexts) |
+
+**Review budget note:** Phase 1 and Phase 2 agents run as Task subagents with their own context windows, so they don't consume the main budget. The main context only sees their summarized results + up to 3 loaded skills for Phase 3 synthesis.

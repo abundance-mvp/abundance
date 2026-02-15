@@ -1,6 +1,6 @@
 # ADR-008: Image Storage Architecture
 
-**Status**: Approved
+**Status**: Approved (Revised 2026-02-08)
 **Date**: 2025-11-08
 **Decision Makers**: Engineering Leadership, Backend Developer, iOS Developer
 **Related Documents**:
@@ -59,22 +59,30 @@ curl -X POST "https://serpapi.com/search.json" \
 
 **Solution**: GCS buckets can serve images via public URLs with Cloud CDN.
 
-**URL Format**: `https://storage.googleapis.com/abundance-prod-images/items/user_abc/item_123_cropped.jpg`
+**Security**: Firebase Storage security rules control access (from `storage.rules`):
 
-**Security**: Use signed URLs (temporary access tokens, 1-hour expiration) to prevent unauthorized access:
-```javascript
-const bucket = admin.storage().bucket('abundance-prod-images');
-const file = bucket.file('items/user_abc/item_123.jpg');
+```
+// Users can upload to their items folder
+match /users/{userId}/items/{allPaths=**} {
+  allow read: if request.auth != null && request.auth.uid == userId;
+  allow write: if request.auth != null
+               && request.auth.uid == userId
+               && request.resource.size < 10 * 1024 * 1024  // 10MB limit
+               && request.resource.contentType.matches('image/.*|video/.*');
+}
 
-const [url] = await file.getSignedUrl({
-    action: 'read',
-    expires: Date.now() + 3600 * 1000, // 1 hour
-});
-
-// url = "https://storage.googleapis.com/...?X-Goog-Signature=..."
+// Session crops: written by Cloud Functions, read by owner
+match /users/{userId}/sessions/{sessionId}/crops/{allPaths=**} {
+  allow read: if request.auth != null && request.auth.uid == userId;
+  // Write handled by Cloud Functions service account (bypasses rules)
+}
 ```
 
-**Outcome**: SerpAPI visual search works, images accessible for 1 hour (prevents permanent public exposure).
+**Content types**: Both `image/*` and `video/*` are allowed (supports Live Photo motion clips as `.mov` files).
+
+**Cloud Functions access**: Backend functions use the Admin SDK which bypasses security rules entirely. For SerpAPI tool calls, the Gemini service fetches images via the Admin SDK and converts to base64, or uses signed URLs (15-minute expiration) when needed.
+
+**Outcome**: User data is isolated by `userId` path segment, with 10MB upload limit and content type restrictions.
 
 ---
 
@@ -96,13 +104,13 @@ import FirebaseStorage
 
 let storage = Storage.storage()
 let storageRef = storage.reference()
-let imageRef = storageRef.child("items/\(userId)/\(itemId)_cropped.jpg")
+let imageRef = storageRef.child("users/\(userId)/items/\(itemId).jpg")
 
 imageRef.putData(imageData, metadata: nil) { metadata, error in
     guard let metadata = metadata else { return }
     imageRef.downloadURL { url, error in
-        // url = "https://storage.googleapis.com/abundance-prod-images/..."
-        // Save URL to Firestore
+        // url = "https://firebasestorage.googleapis.com/v0/b/{bucket}/o/..."
+        // Save URL to Firestore item document
     }
 }
 ```
@@ -316,55 +324,56 @@ imageRef.putData(imageData, metadata: nil) { metadata, error in
 
 ### Directory Structure
 
-**GCS Bucket Layout**:
+**Storage Paths** (from `storage.rules`):
+
+The storage bucket uses a user-scoped path structure:
+
 ```
-abundance-prod-images/
-├── items/
-│   ├── user_abc/
-│   │   ├── item_001_cropped.jpg         (cropped object from iOS)
-│   │   ├── item_002_cropped.jpg
-│   │   └── ...
-│   ├── user_xyz/
-│   │   └── ...
-└── temp/
-    └── upload_12345.jpg                  (temporary uploads, deleted after 24 hours)
+{bucket}/
+├── users/
+│   ├── {userId}/
+│   │   ├── items/
+│   │   │   ├── {itemId}.jpg                    (primary image from iOS)
+│   │   │   ├── {itemId}_crop_0.jpg             (cropped object from Layer 1)
+│   │   │   ├── {itemId}_crop_1.jpg             (additional crop)
+│   │   │   ├── {itemId}_photo_0.jpg            (additional photo)
+│   │   │   ├── {itemId}/motion.mov             (Live Photo motion clip)
+│   │   │   └── ...
+│   │   └── sessions/
+│   │       └── {sessionId}/
+│   │           └── crops/
+│   │               └── {allPaths=**}           (session crop images)
 ```
 
-**Naming Convention**: `items/{userId}/{itemId}_cropped.jpg`
+**Naming Convention**: `users/{userId}/items/{itemId}.jpg` (primary), `users/{userId}/items/{itemId}_crop_{index}.jpg` (crops)
+
+**Session Crops**: `users/{userId}/sessions/{sessionId}/crops/{allPaths=**}` (written by Cloud Functions service account, read by authenticated owner)
 
 ---
 
 ### iOS Upload Flow
 
-1. iOS app crops object using Vision Framework bounding box
-2. iOS app uploads cropped image to GCS via Firebase Storage SDK
-3. Firebase Storage returns public URL: `https://storage.googleapis.com/abundance-prod-images/items/user_abc/item_123.jpg`
-4. iOS app saves URL to Firestore (`items/item_123` document)
-5. Cloud Function reads URL from Firestore, generates signed URL (1-hour expiration)
-6. Cloud Function sends signed URL to SerpAPI for visual search
+1. iOS app captures image (single, burst, or sweep mode)
+2. iOS app uploads image to Firebase Storage at `users/{userId}/items/{itemId}.jpg`
+3. Firebase Storage returns download URL
+4. iOS app creates Firestore item document with `imageUrl` field
+5. Firestore trigger (`onItemCreatedGemini3`) fires and fetches image via Admin SDK (bypasses security rules)
+6. Image sent to Gemini 3 Pro for cataloging; Gemini may invoke Google Lens tool with the image URL
 
 ---
 
 ### Cloud Function Image Deletion
 
-**Trigger**: Firestore `items/{itemId}` document deleted
+**Trigger**: Firestore `items/{itemId}` document deleted (implemented in `functions/src/triggers/onItemDeleted.ts`)
 
-```javascript
-const admin = require('firebase-admin');
+The `onItemDeleted` trigger cleans up all associated storage files when an item is deleted:
 
-exports.deleteItemImage = functions.firestore
-    .document('items/{itemId}')
-    .onDelete(async (snap, context) => {
-        const item = snap.data();
-        const imageUrl = item.imageUrl; // e.g., "gs://abundance-prod-images/items/user_abc/item_123.jpg"
+1. Primary image: `users/{userId}/items/{itemId}.jpg`
+2. Cropped images: `users/{userId}/items/{itemId}_crop_*.jpg` (listed by prefix)
+3. Additional photos: `users/{userId}/items/{itemId}_photo_*.jpg` (listed by prefix)
+4. Live Photo motion clip: `users/{userId}/items/{itemId}/motion.mov`
 
-        const bucket = admin.storage().bucket();
-        const file = bucket.file(imageUrl.replace('gs://abundance-prod-images/', ''));
-
-        // Set customTime to trigger lifecycle deletion in 90 days
-        await file.setMetadata({ customTime: new Date().toISOString() });
-    });
-```
+Files are deleted immediately (not deferred with lifecycle rules). The trigger handles missing files gracefully (404 errors are logged but not thrown).
 
 ---
 
@@ -404,6 +413,7 @@ exports.deleteItemImage = functions.firestore
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial decision, GCS + Cloud CDN for image storage | Software Architecture Expert |
+| 2026-02-08 | 1.1 | Updated storage paths to match actual storage.rules (users/{userId}/items/{allPaths=**}), added session crop path, updated content type rules (image+video), updated deletion flow to match onItemDeleted trigger | Documentation Agent |
 
 ---
 

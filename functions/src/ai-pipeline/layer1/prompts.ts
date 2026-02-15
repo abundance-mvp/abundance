@@ -99,7 +99,7 @@ export const LAYER1_TIMEOUTS = {
   GEMINI_FLASH_TIMEOUT_MS: 30000,
 
   /** Max retries for transient failures */
-  GEMINI_FLASH_MAX_RETRIES: 2,
+  GEMINI_FLASH_MAX_RETRIES: 4,
 
   /** Per-image fetch timeout (10 seconds) */
   IMAGE_FETCH_TIMEOUT_MS: 10000,

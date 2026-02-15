@@ -1,6 +1,6 @@
 # ADR-003: MVP Scope and Phasing Decision
 
-**Status:** Proposed
+**Status:** Approved
 **Date:** 2025-10-24
 **Decision Makers:** Product Leadership, Engineering Leadership
 **Related Documents:** PRD-001, FEATURES-001, METRICS-001, business-strategy-validated.md, ADR-001, ADR-002

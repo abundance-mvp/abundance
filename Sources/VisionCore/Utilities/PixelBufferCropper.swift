@@ -18,6 +18,9 @@ public enum PixelBufferCropper {
         case conversionFailed
     }
 
+    /// Reusable CIContext — creating one per-crop costs 100-250ms of GPU/CPU setup.
+    private static let ciContext = CIContext(options: [.useSoftwareRenderer: false])
+
     /// Crop image from CVPixelBuffer using Vision bounding box
     /// - Parameters:
     ///   - pixelBuffer: Source pixel buffer from camera
@@ -52,8 +55,7 @@ public enum PixelBufferCropper {
         let croppedCI = ciImage.cropped(to: cropRect)
 
         // Convert to platform image
-        let context = CIContext()
-        guard let cgImage = context.createCGImage(croppedCI, from: croppedCI.extent) else {
+        guard let cgImage = ciContext.createCGImage(croppedCI, from: croppedCI.extent) else {
             throw CropError.conversionFailed
         }
 

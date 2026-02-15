@@ -73,7 +73,13 @@ export const onItemFromSession = onDocumentCreated(
 
       // Process with Gemini 3 Pro
       // The imageUrl should point to the cropped object in GCS
-      const result = await processItemWithGemini(itemData.imageUrl);
+      const additionalImageUrls = Array.isArray(itemData.additionalImageUrls)
+        ? itemData.additionalImageUrls as string[]
+        : [];
+      const result = await processItemWithGemini(
+        itemData.imageUrl,
+        additionalImageUrls.length > 0 ? additionalImageUrls : undefined
+      );
 
       // Validate result
       const catalogItems = Array.isArray(result) ? result : [result];
@@ -89,9 +95,9 @@ export const onItemFromSession = onDocumentCreated(
 
       const flattenedUpdate: Record<string, unknown> = {
         status: 'complete',
-        // Flatten catalog fields to top level
-        name: catalogItem.name,
-        category: catalogItem.category,
+        // Flatten catalog fields to top level, falling back to layer1 data
+        name: catalogItem.name || itemData.layer1Label || null,
+        category: catalogItem.category || itemData.layer1Category || null,
         subCategory: catalogItem.subCategory,
         brand: catalogItem.brand ?? null,
         model: catalogItem.model ?? null,
@@ -140,6 +146,9 @@ export const onItemFromSession = onDocumentCreated(
       await itemRef.update({
         status: 'failed',
         error: errorMessage,
+        // Preserve layer1 data as fallback display name on failure
+        name: itemData.layer1Label || null,
+        category: itemData.layer1Category || null,
         updatedAt: FieldValue.serverTimestamp()
       });
     }

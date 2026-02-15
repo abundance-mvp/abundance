@@ -84,17 +84,19 @@ gs://abundance-temp/sessions/abc123xyz/2.jpg
 
 ### Permanent Bucket: Cropped Objects
 
-**Path Pattern:** `users/{userId}/items/{groupId}_crop_{index}.jpg`
+**Path Pattern:** `users/{userId}/sessions/{sessionId}/crops/{groupId}_crop_{index}.jpg`
+
+Crops are organized under the session that produced them, preventing different sessions from overwriting each other's crops.
 
 **Example:**
 ```
-gs://abundance-mvp.firebasestorage.app/users/uid123/items/obj_a1b2c3_crop_0.jpg
-gs://abundance-mvp.firebasestorage.app/users/uid123/items/obj_a1b2c3_crop_1.jpg
+gs://abundance-mvp.firebasestorage.app/users/uid123/sessions/session_abc123/crops/obj_a1b2c3_crop_0.jpg
+gs://abundance-mvp.firebasestorage.app/users/uid123/sessions/session_abc123/crops/obj_a1b2c3_crop_1.jpg
 ```
 
-**Reference:** `functions/src/ai-pipeline/layer1/layer1-service.ts:387`
+**Reference:** `functions/src/ai-pipeline/layer1/layer1-service.ts:467`
 ```typescript
-const cropPath = `users/${userId}/items/${groupId}_crop_${croppedUrls.length}.jpg`;
+const cropPath = `users/${userId}/sessions/${sessionId}/crops/${groupId}_crop_${croppedUrls.length}.jpg`;
 ```
 
 ### Permanent Bucket: Live Photo Motion Clips
@@ -188,7 +190,7 @@ public func uploadCroppedObject(
 **Server-Side Cropping Code:**
 
 ```typescript
-// functions/src/ai-pipeline/layer1/layer1-service.ts:318-441
+// functions/src/ai-pipeline/layer1/layer1-service.ts:395-523
 async function cropAndUploadObjects(
   objects: DetectedObject[],
   imageBase64s: string[],
@@ -209,7 +211,7 @@ async function cropAndUploadObjects(
       const absCoords = boxToAbsolute(obj.box_2d, metadata.width, metadata.height);
       const paddedCoords = addPadding(absCoords, 0.05, metadata.width, metadata.height);
 
-      // Crop the image
+      // Crop from the EXIF-normalized image
       const croppedBuffer = await sharpLib(imageBuffer)
         .extract({
           left: paddedCoords.x1,
@@ -220,11 +222,13 @@ async function cropAndUploadObjects(
         .jpeg({ quality: 85 })
         .toBuffer();
 
-      // Upload to GCS permanent bucket
-      const cropPath = `users/${userId}/items/${groupId}_crop_${croppedUrls.length}.jpg`;
+      // Upload to GCS with Firebase download token for permanent URL
+      // Include sessionId in path to prevent different sessions from overwriting
+      const cropPath = `users/${userId}/sessions/${sessionId}/crops/${groupId}_crop_${croppedUrls.length}.jpg`;
       const bucket = storage.bucket();
       const file = bucket.file(cropPath);
 
+      const downloadToken = randomUUID();
       await file.save(croppedBuffer, {
         metadata: {
           contentType: 'image/jpeg',
@@ -232,18 +236,16 @@ async function cropAndUploadObjects(
             sessionId,
             groupId,
             label: obj.label,
-            imageIndex: obj.image_index.toString()
+            imageIndex: obj.image_index.toString(),
+            firebaseStorageDownloadTokens: downloadToken
           }
         }
       });
 
-      // Generate signed URL (24-hour expiration)
-      const [signedUrl] = await file.getSignedUrl({
-        action: 'read',
-        expires: Date.now() + 24 * 60 * 60 * 1000,
-        version: 'v4'
-      });
-      croppedUrls.push(signedUrl);
+      // Generate permanent Firebase download URL (doesn't expire like signed URLs)
+      const bucketName = bucket.name;
+      const downloadUrl = generateFirebaseDownloadUrl(bucketName, cropPath, downloadToken);
+      croppedUrls.push(downloadUrl);
     }
   }
   return crops;
@@ -259,7 +261,9 @@ async function cropAndUploadObjects(
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  1. Firestore trigger on item document deletion                              │
 │  2. Delete primary image: users/{userId}/items/{itemId}.jpg                  │
-│  3. Delete motion clip (if exists): users/{userId}/items/{itemId}/motion.mov │
+│  3. Delete cropped images: users/{userId}/items/{itemId}_crop_*.jpg          │
+│  4. Delete additional photos: users/{userId}/items/{itemId}_photo_*.jpg      │
+│  5. Delete motion clip (if exists): users/{userId}/items/{itemId}/motion.mov │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -316,7 +320,7 @@ async function cropAndUploadObjects(
 │                                    ▼                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
 │  │ Permanent Bucket Storage                                                  │ │
-│  │ Path: users/{userId}/items/{groupId}_crop_{index}.jpg                    │ │
+│  │ Path: users/{userId}/sessions/{sessionId}/crops/{groupId}_crop_{index}.jpg│ │
 │  │ Contains: cropped object only, no context                                │ │
 │  └─────────────────────────────────────────────────────────────────────────┘ │
 │                                    │                                          │
@@ -360,7 +364,7 @@ async function cropAndUploadObjects(
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Users can only upload to their own folder
+    // Users can upload to their items folder (original images from iOS app)
     // Matches both flat files (items/{itemId}.jpg) and nested paths (items/{itemId}/motion.mov)
     match /users/{userId}/items/{allPaths=**} {
       allow read: if request.auth != null && request.auth.uid == userId;
@@ -368,6 +372,14 @@ service firebase.storage {
                    && request.auth.uid == userId
                    && request.resource.size < 10 * 1024 * 1024  // 10MB limit
                    && request.resource.contentType.matches('image/.*|video/.*');
+    }
+
+    // Session crops are written by backend Cloud Functions (service account)
+    // and read by authenticated users who own the session
+    // Note: Cloud Functions bypass rules, but users need read access
+    match /users/{userId}/sessions/{sessionId}/crops/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Write is handled by Cloud Functions service account (bypasses rules)
     }
   }
 }
@@ -380,56 +392,46 @@ service firebase.storage {
 | **Authentication** | Required (`request.auth != null`) | Only authenticated users can access storage |
 | **User Scoping** | Owner only (`request.auth.uid == userId`) | Users can only access their own files |
 | **Size Limit** | 10MB | Prevents abuse; full photos typically 3-5MB |
-| **Content Type** | `image/*` or `video/*` | Only media files allowed |
+| **Content Type** | `image/*` or `video/*` | Only media files allowed (video for Live Photo `.mov` motion clips) |
 
 ### Allowed Bucket Validation (Server-Side)
 
-The `onSessionCreated` trigger validates that all image URLs come from allowed temp buckets:
+The `onSessionCreated` trigger validates that all image URLs come from allowed buckets using exact match (preventing bucket name spoofing):
 
 ```typescript
-// functions/src/triggers/onSessionCreated.ts:82-98
-const ALLOWED_BUCKETS = ['abundance-temp', 'abundance-dev-temp', 'abundance-staging-temp'];
-
-for (const url of sessionData.originalImageUrls as string[]) {
-  const bucketMatch = url.match(/gs:\/\/([^/]+)\//);
-  if (!bucketMatch || !ALLOWED_BUCKETS.some(b => bucketMatch[1].includes(b))) {
-    logger.error('Session validation failed', { reason: 'Unauthorized bucket', url });
-    await sessionRef.update({
-      status: 'failed',
-      error: 'Unauthorized storage bucket',
-      errorCode: 'UNAUTHORIZED_BUCKET',
-      failedAt: FieldValue.serverTimestamp()
-    });
-    return { valid: false, errorCode: 'UNAUTHORIZED_BUCKET', errorMessage: 'Unauthorized bucket' };
-  }
-}
+// functions/src/triggers/onSessionCreated.ts:47-52
+const ALLOWED_BUCKETS = [
+  'abundance-mvp.firebasestorage.app',  // Default Firebase Storage bucket
+  'abundance-temp',
+  'abundance-dev-temp',
+  'abundance-staging-temp'
+];
 ```
+
+Bucket names are extracted from URLs using `extractBucketFromUrl()` which supports `gs://`, Firebase Storage HTTPS, and GCS HTTPS URL formats. All URL patterns use anchored regex to prevent domain spoofing attacks.
 
 ---
 
 ## URL Generation
 
-### Signed URLs (Server-Side)
+### Firebase Download URLs (Server-Side)
 
-Used for cropped object images returned to the client.
+Used for cropped object images returned to the client. These are permanent URLs generated using Firebase Storage download tokens (no expiration).
 
 **Characteristics:**
-- 24-hour expiration
-- V4 signature format
-- Read-only access
+- No expiration (permanent URL)
+- Download token embedded in metadata during upload
+- Accessible without Firebase Auth (token-based access)
 
 ```typescript
-// functions/src/ai-pipeline/layer1/layer1-service.ts:403-408
-const [signedUrl] = await file.getSignedUrl({
-  action: 'read',
-  expires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-  version: 'v4'
-});
+// functions/src/ai-pipeline/layer1/layer1-service.ts:488-490
+const bucketName = bucket.name;
+const downloadUrl = generateFirebaseDownloadUrl(bucketName, cropPath, downloadToken);
 ```
 
 **URL Format:**
 ```
-https://storage.googleapis.com/{bucket}/{path}?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=...&X-Goog-Date=...&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=...
+https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{urlEncodedPath}?alt=media&token={downloadToken}
 ```
 
 ### Download URLs (Client-Side)
@@ -524,3 +526,4 @@ Minimal cost due to 24-hour lifecycle:
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2026-01-18 | 1.0 | Initial storage architecture specification | Claude Code Audit |
+| 2026-02-08 | 1.1 | Fix crop paths (items/ to sessions/{id}/crops/), add session crops read rule to storage rules, update ALLOWED_BUCKETS, update URL generation from signed URLs to Firebase download URLs, update onItemDeleted cleanup paths | Claude Code Audit |

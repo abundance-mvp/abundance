@@ -50,6 +50,14 @@ function isRetryableError(error: Error): boolean {
 }
 
 /**
+ * Check if an error is a rate limit (429 / RESOURCE_EXHAUSTED)
+ * These need much longer backoff than transient errors.
+ */
+function isRateLimitError(error: Error): boolean {
+  return error.message.includes('RESOURCE_EXHAUSTED') || error.message.includes('429');
+}
+
+/**
  * Sleep for specified milliseconds
  */
 async function sleep(ms: number): Promise<void> {
@@ -101,11 +109,19 @@ function withTimeout<T>(
  * @returns Detection response from Gemini
  * @throws Last error if all retries fail or non-retryable error
  */
+/**
+ * Maximum consecutive 429 errors before circuit breaker trips.
+ * After this many consecutive rate limit errors, we fail fast with
+ * RATE_LIMITED instead of continuing to hammer the API.
+ */
+const RATE_LIMIT_CIRCUIT_BREAKER_THRESHOLD = 3;
+
 export async function callGeminiFlashWithRetry(
   imageBase64s: string[],
   maxRetries: number = LAYER1_TIMEOUTS.GEMINI_FLASH_MAX_RETRIES
 ): Promise<Layer1DetectionResponse> {
   let lastError: Error | null = null;
+  let consecutive429Count = 0;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -118,16 +134,46 @@ export async function callGeminiFlashWithRetry(
         throw lastError;
       }
 
+      const isRateLimit = isRateLimitError(lastError);
+
+      // Circuit breaker: after N consecutive 429s, fail fast
+      if (isRateLimit) {
+        consecutive429Count++;
+        if (consecutive429Count >= RATE_LIMIT_CIRCUIT_BREAKER_THRESHOLD) {
+          logger.error('Rate limit circuit breaker tripped', {
+            consecutive429Count,
+            attempt: attempt + 1
+          });
+          throw new Error(
+            `RATE_LIMITED: ${consecutive429Count} consecutive 429 errors. ` +
+            `Circuit breaker tripped to prevent further API hammering.`
+          );
+        }
+      } else {
+        consecutive429Count = 0; // Reset on non-429 errors
+      }
+
       logger.warn('Gemini Flash attempt failed', {
         attempt: attempt + 1,
         maxAttempts: maxRetries + 1,
+        isRateLimit,
+        consecutive429Count,
         error: lastError.message
       });
 
-      // Apply exponential backoff before next retry (except on last attempt)
+      // Apply backoff before next retry (except on last attempt)
+      // Rate limit errors (429) need much longer backoff than transient errors
       if (attempt < maxRetries) {
-        const backoffMs = 1000 * Math.pow(2, attempt); // 1s, 2s, 4s
-        logger.info('Retrying Gemini Flash', { backoffMs });
+        const baseMs = isRateLimit
+          ? 15000 * Math.pow(2, attempt)  // 15s, 30s, 60s, 120s for rate limits
+          : 1000 * Math.pow(2, attempt);  // 1s, 2s, 4s, 8s, 16s for transient errors
+        const jitter = Math.random() * baseMs * 0.5; // 0-50% jitter
+        const backoffMs = Math.min(baseMs + jitter, 60000); // Cap at 60s
+        logger.info('Retrying Gemini Flash', {
+          backoffMs: Math.round(backoffMs),
+          isRateLimit,
+          attempt: attempt + 1
+        });
         await sleep(backoffMs);
       }
     }
@@ -192,9 +238,23 @@ export async function detectObjectsInImages(
   userId: string,
   sessionId: string
 ): Promise<Layer1Result> {
-  // Fetch images and convert to base64
-  const imageBase64s = await Promise.all(
+  const sharpLib = await getSharp();
+
+  // Fetch images and normalize EXIF rotation BEFORE sending to Gemini.
+  // This ensures Gemini's bounding box coordinates match the visual orientation
+  // of the image, which is the same orientation used for cropping.
+  // Without this, a portrait photo (landscape sensor + EXIF rotation tag) would
+  // have Gemini return coords in raw sensor space while crops use rotated space.
+  const rawBase64s = await Promise.all(
     imageUrls.map(url => fetchImageFromGCS(url, storage))
+  );
+
+  const imageBase64s = await Promise.all(
+    rawBase64s.map(async (base64) => {
+      const buffer = Buffer.from(base64, 'base64');
+      const rotated = await sharpLib(buffer).rotate().jpeg({ quality: 95 }).toBuffer();
+      return rotated.toString('base64');
+    })
   );
 
   // Call Gemini 3 Flash for detection with retry logic
@@ -377,19 +437,11 @@ async function cropAndUploadObjects(
       }
 
       try {
-        // Get image dimensions AFTER EXIF rotation normalization
-        // Gemini sees the image in its visual orientation (post-EXIF-rotation),
-        // so we need the rotated dimensions for accurate bounding box conversion
+        // Images are already EXIF-normalized in detectObjectsInImages() before
+        // being sent to Gemini, so bbox coords and image dimensions are aligned.
         const imageBuffer = Buffer.from(imageBase64, 'base64');
 
-        // First, apply rotation and get the normalized buffer
-        // .rotate() with no args auto-rotates based on EXIF orientation metadata
-        const rotatedBuffer = await sharpLib(imageBuffer)
-          .rotate()
-          .toBuffer();
-
-        // Now get metadata from the rotated image (correct dimensions)
-        const metadata = await sharpLib(rotatedBuffer).metadata();
+        const metadata = await sharpLib(imageBuffer).metadata();
         if (!metadata.width || !metadata.height) {
           logger.warn('Could not get image dimensions', { label: obj.label });
           continue;
@@ -399,8 +451,8 @@ async function cropAndUploadObjects(
         const absCoords = boxToAbsolute(obj.box_2d, metadata.width, metadata.height);
         const paddedCoords = addPadding(absCoords, 0.05, metadata.width, metadata.height);
 
-        // Crop from the already-rotated image
-        const croppedBuffer = await sharpLib(rotatedBuffer)
+        // Crop from the EXIF-normalized image
+        const croppedBuffer = await sharpLib(imageBuffer)
           .extract({
             left: paddedCoords.x1,
             top: paddedCoords.y1,

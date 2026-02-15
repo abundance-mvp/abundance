@@ -86,6 +86,16 @@ final class MockStorageService: StorageServiceProtocol, @unchecked Sendable {
         return stubbedMotionUrl
     }
 
+    func uploadAdditionalPhoto(
+        _ image: PlatformImage,
+        itemId: String,
+        photoIndex: Int,
+        userId: String
+    ) async throws -> URL {
+        if let error = errorToThrow { throw error }
+        return URL(string: "https://storage.example.com/\(itemId)_photo_\(photoIndex).jpg")!
+    }
+
     // MARK: - Test Helpers
 
     /// Reset all state for clean test setup

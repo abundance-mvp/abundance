@@ -19,22 +19,22 @@ The Abundance MVP backend is powered by Firebase Cloud Functions, providing:
 ### Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                       Cloud Functions                            │
-├─────────────────────────────────────────────────────────────────┤
-│  HTTP Endpoints        │  Firestore Triggers  │  Scheduled Jobs  │
-│  - health              │  - onSessionCreated  │  - cleanupDeleted│
-│  - createItemHTTP      │  - onItemCreatedGemini3                  │
-│  - getItemHTTP         │  - onItemFromSession │  - checkExpiry   │
-│  - listItemsHTTP       │  - onItemDeleted     │                  │
-│  - getUserProfile      │                      │                  │
-│  - backfillFlatten...  │                      │                  │
-├─────────────────────────────────────────────────────────────────┤
-│                    Firebase Admin SDK                            │
-│              (Firestore, Storage, Auth)                          │
-├─────────────────────────────────────────────────────────────────┤
-│                    AI Pipeline (Gemini/Vertex AI)                │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Cloud Functions                              │
+├─────────────────────────────────────────────────────────────────────┤
+│  HTTP Endpoints        │  Firestore Triggers        │ Scheduled Jobs│
+│  - health              │  - onSessionCreated        │ - cleanupDel. │
+│  - createItemHTTP      │  - onItemCreatedGemini3    │ - checkExpiry │
+│  - getItemHTTP         │  - onItemFromSession       │               │
+│  - listItemsHTTP       │  - onItemDeleted           │               │
+│  - getUserProfile      │  - onItemUpdatedDeepScan   │               │
+│  - backfillFlatten...  │  - onItemUpdatedRescan     │               │
+├─────────────────────────────────────────────────────────────────────┤
+│                      Firebase Admin SDK                              │
+│                (Firestore, Storage, Auth)                            │
+├─────────────────────────────────────────────────────────────────────┤
+│                      AI Pipeline (Gemini/Vertex AI)                 │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Runtime Environment
@@ -57,6 +57,8 @@ The Abundance MVP backend is powered by Firebase Cloud Functions, providing:
 | `onSessionCreated` | Firestore Update | sessions/{sessionId} | Layer 1 object detection |
 | `onItemCreatedGemini3` | Firestore Create | items/{itemId} | Layer 2 AI cataloging |
 | `onItemFromSession` | Firestore Create | items/{itemId} | Catalog session-detected items |
+| `onItemUpdatedDeepScan` | Firestore Update | items/{itemId} | Deep scan / refresh with Gemini Pro |
+| `onItemUpdatedRescan` | Firestore Update | items/{itemId} | Re-catalog item through standard pipeline |
 | `onItemDeleted` | Firestore Delete | items/{itemId} | Storage cleanup on delete |
 | `cleanupDeletedItemsScheduled` | Scheduled | Daily 2am UTC | Purge soft-deleted items (90+ days) |
 | `checkSubscriptionExpiryScheduled` | Scheduled | Daily 6am UTC | Downgrade expired subscriptions |
@@ -253,11 +255,14 @@ Fires when:
 
 **Session Document Schema:**
 ```typescript
+type CaptureMode = 'single' | 'burst' | 'sweep';
+type SessionStatus = 'uploading' | 'detecting' | 'detected' | 'failed';
+
 interface CaptureSession {
   id: string;
   userId: string;
-  captureMode: 'single' | 'burst';
-  status: 'uploading' | 'detecting' | 'detected' | 'failed';
+  captureMode: CaptureMode;
+  status: SessionStatus;
   originalImageUrls: string[];
   imagesUploaded?: number;
   expectedImageCount?: number;
@@ -273,10 +278,14 @@ interface CaptureSession {
   reasoning?: string;
   error?: string;
   errorCode?: string;
+  /** Sweep mode: pre-cropped segments from on-device EdgeTAM */
+  sweepCrops?: SweepCropInfo[];
+  processingStartedAt?: FirebaseFirestore.Timestamp;
 }
 ```
 
 **Allowed Storage Buckets:**
+- `abundance-mvp.firebasestorage.app` (default Firebase Storage bucket)
 - `abundance-temp`
 - `abundance-dev-temp`
 - `abundance-staging-temp`
@@ -392,16 +401,95 @@ Fires when item has:
 **Processing Steps:**
 1. Extract userId and imageUrl from deleted document
 2. Delete primary image: `users/{userId}/items/{itemId}.jpg`
-3. Delete Live Photo motion clip (if exists): `items/{itemId}/motion.mov`
-4. Log results (warns on 404, errors on other failures)
+3. Delete cropped images (prefix scan): `users/{userId}/items/{itemId}_crop_*.jpg`
+4. Delete additional photos (prefix scan): `users/{userId}/items/{itemId}_photo_*.jpg`
+5. Delete Live Photo motion clip (if exists): `users/{userId}/items/{itemId}/motion.mov`
+6. Log results with counts (deleted, not found, errors)
 
 **Storage Paths Cleaned:**
-- `/users/{userId}/items/{itemId}.jpg` (primary image)
-- `/items/{itemId}/motion.mov` (optional Live Photo)
+- `users/{userId}/items/{itemId}.jpg` (primary image)
+- `users/{userId}/items/{itemId}_crop_*.jpg` (cropped object images)
+- `users/{userId}/items/{itemId}_photo_*.jpg` (additional photos)
+- `users/{userId}/items/{itemId}/motion.mov` (optional Live Photo)
 
 ---
 
-### 3.10 Cleanup Deleted Items (Scheduled)
+### 3.10 On Item Updated: Deep Scan / Refresh
+
+**Function:** `onItemUpdatedDeepScan`
+**File:** `functions/src/triggers/onItemUpdatedDeepScan.ts`
+
+| Property | Value |
+|----------|-------|
+| **Type** | Firestore Update Trigger (v2) |
+| **Document Path** | `items/{itemId}` |
+| **Region** | us-central1 |
+| **Memory** | 1 GiB |
+| **Timeout** | 180 seconds |
+| **Secrets** | `SERPAPI_KEY` |
+
+**Trigger Condition:**
+Fires when:
+- `deepScanRequested === true`
+- `status === 'pending'`
+- `before.deepScanRequested !== true` (prevents re-triggering on unrelated updates)
+
+**Processing Steps:**
+1. Set SERPAPI_KEY environment variable from secret
+2. Resolve image URL from `imageUrl` or `imagePath`
+3. Read `additionalImageUrls` if present
+4. Call `processItemWithGeminiPersistent()` with context cache enabled
+5. Extract deep scan extended fields from result
+6. Update item with: `productUrl`, `upcCode`, `marketPriceRange`, `originalRetailPrice`, `deepScanCompletedAt`
+7. Also update standard fields (name, dimensions, estimatedValue) if better data found
+
+**Output Fields:**
+```typescript
+{
+  status: 'complete';
+  deepScanCompletedAt: Timestamp;
+  productUrl: string | null;
+  upcCode: string | null;
+  marketPriceRange: string | null;
+  originalRetailPrice: number | null;
+  // Standard fields updated if better data found:
+  name?: string;
+  dimensions?: string;
+  estimatedValue?: number;
+}
+```
+
+---
+
+### 3.11 On Item Updated: Rescan
+
+**Function:** `onItemUpdatedRescan`
+**File:** `functions/src/triggers/onItemUpdatedRescan.ts`
+
+| Property | Value |
+|----------|-------|
+| **Type** | Firestore Update Trigger (v2) |
+| **Document Path** | `items/{itemId}` |
+| **Region** | us-central1 |
+| **Memory** | 512 MiB |
+| **Timeout** | 120 seconds |
+| **Secrets** | `SERPAPI_KEY` |
+
+**Trigger Condition:**
+Fires when:
+- `status === 'pending'`
+- `before.status !== 'pending'` (prevents re-triggering)
+- `deepScanRequested !== true` (deep scans handled by `onItemUpdatedDeepScan`)
+
+**Processing Steps:**
+1. Set SERPAPI_KEY environment variable from secret
+2. Call `handleItemCreated()` with the updated document snapshot (same pipeline as initial cataloging)
+
+**Note:** This handles the "Re-catalog" button flow where the user wants to re-process an item through the standard AI pipeline.
+
+---
+
+### 3.12 Cleanup Deleted Items (Scheduled)
 
 **Function:** `cleanupDeletedItemsScheduled`
 **File:** `functions/src/scheduled/cleanupDeletedItems.ts`
@@ -422,7 +510,7 @@ Fires when item has:
 
 ---
 
-### 3.11 Check Subscription Expiry (Scheduled)
+### 3.13 Check Subscription Expiry (Scheduled)
 
 **Function:** `checkSubscriptionExpiryScheduled`
 **File:** `functions/src/scheduled/checkSubscriptionExpiry.ts`
@@ -443,7 +531,7 @@ Fires when item has:
 
 ---
 
-### 3.12 Backfill Flattened Schema (Migration)
+### 3.14 Backfill Flattened Schema (Migration)
 
 **Function:** `backfillFlattenedSchema`
 **File:** `functions/src/migrations/backfillFlattenedSchema.ts`
@@ -507,6 +595,8 @@ All functions deploy to **us-central1**.
 | `onSessionCreated` | 1 GiB (Sharp image processing) |
 | `onItemCreatedGemini3` | 512 MiB |
 | `onItemFromSession` | 512 MiB |
+| `onItemUpdatedDeepScan` | 1 GiB |
+| `onItemUpdatedRescan` | 512 MiB |
 | HTTP endpoints | Default (256 MiB) |
 | Scheduled jobs | Default (256 MiB) |
 
@@ -516,6 +606,8 @@ All functions deploy to **us-central1**.
 |----------|---------|
 | `onItemCreatedGemini3` | 120 seconds |
 | `onItemFromSession` | 120 seconds |
+| `onItemUpdatedDeepScan` | 180 seconds |
+| `onItemUpdatedRescan` | 120 seconds |
 | `onSessionCreated` | LAYER1_TIMEOUTS.FUNCTION_TIMEOUT_SECONDS |
 | HTTP endpoints | Default (60 seconds) |
 | Scheduled jobs | Default (540 seconds) |
@@ -524,7 +616,7 @@ All functions deploy to **us-central1**.
 
 | Variable | Type | Usage |
 |----------|------|-------|
-| `SERPAPI_KEY` | Secret | Google Lens visual search (onItemCreatedGemini3, onItemFromSession) |
+| `SERPAPI_KEY` | Secret | Google Lens visual search (onItemCreatedGemini3, onItemFromSession, onItemUpdatedDeepScan, onItemUpdatedRescan) |
 | `GOOGLE_CLOUD_PROJECT` | Auto-set | Vertex AI project context |
 | `GOOGLE_CLOUD_LOCATION` | Auto-set | Defaults to 'global' |
 

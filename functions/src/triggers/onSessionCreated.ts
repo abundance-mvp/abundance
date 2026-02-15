@@ -21,6 +21,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import * as logger from 'firebase-functions/logger';
 import { detectObjectsInImages, getEmptyResultReasoning } from '../ai-pipeline/layer1/layer1-service';
 import { LAYER1_TIMEOUTS } from '../ai-pipeline/layer1/prompts';
+import { labelPrecroppedObjects as labelPrecroppedObjectsImpl } from '../ai-pipeline/layer1/sweep-labeling';
 
 /**
  * Session status enum
@@ -90,12 +91,41 @@ function extractBucketFromUrl(url: string): string | null {
 }
 
 /**
+ * Validate a single sweep crop entry from Firestore.
+ *
+ * Since Firestore is schemaless, crop fields could be any type.
+ * Returns an error message if invalid, or null if valid.
+ */
+function validateSweepCrop(crop: unknown, index: number): string | null {
+  if (typeof crop !== 'object' || crop === null) {
+    return `sweepCrops[${index}] is not an object`;
+  }
+  const c = crop as Record<string, unknown>;
+
+  if (typeof c.cropUrl !== 'string' || c.cropUrl.trim() === '') {
+    return `sweepCrops[${index}].cropUrl must be a non-empty string`;
+  }
+  if (!Array.isArray(c.boundingBox) || c.boundingBox.length !== 4 ||
+      !c.boundingBox.every((v: unknown) => typeof v === 'number' && isFinite(v as number))) {
+    return `sweepCrops[${index}].boundingBox must be a 4-element array of finite numbers`;
+  }
+  if (typeof c.frameIndex !== 'number' || !Number.isInteger(c.frameIndex) || c.frameIndex < 0) {
+    return `sweepCrops[${index}].frameIndex must be a non-negative integer`;
+  }
+  if (typeof c.groupId !== 'string' || c.groupId.trim() === '') {
+    return `sweepCrops[${index}].groupId must be a non-empty string`;
+  }
+  return null;
+}
+
+/**
  * Validate session document before processing
  *
  * Checks:
  * 1. userId is a non-empty string
- * 2. originalImageUrls is a non-empty array
- * 3. All URLs are from allowed storage buckets
+ * 2. For sweep mode: sweepCrops is a non-empty array with valid structure
+ * 3. For single/burst mode: originalImageUrls is a non-empty array
+ * 4. All URLs are from allowed storage buckets (SSRF prevention)
  *
  * @param sessionData - The session document data
  * @param sessionRef - Reference to the session document for updating on failure
@@ -117,32 +147,92 @@ export async function validateSessionDocument(
     return { valid: false, errorCode: 'INVALID_DOCUMENT', errorMessage: 'Missing userId' };
   }
 
-  // Validate originalImageUrls is a non-empty array
-  if (!Array.isArray(sessionData.originalImageUrls) || sessionData.originalImageUrls.length === 0) {
-    logger.error('Session validation failed', { reason: 'No images provided' });
-    await sessionRef.update({
-      status: 'failed',
-      error: 'No images provided',
-      errorCode: 'NO_IMAGES',
-      failedAt: FieldValue.serverTimestamp()
-    });
-    return { valid: false, errorCode: 'NO_IMAGES', errorMessage: 'No images provided' };
-  }
+  const captureMode = sessionData.captureMode as string | undefined;
 
-  // Validate all URLs are from allowed buckets
-  // SECURITY: Use exact match to prevent bucket name spoofing
-  // (e.g., "evil-abundance-mvp.firebasestorage.app" must NOT pass)
-  for (const url of sessionData.originalImageUrls as string[]) {
-    const bucketName = extractBucketFromUrl(url);
-    if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
-      logger.error('Session validation failed', { reason: 'Unauthorized bucket', url, bucketName });
+  if (captureMode === 'sweep') {
+    // Sweep mode: validate sweepCrops instead of originalImageUrls
+    if (!Array.isArray(sessionData.sweepCrops) || sessionData.sweepCrops.length === 0) {
+      logger.error('Session validation failed', { reason: 'No sweep crops provided' });
       await sessionRef.update({
         status: 'failed',
-        error: 'Unauthorized storage bucket',
-        errorCode: 'UNAUTHORIZED_BUCKET',
+        error: 'No sweep crops provided',
+        errorCode: 'SWEEP_NO_CROPS',
         failedAt: FieldValue.serverTimestamp()
       });
-      return { valid: false, errorCode: 'UNAUTHORIZED_BUCKET', errorMessage: 'Unauthorized bucket' };
+      return { valid: false, errorCode: 'SWEEP_NO_CROPS', errorMessage: 'No sweep crops provided' };
+    }
+
+    // Structural validation of each crop (Firestore is schemaless)
+    for (let i = 0; i < (sessionData.sweepCrops as unknown[]).length; i++) {
+      const crop = (sessionData.sweepCrops as unknown[])[i];
+      const cropError = validateSweepCrop(crop, i);
+      if (cropError) {
+        logger.error('Sweep crop validation failed', { reason: cropError, index: i });
+        await sessionRef.update({
+          status: 'failed',
+          error: cropError,
+          errorCode: 'INVALID_SWEEP_CROP',
+          failedAt: FieldValue.serverTimestamp()
+        });
+        return { valid: false, errorCode: 'INVALID_SWEEP_CROP', errorMessage: cropError };
+      }
+    }
+
+    // Cap sweep crops to prevent abuse and timeout
+    const MAX_SWEEP_CROPS = 50;
+    if ((sessionData.sweepCrops as unknown[]).length > MAX_SWEEP_CROPS) {
+      logger.error('Session validation failed', { reason: 'Too many sweep crops', count: (sessionData.sweepCrops as unknown[]).length, limit: MAX_SWEEP_CROPS });
+      await sessionRef.update({
+        status: 'failed',
+        error: `Too many sweep crops: ${(sessionData.sweepCrops as unknown[]).length} exceeds limit of ${MAX_SWEEP_CROPS}`,
+        errorCode: 'SWEEP_TOO_MANY_CROPS',
+        failedAt: FieldValue.serverTimestamp()
+      });
+      return { valid: false, errorCode: 'SWEEP_TOO_MANY_CROPS', errorMessage: 'Too many sweep crops' };
+    }
+
+    // Validate all sweep crop URLs are from allowed buckets
+    for (const crop of sessionData.sweepCrops as SweepCropInfo[]) {
+      const bucketName = extractBucketFromUrl(crop.cropUrl);
+      if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
+        logger.error('Session validation failed', { reason: 'Unauthorized bucket in sweep crop', cropUrl: crop.cropUrl, bucketName });
+        await sessionRef.update({
+          status: 'failed',
+          error: 'Unauthorized storage bucket in sweep crop',
+          errorCode: 'UNAUTHORIZED_BUCKET',
+          failedAt: FieldValue.serverTimestamp()
+        });
+        return { valid: false, errorCode: 'UNAUTHORIZED_BUCKET', errorMessage: 'Unauthorized bucket' };
+      }
+    }
+  } else {
+    // Single/Burst mode: validate originalImageUrls
+    if (!Array.isArray(sessionData.originalImageUrls) || sessionData.originalImageUrls.length === 0) {
+      logger.error('Session validation failed', { reason: 'No images provided' });
+      await sessionRef.update({
+        status: 'failed',
+        error: 'No images provided',
+        errorCode: 'NO_IMAGES',
+        failedAt: FieldValue.serverTimestamp()
+      });
+      return { valid: false, errorCode: 'NO_IMAGES', errorMessage: 'No images provided' };
+    }
+
+    // Validate all URLs are from allowed buckets
+    // SECURITY: Use exact match to prevent bucket name spoofing
+    // (e.g., "evil-abundance-mvp.firebasestorage.app" must NOT pass)
+    for (const url of sessionData.originalImageUrls as string[]) {
+      const bucketName = extractBucketFromUrl(url);
+      if (!bucketName || !ALLOWED_BUCKETS.includes(bucketName)) {
+        logger.error('Session validation failed', { reason: 'Unauthorized bucket', url, bucketName });
+        await sessionRef.update({
+          status: 'failed',
+          error: 'Unauthorized storage bucket',
+          errorCode: 'UNAUTHORIZED_BUCKET',
+          failedAt: FieldValue.serverTimestamp()
+        });
+        return { valid: false, errorCode: 'UNAUTHORIZED_BUCKET', errorMessage: 'Unauthorized bucket' };
+      }
     }
   }
 
@@ -152,7 +242,23 @@ export async function validateSessionDocument(
 /**
  * Capture mode enum
  */
-type CaptureMode = 'single' | 'burst';
+type CaptureMode = 'single' | 'burst' | 'sweep';
+
+/**
+ * Sweep crop metadata from on-device EdgeTAM segmentation
+ */
+interface SweepCropInfo {
+  /** GCS URL of the pre-cropped image */
+  cropUrl: string;
+  /** Bounding box [ymin, xmin, ymax, xmax] normalized 0-1000 */
+  boundingBox: [number, number, number, number];
+  /** Index of the keyframe this crop came from */
+  frameIndex: number;
+  /** Deduplication group ID from on-device segment grouping */
+  groupId: string;
+  /** Optional 3D world position from ARKit, if available */
+  worldPosition?: [number, number, number];
+}
 
 /**
  * Session document structure
@@ -164,7 +270,8 @@ interface CaptureSession {
   status: SessionStatus;
   createdAt: FirebaseFirestore.Timestamp;
   detectedAt?: FirebaseFirestore.Timestamp;
-  originalImageUrls: string[];
+  /** Image URLs — required for single/burst, absent for sweep mode */
+  originalImageUrls?: string[];
   imagesUploaded?: number;
   expectedImageCount?: number;
   detectedObjects?: Array<{
@@ -182,6 +289,10 @@ interface CaptureSession {
   reasoning?: string;
   error?: string;
   errorCode?: string;
+  failedAt?: FirebaseFirestore.Timestamp;
+  processingStartedAt?: FirebaseFirestore.Timestamp;
+  /** Sweep mode: pre-cropped segments from on-device EdgeTAM */
+  sweepCrops?: SweepCropInfo[];
 }
 
 export const onSessionCreated = onDocumentUpdated(
@@ -222,7 +333,8 @@ export const onSessionCreated = onDocumentUpdated(
     logger.info('Processing session', {
       sessionId,
       captureMode: afterData.captureMode,
-      imageCount: afterData.originalImageUrls.length
+      imageCount: afterData.originalImageUrls?.length ?? 0,
+      sweepCropCount: afterData.sweepCrops?.length ?? 0
     });
 
     try {
@@ -240,17 +352,96 @@ export const onSessionCreated = onDocumentUpdated(
         return;
       }
 
-      // Update status to detecting
-      await sessionRef.update({
-        status: 'detecting'
+      // Atomically claim processing to prevent duplicate execution
+      // Both Case 1 (uploading→detecting) and Case 2 (all images uploaded) can fire
+      // simultaneously for the same session. The transaction ensures only one wins.
+      // Additionally, check processingStartedAt to guard against re-processing
+      // a session that was claimed recently (within 5 minutes).
+      const claimed = await db.runTransaction(async (tx) => {
+        const snap = await tx.get(sessionRef);
+        const data = snap.data();
+        const currentStatus = data?.status;
+
+        // Already completed or failed — don't reprocess
+        if (currentStatus === 'detected' || currentStatus === 'failed') {
+          return false;
+        }
+
+        // Guard against re-processing: if processingStartedAt is recent,
+        // another function instance already claimed this session
+        const processingStartedAt = data?.processingStartedAt?.toDate?.();
+        if (processingStartedAt) {
+          const ageMs = Date.now() - processingStartedAt.getTime();
+          if (ageMs < 5 * 60 * 1000) {
+            logger.info('Session recently claimed, skipping', { sessionId, ageMs });
+            return false;
+          }
+        }
+
+        // Claim: set processingStartedAt (and ensure status is 'detecting')
+        tx.update(sessionRef, {
+          status: 'detecting',
+          processingStartedAt: FieldValue.serverTimestamp()
+        });
+        return true;
       });
+
+      if (!claimed) {
+        logger.info('Session already being processed, skipping duplicate', { sessionId });
+        return;
+      }
+
+      // ── Sweep mode: skip detection, label pre-cropped segments ──
+      // Note: sweepCrops structure, types, bucket URLs, and count limit are
+      // validated by validateSessionDocument above.
+      if (afterData.captureMode === 'sweep') {
+        const sweepCrops = afterData.sweepCrops!;
+
+        logger.info('Sweep session: labeling pre-cropped segments', {
+          sessionId,
+          cropCount: sweepCrops.length
+        });
+
+        // Label pre-cropped objects via Gemini Flash (no bounding box detection needed)
+        const labels = await labelPrecroppedObjects(sweepCrops);
+
+        // Construct detectedObjects from labels + sweep crop metadata
+        const detectedObjects = labels.map((label, index) => ({
+          groupId: sweepCrops[index].groupId,
+          label: label.name,
+          category: label.category,
+          attributes: label.attributes || {},
+          confidence: 'high' as const,
+          croppedImageUrls: [sweepCrops[index].cropUrl],
+          boundingBoxes: [{
+            imageIndex: sweepCrops[index].frameIndex,
+            box_2d: sweepCrops[index].boundingBox,
+          }],
+        }));
+
+        await sessionRef.update({
+          status: 'detected',
+          detectedAt: FieldValue.serverTimestamp(),
+          detectedObjects,
+          reasoning: `Sweep mode: ${detectedObjects.length} objects labeled from ${sweepCrops.length} pre-cropped segments`
+        });
+
+        logger.info('Sweep session detection completed', {
+          sessionId,
+          objectCount: detectedObjects.length
+        });
+
+        return;
+      }
+
+      // ── Single/Burst mode: full detection pipeline ──
 
       // Get storage instance
       const storage = getStorage();
 
-      // Run Layer 1 detection
+      // Run Layer 1 detection (originalImageUrls validated as non-empty above)
       const result = await detectObjectsInImages(
-        afterData.originalImageUrls,
+        afterData.originalImageUrls!,
         storage,
         afterData.userId,
         sessionId
@@ -310,11 +501,49 @@ export const onSessionCreated = onDocumentUpdated(
       await sessionRef.update({
         status: 'failed',
         error: errorMessage,
-        errorCode
+        errorCode,
+        failedAt: FieldValue.serverTimestamp()
       });
     }
   }
 );
+
+/**
+ * Label result from Gemini Flash for a single pre-cropped object
+ */
+interface SweepLabelResult {
+  /** Specific product name or descriptive label */
+  name: string;
+  /** High-level category (electronics, furniture, kitchen, etc.) */
+  category: string;
+  /** Optional attributes (color, brand, material, condition) */
+  attributes?: Record<string, string>;
+}
+
+/**
+ * Label pre-cropped objects using Gemini Flash (sweep mode).
+ *
+ * Sweep sessions provide already-cropped images from on-device EdgeTAM
+ * segmentation. This function skips bounding box detection entirely and
+ * only runs the labeling/identification step, making it ~50% cheaper
+ * per item than the full single/burst detection pipeline.
+ *
+ * TODO: Wire up actual Gemini Flash call via layer1-service or
+ * a dedicated sweep labeling prompt. Current implementation returns
+ * placeholder labels to unblock pipeline integration.
+ *
+ * @param sweepCrops - Array of pre-cropped segment metadata from EdgeTAM
+ * @returns Array of label results, one per crop (same order as input)
+ */
+async function labelPrecroppedObjects(
+  sweepCrops: SweepCropInfo[]
+): Promise<SweepLabelResult[]> {
+  logger.info('labelPrecroppedObjects: labeling via Gemini Flash', {
+    cropCount: sweepCrops.length,
+  });
+
+  return labelPrecroppedObjectsImpl(sweepCrops);
+}
 
 /**
  * Determine error code from error type
@@ -322,7 +551,7 @@ export const onSessionCreated = onDocumentUpdated(
 function determineErrorCode(error: unknown): string {
   if (error instanceof Error) {
     if (error.message.includes('timeout')) return 'TIMEOUT';
-    if (error.message.includes('quota')) return 'QUOTA_EXCEEDED';
+    if (error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED') || error.message.includes('429')) return 'QUOTA_EXCEEDED';
     if (error.message.includes('invalid')) return 'INVALID_INPUT';
     if (error.message.includes('permission')) return 'PERMISSION_DENIED';
     if (error.message.includes('not found')) return 'NOT_FOUND';

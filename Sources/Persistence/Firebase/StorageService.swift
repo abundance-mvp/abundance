@@ -38,6 +38,21 @@ public protocol StorageServiceProtocol: Sendable {
         itemId: String,
         userId: String
     ) async throws -> URL
+
+    /// Upload an additional photo for an existing item
+    /// - Parameters:
+    ///   - image: Photo to upload
+    ///   - itemId: Unique item identifier
+    ///   - photoIndex: Index for additional photo (1-based)
+    ///   - userId: Current user ID (Firebase Auth UID)
+    /// - Returns: Public download URL for uploaded image
+    /// - Throws: StorageError if upload fails
+    func uploadAdditionalPhoto(
+        _ image: PlatformImage,
+        itemId: String,
+        photoIndex: Int,
+        userId: String
+    ) async throws -> URL
 }
 
 /// Concrete implementation of Firebase Storage operations
@@ -146,6 +161,52 @@ public final class StorageService: StorageServiceProtocol {
         ]
 
         return try await withTimeout(uploadTimeout, ref: ref, imageData: motionData, metadata: metadata)
+    }
+
+    public func uploadAdditionalPhoto(
+        _ image: PlatformImage,
+        itemId: String,
+        photoIndex: Int,
+        userId: String
+    ) async throws -> URL {
+        // Compress image to JPEG
+        #if os(iOS)
+        guard let imageData = image.jpegData(compressionQuality: compressionQuality) else {
+            throw StorageError.compressionFailed
+        }
+        #elseif os(macOS)
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            throw StorageError.compressionFailed
+        }
+        let imageRep: NSBitmapImageRep = NSBitmapImageRep(cgImage: cgImage)
+        guard let imageData = imageRep.representation(
+            using: .jpeg,
+            properties: [.compressionFactor: compressionQuality]
+        ) else {
+            throw StorageError.compressionFailed
+        }
+        #endif
+
+        // Path: users/{userId}/items/{itemId}_photo_{index}.jpg
+        let ref: StorageReference = storage.reference()
+            .child("users/\(userId)/items/\(itemId)_photo_\(photoIndex).jpg")
+
+        let metadata: StorageMetadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        metadata.cacheControl = "public, max-age=3600"
+        metadata.customMetadata = [
+            "uploadedAt": Self.iso8601Formatter.string(from: Date()),
+            "itemId": itemId,
+            "userId": userId,
+            "photoIndex": String(photoIndex),
+            "uploadSource": "additional-photo"
+        ]
+
+        logger.info("📤 Uploading additional photo \(photoIndex): itemId=\(itemId), size=\(imageData.count) bytes")
+
+        let url = try await withTimeout(uploadTimeout, ref: ref, imageData: imageData, metadata: metadata)
+        logger.info("✅ Additional photo upload complete: \(url.absoluteString)")
+        return url
     }
 
     // MARK: - Helper Methods

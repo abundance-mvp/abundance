@@ -24,30 +24,31 @@ public enum CaptureUIState: Equatable, Sendable {
 /// MainActor-bound ViewModel for the new capture flow
 /// Handles double-tap single capture and long-press burst capture
 @MainActor
-public final class CaptureSessionViewModel: ObservableObject {
+@Observable
+public final class CaptureSessionViewModel {
 
-    // MARK: - Published Properties
+    // MARK: - Observable Properties
 
     /// Current UI state
-    @Published public var uiState: CaptureUIState = .idle
+    public var uiState: CaptureUIState = .idle
 
     /// Current capture session (nil when idle)
-    @Published public var currentSession: CaptureSession?
+    public var currentSession: CaptureSession?
 
     /// Detected objects from server
-    @Published public var detectedObjects: [ServerDetectedObject] = []
+    public var detectedObjects: [ServerDetectedObject] = []
 
     /// Burst capture count (during long-press)
-    @Published public var burstCount: Int = 0
+    public var burstCount: Int = 0
 
     /// Whether a capture is in progress
-    @Published public var isCapturing: Bool = false
+    public var isCapturing: Bool = false
 
     /// Last captured photo data (for displaying frozen frame and results)
-    @Published public var lastCapturedPhoto: Data?
+    public var lastCapturedPhoto: Data?
 
     /// Accumulated errors during burst capture
-    @Published public var burstErrors: [CaptureError] = []
+    public var burstErrors: [CaptureError] = []
 
     // MARK: - Configuration
 
@@ -79,10 +80,10 @@ public final class CaptureSessionViewModel: ObservableObject {
     private var capturedPhotos: [Data] = []
 
     /// Tracks which objects are being cataloged
-    @Published public var catalogingObjectIds: Set<String> = []
+    public var catalogingObjectIds: Set<String> = []
 
     /// Tracks which objects have been cataloged successfully
-    @Published public var catalogedObjectIds: Set<String> = []
+    public var catalogedObjectIds: Set<String> = []
 
     /// Track (sessionId, groupId) pairs that have been submitted to prevent duplicates
     /// This prevents rapid double-taps from creating duplicate catalog items
@@ -90,14 +91,25 @@ public final class CaptureSessionViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    private let haptics: HapticFeedbackProviding?
+
+    /// Injected closure to get the current user ID.
+    /// Defaults to `getUserId()`.
+    /// Inject a custom closure in tests to avoid requiring Firebase configuration.
+    private let getUserId: @MainActor () -> String?
+
     public init(
         sessionService: SessionServiceProtocol = SessionService(),
         storageService: StorageServiceProtocol = StorageService(),
-        catalogService: CatalogServiceProtocol = CatalogService()
+        catalogService: CatalogServiceProtocol = CatalogService(),
+        haptics: HapticFeedbackProviding? = nil,
+        getUserId: @escaping @MainActor () -> String? = { Auth.auth().currentUser?.uid }
     ) {
         self.sessionService = sessionService
         self.storageService = storageService
         self.catalogService = catalogService
+        self.haptics = haptics
+        self.getUserId = getUserId
     }
 
     // MARK: - Single Photo Capture (Double-Tap)
@@ -110,7 +122,7 @@ public final class CaptureSessionViewModel: ObservableObject {
             return
         }
 
-        guard let userId = Auth.auth().currentUser?.uid else {
+        guard let userId = getUserId() else {
             uiState = .error(.notAuthenticated)
             return
         }
@@ -178,8 +190,11 @@ public final class CaptureSessionViewModel: ObservableObject {
         burstTask = nil
 
         guard let startTime = burstStartTime else {
-            isCapturing = false
-            uiState = .idle
+            // Already ended (double-call guard) — only reset if not already processing
+            if case .capturing = uiState {
+                isCapturing = false
+                uiState = .idle
+            }
             return
         }
 
@@ -191,16 +206,20 @@ public final class CaptureSessionViewModel: ObservableObject {
             logger.warning("Burst completed with \(self.burstErrors.count) capture errors")
         }
 
-        // Check minimum duration
-        if duration < minBurstDuration || capturedPhotos.count < 2 {
+        // If we captured at least one usable photo, process it (single or burst).
+        // Only show "too short" error when NO photos were captured at all.
+        if capturedPhotos.isEmpty {
             isCapturing = false
             uiState = .error(.burstCaptureTooShort)
-            capturedPhotos = []
             burstCount = 0
             return
         }
 
-        guard let userId = Auth.auth().currentUser?.uid else {
+        // If only 1 photo captured (short hold), still process as burst with 1 image
+        // rather than erroring — the server handles any image count.
+        logger.info("Burst ended: \(self.capturedPhotos.count) photos in \(duration, format: .fixed(precision: 1))s")
+
+        guard let userId = getUserId() else {
             isCapturing = false
             uiState = .error(.notAuthenticated)
             capturedPhotos = []
@@ -208,7 +227,15 @@ public final class CaptureSessionViewModel: ObservableObject {
             return
         }
 
-        await processCapture(userId: userId, captureMode: .burst)
+        // Run processCapture in a fresh unstructured Task to isolate from
+        // burst task cancellation. When endBurstCapture() is called from
+        // within the burst task (auto-end on max duration/photos), the
+        // burst task is already cancelled above. A new Task does not
+        // inherit that cancellation, preventing CancellationError from
+        // propagating to Firestore/Storage async calls.
+        await Task { @MainActor [weak self] in
+            await self?.processCapture(userId: userId, captureMode: .burst)
+        }.value
     }
 
     /// Cancel burst capture
@@ -394,10 +421,7 @@ public final class CaptureSessionViewModel: ObservableObject {
     }
 
     private func triggerHapticPulse() async {
-        #if os(iOS)
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
-        #endif
+        haptics?.playImpact(style: .medium)
     }
 
     // MARK: - Public Actions
@@ -430,7 +454,7 @@ public final class CaptureSessionViewModel: ObservableObject {
     /// Catalog a single detected object
     /// - Parameter object: The detected object to catalog
     public func catalogObject(_ object: ServerDetectedObject) async {
-        guard let userId = Auth.auth().currentUser?.uid,
+        guard let userId = getUserId(),
               let sessionId = currentSession?.id else {
             logger.error("Cannot catalog: missing user or session")
             return
@@ -475,6 +499,18 @@ public final class CaptureSessionViewModel: ObservableObject {
     public func catalogAllObjects() async {
         for object in detectedObjects {
             if !catalogingObjectIds.contains(object.groupId) &&
+               !catalogedObjectIds.contains(object.groupId) {
+                await catalogObject(object)
+            }
+        }
+    }
+
+    /// Catalog only the selected detected objects
+    /// - Parameter selectedIds: Set of groupId strings for objects to catalog
+    public func catalogSelectedObjects(_ selectedIds: Set<String>) async {
+        for object in detectedObjects {
+            if selectedIds.contains(object.groupId) &&
+               !catalogingObjectIds.contains(object.groupId) &&
                !catalogedObjectIds.contains(object.groupId) {
                 await catalogObject(object)
             }

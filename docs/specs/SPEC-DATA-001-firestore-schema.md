@@ -109,7 +109,7 @@ Capture sessions for multi-image object detection (Layer 1).
 |-------|------|----------|-------------|
 | `id` | string | Yes | Session document ID |
 | `userId` | string | Yes | Owner's Firebase Auth UID |
-| `captureMode` | string | Yes | `"single"` or `"burst"` |
+| `captureMode` | string | Yes | `"single"`, `"burst"`, or `"sweep"` |
 | `status` | string | Yes | Session processing status |
 | `originalImageUrls` | array | Yes | GCS URLs to original images |
 | `imagesUploaded` | number | No | Count of uploaded images |
@@ -118,6 +118,9 @@ Capture sessions for multi-image object detection (Layer 1).
 | `reasoning` | string | No | AI reasoning for detection results |
 | `error` | string | No | Error message if failed |
 | `errorCode` | string | No | Error code for categorization |
+| `sweepCrops` | array | No | Pre-cropped segments from on-device EdgeTAM (sweep mode only) |
+| `failedAt` | timestamp | No | Failure timestamp |
+| `processingStartedAt` | timestamp | No | Processing claim timestamp (idempotency) |
 | `createdAt` | timestamp | Yes | Session creation timestamp |
 | `detectedAt` | timestamp | No | Detection completion timestamp |
 
@@ -134,7 +137,7 @@ Capture sessions for multi-image object detection (Layer 1).
 
 ```typescript
 type SessionStatus = 'uploading' | 'detecting' | 'detected' | 'failed';
-type CaptureMode = 'single' | 'burst';
+type CaptureMode = 'single' | 'burst' | 'sweep';
 
 interface CaptureSession {
   id: string;
@@ -150,6 +153,22 @@ interface CaptureSession {
   reasoning?: string;
   error?: string;
   errorCode?: string;
+  /** Sweep mode: pre-cropped segments from on-device EdgeTAM */
+  sweepCrops?: SweepCropInfo[];
+  failedAt?: FirebaseFirestore.Timestamp;
+  processingStartedAt?: FirebaseFirestore.Timestamp;
+}
+
+/** Sweep crop metadata from on-device EdgeTAM segmentation */
+interface SweepCropInfo {
+  /** GCS URL of the pre-cropped image */
+  cropUrl: string;
+  /** Bounding box [ymin, xmin, ymax, xmax] normalized 0-1000 */
+  boundingBox: [number, number, number, number];
+  /** Index of the keyframe this crop came from */
+  frameIndex: number;
+  /** Deduplication group ID from on-device segment grouping */
+  groupId: string;
 }
 
 interface DetectedObject {
@@ -201,6 +220,23 @@ interface DetectedObject {
 }
 ```
 
+#### Sweep Mode
+
+When `captureMode` is `"sweep"`, the session uses on-device EdgeTAM segmentation instead of server-side bounding box detection:
+
+1. Client captures keyframes during camera sweep
+2. EdgeTAM segments objects on-device, producing pre-cropped images
+3. Client uploads crops to GCS and creates session with `sweepCrops` array
+4. Cloud Function skips detection, labels pre-cropped segments via Gemini Flash
+5. Results stored in `detectedObjects` (same schema as single/burst)
+
+**Sweep-specific error codes:**
+| Code | Description |
+|------|-------------|
+| `SWEEP_NO_CROPS` | Session has no sweep crops |
+| `SWEEP_TOO_MANY_CROPS` | Exceeds 50 crop limit |
+| `UNAUTHORIZED_BUCKET` | Crop URL from disallowed bucket |
+
 ---
 
 ### 2.3 `items` Collection
@@ -234,8 +270,17 @@ Cataloged inventory items with AI-extracted metadata.
 | `aiAnalysis` | object | No | Layer 1 detection metadata |
 | `catalog` | object | No | Raw Gemini response (legacy) |
 | `photoMetadata` | object | No | Photo capture metadata for fraud prevention |
+| `layer1Label` | string | No | Label from Layer 1 detection (fallback when Layer 2 fails) |
+| `layer1Category` | string | No | Category from Layer 1 detection (fallback when Layer 2 fails) |
 | `userEditedFields` | array | No | Fields manually edited by user |
 | `lastRescanAt` | timestamp | No | Last rescan timestamp |
+| `additionalImageUrls` | array | No | URLs for additional photos beyond primary `imageUrl` |
+| `deepScanRequested` | boolean | No | Whether a refresh/deep scan has been requested |
+| `deepScanCompletedAt` | timestamp | No | When refresh/deep scan completed |
+| `productUrl` | string | No | Product URL from refresh |
+| `upcCode` | string | No | UPC/barcode from refresh |
+| `marketPriceRange` | string | No | Market price range from refresh (e.g., "$50-$80") |
+| `originalRetailPrice` | number | No | Original retail price from refresh |
 | `createdAt` | timestamp | Yes | Item creation timestamp |
 | `updatedAt` | timestamp | Yes | Last update timestamp |
 | `completedAt` | timestamp | No | AI processing completion timestamp |
@@ -244,16 +289,15 @@ Cataloged inventory items with AI-extracted metadata.
 
 #### Status Values
 
-| Status | Description |
-|--------|-------------|
-| `pending` | Triggers AI processing (Gemini 3 Pro) |
-| `layer2a_complete` | Layer 2a extraction complete |
-| `layer2b_scheduled` | Layer 2b processing scheduled |
-| `layer2b_complete` | Layer 2b processing complete |
-| `complete` | All AI processing complete |
-| `failed` | AI processing failed |
-| `failed_layer2a` | Layer 2a specifically failed |
-| `failed_layer2b` | Layer 2b specifically failed |
+The iOS client uses a simplified 3-state enum, while the backend writes additional legacy values. The iOS `ItemStatus` enum maps legacy Firestore values on decode:
+
+| iOS Status | Firestore Values (mapped) | Description |
+|------------|---------------------------|-------------|
+| `processing` | `processing`, `pending`, `layer2a_complete`, `layer2b_scheduled`, `layer2b_complete` | AI processing in progress |
+| `complete` | `complete` | All AI processing complete |
+| `failed` | `failed`, `failed_layer2a`, `failed_layer2b` | AI processing failed |
+
+**Note:** The `createItem` endpoint writes `status: "processing"` directly. The `onItemCreatedGemini3` trigger fires on document create with `status="pending"`. Legacy sub-statuses (`layer2a_complete`, etc.) may still exist in older documents but are mapped to `processing` on the iOS client.
 
 #### Condition Values
 
@@ -278,15 +322,11 @@ Cataloged inventory items with AI-extracted metadata.
 ```typescript
 type Condition = 'new' | 'like-new' | 'good' | 'fair' | 'poor';
 type Confidence = 'high' | 'medium' | 'low';
-type ItemStatus =
-  | 'pending'
-  | 'layer2a_complete'
-  | 'layer2b_scheduled'
-  | 'layer2b_complete'
-  | 'complete'
-  | 'failed'
-  | 'failed_layer2a'
-  | 'failed_layer2b';
+// Primary status values written by current backend
+type ItemStatus = 'processing' | 'complete' | 'failed';
+// Legacy values that may exist in older documents:
+// 'pending', 'layer2a_complete', 'layer2b_scheduled', 'layer2b_complete',
+// 'failed_layer2a', 'failed_layer2b'
 
 interface CatalogItem {
   name: string;
@@ -354,6 +394,10 @@ interface Item {
   confidence?: Confidence;
   processingNotes?: string;
 
+  // Layer 1 fallback data
+  layer1Label?: string;
+  layer1Category?: string;
+
   // AI metadata
   aiAnalysis?: {
     layer1: Layer1Metadata;
@@ -363,9 +407,20 @@ interface Item {
   // Photo metadata
   photoMetadata?: PhotoMetadata;
 
+  // Additional photos
+  additionalImageUrls?: string[];
+
   // Edit tracking
   userEditedFields?: string[];
   lastRescanAt?: FirebaseFirestore.Timestamp;
+
+  // Refresh / Deep Scan fields
+  deepScanRequested?: boolean;
+  deepScanCompletedAt?: FirebaseFirestore.Timestamp;
+  productUrl?: string;
+  upcCode?: string;
+  marketPriceRange?: string;
+  originalRetailPrice?: number;
 
   // Timestamps
   createdAt: FirebaseFirestore.Timestamp;
@@ -395,15 +450,26 @@ public enum ItemConfidence: String, Codable, Sendable, CaseIterable {
     case low
 }
 
+/// Simplified 3-state enum; legacy Firestore values mapped on decode
 public enum ItemStatus: String, Codable, Sendable {
-    case pending = "pending"
-    case layer2aComplete = "layer2a_complete"
-    case layer2bScheduled = "layer2b_scheduled"
-    case layer2bComplete = "layer2b_complete"
+    case processing = "processing"
     case complete = "complete"
     case failed = "failed"
-    case failedLayer2a = "failed_layer2a"
-    case failedLayer2b = "failed_layer2b"
+
+    public init(from decoder: Decoder) throws {
+        let rawValue = try decoder.singleValueContainer().decode(String.self)
+        self = ItemStatus.fromFirestoreValue(rawValue)
+    }
+
+    public static func fromFirestoreValue(_ value: String) -> ItemStatus {
+        switch value {
+        case "complete": return .complete
+        case "failed", "failed_layer2a", "failed_layer2b": return .failed
+        case "processing", "pending", "layer2a_complete",
+             "layer2b_scheduled", "layer2b_complete": return .processing
+        default: return .processing
+        }
+    }
 }
 
 public struct Item: Identifiable, Codable, Equatable, Sendable {
@@ -412,6 +478,7 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
     public let imageUrl: String
     public var status: ItemStatus
 
+    // Catalog data
     public var name: String?
     public var category: String?
     public var subCategory: String?
@@ -425,10 +492,30 @@ public struct Item: Identifiable, Codable, Equatable, Sendable {
     public var estimatedValue: Double?
     public var confidence: ItemConfidence?
     public var processingNotes: String?
+
+    // Layer 1 fallback data
+    public var layer1Label: String?
+    public var layer1Category: String?
+
+    // Edit tracking
     public var userEditedFields: [String]?
     public var lastRescanAt: Date?
+
+    // Additional photos
+    public var additionalImageUrls: [String]?
+
+    // Refresh / Deep Scan
+    public var refreshRequested: Bool?       // Firestore: deepScanRequested
+    public var refreshCompletedAt: Date?     // Firestore: deepScanCompletedAt
+    public var productUrl: String?
+    public var upcCode: String?
+    public var marketPriceRange: String?
+    public var originalRetailPrice: Double?
+
+    // Photo metadata
     public var photoMetadata: PhotoMetadata?
 
+    // Timestamps
     public let createdAt: Date
     public var updatedAt: Date
 }
@@ -563,6 +650,13 @@ Defined in `firestore.indexes.json`:
         { "fieldPath": "subscription.tier", "order": "ASCENDING" },
         { "fieldPath": "subscription.expiresAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "catalogHistory",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "catalogedAt", "order": "DESCENDING" }
+      ]
     }
   ]
 }
@@ -576,6 +670,7 @@ Defined in `firestore.indexes.json`:
 | `items: userId + createdAt DESC` | `where('userId', '==', uid).orderBy('createdAt', 'desc')` | List user's items by creation date |
 | `items: status + deletedAt` | `where('status', '==', 'failed').where('deletedAt', '==', null)` | Find failed items for retry |
 | `users: subscription.tier + subscription.expiresAt` | `where('subscription.tier', '==', 'premium').where('subscription.expiresAt', '<', now)` | Find expired premium subscriptions |
+| `catalogHistory: catalogedAt DESC` | `orderBy('catalogedAt', 'desc')` | List catalog history entries by date |
 
 ---
 
@@ -713,13 +808,49 @@ db.collection('items')
 ### Item Cataloging (`onItemCreatedGemini3`)
 
 **Trigger:** `items/{itemId}` document created
-**Condition:** `status === 'pending'`
+**Condition:** `status === 'pending'` and no `sessionId`/`fromDetection` fields
 
 **Flow:**
 1. Get signed URL for item image
 2. Call Gemini 3 Pro with tool calling
 3. Flatten catalog data to top-level fields
 4. Update item with catalog results
+
+### Item From Session (`onItemFromSession`)
+
+**Trigger:** `items/{itemId}` document created
+**Condition:** Has `sessionId` and `fromDetection: true`, `status === 'pending'`
+
+**Flow:**
+1. Verify session reference and user ownership
+2. Process with Gemini 3 Pro for cataloging
+3. Flatten catalog data to top-level fields
+4. Update session's `catalogedObjects` map
+
+### Rescan (`onItemUpdatedRescan`)
+
+**Trigger:** `items/{itemId}` document updated
+**Condition:** Status transitions to `pending` (from non-pending), `deepScanRequested !== true`
+
+**Flow:**
+1. Re-process item through standard AI pipeline via `handleItemCreated`
+
+### Deep Scan / Refresh (`onItemUpdatedDeepScan`)
+
+**Trigger:** `items/{itemId}` document updated
+**Condition:** `deepScanRequested === true`, `status === 'pending'`, `before.deepScanRequested !== true`
+
+**Flow:**
+1. Process with Gemini Pro using enhanced deep scan prompt
+2. Extract extended fields (productUrl, upcCode, marketPriceRange, originalRetailPrice)
+3. Update item with deep scan results
+
+### Item Deleted (`onItemDeleted`)
+
+**Trigger:** `items/{itemId}` document deleted
+
+**Flow:**
+1. Delete primary image, cropped images, additional photos, and motion clip from GCS
 
 ---
 
@@ -728,7 +859,7 @@ db.collection('items')
 ### Item Lifecycle
 
 ```
-[Created with status='pending']
+[Created with status='processing' (createItem) or 'pending' (onItemCreatedGemini3)]
         │
         ▼
 [Gemini 3 Pro processes]
@@ -736,9 +867,15 @@ db.collection('items')
    ┌────┴────┐
    ▼         ▼
 [complete] [failed]
+   │         │
+   │         ▼
+   │    [Rescan: status→'pending'] ──► [Re-processes via onItemUpdatedRescan]
    │
    ▼
 [User edits] ──► [userEditedFields updated]
+   │
+   ▼
+[Refresh: deepScanRequested=true, status='pending'] ──► [onItemUpdatedDeepScan]
    │
    ▼
 [Soft delete] ──► [deletedAt set]
@@ -773,3 +910,4 @@ db.collection('items')
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2026-01-18 | 1.0 | Initial comprehensive schema documentation | Claude Code Audit |
+| 2026-02-08 | 1.1 | Fix ItemStatus to 3-state enum, add missing item fields (layer1Label, layer1Category, additionalImageUrls, deep scan fields), add catalogHistory index, update trigger docs | Claude Code Audit |

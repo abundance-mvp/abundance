@@ -76,6 +76,20 @@ public enum LogEvent: @unchecked Sendable {
     // MARK: - Image Loading Events
     case imageLoadFailed(url: String, itemId: String?, context: String)
 
+    // MARK: - Device Testing Events
+    case screenshotTaken(screen: String)
+
+    // MARK: - Sweep Mode Events
+    case sweepStarted
+    case sweepFrameProcessed(segmentCount: Int, duplicateCount: Int, fps: Double)
+    case sweepSegmentAppeared(segmentId: String, frameIndex: Int)
+    case sweepSegmentLost(segmentId: String, framesVisible: Int)
+    case sweepSegmentSelected(segmentId: String)
+    case sweepSegmentDeselected(segmentId: String)
+    case sweepCatalogStarted(selectedCount: Int)
+    case sweepStopped(totalSegmentsSeen: Int, totalSelected: Int)
+    case sweepError(error: String)
+
     // MARK: - Private Helpers
 
     /// Sanitizes user IDs for logging to prevent PII exposure.
@@ -112,6 +126,12 @@ public enum LogEvent: @unchecked Sendable {
             return "silent-failure"
         case .imageLoadFailed:
             return "image"
+        case .screenshotTaken:
+            return "device-testing"
+        case .sweepStarted, .sweepFrameProcessed, .sweepSegmentAppeared, .sweepSegmentLost,
+             .sweepSegmentSelected, .sweepSegmentDeselected, .sweepCatalogStarted, .sweepStopped,
+             .sweepError:
+            return "sweep"
         }
     }
 
@@ -125,6 +145,10 @@ public enum LogEvent: @unchecked Sendable {
         case .specViolation(_, _, _, _, let sev):
             return sev == .critical ? .fault : .error
         case .silentFailure:
+            return .error
+        case .screenshotTaken:
+            return .info
+        case .sweepError:
             return .error
         default:
             return .info
@@ -187,6 +211,26 @@ public enum LogEvent: @unchecked Sendable {
         case .imageLoadFailed(let url, let itemId, let context):
             let truncatedUrl = url.count > 60 ? "\(url.prefix(60))..." : url
             return "Image load failed: \(truncatedUrl) (item: \(itemId ?? "unknown"), context: \(context))"
+        case .screenshotTaken(let screen):
+            return "SCREENSHOT_MARKER: \(screen)"
+        case .sweepStarted:
+            return "Sweep scanning started"
+        case .sweepFrameProcessed(let segmentCount, let duplicateCount, let fps):
+            return "Sweep frame: \(segmentCount) segments (\(duplicateCount) dupes) at \(String(format: "%.1f", fps)) FPS"
+        case .sweepSegmentAppeared(let segmentId, let frameIndex):
+            return "Sweep segment appeared: \(segmentId) at frame \(frameIndex)"
+        case .sweepSegmentLost(let segmentId, let framesVisible):
+            return "Sweep segment lost: \(segmentId) after \(framesVisible) frames"
+        case .sweepSegmentSelected(let segmentId):
+            return "Sweep segment selected: \(segmentId)"
+        case .sweepSegmentDeselected(let segmentId):
+            return "Sweep segment deselected: \(segmentId)"
+        case .sweepCatalogStarted(let selectedCount):
+            return "Sweep catalog started: \(selectedCount) items"
+        case .sweepStopped(let totalSegmentsSeen, let totalSelected):
+            return "Sweep stopped: \(totalSegmentsSeen) seen, \(totalSelected) selected"
+        case .sweepError(let error):
+            return "Sweep error: \(error)"
         }
     }
 
@@ -229,6 +273,24 @@ public enum LogEvent: @unchecked Sendable {
             meta["url"] = url
             meta["itemId"] = itemId ?? "unknown"
             meta["context"] = context
+        case .screenshotTaken(let screen):
+            meta["screen"] = screen
+            meta["marker"] = "SCREENSHOT"
+        case .sweepFrameProcessed(let segmentCount, let duplicateCount, let fps):
+            meta["segmentCount"] = segmentCount
+            meta["duplicateCount"] = duplicateCount
+            meta["fps"] = fps
+        case .sweepSegmentAppeared(let segmentId, let frameIndex):
+            meta["segmentId"] = segmentId
+            meta["frameIndex"] = frameIndex
+        case .sweepSegmentLost(let segmentId, let framesVisible):
+            meta["segmentId"] = segmentId
+            meta["framesVisible"] = framesVisible
+        case .sweepStopped(let totalSeen, let totalSelected):
+            meta["totalSegmentsSeen"] = totalSeen
+            meta["totalSelected"] = totalSelected
+        case .sweepError(let error):
+            meta["error"] = error
         default:
             break
         }

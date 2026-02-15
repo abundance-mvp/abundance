@@ -1,10 +1,17 @@
 import SwiftUI
 
-/// A reusable image component for displaying item photos with error handling and logging
+/// A reusable image component for displaying item photos with retry and error handling
+///
+/// Firebase Storage download URLs can occasionally fail on first load due to eventual
+/// consistency or network hiccups. This component automatically retries failed loads
+/// before showing a placeholder.
 ///
 /// Features:
+/// - Automatic retry on failure (configurable, default 2 retries with 1s delay)
+/// - Cache-busting query parameter on retries to bypass stale URLSession cache
+/// - Optional URL refresh callback for recovering from expired download URLs
 /// - Graceful error handling with placeholder
-/// - Automatic logging of image load failures
+/// - Automatic logging of image load failures (after all retries exhausted)
 /// - Configurable placeholder icon and background
 ///
 /// Usage:
@@ -21,25 +28,46 @@ public struct ItemImage: View {
     let context: String
     var placeholderIcon: String = "photo"
     var contentMode: ContentMode = .fill
+    var maxRetries: Int = 2
+    var onRefreshUrl: ((String) async -> String?)?
 
+    @State private var retryCount = 0
+    @State private var loadId = UUID()
     @State private var hasLoggedError = false
+    @State private var currentUrl: String?
+    @State private var isRefreshing = false
 
     public init(
         url: String,
         itemId: String? = nil,
         context: String,
         placeholderIcon: String = "photo",
-        contentMode: ContentMode = .fill
+        contentMode: ContentMode = .fill,
+        maxRetries: Int = 2,
+        onRefreshUrl: ((String) async -> String?)? = nil
     ) {
         self.url = url
         self.itemId = itemId
         self.context = context
         self.placeholderIcon = placeholderIcon
         self.contentMode = contentMode
+        self.maxRetries = maxRetries
+        self.onRefreshUrl = onRefreshUrl
+    }
+
+    /// The URL to load, with cache-busting on retries
+    private var effectiveUrl: URL? {
+        let base = currentUrl ?? url
+        if retryCount > 0 {
+            // Append cache-busting parameter to bypass stale URLSession cache
+            let separator = base.contains("?") ? "&" : "?"
+            return URL(string: "\(base)\(separator)_retry=\(retryCount)")
+        }
+        return URL(string: base)
     }
 
     public var body: some View {
-        AsyncImage(url: URL(string: url)) { phase in
+        AsyncImage(url: effectiveUrl) { phase in
             switch phase {
             case .empty:
                 loadingPlaceholder
@@ -48,31 +76,70 @@ public struct ItemImage: View {
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
             case .failure:
-                errorPlaceholder
-                    .onAppear {
-                        logErrorIfNeeded()
-                    }
+                if retryCount < maxRetries {
+                    // Show loading state while waiting to retry
+                    loadingPlaceholder
+                        .onAppear {
+                            scheduleRetry()
+                        }
+                } else if !isRefreshing, onRefreshUrl != nil, itemId != nil {
+                    // All retries exhausted — attempt URL refresh before giving up
+                    loadingPlaceholder
+                        .onAppear {
+                            attemptUrlRefresh()
+                        }
+                } else {
+                    errorPlaceholder
+                        .onAppear {
+                            logErrorIfNeeded()
+                        }
+                }
             @unknown default:
                 errorPlaceholder
             }
         }
+        .id(loadId)
     }
 
     // MARK: - Placeholders
 
     private var loadingPlaceholder: some View {
         ZStack {
-            Color.gray.opacity(0.1)
+            Color.secondary.opacity(0.1)
             ProgressView()
         }
     }
 
     private var errorPlaceholder: some View {
         ZStack {
-            Color.gray.opacity(0.2)
+            Color.secondary.opacity(0.2)
             Image(systemName: placeholderIcon)
                 .font(.title)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Retry Logic
+
+    private func scheduleRetry() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            retryCount += 1
+            loadId = UUID()
+        }
+    }
+
+    /// Attempt to refresh the URL via the callback, then retry once more
+    private func attemptUrlRefresh() {
+        guard let onRefreshUrl, let itemId else { return }
+        isRefreshing = true
+        Task { @MainActor in
+            if let freshUrl = await onRefreshUrl(itemId) {
+                currentUrl = freshUrl
+                retryCount = 0 // Reset retries with the fresh URL
+                loadId = UUID()
+            }
+            isRefreshing = false
         }
     }
 
@@ -86,7 +153,7 @@ public struct ItemImage: View {
         AppLogger.log(.imageLoadFailed(
             url: url,
             itemId: itemId,
-            context: context
+            context: "\(context) (after \(maxRetries) retries)"
         ))
     }
 }
@@ -105,6 +172,20 @@ public extension ItemImage {
     func aspectRatio(_ mode: ContentMode) -> ItemImage {
         var view = self
         view.contentMode = mode
+        return view
+    }
+
+    /// Sets the maximum number of retries before showing error placeholder
+    func retries(_ count: Int) -> ItemImage {
+        var view = self
+        view.maxRetries = count
+        return view
+    }
+
+    /// Sets the URL refresh callback for recovering from expired download URLs
+    func refreshUrl(_ handler: @escaping (String) async -> String?) -> ItemImage {
+        var view = self
+        view.onRefreshUrl = handler
         return view
     }
 }

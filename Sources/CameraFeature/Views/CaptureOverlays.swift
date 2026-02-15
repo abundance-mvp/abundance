@@ -8,13 +8,15 @@ struct CaptureOverlay: View {
     let photoCount: Int
     let isLongPress: Bool
 
+    @ScaledMetric(relativeTo: .largeTitle) private var burstCountSize: CGFloat = 48
+
     var body: some View {
         VStack {
             Spacer()
 
             if isLongPress && photoCount > 0 {
                 Text("\(photoCount) photos")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(.system(size: burstCountSize, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .shadow(radius: 4)
             }
@@ -58,12 +60,22 @@ struct UploadingOverlay: View {
         }
         .padding(32)
         .background {
-            if reduceTransparency {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.black.opacity(0.85))
+            if #available(iOS 26.0, macOS 26.0, *) {
+                if !reduceTransparency {
+                    Color.clear
+                        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+                } else {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.black.opacity(0.85))
+                }
             } else {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                if reduceTransparency {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.black.opacity(0.85))
+                } else {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(.ultraThinMaterial)
+                }
             }
         }
     }
@@ -97,7 +109,7 @@ struct AnalyzingOverlay: View {
             }
             .frame(width: 100, height: 100)
             .animation(
-                reduceMotion ? nil : .easeInOut(duration: 1.5).repeatForever(autoreverses: true),
+                reduceMotion ? nil : .brandDefault.repeatForever(autoreverses: true),
                 value: animationPhase
             )
 
@@ -111,12 +123,22 @@ struct AnalyzingOverlay: View {
         }
         .padding(32)
         .background {
-            if reduceTransparency {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.black.opacity(0.85))
+            if #available(iOS 26.0, macOS 26.0, *) {
+                if !reduceTransparency {
+                    Color.clear
+                        .glassEffect(in: RoundedRectangle(cornerRadius: 20))
+                } else {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.black.opacity(0.85))
+                }
             } else {
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
+                if reduceTransparency {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.black.opacity(0.85))
+                } else {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(.ultraThinMaterial)
+                }
             }
         }
         .onAppear {
@@ -139,6 +161,7 @@ struct ErrorOverlay: View {
     let onDismiss: () -> Void
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @ScaledMetric(relativeTo: .title) private var errorIconSize: CGFloat = 32
     @State private var isRetrying = false
 
     var body: some View {
@@ -186,7 +209,7 @@ struct ErrorOverlay: View {
                 .frame(width: 72, height: 72)
 
             Image(systemName: iconName)
-                .font(.system(size: 32, weight: .medium))
+                .font(.system(size: errorIconSize, weight: .medium))
                 .foregroundStyle(iconColor)
         }
     }
@@ -207,13 +230,13 @@ struct ErrorOverlay: View {
     private var iconColor: Color {
         switch error {
         case .networkTimeout, .uploadFailed:
-            return .orange
+            return .accentSecondary
         case .notAuthenticated, .authenticationExpired:
-            return .blue
+            return .accentPrimary
         case .detectionTimeout, .detectionFailed, .invalidResponse:
-            return .red
+            return .errorColor
         default:
-            return .yellow
+            return .cream
         }
     }
 
@@ -252,7 +275,7 @@ struct ErrorOverlay: View {
                 }
                 Text(isRetrying ? "Retrying..." : "Try Again")
             }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .font(.system(.body, design: .rounded, weight: .semibold))
             .foregroundStyle(.black)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -267,7 +290,7 @@ struct ErrorOverlay: View {
             onDismiss()
         } label: {
             Text("Dismiss")
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(.body, design: .rounded, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
@@ -299,7 +322,7 @@ struct CaptureButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .font(.system(.body, design: .rounded, weight: .semibold))
             .foregroundStyle(isPrimary ? .black : .white)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)

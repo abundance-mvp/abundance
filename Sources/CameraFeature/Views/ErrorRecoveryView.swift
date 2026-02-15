@@ -36,15 +36,15 @@ public enum ErrorCategory: Sendable {
     var iconColor: Color {
         switch self {
         case .camera:
-            return .yellow
+            return .cream
         case .network:
-            return .orange
+            return .accentSecondary
         case .authentication:
-            return .blue
+            return .accentPrimary
         case .server:
-            return .red
+            return .errorColor
         case .unknown:
-            return .yellow
+            return .cream
         }
     }
 }
@@ -62,6 +62,7 @@ public struct ErrorRecoveryView: View {
     let onOpenSettings: (() -> Void)?
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 36
     @State private var isRetrying = false
     @State private var showingSettingsAlert = false
 
@@ -147,7 +148,7 @@ public struct ErrorRecoveryView: View {
                 .frame(width: 80, height: 80)
 
             Image(systemName: category.iconName)
-                .font(.system(size: 36, weight: .medium))
+                .font(.system(size: iconSize, weight: .medium))
                 .foregroundStyle(category.iconColor)
         }
         .accessibilityHidden(true)
@@ -207,7 +208,7 @@ public struct ErrorRecoveryView: View {
                 }
                 Text(isRetrying ? "Retrying..." : "Try Again")
             }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .font(.system(.body, design: .rounded, weight: .semibold))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -225,7 +226,7 @@ public struct ErrorRecoveryView: View {
                 Image(systemName: "gear")
                 Text("Open Settings")
             }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .font(.system(.body, design: .rounded, weight: .semibold))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -239,7 +240,7 @@ public struct ErrorRecoveryView: View {
             action()
         } label: {
             Text("Dismiss")
-                .font(.system(size: 17, weight: .medium, design: .rounded))
+                .font(.system(.body, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
@@ -403,10 +404,10 @@ public struct OfflineModeIndicator: View {
     public var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "wifi.slash")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(.caption, weight: .medium))
 
             Text("Offline")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(.caption, design: .rounded, weight: .semibold))
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 10)
@@ -414,15 +415,15 @@ public struct OfflineModeIndicator: View {
         .background {
             if #available(iOS 26.0, macOS 26.0, *) {
                 if !reduceTransparency {
-                    Color.orange.opacity(0.8)
+                    Color.accentSecondary.opacity(0.8)
                         .glassEffect(in: Capsule())
                 } else {
                     Capsule()
-                        .fill(Color.orange)
+                        .fill(Color.accentSecondary)
                 }
             } else {
                 Capsule()
-                    .fill(Color.orange)
+                    .fill(Color.accentSecondary)
             }
         }
         .accessibilityLabel("Offline mode active")

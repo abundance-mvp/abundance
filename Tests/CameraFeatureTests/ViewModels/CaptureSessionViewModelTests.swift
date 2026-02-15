@@ -93,7 +93,8 @@ final class CaptureSessionViewModelTests: XCTestCase {
             CaptureSessionViewModel(
                 sessionService: sessionService,
                 storageService: storageService,
-                catalogService: catalogService
+                catalogService: catalogService,
+                getUserId: { "test-user-id" }
             )
         }
     }
@@ -124,13 +125,13 @@ final class CaptureSessionViewModelTests: XCTestCase {
 
     // MARK: - Single Capture (Double-Tap) Tests
 
-    /// Test 1: handleDoubleTap changes state to capturing
+    /// Test 1: handleDoubleTap changes state from idle
     func testHandleDoubleTap_changesStateToCapturing() async throws {
         // Given - ViewModel in idle state
         XCTAssertEqual(sut.uiState, .idle)
         XCTAssertFalse(sut.isCapturing)
 
-        // When - Double tap (without auth, will fail but state changes first)
+        // When - Double tap triggers the capture flow
         let photoData = Data([0x00, 0x01, 0x02])
 
         // Start capture in background task
@@ -138,16 +139,15 @@ final class CaptureSessionViewModelTests: XCTestCase {
             await sut.handleDoubleTap(photoData: photoData)
         }
 
-        // Wait for photo to be stored (condition-based, not fixed sleep)
-        let photoStored = await waitForCondition(timeout: 1.0) {
-            self.sut.lastCapturedPhoto != nil
+        // Wait for state to change from idle (capturing → uploading → error)
+        let stateChanged = await waitForCondition(timeout: 1.0) {
+            self.sut.uiState != .idle
         }
 
         task.cancel()
 
-        // Then - Verify the photo was stored
-        XCTAssertTrue(photoStored, "Photo should be stored within timeout")
-        XCTAssertNotNil(sut.lastCapturedPhoto)
+        // Then - State should have progressed past idle
+        XCTAssertTrue(stateChanged, "State should change from idle within timeout")
     }
 
     /// Test 2: handleDoubleTap stores captured photo data
@@ -195,17 +195,23 @@ final class CaptureSessionViewModelTests: XCTestCase {
 
     /// Test 4: handleDoubleTap without auth shows error
     func testHandleDoubleTap_noAuth_showsError() async throws {
-        // Given - No Firebase Auth (default in tests)
+        // Given - ViewModel with no auth (getUserId returns nil)
+        let noAuthSut = CaptureSessionViewModel(
+            sessionService: mockSessionService,
+            storageService: mockStorageService,
+            catalogService: mockCatalogService,
+            getUserId: { nil }
+        )
         let photoData = Data([0x00])
 
         // When
-        await sut.handleDoubleTap(photoData: photoData)
+        await noAuthSut.handleDoubleTap(photoData: photoData)
 
         // Then - Should show not authenticated error
-        if case .error(let error) = sut.uiState {
+        if case .error(let error) = noAuthSut.uiState {
             XCTAssertEqual(error, .notAuthenticated)
         } else {
-            XCTFail("Expected error state, got \(sut.uiState)")
+            XCTFail("Expected error state, got \(noAuthSut.uiState)")
         }
     }
 

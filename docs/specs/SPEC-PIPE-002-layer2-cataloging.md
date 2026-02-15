@@ -107,7 +107,9 @@ The pipeline uses **Gemini 3 Pro Preview**, accessed through Vertex AI (not API 
 export const GENERATION_CONFIG = {
   temperature: 0.1,
   topP: 0.95,
-  maxOutputTokens: 8192,
+  // 32K tokens: multi-turn tool calling accumulates context rapidly
+  // (10 iterations x 3 tools x tool responses = large context window)
+  maxOutputTokens: 32768,
   responseMimeType: 'application/json',
   responseSchema: CATALOG_ITEM_SCHEMA
 };
@@ -117,7 +119,7 @@ export const GENERATION_CONFIG = {
 |-----------|-------|-----------|
 | `temperature` | 0.1 | Low temperature for consistent, deterministic cataloging |
 | `topP` | 0.95 | Nucleus sampling for focused yet slightly varied responses |
-| `maxOutputTokens` | 8192 | Large budget for tool calling + JSON response (increased from 1024) |
+| `maxOutputTokens` | 32768 | Large budget for multi-turn tool calling which accumulates context rapidly (10 iterations x 3 tools) |
 | `responseMimeType` | `'application/json'` | Enforces JSON output format |
 | `responseSchema` | `CATALOG_ITEM_SCHEMA` | Structured output validation |
 
@@ -687,11 +689,12 @@ export async function processItemWithGeminiPersistent(
 
 **Features:**
 
-1. **History Context Injection** - When `itemId` is provided, fetches recent catalog history and injects it into the prompt
-2. **Context Caching** - Caches system prompt + tool definitions for ~90% token cost reduction
-3. **Tool Call Recording** - Records all tool calls (including failures) for history
-4. **Token Tracking** - Accumulates `totalTokenCount` across all iterations
+1. **History Context Injection** - When `itemId` is provided, fetches the most recent catalog history entry and injects it into the prompt
+2. **Context Caching** - Caches system prompt + tool definitions via Gemini's Explicit Context Caching for ~90% token cost reduction
+3. **Tool Call Recording** - Records all tool calls with `{ name, args, result, success }` for history
+4. **Token Tracking** - Accumulates `totalTokenCount` across all iterations via `response.usageMetadata`
 5. **Auto-Save** - Saves catalog result to history subcollection after processing
+6. **Multi-Image Support** - Optional `additionalImageUrls` parameter for multi-angle analysis
 
 **History Storage:**
 
@@ -700,12 +703,12 @@ items/{itemId}/catalogHistory/{entryId}
 ```
 
 Each entry contains:
-- `catalogedAt` - Timestamp
-- `model` - Gemini model ID
+- `catalogedAt` - Timestamp (server-generated)
+- `model` - Gemini model ID (e.g., `gemini-3-pro-preview`)
 - `imageUrls` - Images processed
-- `toolCalls` - Array of tool call records
-- `result` - CatalogResultSnapshot
-- `metadata` - Token count, duration, cache usage
+- `toolCalls` - Array of `{ name, args, result, success }` records
+- `result` - CatalogResultSnapshot (`name`, `brand`, `model`, `category`, `subCategory`, `confidence`, `estimatedValue`, `condition`)
+- `metadata` - `{ totalTokens, durationMs, usedContextCache }`
 
 **Cost Savings:**
 
@@ -942,11 +945,25 @@ if (iterations >= maxIterations) {
 
 ### Document Status Updates
 
+On success, catalog fields are **flattened to top-level** fields on the item document (not nested under a `catalog` object):
+
 ```typescript
-// On success
+// On success - flatten catalog data to top-level fields
 await snapshot.ref.update({
   status: 'complete',
-  // ... catalog fields
+  name: catalogItem.name,
+  category: catalogItem.category,
+  subCategory: catalogItem.subCategory,
+  brand: catalogItem.brand ?? null,
+  model: catalogItem.model ?? null,
+  color: catalogItem.color,
+  condition: catalogItem.condition,
+  dimensions: catalogItem.dimensions ?? null,
+  quantity: catalogItem.quantity ?? 1,
+  estimatedValue: catalogItem.estimatedValue ?? null,
+  confidence: catalogItem.confidence,
+  processingNotes: catalogItem.processingNotes ?? null,
+  catalog: result,  // Keep original for backward compatibility
   completedAt: admin.firestore.FieldValue.serverTimestamp(),
   updatedAt: admin.firestore.FieldValue.serverTimestamp()
 });
@@ -991,7 +1008,7 @@ Based on COST-MODEL-001:
 
 **With Session Persistence:**
 
-When using `processItemWithGeminiPersistent()`, subsequent catalogs of the same item achieve significant cost savings through context caching and tool call deduplication. See [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md#cost-savings-analysis) for detailed analysis.
+When using `processItemWithGeminiPersistent()`, subsequent catalogs of the same item achieve significant cost savings through context caching and tool call deduplication. See [SPEC-PIPE-003](./SPEC-PIPE-003-session-persistence.md) for detailed cost savings analysis.
 
 ### Cost Logging
 

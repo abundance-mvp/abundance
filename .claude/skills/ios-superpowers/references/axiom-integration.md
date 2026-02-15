@@ -309,3 +309,23 @@ Skill(skill="axiom-swift-concurrency")
 ```
 Skill(skill="axiom-apple-docs-research", args="AVCaptureSession configuration")
 ```
+
+---
+
+## Xcode Native MCP Bridge Tools
+
+When Xcode is open (macOS 26+), these tools augment Axiom skills:
+
+| mcpbridge Tool | Augments | How |
+|----------------|----------|-----|
+| `mcp__xcode__DocumentationSearch` | `axiom-apple-docs-research` | Semantic search across Apple docs + WWDC transcripts (on-device) |
+| `mcp__xcode__BuildProject` | `swift build` | Triggers Xcode build with structured success/failure |
+| `mcp__xcode__GetBuildLog` | `swift build 2>&1` | Filtered build log (errors, warnings, notes) with file paths |
+| `mcp__xcode__RunAllTests` | `swift test` | Runs tests from active test plan with structured results |
+| `mcp__xcode__RunSomeTests` | `swift test --filter` | Run specific test targets or methods |
+| `mcp__xcode__RenderPreview` | Device screenshots | Renders SwiftUI Preview as snapshot image |
+| `mcp__xcode__ExecuteSnippet` | Swift playground | REPL-like execution in file context |
+| `mcp__xcode__XcodeListNavigatorIssues` | `axiom:build-fixer` | Mirrors Issue Navigator for all current warnings/errors |
+| `mcp__xcode__XcodeRefreshCodeIssuesInFile` | Manual inspection | Live compiler diagnostics for a specific file |
+
+**Fallback rule:** If mcpbridge is unavailable (Xcode closed, not macOS 26), all operations fall back to existing Axiom skills and CLI commands. No skill breaks without mcpbridge.

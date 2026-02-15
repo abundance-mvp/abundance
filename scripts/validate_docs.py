@@ -121,6 +121,7 @@ def validate_files_tracked(index: dict, project_root: Path, result: ValidationRe
 def validate_markdown_links(index: dict, project_root: Path, result: ValidationResult):
     """Check that all markdown links resolve."""
     link_pattern = re.compile(r'\[[^\]]+\]\(([^)]+)\)')
+    code_block_pattern = re.compile(r'```[\s\S]*?```|`[^`]+`', re.MULTILINE)
 
     for dir_info in index.get("directories", {}).values():
         dir_path = project_root / dir_info.get("path", "")
@@ -134,6 +135,9 @@ def validate_markdown_links(index: dict, project_root: Path, result: ValidationR
                 content = file_path.read_text()
             except Exception:
                 continue
+
+            # Strip code blocks to avoid false positives from code snippets
+            content = code_block_pattern.sub('', content)
 
             for match in link_pattern.finditer(content):
                 link_target = match.group(1)
@@ -186,20 +190,19 @@ def validate_plan_status(index: dict, result: ValidationResult):
 
 
 def validate_code_refs(index: dict, project_root: Path, result: ValidationResult):
-    """Check that code_refs in specs point to existing paths."""
-    specs = index.get("directories", {}).get("specs", {}).get("docs", {})
-
-    for filename, doc_info in specs.items():
-        code_refs = doc_info.get("code_refs", [])
-
-        for ref in code_refs:
-            ref_path = project_root / ref
-            if not ref_path.exists():
-                result.add_warning(
-                    "code_drift",
-                    f"docs/specs/{filename}",
-                    f"Code reference '{ref}' does not exist"
-                )
+    """Check that code_refs in all docs point to existing paths."""
+    for dir_name, dir_info in index.get("directories", {}).items():
+        dir_path = dir_info.get("path", "")
+        for filename, doc_info in dir_info.get("docs", {}).items():
+            code_refs = doc_info.get("code_refs", [])
+            for ref in code_refs:
+                ref_path = project_root / ref
+                if not ref_path.exists():
+                    result.add_warning(
+                        "code_drift",
+                        f"{dir_path}{filename}",
+                        f"Code reference '{ref}' does not exist"
+                    )
 
 
 def validate_archival(index: dict, result: ValidationResult):

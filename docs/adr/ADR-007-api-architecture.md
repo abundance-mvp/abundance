@@ -1,25 +1,25 @@
 # ADR-007: API Architecture
 
-**Status**: Approved
+**Status**: Approved (Revised 2026-02-08 to reflect Gemini 3 Pro pipeline)
 **Date**: 2025-11-08
 **Decision Makers**: Engineering Leadership, Backend Developer, iOS Developer
 **Related Documents**:
 - docs/adr/ADR-002-platform-strategy.md (GCP/Firebase platform)
-- docs/design/DESIGN-004-computer-vision-pipeline.md (AI pipeline architecture)
-- docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md
+- docs/specs/SPEC-ARCH-002-layer1-layer2-pipeline.md (AI pipeline architecture)
+- docs/specs/SPEC-API-001-cloud-functions.md (Cloud Functions specification)
 
 ---
 
 ## Context
 
 Abundance needs an API layer for:
-- **iOS app → Backend communication**: Catalog CRUD operations, AI pipeline triggers
-- **AI pipeline orchestration**: Coordinate Layer 2/3 cloud AI (Gemini, SerpAPI, Claude)
-- **Webhook handling**: Stripe subscription lifecycle events (Phase 2)
+- **iOS app to Backend communication**: Item CRUD operations, AI pipeline triggers
+- **AI pipeline orchestration**: Gemini 3 Pro with tool calling (Google Lens, barcode lookup, web search)
+- **Session-based capture**: Multi-image detection pipeline using Gemini 3 Flash
 - **Future PWA support**: Phase 2 web app uses same API as iOS app
 
 **Requirements**:
-- Simple iOS integration (URLSession, no GraphQL client)
+- Simple iOS integration (Firebase SDK callable functions + HTTP endpoints)
 - Serverless (auto-scale, pay-per-use, no server management)
 - GCP platform (ADR-002): Native Firebase/GCP integration
 - Cost-efficient (low invocation cost for free tier users)
@@ -28,162 +28,74 @@ Abundance needs an API layer for:
 
 ## Decision
 
-**Use REST API with Cloud Functions (HTTP triggers) for all backend endpoints.**
+**Use Cloud Functions (2nd gen) with a mix of HTTP endpoints, Firebase callable functions, and Firestore triggers for all backend compute.**
 
 ### Specifications
 
-- **Architecture**: RESTful API (nouns + HTTP verbs: GET, POST, PUT, DELETE)
-- **Compute**: Cloud Functions (2nd gen, Node.js 20 runtime)
-- **Authentication**: Firebase ID tokens (Bearer token in `Authorization` header)
+- **Architecture**: HTTP endpoints for item CRUD, Firestore triggers for AI pipeline orchestration
+- **Compute**: Cloud Functions 2nd gen (Node.js 20 runtime, TypeScript)
+- **AI Pipeline**: Gemini 3 Pro (`gemini-3-pro-preview`) with tool calling via Vertex AI
+- **Layer 1 Detection**: Gemini 3 Flash (`gemini-3-flash-preview`) for object detection and cropping
+- **Authentication**: Firebase ID tokens (Bearer token in `Authorization` header for HTTP; `context.auth` for callables)
 - **Response Format**: JSON (Content-Type: `application/json`)
-- **API Versioning**: URL-based versioning (`/api/v1/...`)
-- **OpenAPI Specification**: API-CONTRACTS-001 (full endpoint documentation)
+- **SDK**: `@google/genai` for Vertex AI (Application Default Credentials, no API keys)
 
 ---
 
 ## Rationale
 
-### 1. Simple iOS Integration (No GraphQL Client)
+### 1. Unified Gemini Pipeline (Replaced Multi-Layer Claude/SerpAPI Architecture)
 
-**Requirement**: iOS app should use native `URLSession` (no third-party GraphQL dependencies).
+**Previous Design**: 4-layer pipeline with separate AI services per layer (Vertex AI Gemini for attributes, SerpAPI + Claude Haiku for product identification, Claude Sonnet for synthesis).
 
-**Solution**: REST API with standard HTTP methods (GET, POST, PUT, DELETE).
+**Current Design**: Unified Gemini 3 Pro pipeline with tool calling. A single Gemini 3 Pro call handles the entire cataloging workflow, invoking tools as needed:
 
-**iOS Example** (Swift):
-```swift
-struct APIClient {
-    func analyzeItem(image: UIImage) async throws -> AnalysisResult {
-        let url = URL(string: "https://us-central1-abundance-prod.cloudfunctions.net/analyzeItem")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(try await getFirebaseToken())", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let body = ["imageUrl": uploadedImageUrl, "userId": userId]
-        request.httpBody = try JSONEncoder().encode(body)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw APIError.invalidResponse
-        }
-
-        return try JSONDecoder().decode(AnalysisResult.self, from: data)
-    }
-}
-```
-
-**Benefits**:
-- **Zero dependencies**: No Apollo Client, no Relay, no code generation
-- **Type-safe**: Swift `Codable` for JSON serialization
-- **Familiar**: Standard HTTP patterns (every iOS dev knows URLSession)
-
-**Outcome**: iOS developer can integrate API in < 1 day (vs 2-3 days for GraphQL setup).
-
----
-
-### 2. Cloud Functions Auto-Scale (Serverless)
-
-**Requirement**: Backend should scale automatically (no manual server provisioning).
-
-**Solution**: Cloud Functions (2nd gen) auto-scale from 0 to 1,000+ concurrent instances.
+| Tool | Purpose | Implementation |
+|------|---------|----------------|
+| `google_lens_search` | Visual product matching via SerpAPI Google Lens | `functions/src/ai-pipeline/tools/google-lens.ts` |
+| `barcode_lookup` | UPC/EAN barcode product lookup | `functions/src/ai-pipeline/tools/barcode-lookup.ts` |
+| `web_search` | E-commerce pricing search via SerpAPI | `functions/src/ai-pipeline/tools/web-search.ts` |
 
 **How it works**:
-1. iOS app sends POST `/api/v1/items/analyze` → Cloud Function triggered
-2. GCP spawns new Cloud Function instance (cold start: 200-500ms)
-3. Subsequent requests use warm instances (latency: 50-100ms)
-4. No traffic → Functions scale to zero (no cost)
+1. Image uploaded by iOS app to Firebase Storage
+2. Firestore trigger (`onItemCreatedGemini3`) fires on item creation
+3. Image fetched and sent to Gemini 3 Pro with tool declarations
+4. Gemini decides which tools to call (barcode, Google Lens, web search)
+5. Tool results returned to Gemini for synthesis
+6. Final catalog JSON written to Firestore item document
 
-**Cost Model**:
-- **Invocations**: $0.40 per million (free tier: 2M/month)
-- **Compute time**: $0.0000025/GB-second (free tier: 400K GB-seconds)
+**Benefits**:
+- **Single model**: One Gemini 3 Pro call replaces 3 separate AI services
+- **Tool calling**: Model autonomously decides which tools to invoke based on image content
+- **Thought signatures**: Gemini 3 requires thought_signature preservation for multi-turn tool calls
+- **Session persistence**: Catalog history enables context continuity across rescans
 
-**Month 6 Projection** (5,000 users, 250K items cataloged):
-- API calls: 250K items × 2 API calls/item (analyze + synthesize) = **500K invocations**
-- Cost: 500K / 1M × $0.40 = **$0.20/month** (negligible)
+### 2. Two-Tier AI Model Strategy
 
-**Outcome**: Serverless backend scales automatically, $0.20/month cost vs $50/month for dedicated server.
+**Layer 1 (Detection)**: Gemini 3 Flash (`gemini-3-flash-preview`)
+- Object detection with bounding boxes in images
+- Server-side cropping with sharp
+- Runs in `onSessionCreated` trigger
+- Optimized for speed with `thinking_level: low`
 
----
+**Layer 2 (Cataloging)**: Gemini 3 Pro (`gemini-3-pro-preview`)
+- Full product cataloging with tool calling
+- Runs in `onItemCreatedGemini3` and `onItemFromSession` triggers
+- Returns structured CatalogItem JSON with confidence scoring
+- Supports context caching for cost optimization
 
-### 3. AI Pipeline Orchestration (Functions Map to Layers)
+### 3. Cloud Functions Auto-Scale (Serverless)
 
-**Requirement**: Backend must coordinate 4-layer AI pipeline (DESIGN-004).
-
-**Solution**: Each AI layer maps to a Cloud Function endpoint.
-
-**Endpoint Design**:
-
-| Endpoint | Layer | Purpose | AI APIs Called |
-|----------|-------|---------|----------------|
-| `POST /api/v1/items/analyze` | Layer 1 | Upload cropped object, trigger on-device analysis result | None (iOS-only) |
-| `POST /api/v1/items/extract-attributes` | Layer 2a | Extract color, material, condition | Vertex AI Gemini |
-| `POST /api/v1/items/identify-product` | Layer 2b | Barcode lookup or visual search | UPCitemdb or SerpAPI + Claude Haiku |
-| `POST /api/v1/items/synthesize` | Layer 3 | Conflict resolution, final metadata | Claude Sonnet Batch |
-
-**Example** (Cloud Function for Layer 2b):
-```javascript
-const functions = require('firebase-functions');
-const { callUPCitemdb, callSerpAPI, callClaudeHaiku } = require('./ai-clients');
-
-exports.identifyProduct = functions.https.onCall(async (data, context) => {
-    if (!context.auth) {
-        throw new functions.https.HttpsError('unauthenticated', 'User must be signed in');
-    }
-
-    const { barcode, imageUrl } = data;
-
-    // Try barcode first (Layer 2b dual-mode strategy per ADR-018)
-    if (barcode) {
-        const product = await callUPCitemdb(barcode);
-        if (product) return { source: 'barcode', product };
-    }
-
-    // Fallback to visual search
-    const serpResults = await callSerpAPI(imageUrl);
-    const parsedProduct = await callClaudeHaiku(serpResults);
-    return { source: 'visual', product: parsedProduct };
-});
-```
-
-**Outcome**: Clean separation of concerns, each function handles one AI layer.
-
----
+Cloud Functions (2nd gen) auto-scale from 0 to 1,000+ concurrent instances. All functions use `us-central1` region with configurable memory and timeout per function.
 
 ### 4. GCP Integration (Cloud Functions Native to Firebase)
 
-**Requirement** (ADR-002): GCP platform for backend.
-
-**Solution**: Cloud Functions are native to Firebase ecosystem.
-
 **Integration Points**:
-- **Firebase Auth**: `context.auth` auto-populated with user ID
-- **Firestore**: Direct access via `admin.firestore()`
-- **Cloud Storage**: Direct access via `admin.storage()`
-- **Secret Manager**: API keys stored securely (Gemini, Claude, SerpAPI)
-
-**Example** (Firestore integration):
-```javascript
-const admin = require('firebase-admin');
-admin.initializeApp();
-
-exports.getItem = functions.https.onCall(async (data, context) => {
-    const { itemId } = data;
-    const doc = await admin.firestore().collection('items').doc(itemId).get();
-
-    if (!doc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Item not found');
-    }
-
-    // Verify user owns item
-    if (doc.data().userId !== context.auth.uid) {
-        throw new functions.https.HttpsError('permission-denied', 'Access denied');
-    }
-
-    return doc.data();
-});
-```
-
-**Outcome**: No custom database adapters, no auth middleware (Firebase handles it).
+- **Vertex AI**: Gemini 3 models via `@google/genai` SDK with Application Default Credentials
+- **Firebase Auth**: `context.auth` for callable functions, Bearer token verification for HTTP
+- **Firestore**: Direct access via `firebase-admin` SDK
+- **Cloud Storage**: Image fetch via Admin SDK (bypasses security rules)
+- **Secret Manager**: `SERPAPI_KEY` stored as Cloud Functions secret
 
 ---
 
@@ -191,56 +103,17 @@ exports.getItem = functions.https.onCall(async (data, context) => {
 
 ### Alternative 1: GraphQL (Apollo Server)
 
-**Approach**: Use GraphQL API with Apollo Server (Cloud Run).
+**Why Rejected**: GraphQL overkill for simple catalog CRUD. REST/callable API simpler for iOS integration with Firebase SDK.
 
-**Pros**:
-- **Flexible queries**: Clients request exactly what they need (no over-fetching)
-- **Type safety**: GraphQL schema enforces contracts
-- **Real-time subscriptions**: WebSocket support for live updates
+### Alternative 2: Multi-Model Pipeline (Claude + Gemini + SerpAPI)
 
-**Cons**:
-- **iOS complexity**: Requires Apollo iOS SDK (5,000+ lines of generated code)
-- **Over-engineered**: MVP doesn't need complex queries (catalog is simple CRUD)
-- **Cloud Run cost**: Minimum $5/month for always-on container (vs $0.20 Cloud Functions)
-- **Learning curve**: GraphQL query language, schema design, resolvers
+**Previous approach**: Separate AI services per pipeline layer.
 
-**Why Rejected**: GraphQL overkill for simple catalog CRUD. REST API simpler for iOS integration.
+**Why Replaced**: Gemini 3 Pro tool calling unifies all AI operations into a single model call. Reduces latency, simplifies orchestration, and eliminates Claude/Anthropic dependency.
 
----
+### Alternative 3: API Key Authentication for Gemini
 
-### Alternative 2: tRPC (TypeScript RPC)
-
-**Approach**: Use tRPC for end-to-end type-safe API (TypeScript on both iOS/backend).
-
-**Pros**:
-- **Full type safety**: Shared types between frontend/backend
-- **No code generation**: Auto-inferred types
-- **Fast development**: Changes propagate instantly
-
-**Cons**:
-- **iOS limitation**: tRPC designed for TypeScript (no Swift support)
-- **Requires TypeScript iOS app**: Would need React Native or web wrapper (contradicts iOS 26 native strategy)
-- **Niche technology**: Smaller ecosystem than REST/GraphQL
-
-**Why Rejected**: No Swift support, contradicts native iOS decision (ADR-004).
-
----
-
-### Alternative 3: gRPC (Protocol Buffers)
-
-**Approach**: Use gRPC for binary protocol, high-performance RPC.
-
-**Pros**:
-- **Performance**: Binary protocol faster than JSON
-- **Type safety**: Protocol Buffers schema enforces contracts
-- **Streaming**: Bi-directional streaming support
-
-**Cons**:
-- **iOS complexity**: gRPC-Swift library adds 10,000+ lines of code
-- **HTTP/2 required**: More complex debugging (can't use curl/Postman easily)
-- **Over-engineered**: MVP doesn't need microsecond latency (AI pipeline is seconds)
-
-**Why Rejected**: Complexity unjustified for MVP. REST API sufficient for catalog CRUD.
+**Why Rejected**: Gemini 3 Preview models require Vertex AI (not API keys). Application Default Credentials provide automatic authentication in Cloud Functions.
 
 ---
 
@@ -248,51 +121,94 @@ exports.getItem = functions.https.onCall(async (data, context) => {
 
 ### Positive
 
-1. **Simple iOS Integration**: URLSession + Codable (no GraphQL/gRPC dependencies)
-2. **Serverless Auto-Scale**: Cloud Functions scale 0 → 1,000+ instances automatically
-3. **Low Cost**: $0.20/month for 500K API calls (vs $50/month dedicated server)
-4. **GCP Integration**: Firebase Auth, Firestore, Secret Manager native access
-5. **Fast Development**: REST API familiar to all developers (no learning curve)
-
----
+1. **Unified AI Pipeline**: Single Gemini 3 Pro model with tool calling replaces multi-service orchestration
+2. **Serverless Auto-Scale**: Cloud Functions scale 0 to 1,000+ instances automatically
+3. **GCP-Native Auth**: Vertex AI uses Application Default Credentials (no API key management)
+4. **Cost Efficient**: Context caching reduces Gemini token costs for repeat scans
+5. **Simple iOS Integration**: Firebase SDK for callables, standard HTTP for REST endpoints
 
 ### Negative
 
-1. **Over-Fetching**: REST endpoints return full JSON objects (vs GraphQL selective queries)
-   - **Mitigation**: Keep response payloads small (< 10 KB per item), acceptable for catalog CRUD
-2. **No Real-Time Subscriptions**: REST doesn't support WebSocket live updates
-   - **Mitigation**: Firestore Realtime Listeners handle real-time sync (ADR-006), API only for mutations
-3. **Versioning Overhead**: URL-based versioning requires maintaining `/v1`, `/v2` endpoints
-   - **Mitigation**: Phase 1 MVP unlikely to need breaking changes (stable API contract)
+1. **Gemini 3 Preview Dependency**: Using preview model (`gemini-3-pro-preview`), will need migration when GA
+   - **Mitigation**: Model ID centralized in `prompts.ts`, single-line change
+2. **Tool calling latency**: Multi-turn tool calling loop adds latency (up to 10 iterations)
+   - **Mitigation**: Max iteration cap prevents infinite loops; typical items complete in 2-3 iterations
+3. **SerpAPI Dependency**: Google Lens and web search require SerpAPI key
+   - **Mitigation**: Graceful degradation if tools fail; Gemini falls back to visual analysis
 
 ---
 
 ## Implementation Details
 
-### Cloud Functions Deployment
+### Cloud Functions Project Structure
 
-**Project Structure**:
 ```
 functions/
 ├── src/
-│   ├── api/
-│   │   ├── items.js          // CRUD endpoints (analyze, get, update, delete)
-│   │   ├── subscriptions.js  // Stripe webhook handler
-│   │   └── auth.js           // Custom claims (premium status)
-│   ├── ai/
-│   │   ├── gemini.js         // Layer 2a (Vertex AI Gemini)
-│   │   ├── serpapi.js        // Layer 2b (SerpAPI visual search)
-│   │   ├── upcitemdb.js      // Layer 2b (barcode lookup)
-│   │   └── claude.js         // Layer 3 (Claude Sonnet synthesis)
-│   ├── utils/
-│   │   ├── auth.js           // Verify Firebase tokens
-│   │   └── errors.js         // Custom error handling
-│   └── index.js              // Export all functions
+│   ├── index.ts                          // All function exports
+│   ├── ai-pipeline/
+│   │   ├── gemini/
+│   │   │   ├── gemini-service.ts         // Gemini 3 Pro tool-calling loop
+│   │   │   ├── orchestrator.ts           // Firestore trigger handler
+│   │   │   ├── prompts.ts               // System prompt, tool declarations, model config
+│   │   │   ├── vertexai-config.ts        // Vertex AI client setup (ADC)
+│   │   │   ├── context-cache-service.ts  // Context caching for cost optimization
+│   │   │   ├── catalog-history-service.ts // Session persistence
+│   │   │   └── schemas/
+│   │   │       ├── catalog-item.ts       // CatalogItem JSON schema
+│   │   │       └── catalog-history.ts    // History record schema
+│   │   ├── layer1/
+│   │   │   ├── layer1-service.ts         // Gemini 3 Flash object detection
+│   │   │   ├── prompts.ts               // Detection prompts and config
+│   │   │   ├── schemas/
+│   │   │   │   └── detection-result.ts   // Detection response schema
+│   │   │   └── utils/
+│   │   │       └── bbox-converter.ts     // Bounding box utilities
+│   │   ├── tools/
+│   │   │   ├── tool-executor.ts          // Central dispatch for tool calls
+│   │   │   ├── google-lens.ts            // SerpAPI Google Lens integration
+│   │   │   ├── barcode-lookup.ts         // Barcode product lookup
+│   │   │   └── web-search.ts             // SerpAPI web search for pricing
+│   │   ├── providers/
+│   │   │   └── GeminiProvider.ts         // Provider abstraction
+│   │   └── cost-tracking/
+│   │       └── CostLogger.ts            // AI cost logging
+│   ├── items/
+│   │   ├── createItem.ts                 // Item creation logic
+│   │   ├── getItem.ts                    // Item retrieval logic
+│   │   └── listItems.ts                  // Item listing logic
+│   ├── triggers/
+│   │   ├── onItemCreatedGemini3.ts       // New item -> Gemini 3 Pro cataloging
+│   │   ├── onItemFromSession.ts          // Session item -> Gemini 3 Pro cataloging
+│   │   ├── onSessionCreated.ts           // Session -> Gemini 3 Flash detection
+│   │   ├── onItemUpdatedDeepScan.ts      // Deep scan -> Gemini 3 Pro enhanced
+│   │   ├── onItemUpdatedRescan.ts        // Rescan -> Gemini 3 Pro re-cataloging
+│   │   └── onItemDeleted.ts              // Item deletion -> Storage cleanup
+│   ├── scheduled/
+│   │   ├── cleanupDeletedItems.ts        // Scheduled cleanup job
+│   │   └── checkSubscriptionExpiry.ts    // Subscription expiry check
+│   └── migrations/
+│       └── backfillFlattenedSchema.ts    // Schema migration
 ├── package.json
-└── .env                      // API keys (Gemini, Claude, SerpAPI)
+└── tsconfig.json
 ```
 
-**Deployment**:
+### Dependencies
+
+```json
+{
+  "@google/genai": "^1.35.0",
+  "firebase-admin": "^12.0.0",
+  "firebase-functions": "^7.0.3",
+  "node-fetch": "^3.3.2",
+  "sharp": "^0.33.0"
+}
+```
+
+Note: No Claude/Anthropic SDK dependency. All AI operations use `@google/genai` for Vertex AI.
+
+### Deployment
+
 ```bash
 cd functions
 npm install
@@ -301,69 +217,39 @@ firebase deploy --only functions
 
 ---
 
-### API Endpoint Examples
+### Exported Functions (from index.ts)
 
-**POST /api/v1/items/analyze**:
-```json
-{
-  "imageUrl": "https://storage.googleapis.com/abundance-prod/items/item_123.jpg",
-  "userId": "user_abc",
-  "detectedObjects": [
-    { "class": "tent", "confidence": 0.87, "boundingBox": [100, 200, 300, 400] }
-  ]
-}
-```
-
-**Response**:
-```json
-{
-  "itemId": "item_12345",
-  "status": "analyzing",
-  "layer1Complete": true
-}
-```
-
-**POST /api/v1/items/synthesize**:
-```json
-{
-  "itemId": "item_12345",
-  "layer2aResult": { "color": "green", "material": "polyester" },
-  "layer2bResult": { "productName": "Coleman Evanston Tent", "barcode": null }
-}
-```
-
-**Response**:
-```json
-{
-  "itemId": "item_12345",
-  "status": "complete",
-  "metadata": {
-    "name": "Coleman Evanston 8-Person Tent",
-    "category": "camping",
-    "brand": "Coleman",
-    "model": "Evanston 8-Person",
-    "color": "green",
-    "material": "polyester",
-    "condition": "good",
-    "estimatedValue": 249.99,
-    "confidence": "high"
-  }
-}
-```
+| Function | Type | Purpose |
+|----------|------|---------|
+| `health` | HTTP (onRequest) | Health check endpoint (no auth) |
+| `getUserProfile` | Callable (onCall) | Get authenticated user profile |
+| `createItemHTTP` | HTTP (onRequest) | Create item with image URL and layer 1 result |
+| `getItemHTTP` | HTTP (onRequest) | Get item by ID |
+| `listItemsHTTP` | HTTP (onRequest) | List items for authenticated user |
+| `onItemCreatedGemini3` | Firestore trigger (onCreate) | Process new items with Gemini 3 Pro |
+| `onItemFromSession` | Firestore trigger (onCreate) | Process session-detected items with Gemini 3 Pro |
+| `onSessionCreated` | Firestore trigger (onUpdate) | Run Gemini 3 Flash detection on sessions |
+| `onItemUpdatedDeepScan` | Firestore trigger (onUpdate) | Enhanced deep scan with Gemini 3 Pro |
+| `onItemUpdatedRescan` | Firestore trigger (onUpdate) | Re-catalog item through standard pipeline |
+| `onItemDeleted` | Firestore trigger (onDelete) | Clean up Cloud Storage files |
+| `cleanupDeletedItemsScheduled` | Scheduled | Periodic cleanup of soft-deleted items |
+| `checkSubscriptionExpiryScheduled` | Scheduled | Check and expire lapsed subscriptions |
+| `backfillFlattenedSchema` | HTTP (migration) | One-time schema migration |
 
 ---
 
 ### Error Handling
 
-**Standard Error Responses**:
-```json
-{
-  "error": {
-    "code": "unauthenticated",
-    "message": "User must be signed in",
-    "details": {}
-  }
-}
+Cloud Functions use Firebase `HttpsError` for callable functions and standard HTTP status codes for HTTP endpoints:
+
+```typescript
+// Callable function errors
+throw new functions.https.HttpsError('unauthenticated', 'User must be signed in');
+throw new functions.https.HttpsError('not-found', 'Item not found');
+
+// HTTP endpoint errors
+res.status(401).json({ error: { code: 'unauthenticated', message: 'User must be signed in' } });
+res.status(404).json({ error: { code: 'not-found', message: 'Item not found' } });
 ```
 
 **HTTP Status Codes**:
@@ -371,7 +257,6 @@ firebase deploy --only functions
 - `201 Created`: Item created
 - `400 Bad Request`: Invalid input
 - `401 Unauthorized`: Missing or invalid Firebase token
-- `403 Forbidden`: User doesn't own resource
 - `404 Not Found`: Item not found
 - `500 Internal Server Error`: Server error (logged to Cloud Logging)
 
@@ -379,21 +264,21 @@ firebase deploy --only functions
 
 ## Acceptance Criteria
 
-- [x] ✅ REST API endpoints defined for all AI pipeline layers
-- [x] ✅ Cloud Functions (2nd gen) deployed to GCP
-- [x] ✅ Firebase Auth token validation implemented
-- [x] ✅ iOS URLSession integration tested (POST /analyze, GET /items/:id)
-- [x] ✅ OpenAPI 3.0 specification created (API-CONTRACTS-001)
-- [x] ✅ Error handling standardized (HTTP status codes + error JSON)
+- [x] Gemini 3 Pro pipeline operational with tool calling (google_lens, barcode_lookup, web_search)
+- [x] Gemini 3 Flash detection pipeline for session-based capture
+- [x] Cloud Functions (2nd gen) deployed to GCP with Vertex AI ADC
+- [x] Firebase Auth token validation on all endpoints
+- [x] Firestore triggers orchestrate AI pipeline automatically
+- [x] Context caching and session persistence implemented
 
 ---
 
 ## Related Decisions
 
-- **ADR-002**: Platform strategy (GCP) → Cloud Functions native GCP service
-- **ADR-005**: Authentication (Firebase Auth) → API validates Firebase ID tokens
-- **ADR-006**: Database (Firestore) → API writes results to Firestore
-- **DESIGN-004**: AI pipeline (4-layer) → API endpoints map to layers
+- **ADR-002**: Platform strategy (GCP) -> Cloud Functions native GCP service
+- **ADR-005**: Authentication (Firebase Auth) -> API validates Firebase ID tokens
+- **ADR-006**: Database (Firestore) -> API writes results to Firestore
+- **ADR-020**: Cloud Functions organization -> Function categories and trigger strategy
 
 ---
 
@@ -402,7 +287,8 @@ firebase deploy --only functions
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
 | 2025-11-08 | 1.0 | Initial decision, REST API with Cloud Functions | Software Architecture Expert |
+| 2026-02-08 | 2.0 | Major revision: Updated to reflect Gemini 3 Pro pipeline with tool calling, replaced Claude/SerpAPI multi-layer references, updated project structure from JS to TypeScript, updated function inventory to match actual exports | Documentation Agent |
 
 ---
 
-**This API architecture supports simple iOS integration (URLSession), serverless auto-scaling (Cloud Functions), and GCP platform integration (ADR-002).**
+**This API architecture uses Gemini 3 Pro with tool calling for unified AI cataloging, Gemini 3 Flash for object detection, and Cloud Functions 2nd gen for serverless auto-scaling compute.**

@@ -252,7 +252,7 @@ struct ProfileViewModelTests {
         )
 
         // When: Export data
-        await viewModel.exportData(format: .json)
+        await viewModel.exportData(format: .csv)
 
         // Then: Should complete without error
         #expect(viewModel.error == nil)
@@ -263,20 +263,16 @@ struct ProfileViewModelTests {
 @Suite("ExportFormat Tests")
 struct ExportFormatTests {
 
-    @Test("ExportFormat has all expected cases")
+    @Test("ExportFormat has CSV case only")
     func testExportFormat_hasAllCases() {
         let allCases = ExportFormat.allCases
-        #expect(allCases.count == 3)
+        #expect(allCases.count == 1)
         #expect(allCases.contains(.csv))
-        #expect(allCases.contains(.json))
-        #expect(allCases.contains(.pdf))
     }
 
     @Test("ExportFormat raw values are correct")
     func testExportFormat_rawValues() {
         #expect(ExportFormat.csv.rawValue == "CSV")
-        #expect(ExportFormat.json.rawValue == "JSON")
-        #expect(ExportFormat.pdf.rawValue == "PDF")
     }
 }
 
@@ -381,6 +377,14 @@ extension MockItemRepository: ItemRepository {
     func rescanItem(_ item: Item) async throws {
         // Mock implementation
     }
+
+    func refreshImageUrl(id: String) async throws -> String? {
+        nil
+    }
+
+    func refreshItem(id: String) async throws {}
+
+    func recatalogWithPhotos(id: String) async throws {}
 }
 
 /// Mock AuthService for testing

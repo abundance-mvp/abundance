@@ -5,8 +5,8 @@
 **Decision Makers**: Engineering Leadership, iOS Developer, Security Engineer
 **Related Documents**:
 - docs/adr/ADR-001-strategic-positioning.md (privacy-first requirement)
-- docs/adr/ADR-002-platform-strategy.md (GCP/Firebase platform)
-- docs/adr/ADR-004-ios-26-only-launch.md (iOS 26 requirement)
+- docs/adr/ADR-002-platform-strategy.md (product strategy)
+- docs/archive/adr/ADR-004-ios-26-only-launch.md (iOS 26 requirement, archived)
 - docs/tech-stack/TECH-STACK-MAP-001-abundance-tech-stack.md
 
 ---
@@ -22,7 +22,7 @@ Abundance needs user authentication for:
 **Requirements**:
 - Privacy-first (ADR-001): No email/password collection if possible
 - iOS 26-only (ADR-004): Leverage latest iOS auth capabilities
-- GCP platform (ADR-002): Seamless Firebase integration
+- GCP platform: Seamless Firebase integration
 - Free tier sustainable: Low cost for 85% of users
 
 ---
@@ -301,8 +301,8 @@ service cloud.firestore {
 ## Related Decisions
 
 - **ADR-001**: Strategic positioning (privacy-first) → Requires Apple Sign-In (no email)
-- **ADR-002**: Platform strategy (GCP) → Firebase Auth native integration
-- **ADR-004**: iOS 26-only launch → Leverage AuthenticationServices framework
+- **ADR-002**: Platform strategy (product strategy) → Firebase Auth native integration
+- **ADR-004**: iOS 26-only launch (archived: `docs/archive/adr/ADR-004-ios-26-only-launch.md`) → Leverage AuthenticationServices framework
 - **ADR-006**: Database selection (Firestore) → Security Rules use `request.auth.uid`
 
 ---
@@ -315,4 +315,4 @@ service cloud.firestore {
 
 ---
 
-**This authentication strategy supports privacy-first positioning (ADR-001), GCP platform integration (ADR-002), and iOS 26 premium UX (ADR-004).**
+**This authentication strategy supports privacy-first positioning (ADR-001), GCP/Firebase platform integration, and iOS 26 premium UX (ADR-004, archived).**
